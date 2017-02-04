@@ -1,0 +1,94 @@
+# XBMC Media Center language file
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC-Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
+"POT-Creation-Date: 2013-12-12 22:56+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+msgctxt "#30000"
+msgid "General"
+msgstr ""
+
+msgctxt "#30001"
+msgid "Discovery Intervals"
+msgstr ""
+
+msgctxt "#30100"
+msgid "Pause discovery while streaming Live TV channels"
+msgstr ""
+
+msgctxt "#30101"
+msgid "Devices"
+msgstr ""
+
+msgctxt "#30102"
+msgid "Channel Lineups"
+msgstr ""
+
+msgctxt "#30103"
+msgid "Electronic Program Guide (EPG)"
+msgstr ""
+
+msgctxt "#30104"
+msgid "Recordings"
+msgstr ""
+
+msgctxt "#30105"
+msgid "Recording Rules"
+msgstr ""
+
+msgctxt "#30106"
+msgid "Recording Rule Episodes"
+msgstr ""
+
+msgctxt "#30107"
+msgid "Prepend channel numbers to channel names"
+msgstr ""
+
+msgctxt "#30201"
+msgid "5 Minutes"
+msgstr ""
+
+msgctxt "#30202"
+msgid "10 Minutes"
+msgstr ""
+
+msgctxt "#30203"
+msgid "15 Minutes"
+msgstr ""
+
+msgctxt "#30204"
+msgid "30 Minutes"
+msgstr ""
+
+msgctxt "#30205"
+msgid "45 Minutes"
+msgstr ""
+
+msgctxt "#30206"
+msgid "1 Hour"
+msgstr ""
+
+msgctxt "#30207"
+msgid "2 Hours"
+msgstr ""
+
+msgctxt "#30208"
+msgid "4 Hours"
+msgstr ""
+
+msgctxt "#30301"
+msgid "Delete episode"
+msgstr ""
+
+msgctxt "#30302"
+msgid "Delete and re-record episode"
+msgstr ""

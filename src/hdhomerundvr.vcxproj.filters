@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="External Libraries">
+      <UniqueIdentifier>{eb0262dd-4497-479f-81a3-67548f7bddf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\sqlite">
+      <UniqueIdentifier>{824cb369-40c3-4c93-b00f-26a89f80cb70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\external-kodi-addon-dev-kit">
+      <UniqueIdentifier>{4da93225-415f-4268-bca9-e1f9caf7f267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\compat">
+      <UniqueIdentifier>{4d3c3b8b-5e05-4f27-8305-5f870daffba9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\compat">
+      <UniqueIdentifier>{2a0c1029-3d04-4d2d-a301-468d7e2c070c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\compat\uuid">
+      <UniqueIdentifier>{434554ef-071f-4214-a443-ade85ba7d18e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\external-sqlite\sqlite3.h">
+      <Filter>External Libraries\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\external-sqlite\sqlite3ext.h">
+      <Filter>External Libraries\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\external-kodi-addon-dev-kit\kodi\xbmc_addon_dll.h">
+      <Filter>External Libraries\external-kodi-addon-dev-kit</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\external-kodi-addon-dev-kit\kodi\xbmc_pvr_dll.h">
+      <Filter>External Libraries\external-kodi-addon-dev-kit</Filter>
+    </ClInclude>
+    <ClInclude Include="database.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="compat\dlfcn.h">
+      <Filter>Header Files\compat</Filter>
+    </ClInclude>
+    <ClInclude Include="compat\uuid\uuid.h">
+      <Filter>Header Files\compat\uuid</Filter>
+    </ClInclude>
+    <ClInclude Include="addoncallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="livestream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pvrcallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scalar_condition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scheduler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\version\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\external-sqlite\sqlite3.c">
+      <Filter>External Libraries\sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="dbextension.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="database.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pvr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\dlfcn.cpp">
+      <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\uuid.cpp">
+      <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="addoncallbacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="livestream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pvrcallbacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scheduler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hdhomerundvr.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\tmp\version\version.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
