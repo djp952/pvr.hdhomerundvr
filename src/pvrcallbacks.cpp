@@ -70,6 +70,8 @@ pvrcallbacks::pvrcallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle(add
 		// Acquire function pointers to all of the PVR addon library callbacks
 		PvrAddMenuHook = GetFunctionPointer<PvrAddMenuHookFunc>(m_hmodule, "PVR_add_menu_hook");
 		PvrAllocateDemuxPacket = GetFunctionPointer<PvrAllocateDemuxPacketFunc>(m_hmodule, "PVR_allocate_demux_packet");
+		PvrConnectionStateChange = GetFunctionPointer<PvrConnectionStateChangeFunc>(m_hmodule, "PVR_connection_state_change");
+		PvrEpgEventStateChange = GetFunctionPointer<PvrEpgEventStateChangeFunc>(m_hmodule, "PVR_epg_event_state_change");
 		PvrFreeDemuxPacket = GetFunctionPointer<PvrFreeDemuxPacketFunc>(m_hmodule, "PVR_free_demux_packet");
 		PvrRecording = GetFunctionPointer<PvrRecordingFunc>(m_hmodule, "PVR_recording");
 		PvrRegisterMe = GetFunctionPointer<PvrRegisterMeFunc>(m_hmodule, "PVR_register_me");
@@ -117,6 +119,40 @@ void pvrcallbacks::AddMenuHook(PVR_MENUHOOK* menuhook) const
 {
 	assert((PvrAddMenuHook) && (m_handle) && (m_callbacks));
 	PvrAddMenuHook(m_handle, m_callbacks, menuhook);
+}
+	
+//-----------------------------------------------------------------------------
+// pvrcallbacks::ConnectionStateChange
+//
+// Notifies Kodi of a state change on the backend connection
+//
+// Arguments:
+//
+//	connstring		- The backend connection string
+//	state			- The new state to be reported
+//	message			- Optional connection state message to be reported
+
+void pvrcallbacks::ConnectionStateChange(char const* connstring, PVR_CONNECTION_STATE state, char const* message) const
+{
+	assert((PvrConnectionStateChange) && (m_handle) && (m_callbacks));
+	PvrConnectionStateChange(m_handle, m_callbacks, connstring, state, message);
+}
+	
+//-----------------------------------------------------------------------------
+// pvrcallbacks::EpgEventStateChange
+//
+// Asynchronously updates the EPG entries for a single channel
+//
+// Arguments:
+//
+//	tag			- EPG_TAG to be updated
+//	channelid	- Channel identifier
+//	state		- State being changed for the EPG_TAG
+
+void pvrcallbacks::EpgEventStateChange(EPG_TAG* tag, unsigned int channelid, EPG_EVENT_STATE state) const
+{
+	assert((PvrEpgEventStateChange) && (m_handle) && (m_callbacks));
+	PvrEpgEventStateChange(m_handle, m_callbacks, tag, channelid, state);
 }
 	
 //-----------------------------------------------------------------------------

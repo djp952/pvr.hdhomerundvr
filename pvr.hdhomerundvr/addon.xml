@@ -5,15 +5,15 @@
 	name="HDHomeRun DVR PVR"
 	provider-name="Michael G. Brehm">
 	<requires>
-		<import addon="xbmc.pvr" version="4.1.0"/>
+		<import addon="xbmc.pvr" version="5.2.1"/>
 	</requires>
 	<extension
 		point="xbmc.pvrclient"
 		needs_configuration="false"
 		library_windows="zuki.pvr.hdhomerundvr.dll"/>
 		<extension point="xbmc.addon.metadata">
-		<summary lang="en">HDHomeRun DVR PVR</summary>
-		<description lang="en">HDHomeRun DVR PVR Client</description>
+		<summary lang="en_US">HDHomeRun DVR PVR</summary>
+		<description lang="en_US">HDHomeRun DVR PVR Client</description>
 		<platform>windows</platform>
 	</extension>
 </addon>

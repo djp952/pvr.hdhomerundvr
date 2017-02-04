@@ -3,8 +3,8 @@
   <PropertyGroup>
     <SolutionDir>.\</SolutionDir>
     <Configuration>Release</Configuration>
-    <KodiBaseline>jarvis</KodiBaseline>
-</PropertyGroup>
+    <KodiBaseline>krypton</KodiBaseline>
+  </PropertyGroup>
 
   <Target Name="Clean">
     <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Clean" ContinueOnError="false"/>

@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdint.h>
+#include <kodi_vfs_types.h>
 
 #pragma warning(push, 4)
 
@@ -97,6 +98,21 @@ public:
 	// Creates a directory on the local file system
 	bool CreateDirectory(char const* path) const;
 
+	// CurlAddOption
+	//
+	// Adds an option to a CURL file representation
+	bool CurlAddOption(void* file, CURLOPTIONTYPE type, char const* name, char const* value) const;
+
+	// CurlCreate
+	//
+	// Creates a CURL representation of a file
+	void* CurlCreate(char const* url) const;
+
+	// CurlOpen
+	//
+	// Opens the file instance from a CURL file representation
+	bool CurlOpen(void* file, unsigned int flags) const;
+
 	// DeleteFile
 	//
 	// Deletes a file
@@ -106,6 +122,16 @@ public:
 	//
 	// Determines if a specific directory exists
 	bool DirectoryExists(char const* path) const;
+
+	// FreeDirectory
+	//
+	// Releases data obtained through GetDirectory()
+	void FreeDirectory(VFSDirEntry* items, unsigned int count) const;
+
+	// GetDirectory
+	//
+	// Gets a listing of all files within a directory
+	bool GetDirectory(char const* path, char const* mask, VFSDirEntry** items, unsigned int* count) const;
 
 	// GetFileChunkSize
 	//
@@ -158,13 +184,19 @@ private:
 	using XbmcCanOpenDirectoryFunc		= bool		(*)(void*, void*, char const*);
 	using XbmcCloseFileFunc				= void		(*)(void*, void*, void*);
 	using XbmcCreateDirectoryFunc		= bool		(*)(void*, void*, char const*);
+	using XbmcCurlAddOptionFunc			= bool		(*)(void*, void*, void*, CURLOPTIONTYPE, char const*, char const*);
+	using XbmcCurlCreateFunc			= void*		(*)(void*, void*, char const*);
+	using XbmcCurlOpenFunc				= bool		(*)(void*, void*, void*, unsigned int);
 	using XbmcDeleteFileFunc			= bool		(*)(void*, void*, char const*);
 	using XbmcDirectoryExistsFunc		= bool		(*)(void*, void*, char const*);
 	using XbmcFileExistsFunc			= bool		(*)(void*, void*, char const*, bool);
 	using XbmcFlushFileFunc				= void		(*)(void*, void*, void*);
+	using XbmcFreeDirectoryFunc			= void		(*)(void*, void*, VFSDirEntry*, unsigned int);
 	using XbmcFreeStringFunc			= void		(*)(void*, void*, char*);
+	using XbmcGetDirectoryFunc			= bool		(*)(void*, void*, char const*, char const*, VFSDirEntry**, unsigned int*);
 	using XbmcGetDvdMenuLanguageFunc	= char*		(*)(void*, void*);
 	using XbmcGetFileChunkSizeFunc		= int		(*)(void*, void*, void*);
+	using XbmcGetFileDownloadSpeedFunc	= double	(*)(void*, void*, void*);
 	using XbmcGetFileLengthFunc			= int64_t	(*)(void*, void*, void*);
 	using XbmcGetFilePositionFunc		= int64_t	(*)(void*, void*, void*);
 	using XbmcGetLocalizedStringFunc	= char*		(*)(void*, void*, int);
@@ -179,6 +211,7 @@ private:
 	using XbmcRegisterMeFunc			= void*		(*)(void*);
 	using XbmcSeekFileFunc				= int64_t	(*)(void*, void*, void*, int64_t, int);
 	using XbmcStatFileFunc				= int		(*)(void*, void*, char const*, struct __stat64*);
+	using XbmcTranslateSpecialFunc		= char*		(*)(void*, void*, char const*);
 	using XbmcTruncateFileFunc			= int		(*)(void*, void*, void*, int64_t);
 	using XbmcUnRegisterMeFunc			= void		(*)(void*, void*);
 	using XbmcUnknownToUTF8Func			= char*		(*)(void*, void*, char const*);
@@ -191,13 +224,19 @@ private:
 	XbmcCanOpenDirectoryFunc		XbmcCanOpenDirectory;
 	XbmcCloseFileFunc				XbmcCloseFile;
 	XbmcCreateDirectoryFunc			XbmcCreateDirectory;
+	XbmcCurlAddOptionFunc			XbmcCurlAddOption;
+	XbmcCurlCreateFunc				XbmcCurlCreate;
+	XbmcCurlOpenFunc				XbmcCurlOpen;
 	XbmcDeleteFileFunc				XbmcDeleteFile;
 	XbmcDirectoryExistsFunc			XbmcDirectoryExists;
 	XbmcFileExistsFunc				XbmcFileExists;
 	XbmcFlushFileFunc				XbmcFlushFile;
+	XbmcFreeDirectoryFunc			XbmcFreeDirectory;
 	XbmcFreeStringFunc				XbmcFreeString;
+	XbmcGetDirectoryFunc			XbmcGetDirectory;
 	XbmcGetDvdMenuLanguageFunc		XbmcGetDvdMenuLanguage;
 	XbmcGetFileChunkSizeFunc		XbmcGetFileChunkSize;
+	XbmcGetFileDownloadSpeedFunc	XbmcGetFileDownloadSpeed;
 	XbmcGetFileLengthFunc			XbmcGetFileLength;
 	XbmcGetFilePositionFunc			XbmcGetFilePosition;
 	XbmcGetLocalizedStringFunc		XbmcGetLocalizedString;
@@ -212,6 +251,7 @@ private:
 	XbmcRegisterMeFunc				XbmcRegisterMe;
 	XbmcSeekFileFunc				XbmcSeekFile;
 	XbmcStatFileFunc				XbmcStatFile;
+	XbmcTranslateSpecialFunc		XbmcTranslateSpecial;
 	XbmcTruncateFileFunc			XbmcTruncateFile;
 	XbmcUnRegisterMeFunc			XbmcUnRegisterMe;
 	XbmcUnknownToUTF8Func			XbmcUnknownToUTF8;

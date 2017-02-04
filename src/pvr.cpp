@@ -23,7 +23,6 @@
 #include "stdafx.h"
 
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -197,10 +196,10 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 // Global SQLite database connection pool instance
 static std::shared_ptr<connectionpool> g_connpool;
 
-// g_currentchannel
+// g_epgmaxtime
 //
-// Global current channel indicator for the live stream
-static std::atomic<int> g_currentchannel{ -1 };
+// Maximum number of days to report for EPG and series timers
+static int g_epgmaxtime = EPG_TIMEFRAME_UNLIMITED;
 
 // g_livestream
 //
@@ -765,63 +764,6 @@ static void log_notice(_args&&... args)
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// ADDON_Announce
-//
-// Handler for an announcement (event) sent from Kodi
-//
-// Arguments:
-//
-//	flag		- Announcement flag string
-//	sender		- Announcement sender string
-//	message		- Announcement message string
-//	data		- Announcement specific data
-
-void ADDON_Announce(char const* flag, char const* sender, char const* message, void const* /*data*/)
-{
-	if((flag == nullptr) || (sender == nullptr) || (message == nullptr)) return;
-
-	// Only care about announcements from xbmc::System
-	if(strcmp(flag, "xbmc") != 0) return;
-	if(strcmp(sender, "System") != 0) return;
-
-	// xbmc::System::OnSleep
-	if(strcmp(message, "OnSleep") == 0) {
-
-		try {
-
-			g_livestream.stop();				// Stop live stream if necessary
-			g_scheduler.stop();					// Stop the scheduler
-			g_scheduler.clear();				// Clear out any pending tasks
-		}
-
-		catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
-		catch(...) { return handle_generalexception(__func__); }
-	}
-	
-	// xbmc::System::OnWake
-	else if(strcmp(message, "OnWake") == 0) {
-	
-		try {
-
-			// Reschedule all discoveries to execute sequentially to update everything
-			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
-			g_scheduler.add(now + std::chrono::seconds(2), discover_lineups_task);
-			g_scheduler.add(now + std::chrono::seconds(3), discover_guide_task);
-			g_scheduler.add(now + std::chrono::seconds(4), discover_recordings_task);
-			g_scheduler.add(now + std::chrono::seconds(5), discover_recordingrules_task);
-			g_scheduler.add(now + std::chrono::seconds(6), discover_episodes_task);
-	
-			// Restart the scheduler
-			g_scheduler.start();
-		}
-
-		catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
-		catch(...) { return handle_generalexception(__func__); }
-	}
-}
-
-//---------------------------------------------------------------------------
 // ADDON_Create
 //
 // Creates and initializes the Kodi addon instance
@@ -839,6 +781,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 	// Copy anything relevant from the provided parameters
 	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
+	g_epgmaxtime = pvrprops->iEpgMaxDays;
 
 	try {
 		
@@ -953,8 +896,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 void ADDON_Stop(void)
 {
 	g_livestream.stop();			// Stop the live stream
-	g_currentchannel.store(-1);		// Reset the current channel indicator
-
 	g_scheduler.stop();				// Stop the task scheduler
 }
 
@@ -975,9 +916,6 @@ void ADDON_Destroy(void)
 	// Stop any executing live stream data transfer as well as the task scheduler
 	g_livestream.stop();
 	g_scheduler.stop();
-
-	// Reset the current channel indicator
-	g_currentchannel.store(-1);
 
 	// Destroy all the dynamically created objects
 	g_connpool.reset();
@@ -1219,9 +1157,7 @@ char const* GetMininumPVRAPIVersion(void)
 
 char const* GetGUIAPIVersion(void)
 {
-	// This addon doesn't use the Kodi GUI, use a static string to report
-	// the version rather than including libKODI_guilib.h
-	return "5.10.0";
+	return "";
 }
 
 //---------------------------------------------------------------------------
@@ -1235,9 +1171,7 @@ char const* GetGUIAPIVersion(void)
 
 char const* GetMininumGUIAPIVersion(void)
 {
-	// This addon doesn't use the Kodi GUI, use a static string to report
-	// the version rather than including libKODI_guilib.h
-	return "5.10.0";
+	return "";
 }
 
 //---------------------------------------------------------------------------
@@ -1297,20 +1231,6 @@ char const* GetBackendVersion(void)
 char const* GetConnectionString(void)
 {
 	return "my.hdhomerun.com";
-}
-
-//---------------------------------------------------------------------------
-// GetCurrentClientChannel
-//
-// Gets the channel number on the backend of the current live stream
-//
-// Arguments:
-//
-//	NONE
-
-int GetCurrentClientChannel(void)
-{
-	return g_currentchannel.load();
 }
 
 //---------------------------------------------------------------------------
@@ -1409,7 +1329,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the guide entries in the database for this channel and time frame
-		enumerate_guideentries(dbhandle, channelid, -1, [&](struct guideentry const& item) -> void {
+		enumerate_guideentries(dbhandle, channelid, g_epgmaxtime, [&](struct guideentry const& item) -> void {
 
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
@@ -1825,6 +1745,12 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// iDuration
 			recording.iDuration = item.duration;
 
+			// iChannelUid
+			recording.iChannelUid = item.channelid.value;
+
+			// channelType
+			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
+
 			g_pvr->TransferRecordingEntry(handle, &recording);
 		});
 	}
@@ -1999,7 +1925,7 @@ int GetTimersAmount(void)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Return the sum of the timer rules and the invidual timers themselves
-		return get_recordingrule_count(dbhandle) + get_timer_count(dbhandle, -1); 
+		return get_recordingrule_count(dbhandle) + get_timer_count(dbhandle, g_epgmaxtime); 
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
@@ -2089,7 +2015,7 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 		});
 
 		// Enumerate all of the timers in the database
-		enumerate_timers(dbhandle, -1, [&](struct timer const& item) -> void {
+		enumerate_timers(dbhandle, g_epgmaxtime, [&](struct timer const& item) -> void {
 
 			PVR_TIMER timer;							// PVR_TIMER to be transferred to Kodi
 			memset(&timer, 0, sizeof(PVR_TIMER));		// Initialize the structure
@@ -2355,7 +2281,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 	// Ensure that any active live stream is closed out and reset first
 	g_livestream.stop();
-	g_currentchannel.store(-1);
 
 	// The only interesting thing about PVR_CHANNEL is the channel id
 	union channelid channelid;
@@ -2372,9 +2297,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 		// Start the new channel live stream
 		g_livestream.start(streamurl.c_str());
-
-		// Set the current channel number
-		g_currentchannel.store(channel.iUniqueId);
 
 		return true;
 	}
@@ -2398,7 +2320,7 @@ void CloseLiveStream(void)
 	g_scheduler.resume();
 
 	// Close out the live stream if it's active
-	try { g_livestream.stop(); g_currentchannel.store(-1); }
+	try { g_livestream.stop(); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
 	catch(...) { return handle_generalexception(__func__); }
 }
@@ -2756,7 +2678,7 @@ void PauseStream(bool /*paused*/)
 //	backwards	- True to seek to keyframe BEFORE time, else AFTER
 //	startpts	- Can be updated to point to where display should start
 
-bool SeekTime(int /*time*/, bool /*backwards*/, double* startpts)
+bool SeekTime(double /*time*/, bool /*backwards*/, double* startpts)
 {
 	if(startpts == nullptr) return false;
 
@@ -2844,6 +2766,114 @@ char const* GetBackendHostname(void)
 bool IsTimeshifting(void)
 {
 	return false;
+}
+
+//---------------------------------------------------------------------------
+// IsRealTimeStream
+//
+// Check for real-time streaming
+//
+// Arguments:
+//
+//	NONE
+
+bool IsRealTimeStream(void)
+{
+	return true;
+}
+
+//---------------------------------------------------------------------------
+// SetEPGTimeFrame
+//
+// Tell the client the time frame to use when notifying epg events back to Kodi
+//
+// Arguments:
+//
+//	days	- number of days from "now". EPG_TIMEFRAME_UNLIMITED means that Kodi is interested in all epg events
+
+PVR_ERROR SetEPGTimeFrame(int days)
+{
+	g_epgmaxtime = days;
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//---------------------------------------------------------------------------
+// OnSystemSleep
+//
+// Notification of system sleep power event
+//
+// Arguments:
+//
+//	NONE
+
+void OnSystemSleep()
+{
+	try {
+
+		g_livestream.stop();				// Stop live stream if necessary
+
+		g_scheduler.stop();					// Stop the scheduler
+		g_scheduler.clear();				// Clear out any pending tasks
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
+	catch(...) { return handle_generalexception(__func__); }
+}
+
+//---------------------------------------------------------------------------
+// OnSystemWake
+//
+// Notification of system wake power event
+//
+// Arguments:
+//
+//	NONE
+
+void OnSystemWake()
+{
+	try {
+
+		// Reschedule all discoveries to execute sequentially to update everything
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
+		g_scheduler.add(now + std::chrono::seconds(2), discover_lineups_task);
+		g_scheduler.add(now + std::chrono::seconds(3), discover_guide_task);
+		g_scheduler.add(now + std::chrono::seconds(4), discover_recordings_task);
+		g_scheduler.add(now + std::chrono::seconds(5), discover_recordingrules_task);
+		g_scheduler.add(now + std::chrono::seconds(6), discover_episodes_task);
+	
+		// Restart the scheduler
+		g_scheduler.start();
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
+	catch(...) { return handle_generalexception(__func__); }
+}
+
+//---------------------------------------------------------------------------
+// OnPowerSavingActivated
+//
+// Notification of system power saving activation event
+//
+// Arguments:
+//
+//	NONE
+
+void OnPowerSavingActivated()
+{
+}
+
+//---------------------------------------------------------------------------
+// OnPowerSavingDeactivated
+//
+// Notification of system power saving deactivation event
+//
+// Arguments:
+//
+//	NONE
+
+void OnPowerSavingDeactivated()
+{
 }
 
 //---------------------------------------------------------------------------

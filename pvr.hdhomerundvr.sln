@@ -29,9 +29,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "language", "language", "{AB93AD67-82B8-4012-9299-C301D583CAE2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "English", "English", "{A32210DB-B4C6-410C-8B9D-5B4BE3CA5A2E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource.language.en_us", "resource.language.en_us", "{A32210DB-B4C6-410C-8B9D-5B4BE3CA5A2E}"
 	ProjectSection(SolutionItems) = preProject
-		pvr.hdhomerundvr\resources\language\English\strings.po = pvr.hdhomerundvr\resources\language\English\strings.po
+		pvr.hdhomerundvr\resources\language\resource.language.en_us\strings.po = pvr.hdhomerundvr\resources\language\resource.language.en_us\strings.po
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "version", "src\version.vcxproj", "{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}"

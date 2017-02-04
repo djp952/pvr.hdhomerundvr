@@ -53,6 +53,16 @@ public:
 	// Adds a PVR-specific menu hook
 	void AddMenuHook(PVR_MENUHOOK* menuhook) const;
 
+	// ConnectionStateChange
+	//
+	// Indicates that the state of the connection with the backend has changed
+	void ConnectionStateChange(char const* connstring, PVR_CONNECTION_STATE state, char const* message) const;
+
+	// EpgEventStateChange
+	//
+	// Asynchronously updates the EPG entries for a single channel
+	void EpgEventStateChange(EPG_TAG* tag, unsigned int channelid, EPG_EVENT_STATE state) const;
+
 	// TransferChannelEntry
 	//
 	// Transfers an enumerated PVR_CHANNEL structure to Kodi
@@ -118,6 +128,8 @@ private:
 
 	using PvrAddMenuHookFunc				= void			(*)(void*, void*, PVR_MENUHOOK*);
     using PvrAllocateDemuxPacketFunc		= DemuxPacket*	(*)(void*, void*, int);
+    using PvrConnectionStateChangeFunc		= void			(*)(void*, void*, char const*, PVR_CONNECTION_STATE, char const*);
+    using PvrEpgEventStateChangeFunc		= void			(*)(void*, void*, EPG_TAG*, unsigned int, EPG_EVENT_STATE);
     using PvrFreeDemuxPacketFunc			= void			(*)(void*, void*, DemuxPacket*);
 	using PvrRecordingFunc					= void			(*)(void*, void*, char const*, char const*, bool);
 	using PvrRegisterMeFunc					= void*			(*)(void*);
@@ -139,6 +151,8 @@ private:
 
 	PvrAddMenuHookFunc					PvrAddMenuHook;
 	PvrAllocateDemuxPacketFunc			PvrAllocateDemuxPacket;
+	PvrConnectionStateChangeFunc		PvrConnectionStateChange;
+	PvrEpgEventStateChangeFunc			PvrEpgEventStateChange;
 	PvrFreeDemuxPacketFunc				PvrFreeDemuxPacket;
 	PvrRecordingFunc					PvrRecording;
 	PvrRegisterMeFunc					PvrRegisterMe;

@@ -67,13 +67,19 @@ addoncallbacks::addoncallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle
 		XbmcCanOpenDirectory = GetFunctionPointer<XbmcCanOpenDirectoryFunc>(m_hmodule, "XBMC_can_open_directory");
 		XbmcCloseFile = GetFunctionPointer<XbmcCloseFileFunc>(m_hmodule, "XBMC_close_file");
 		XbmcCreateDirectory = GetFunctionPointer<XbmcCreateDirectoryFunc>(m_hmodule, "XBMC_create_directory");
+		XbmcCurlAddOption = GetFunctionPointer<XbmcCurlAddOptionFunc>(m_hmodule, "XBMC_curl_add_option");
+		XbmcCurlCreate = GetFunctionPointer<XbmcCurlCreateFunc>(m_hmodule, "XBMC_curl_create");
+		XbmcCurlOpen = GetFunctionPointer<XbmcCurlOpenFunc>(m_hmodule, "XBMC_curl_open");
 		XbmcDeleteFile = GetFunctionPointer<XbmcDeleteFileFunc>(m_hmodule, "XBMC_delete_file");
 		XbmcDirectoryExists = GetFunctionPointer<XbmcDirectoryExistsFunc>(m_hmodule, "XBMC_directory_exists");
 		XbmcFileExists = GetFunctionPointer<XbmcFileExistsFunc>(m_hmodule, "XBMC_file_exists");
 		XbmcFlushFile = GetFunctionPointer<XbmcFlushFileFunc>(m_hmodule, "XBMC_flush_file");
+		XbmcFreeDirectory = GetFunctionPointer<XbmcFreeDirectoryFunc>(m_hmodule, "XBMC_free_directory");
 		XbmcFreeString = GetFunctionPointer<XbmcFreeStringFunc>(m_hmodule, "XBMC_free_string");
+		XbmcGetDirectory = GetFunctionPointer<XbmcGetDirectoryFunc>(m_hmodule, "XBMC_get_directory");
 		XbmcGetDvdMenuLanguage = GetFunctionPointer<XbmcGetDvdMenuLanguageFunc>(m_hmodule, "XBMC_get_dvd_menu_language");
 		XbmcGetFileChunkSize = GetFunctionPointer<XbmcGetFileChunkSizeFunc>(m_hmodule, "XBMC_get_file_chunk_size");
+		XbmcGetFileDownloadSpeed = GetFunctionPointer<XbmcGetFileDownloadSpeedFunc>(m_hmodule, "XBMC_get_file_download_speed");
 		XbmcGetFileLength = GetFunctionPointer<XbmcGetFileLengthFunc>(m_hmodule, "XBMC_get_file_length");
 		XbmcGetFilePosition = GetFunctionPointer<XbmcGetFilePositionFunc>(m_hmodule, "XBMC_get_file_position");
 		XbmcGetLocalizedString = GetFunctionPointer<XbmcGetLocalizedStringFunc>(m_hmodule, "XBMC_get_localized_string");
@@ -88,6 +94,7 @@ addoncallbacks::addoncallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle
 		XbmcRegisterMe = GetFunctionPointer<XbmcRegisterMeFunc>(m_hmodule, "XBMC_register_me");
 		XbmcSeekFile = GetFunctionPointer<XbmcSeekFileFunc>(m_hmodule, "XBMC_seek_file");
 		XbmcStatFile = GetFunctionPointer<XbmcStatFileFunc>(m_hmodule, "XBMC_stat_file");
+		XbmcTranslateSpecial = GetFunctionPointer<XbmcTranslateSpecialFunc>(m_hmodule, "XBMC_translate_special");
 		XbmcTruncateFile = GetFunctionPointer<XbmcTruncateFileFunc>(m_hmodule, "XBMC_truncate_file");
 		XbmcUnRegisterMe = GetFunctionPointer<XbmcUnRegisterMeFunc>(m_hmodule, "XBMC_unregister_me");
 		XbmcUnknownToUTF8 = GetFunctionPointer<XbmcUnknownToUTF8Func>(m_hmodule, "XBMC_unknown_to_utf8");
@@ -143,6 +150,55 @@ bool addoncallbacks::CreateDirectory(char const* path) const
 }
 
 //-----------------------------------------------------------------------------
+// addoncallbacks::CurlAddOption
+//
+// Adds an option to a CURL representation
+//
+// Arguments:
+//
+//	file	- CURL file representation
+//	type	- Type of option to be added
+//	name	- Name of the option
+//	value	- Value of the option
+
+bool addoncallbacks::CurlAddOption(void* file, CURLOPTIONTYPE type, char const* name, char const* value) const
+{
+	assert((XbmcCurlAddOption) && (m_handle) && (m_callbacks));
+	return XbmcCurlAddOption(m_handle, m_callbacks, file, type, name, value);
+}
+
+//-----------------------------------------------------------------------------
+// addoncallbacks::CurlCreate
+//
+// Creates a CURL representation
+//
+// Arguments:
+//
+//	url		- Target URL string
+
+void* addoncallbacks::CurlCreate(char const* url) const
+{
+	assert((XbmcCurlCreate) && (m_handle) && (m_callbacks));
+	return XbmcCurlCreate(m_handle, m_callbacks, url);
+}
+
+//-----------------------------------------------------------------------------
+// addoncallbacks::CurlOpen
+//
+// Opens the file instance from a CURL representation
+//
+// Arguments:
+//
+//	file	- CURL representation created by CurlCreate
+//	flags	- Open operation flags
+
+bool addoncallbacks::CurlOpen(void* file, unsigned int flags) const
+{
+	assert((XbmcCurlOpen) && (m_handle) && (m_callbacks));
+	return XbmcCurlOpen(m_handle, m_callbacks, file, flags);
+}
+	
+//-----------------------------------------------------------------------------
 // addoncallbacks::DeleteFile
 //
 // Deletes a file
@@ -172,6 +228,40 @@ bool addoncallbacks::DirectoryExists(char const* path) const
 	return XbmcDirectoryExists(m_handle, m_callbacks, path);
 }
 
+//-----------------------------------------------------------------------------
+// addoncallbacks::FreeDirectory
+//
+// Releases data obtained through GetDirectory()
+//
+// Arguments:
+//
+//	items		- Pointer returned from GetDirectory
+//	count		- Number of items returned from GetDirectory
+
+void addoncallbacks::FreeDirectory(VFSDirEntry* items, unsigned int count) const
+{
+	assert((XbmcFreeDirectory) && (m_handle) && (m_callbacks));
+	return XbmcFreeDirectory(m_handle, m_callbacks, items, count);
+}
+
+//-----------------------------------------------------------------------------
+// addoncallbacks::GetDirectory
+//
+// Gets a listing of all files within a directory
+//
+// Arguments:
+//
+//	path		- Target directory path
+//	mask		- Filespec/mask on which to search
+//	items		- On success, contains an array of directory items
+//	count		- Number of items returned in the array
+
+bool addoncallbacks::GetDirectory(char const* path, char const* mask, VFSDirEntry** items, unsigned int* count) const
+{
+	assert((XbmcGetDirectory) && (m_handle) && (m_callbacks));
+	return XbmcGetDirectory(m_handle, m_callbacks, path, mask, items, count);
+}
+	
 //-----------------------------------------------------------------------------
 // addoncallbacks::GetFileChunkSize
 //
