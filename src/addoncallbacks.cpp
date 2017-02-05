@@ -30,6 +30,19 @@
 
 #pragma warning(push, 4)
 
+// LIBXBMC_ADDON_MODULE
+//
+// Macro indicating the location of the libXBMC_addon module, which is architecture-specific
+#if defined(_WINDOWS)
+#define LIBXBMC_ADDON_MODULE "\\library.xbmc.addon\\libXBMC_addon.dll"
+#elif defined(__x86_64__)
+#define LIBXBMC_ADDON_MODULE "/library.xbmc.addon/libXBMC_addon-x86_64-linux.so"
+#elif defined(__i386__)
+#define LIBXBMC_ADDON_MODULE "/library.xbmc.addon/libXBMC_addon-i486-linux.so"
+#else
+#error addoncallbacks.cpp -- unknown architecture; only Windows, Linux i686 and Linux x86_64 are supported
+#endif
+
 // GetFunctionPointer (local)
 //
 // Retrieves a function pointer from the specified module
@@ -55,7 +68,7 @@ addoncallbacks::addoncallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle
 	char const* addonpath = *reinterpret_cast<char const**>(addonhandle);
 
 	// Construct the path to the addon library based on the provided base path
-	std::string addonmodule = std::string(addonpath) + "\\library.xbmc.addon\\libXBMC_addon.dll";
+	std::string addonmodule = std::string(addonpath) + LIBXBMC_ADDON_MODULE;
 
 	// Attempt to load the PVR addon library dynamically, it should already be in the process
 	m_hmodule = dlopen(addonmodule.c_str(), RTLD_LAZY);

@@ -9,28 +9,92 @@
   <Target Name="Clean">
     <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Clean" ContinueOnError="false"/>
     <RemoveDir Directories="$(SolutionDir)tmp"/>
-    <RemoveDir Directories="$(SolutionDir)out\Win32\$(Configuration)"/>
+    <RemoveDir Directories="$(SolutionDir)out"/>
   </Target>
   
-  <Target Name="Build" DependsOnTargets="Clean">
+  <Target Name="Version" DependsOnTargets="Clean">
+    <MSBuild Projects="src/version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="Version">
+
+    <PropertyGroup>
+      <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
+      <CPPFLAGS>-I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/include -I../external-sqlite -Itmp/version</CPPFLAGS>
+      <CFLAGS>-fPIC</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
+      <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
+    </PropertyGroup>
+
+    <MakeDir Directories="out" ContinueOnError="false"/>
+    
+    <!-- Windows/Win32 -->
     <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+
+    <!-- Linux/i686 -->
+    <MakeDir Directories="out\i686" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc $(CPPFLAGS) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1 -c ../external-sqlite/sqlite3.c -o out/i686/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/addoncallbacks.cpp -o out/i686/addoncallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/database.cpp -o out/i686/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/dbextension.cpp -o out/i686/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/livestream.cpp -o out/i686/livestream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/pvr.cpp -o out/i686/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/pvrcallbacks.cpp -o out/i686/pvrcallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/i686/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ -m32 -shared out/i686/addoncallbacks.o out/i686/database.o out/i686/dbextension.o out/i686/livestream.o out/i686/pvr.o out/i686/pvrcallbacks.o out/i686/scheduler.o out/i686/sqlite3.o out/i686/sqlite_exception.o ../prebuilt-libcurl/lib/linux-i686/libcurl.a ../prebuilt-libuuid/lib/linux-i686/libuuid.a -ldl -lpthread -o out/i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+
+    <!-- Linux/x86_64 -->
+    <MakeDir Directories="out\x86_64" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1 -c ../external-sqlite/sqlite3.c -o out/x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/addoncallbacks.cpp -o out/x86_64/addoncallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/x86_64/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/x86_64/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/livestream.cpp -o out/x86_64/livestream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/x86_64/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/pvrcallbacks.cpp -o out/x86_64/pvrcallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/x86_64/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ -shared out/x86_64/addoncallbacks.o out/x86_64/database.o out/x86_64/dbextension.o out/x86_64/livestream.o out/x86_64/pvr.o out/x86_64/pvrcallbacks.o out/x86_64/scheduler.o out/x86_64/sqlite3.o out/x86_64/sqlite_exception.o ../prebuilt-libcurl/lib/linux-x86_64/libcurl.a ../prebuilt-libuuid/lib/linux-x86_64/libuuid.a -ldl -lpthread -o out/x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+
   </Target>
 
   <Target Name="Package" DependsOnTargets="Build">
     <PropertyGroup>
-      <PackageDir>$(SolutionDir)out\Win32\$(Configuration)\</PackageDir>
+      <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
       <SevenZipExe>&quot;$(SolutionDir)tools\7z.exe&quot;</SevenZipExe>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
-      <PackageFile>$(PackageDir)zuki.pvr.hdhomerundvr-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile>
+      <PackageFile-win32>out\zuki.pvr.hdhomerundvr-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-win32>
+      <PackageFile-i686>out\zuki.pvr.hdhomerundvr-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-i686>
+      <PackageFile-x86_64>out\zuki.pvr.hdhomerundvr-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-x86_64>
+
     </PropertyGroup>
     
-    <MakeDir Directories="$(PackageDir)" ContinueOnError="false"/>
-    
-    <Exec Command="$(SevenZipExe) a -tzip &quot;$(PackageFile)&quot; out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.dll" ContinueOnError="false"/>
-    <Exec Condition="'$(Configuration)'=='Debug'" Command="$(SevenZipExe) a -tzip &quot;$(PackageFile)&quot; out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.pdb" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip &quot;$(PackageFile)&quot; LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn &quot;$(PackageFile)&quot; LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn &quot;$(PackageFile)&quot; out\Win32\$(Configuration)\ pvr.hdhomerundvr\" ContinueOnError="false" />
+    <!-- Windows/Win32 -->
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.dll" ContinueOnError="false"/>
+    <Exec Condition="'$(Configuration)'=='Debug'" Command="$(SevenZipExe) a -tzip $(PackageFile-win32) out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.pdb" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-win32) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) pvr.hdhomerundvr\addon-windows.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) out\Win32\$(Configuration)\ pvr.hdhomerundvr\" ContinueOnError="false" />
+
+    <!-- Linux/i686 -->
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-i686) out\i686\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-i686) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-i686) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) out\i686\ pvr.hdhomerundvr\" ContinueOnError="false" />
+
+    <!-- Linux/x86_64 -->
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-x86_64) out\x86_64\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-x86_64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) out\x86_64\ pvr.hdhomerundvr\" ContinueOnError="false" />
+
   </Target>
 
 </Project>

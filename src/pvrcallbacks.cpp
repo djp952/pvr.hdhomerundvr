@@ -34,6 +34,19 @@ struct DemuxPacket {};
 
 #pragma warning(push, 4)
 
+// LIBXBMC_PVR_MODULE
+//
+// Macro indicating the location of the libXBMC_pvr module, which is architecture-specific
+#if defined(_WINDOWS)
+#define LIBXBMC_PVR_MODULE "\\library.xbmc.pvr\\libXBMC_pvr.dll"
+#elif defined(__x86_64__)
+#define LIBXBMC_PVR_MODULE "/library.xbmc.pvr/libXBMC_pvr-x86_64-linux.so"
+#elif defined(__i386__)
+#define LIBXBMC_PVR_MODULE "/library.xbmc.pvr/libXBMC_pvr-i486-linux.so"
+#else
+#error pvrcallbacks.cpp -- unknown architecture; only Windows, Linux i686 and Linux x86_64 are supported
+#endif
+
 // GetFunctionPointer (local)
 //
 // Retrieves a function pointer from the specified module
@@ -59,7 +72,7 @@ pvrcallbacks::pvrcallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle(add
 	char const* addonpath = *reinterpret_cast<char const**>(addonhandle);
 
 	// Construct the path to the PVR addon library based on the provided base path
-	std::string pvrmodule = std::string(addonpath) + "\\library.xbmc.pvr\\libXBMC_pvr.dll";
+	std::string pvrmodule = std::string(addonpath) + LIBXBMC_PVR_MODULE;
 
 	// Attempt to load the PVR addon library dynamically, it should already be in the process
 	m_hmodule = dlopen(pvrmodule.c_str(), RTLD_LAZY);
