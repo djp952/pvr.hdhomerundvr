@@ -24,22 +24,17 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\tmp\version\version.cpp">
+    <ClInclude Include="..\tmp\version\version.h">
       <Filter>Generated Files</Filter>
-    </ClCompile>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\tmp\version\version.rc">
+    <ResourceCompile Include="..\tmp\version\version.rc">
       <Filter>Generated Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\tmp\version\version.cs">
-      <Filter>Generated Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\tmp\version\version.txt">
+    <Text Include="..\tmp\version\version.txt">
       <Filter>Generated Files</Filter>
     </Text>
   </ItemGroup>
