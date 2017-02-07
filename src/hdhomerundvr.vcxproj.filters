@@ -31,6 +31,9 @@
     <Filter Include="Header Files\compat\uuid">
       <UniqueIdentifier>{434554ef-071f-4214-a443-ade85ba7d18e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\compat\openssl">
+      <UniqueIdentifier>{0ce47b53-5ed3-4c52-b3ee-4af174fa40eb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -81,6 +84,12 @@
     <ClInclude Include="..\tmp\version\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="compat\openssl\crypto.h">
+      <Filter>Header Files\compat\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="compat\pthread.h">
+      <Filter>Header Files\compat</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -118,6 +127,12 @@
     </ClCompile>
     <ClCompile Include="sqlite_exception.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\crypto.cpp">
+      <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\pthread.cpp">
+      <Filter>Source Files\compat</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

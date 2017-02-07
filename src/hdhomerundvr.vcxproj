@@ -115,6 +115,8 @@
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="addoncallbacks.h" />
     <ClInclude Include="compat\dlfcn.h" />
+    <ClInclude Include="compat\openssl\crypto.h" />
+    <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="livestream.h" />
@@ -133,7 +135,9 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="addoncallbacks.cpp" />
+    <ClCompile Include="compat\crypto.cpp" />
     <ClCompile Include="compat\dlfcn.cpp" />
+    <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
