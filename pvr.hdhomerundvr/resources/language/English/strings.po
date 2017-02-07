@@ -116,3 +116,24 @@ msgstr "Delete episode"
 msgctxt "#30302"
 msgid "Delete and re-record episode"
 msgstr "Delete and re-record episode"
+
+msgctxt "#30303"
+msgid "Trigger device discovery"
+msgstr "Trigger device discovery"
+
+msgctxt "#30304"
+msgid "Trigger channel lineup discovery"
+msgstr "Trigger channel lineup discovery"
+
+msgctxt "#30305"
+msgid "Trigger Electronic Program Guide (EPG) discovery"
+msgstr "Trigger Electronic Program Guide (EPG) discovery"
+
+msgctxt "#30306"
+msgid "Trigger recording discovery"
+msgstr "Trigger recording discovery"
+
+msgctxt "#30307"
+msgid "Trigger recording rule discovery"
+msgstr "Trigger recording rule discovery"
+
