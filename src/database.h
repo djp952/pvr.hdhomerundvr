@@ -177,6 +177,11 @@ using enumerate_recordings_callback = std::function<void(struct recording const&
 // Callback function passed to enumerate_recordingrules
 using enumerate_recordingrules_callback = std::function<void(struct recordingrule const& recording)>;
 
+// enumerate_recordingruleids_callback
+//
+// Callback function passed to enumerate functions that return recordingruleids
+using enumerate_recordingruleids_callback = std::function<void(unsigned int const& recordingruleid)>;
+
 // enumerate_timers_callback
 //
 // Callback function passed to enumerate_timers
@@ -337,6 +342,11 @@ void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callb
 //
 // Enumerates all channels associated with any series episodes
 void enumerate_episode_channelids(sqlite3* instance, enumerate_channelids_callback callback);
+
+// enumerate_expired_recordingruleids
+//
+// Enumerates all recordingruleids that have expired
+void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate_recordingruleids_callback callback);
 
 // enumerate_favorite_channelids
 //

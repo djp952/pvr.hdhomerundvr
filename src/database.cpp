@@ -1133,6 +1133,46 @@ void enumerate_favorite_channelids(sqlite3* instance, enumerate_channelids_callb
 }
 
 //---------------------------------------------------------------------------
+// enumerate_expired_recordingruleids
+//
+// Enumerates all recordingruleids that have expired
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	expiry		- Expiration time, in seconds
+//	callback	- Callback function
+
+void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate_recordingruleids_callback callback)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (expiry <= 0) || (callback == nullptr)) return;
+
+	// recordingruleid
+	auto sql = "select distinct(recordingruleid) as recordingruleid from recordingrule "
+		"where json_extract(data, '$.DateTimeOnly') < (cast(strftime('%s', 'now') as int) - ?1)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, expiry);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the query and iterate over all returned rows
+		while(sqlite3_step(statement) == SQLITE_ROW) callback(static_cast<unsigned int>(sqlite3_column_int(statement, 0)));
+	
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // enumerate_guideentries
 //
 // Enumerates the available guide entries for a channel and time period

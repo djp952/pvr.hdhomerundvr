@@ -15,80 +15,104 @@ msgstr ""
 
 msgctxt "#30000"
 msgid "General"
-msgstr ""
+msgstr "General"
 
 msgctxt "#30001"
 msgid "Discovery Intervals"
-msgstr ""
+msgstr "Discovery Intervals"
 
 msgctxt "#30100"
 msgid "Pause discovery while streaming Live TV channels"
-msgstr ""
+msgstr "Pause discovery while streaming Live TV channels"
 
 msgctxt "#30101"
 msgid "Devices"
-msgstr ""
+msgstr "Devices"
 
 msgctxt "#30102"
 msgid "Channel Lineups"
-msgstr ""
+msgstr "Channel Lineups"
 
 msgctxt "#30103"
 msgid "Electronic Program Guide (EPG)"
-msgstr ""
+msgstr "Electronic Program Guide (EPG)"
 
 msgctxt "#30104"
 msgid "Recordings"
-msgstr ""
+msgstr "Recordings"
 
 msgctxt "#30105"
 msgid "Recording Rules"
-msgstr ""
+msgstr "Recording Rules"
 
 msgctxt "#30106"
 msgid "Recording Rule Episodes"
-msgstr ""
+msgstr "Recording Rule Episodes"
 
 msgctxt "#30107"
 msgid "Prepend channel numbers to channel names"
-msgstr ""
+msgstr "Prepend channel numbers to channel names"
+
+msgctxt "#30108"
+msgid "Delete expired date/time recording rules after"
+msgstr "Delete expired date/time recording rules after"
 
 msgctxt "#30201"
 msgid "5 Minutes"
-msgstr ""
+msgstr "5 Minutes"
 
 msgctxt "#30202"
 msgid "10 Minutes"
-msgstr ""
+msgstr "10 Minutes"
 
 msgctxt "#30203"
 msgid "15 Minutes"
-msgstr ""
+msgstr "15 Minutes"
 
 msgctxt "#30204"
 msgid "30 Minutes"
-msgstr ""
+msgstr "30 Minutes"
 
 msgctxt "#30205"
 msgid "45 Minutes"
-msgstr ""
+msgstr "45 Minutes"
 
 msgctxt "#30206"
 msgid "1 Hour"
-msgstr ""
+msgstr "1 Hour"
 
 msgctxt "#30207"
 msgid "2 Hours"
-msgstr ""
+msgstr "2 Hours"
 
 msgctxt "#30208"
 msgid "4 Hours"
-msgstr ""
+msgstr "4 Hours"
+
+msgctxt "#30209"
+msgid "6 Hours"
+msgstr "6 Hours"
+
+msgctxt "#30210"
+msgid "12 Hours"
+msgstr "12 Hours"
+
+msgctxt "#30211"
+msgid "1 Day"
+msgstr "1 Day"
+
+msgctxt "#30212"
+msgid "2 Days"
+msgstr "2 Days"
+
+msgctxt "#30213"
+msgid "Never"
+msgstr "Never"
 
 msgctxt "#30301"
 msgid "Delete episode"
-msgstr ""
+msgstr "Delete episode"
 
 msgctxt "#30302"
 msgid "Delete and re-record episode"
-msgstr ""
+msgstr "Delete and re-record episode"

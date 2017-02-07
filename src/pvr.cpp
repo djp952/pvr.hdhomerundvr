@@ -109,6 +109,11 @@ struct addon_settings {
 	// Flag to include the channel number in the channel name
 	bool prepend_channel_numbers;
 
+	// delete_datetime_rules_after
+	//
+	// Amount of time (seconds) after which an expired date/time rule is deleted
+	int delete_datetime_rules_after;
+
 	// discover_devices_interval
 	//
 	// Interval at which the local network device discovery will occur (seconds)
@@ -225,6 +230,7 @@ static addon_settings g_settings = {
 
 	false,			// pause_discovery_while_streaming
 	false,			// prepend_channel_numbers
+	-1,				// delete_datetime_rules_after			default = never
 	300, 			// discover_devices_interval;			default = 5 minutes
 	7200,			// discover_episodes_interval			default = 2 hours
 	1800,			// discover_guide_interval				default = 30 minutes
@@ -400,6 +406,23 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 //---------------------------------------------------------------------------
 // HELPER FUNCTIONS
 //---------------------------------------------------------------------------
+
+// delete_expired_enum_to_seconds
+//
+// Converts the delete expired rules interval enumeration values into a number of seconds
+static int delete_expired_enum_to_seconds(int nvalue)
+{
+	switch(nvalue) {
+
+		case 0: return -1;			// Never
+		case 1: return 21600;		// 6 hours
+		case 2: return 43200;		// 12 hours
+		case 3: return 86400;		// 1 day
+		case 4: return 172800;		// 2 days
+	};
+
+	return -1;						// Never = default
+};
 
 // discover_devices_task
 //
@@ -590,6 +613,24 @@ static void discover_recordingrules_task(void)
 
 		// Discover the recording rules from the backend service
 		discover_recordingrules(dbhandle, changed);
+
+		// Get the setting for how long expired date/time only rules should exist
+		std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+		int delete_datetime_rules_after = g_settings.delete_datetime_rules_after;
+		settings_lock.unlock();
+
+		// Generate a vector<> of all expired recording rules to be deleted from the backend
+		std::vector<unsigned int> expired;
+		enumerate_expired_recordingruleids(dbhandle, delete_datetime_rules_after, 
+			[&](unsigned int const& recordingruleid) -> void { expired.push_back(recordingruleid); });
+
+		// Iterate over the vector<> and attempt to delete each expired rule from the backend
+		for(auto const& it : expired) {
+
+			try { delete_recordingrule(dbhandle, it); changed = true; }
+			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+			catch(...) { handle_generalexception(__func__); }
+		}
 		
 		if(changed) {
 
@@ -800,6 +841,8 @@ void openssl_locking_callback(int mode, int n, char const* /*file*/, int /*line*
 ADDON_STATUS ADDON_Create(void* handle, void* props)
 {
 	PVR_MENUHOOK			menuhook;			// For registering menu hooks
+	bool					bvalue = false;		// Setting value
+	int						nvalue = 0;			// Setting value
 
 	if((handle == nullptr) || (props == nullptr)) return ADDON_STATUS::ADDON_STATUS_PERMANENT_FAILURE;
 
@@ -834,12 +877,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			}
 
 			// Load the general settings
-			bool bvalue = false;
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
+			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
-			int nvalue = 0;
 			if(g_addon->GetSetting("discover_devices_interval", &nvalue)) g_settings.discover_devices_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_lineups_interval", &nvalue)) g_settings.discover_lineups_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_guide_interval", &nvalue)) g_settings.discover_guide_interval = interval_enum_to_seconds(nvalue);
@@ -1051,7 +1093,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// prepend_channel_numbers
 	//
-	if(strcmp(name, "prepend_channel_numbers") == 0) {
+	else if(strcmp(name, "prepend_channel_numbers") == 0) {
 
 		bool bvalue = *reinterpret_cast<bool const*>(value);
 		if(bvalue != g_settings.prepend_channel_numbers) {
@@ -1059,6 +1101,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.prepend_channel_numbers = bvalue;
 			log_notice("setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
+		}
+	}
+
+	// delete_datetime_rules_after
+	//
+	else if(strcmp(name, "delete_datetime_rules_after") == 0) {
+
+		int nvalue = delete_expired_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.delete_datetime_rules_after) {
+
+			g_settings.delete_datetime_rules_after = nvalue;
+			log_notice("setting delete_datetime_rules_after changed to ", nvalue, " seconds");
 		}
 	}
 

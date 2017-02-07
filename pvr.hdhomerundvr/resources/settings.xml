@@ -4,6 +4,7 @@
   <category label="30000">
     <setting id="pause_discovery_while_streaming" label="30100" type="bool" default="false"/>
     <setting id="prepend_channel_numbers" label="30107" type="bool" default="false"/>
+    <setting id="delete_datetime_rules_after" label="30108" type="enum" lvalues="30213|30209|30210|30211|30212" default="3"/>
   </category>
   <category label="30001">
     <setting id="discover_devices_interval" label="30101" type="enum" lvalues="30201|30202|30203|30204" default="0"/>
