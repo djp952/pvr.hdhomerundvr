@@ -81,16 +81,13 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\tmp\version\version.cpp" />
+    <ClInclude Include="..\tmp\version\version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\tmp\version\version.rc" />
+    <ResourceCompile Include="..\tmp\version\version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\tmp\version\version.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\tmp\version\version.txt" />
+    <Text Include="..\tmp\version\version.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
