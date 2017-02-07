@@ -878,11 +878,31 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					// Find out what time it is now to set up the scheduler
 					std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-					// Schedule the initial runs for all discoveries to execute sequentially as soon as possible;
-					// now that the database is an external file there is no compelling reason to launch them 
-					// synchronously -- whatever was in the database when Kodi shut down will be used at first
-					g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
-					g_scheduler.add(now + std::chrono::seconds(2), discover_lineups_task);
+					// WORKAROUND: Kodi currently has no means to create EPG entries in the database for channels
+					// that are added after the PVR manager has been started.  When the database is empty at startup, 
+					// synchronously execute a device and lineup discovery so that the initial set of channels are 
+					// available.  This prevents the user from having to shut down and restart Kodi after installation
+					// but does not address a lack of EPG entries for channels added after the initial discovery ...
+					connectionpool::handle dbhandle(g_connpool);
+					if(get_channel_count(dbhandle) == 0) {
+
+						log_notice(__func__, ": no channels detected in the database -- execute device and lineup discovery now");
+
+						discover_devices_task();				// Discover the initial set of devices
+						discover_lineups_task();				// Discover the initial set of channels
+					}
+
+					else {
+
+						// Channels are present in the database; schedule the device and lineup discoveries
+						// such that they still execute first, but do so asynchronously and not slow startup
+						g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
+						g_scheduler.add(now + std::chrono::seconds(2), discover_lineups_task);
+					}
+
+					// Schedule the initial runs for the remaining discoveries to execute sequentially as soon as 
+					// possible; now that the database is an external file there is no compelling reason to launch
+					// them synchronously -- whatever was in the database when Kodi shut down will be used at first
 					g_scheduler.add(now + std::chrono::seconds(3), discover_recordings_task);
 					g_scheduler.add(now + std::chrono::seconds(4), discover_guide_task);
 					g_scheduler.add(now + std::chrono::seconds(5), discover_recordingrules_task);
