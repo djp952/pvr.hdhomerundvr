@@ -59,8 +59,13 @@
 // MENUHOOK_XXXXXX
 //
 // Menu hook identifiers
-#define MENUHOOK_RECORD_DELETENORERECORD			1
-#define MENUHOOK_RECORD_DELETERERECORD				2
+#define MENUHOOK_RECORD_DELETENORERECORD				1
+#define MENUHOOK_RECORD_DELETERERECORD					2
+#define MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY			3
+#define MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY			4
+#define MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY			5
+#define MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY		6
+#define MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY	7
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -230,7 +235,7 @@ static addon_settings g_settings = {
 
 	false,			// pause_discovery_while_streaming
 	false,			// prepend_channel_numbers
-	-1,				// delete_datetime_rules_after			default = never
+	86400,			// delete_datetime_rules_after			default = 1 day
 	300, 			// discover_devices_interval;			default = 5 minutes
 	7200,			// discover_episodes_interval			default = 2 hours
 	1800,			// discover_guide_interval				default = 30 minutes
@@ -910,6 +915,46 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 				menuhook.category = PVR_MENUHOOK_RECORDING;
 				g_pvr->AddMenuHook(&menuhook);
 
+				// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
+				//
+				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY;
+				menuhook.iLocalizedStringId = 30303;
+				menuhook.category = PVR_MENUHOOK_SETTING;
+				g_pvr->AddMenuHook(&menuhook);
+
+				// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
+				//
+				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY;
+				menuhook.iLocalizedStringId = 30304;
+				menuhook.category = PVR_MENUHOOK_SETTING;
+				g_pvr->AddMenuHook(&menuhook);
+
+				// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
+				//
+				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY;
+				menuhook.iLocalizedStringId = 30305;
+				menuhook.category = PVR_MENUHOOK_SETTING;
+				g_pvr->AddMenuHook(&menuhook);
+
+				// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
+				//
+				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY;
+				menuhook.iLocalizedStringId = 30306;
+				menuhook.category = PVR_MENUHOOK_SETTING;
+				g_pvr->AddMenuHook(&menuhook);
+
+				// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
+				//
+				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY;
+				menuhook.iLocalizedStringId = 30307;
+				menuhook.category = PVR_MENUHOOK_SETTING;
+				g_pvr->AddMenuHook(&menuhook);
+
 				// Create the global database connection pool instance, the file name is based on the versionb
 				std::string databasefile = "file:///" + std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
 				g_connpool = std::make_shared<connectionpool>(databasefile.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
@@ -1395,7 +1440,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 	// MENUHOOK_RECORD_DELETERERECORD
 	//
-	if((menuhook.iHookId == MENUHOOK_RECORD_DELETERERECORD) && (item.cat == PVR_MENUHOOK_RECORDING)) {
+	else if((menuhook.iHookId == MENUHOOK_RECORD_DELETERERECORD) && (item.cat == PVR_MENUHOOK_RECORDING)) {
 
 		// Delete the recording with the re-record flag set to true
 		try { delete_recording(connectionpool::handle(g_connpool), item.data.recording.strRecordingId, true); }
@@ -1404,6 +1449,51 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		g_pvr->TriggerRecordingUpdate();
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY) {
+
+		log_notice(__func__, ": manually triggering device discovery task");
+		g_scheduler.remove(discover_devices_task);
+		discover_devices_task();
+	}
+
+	// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY) {
+
+		log_notice(__func__, ": manually triggering lineup discovery task");
+		g_scheduler.remove(discover_lineups_task);
+		discover_lineups_task();
+	}
+
+	// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY) {
+
+		log_notice(__func__, ": manually triggering guide discovery task");
+		g_scheduler.remove(discover_guide_task);
+		discover_guide_task();
+	}
+
+	// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY) {
+
+		log_notice(__func__, ": manually triggering recording discovery task");
+		g_scheduler.remove(discover_recordings_task);
+		discover_recordings_task();
+	}
+
+	// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY) {
+
+		log_notice(__func__, ": manually triggering recording rule discovery task");
+		g_scheduler.remove(discover_recordingrules_task);
+		discover_recordingrules_task();
 	}
 
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
