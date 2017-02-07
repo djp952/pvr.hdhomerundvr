@@ -27,6 +27,8 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <openssl/crypto.h>
+#include <pthread.h>
 #include <queue>
 #include <string>
 #include <sstream>
@@ -235,6 +237,11 @@ static addon_settings g_settings = {
 //
 // Synchronization object to serialize access to addon settings
 std::mutex g_settings_lock;
+
+// g_openssl_locks
+//
+// Global array of OpenSSL synchronization objects
+std::unique_ptr<std::mutex[]> g_openssl_locks;
 
 // g_timertypes (const)
 //
@@ -748,6 +755,7 @@ static void log_message(addoncallbacks::addon_log_t level, _args&&... args)
 	int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
 
 	if(g_addon) g_addon->Log(level, stream.str().c_str());
+	if (level == addoncallbacks::addon_log_t::LOG_ERROR) fprintf(stderr, "ERROR: %s\r\n", stream.str().c_str());
 }
 
 // log_notice
@@ -757,6 +765,23 @@ template<typename... _args>
 static void log_notice(_args&&... args)
 {
 	log_message(addoncallbacks::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
+}
+
+// openssl_id_callback
+//
+// OpenSSL thread identification callback
+unsigned long openssl_id_callback(void)
+{
+	return static_cast<unsigned long>(pthread_self());
+}
+
+// openssl_locking_callback
+//
+// OpenSSL locking function callback
+void openssl_locking_callback(int mode, int n, char const* /*file*/, int /*line*/)
+{
+	if ((mode & CRYPTO_LOCK) == CRYPTO_LOCK) g_openssl_locks[n].lock();
+	else g_openssl_locks[n].unlock();
 }
 
 //---------------------------------------------------------------------------
@@ -787,6 +812,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		
 		// Initialize libcurl using the standard default options
 		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception("curl_global_init(CURL_GLOBAL_DEFAULT) failed");
+
+		// Initialize synchronization object support for OpenSSL
+		g_openssl_locks = std::make_unique<std::mutex[]>(CRYPTO_num_locks());
+		CRYPTO_set_id_callback(openssl_id_callback);
+		CRYPTO_set_locking_callback(openssl_locking_callback);
 
 		// Create the global addoncallbacks instance
 		g_addon = std::make_unique<addoncallbacks>(handle);
@@ -921,6 +951,11 @@ void ADDON_Destroy(void)
 	g_connpool.reset();
 	g_pvr.reset(nullptr);
 	g_addon.reset(nullptr);
+
+	// Clean up OpenSSL
+	CRYPTO_set_id_callback(nullptr);
+	CRYPTO_set_locking_callback(nullptr);
+	g_openssl_locks.reset(nullptr);
 	
 	// Clean up libcurl
 	curl_global_cleanup();

@@ -42,7 +42,7 @@
     <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/pvrcallbacks.cpp -o out/i686/pvrcallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/i686/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++ -m32 -shared out/i686/addoncallbacks.o out/i686/database.o out/i686/dbextension.o out/i686/livestream.o out/i686/pvr.o out/i686/pvrcallbacks.o out/i686/scheduler.o out/i686/sqlite3.o out/i686/sqlite_exception.o ../prebuilt-libcurl/lib/linux-i686/libcurl.a ../prebuilt-libuuid/lib/linux-i686/libuuid.a -ldl -lpthread -o out/i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ -m32 -shared out/i686/addoncallbacks.o out/i686/database.o out/i686/dbextension.o out/i686/livestream.o out/i686/pvr.o out/i686/pvrcallbacks.o out/i686/scheduler.o out/i686/sqlite3.o out/i686/sqlite_exception.o ../prebuilt-libcurl/lib/linux-i686/libcurl.a ../prebuilt-libuuid/lib/linux-i686/libuuid.a -ldl -lpthread -lssl -lcrypto -o out/i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
 
     <!-- Linux/x86_64 -->
     <MakeDir Directories="out\x86_64" ContinueOnError="false"/>
@@ -55,7 +55,7 @@
     <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/pvrcallbacks.cpp -o out/x86_64/pvrcallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/x86_64/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++ $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++ -shared out/x86_64/addoncallbacks.o out/x86_64/database.o out/x86_64/dbextension.o out/x86_64/livestream.o out/x86_64/pvr.o out/x86_64/pvrcallbacks.o out/x86_64/scheduler.o out/x86_64/sqlite3.o out/x86_64/sqlite_exception.o ../prebuilt-libcurl/lib/linux-x86_64/libcurl.a ../prebuilt-libuuid/lib/linux-x86_64/libuuid.a -ldl -lpthread -o out/x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++ -shared out/x86_64/addoncallbacks.o out/x86_64/database.o out/x86_64/dbextension.o out/x86_64/livestream.o out/x86_64/pvr.o out/x86_64/pvrcallbacks.o out/x86_64/scheduler.o out/x86_64/sqlite3.o out/x86_64/sqlite_exception.o ../prebuilt-libcurl/lib/linux-x86_64/libcurl.a ../prebuilt-libuuid/lib/linux-x86_64/libuuid.a -ldl -lpthread -lssl -lcrypto -o out/x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
 
   </Target>
 
