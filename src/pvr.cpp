@@ -356,7 +356,7 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 	
 	// timer_type::seriestimer
 	//
-	// used to view existing episode timers; these cannot be edited or deleted by the end user
+	// used for existing episode timers; these cannot be edited or deleted by the end user
 	{
 		// iID
 		timer_type::seriestimer,
@@ -366,7 +366,7 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 			PVR_TIMER_TYPE_SUPPORTS_END_TIME,
 		
 		// strDescription
-		"Record Episode",
+		"Record Series Episode",
 
 		0, { {0, "" } }, 0,			// priorities
 		0, { {0, "" } }, 0,			// lifetimes
@@ -377,18 +377,17 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 
 	// timer_type::datetimeonlytimer
 	//
-	// used to view existing episode timers; these cannot be edited or deleted by the end user directly,
-	// but they can be used to delete the parent timer rule via the live TV interface
+	// used for existing date/time only episode timers; these cannot be edited by the user, but allows the
+	// timer and it's associated parent rule to be deleted successfully via the live TV interface
 	{
 		// iID
 		timer_type::datetimeonlytimer,
 
 		// iAttributes
-		PVR_TIMER_TYPE_IS_READONLY | PVR_TIMER_TYPE_FORBIDS_NEW_INSTANCES | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_TIME | 
-			PVR_TIMER_TYPE_SUPPORTS_END_TIME,
+		PVR_TIMER_TYPE_FORBIDS_NEW_INSTANCES | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_TIME | PVR_TIMER_TYPE_SUPPORTS_END_TIME,
 		
 		// strDescription
-		"Record Episode",
+		"Record Once Episode",
 
 		0, { {0, "" } }, 0,			// priorities
 		0, { {0, "" } }, 0,			// lifetimes
@@ -2227,7 +2226,7 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 
 		// seriesrule / datetimeonlyrule --> delete the rule
 		//
-		else if((timer.iTimerType != timer_type::seriesrule) && (timer.iTimerType != timer_type::datetimeonlyrule))
+		else if((timer.iTimerType == timer_type::seriesrule) || (timer.iTimerType == timer_type::datetimeonlyrule))
 			delete_recordingrule(dbhandle, timer.iClientIndex);
 
 		// anything else --> not implemented
