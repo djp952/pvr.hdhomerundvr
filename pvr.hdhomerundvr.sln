@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource.language.en_gb", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "version", "src\version.vcxproj", "{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sqlite3", "src\sqlite3.vcxproj", "{B43F7D9E-C32E-4D8A-B394-6D4E4778A7F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -51,6 +53,10 @@ Global
 		{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}.Debug|Win32.Build.0 = Debug|Win32
 		{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}.Release|Win32.ActiveCfg = Release|Win32
 		{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}.Release|Win32.Build.0 = Release|Win32
+		{B43F7D9E-C32E-4D8A-B394-6D4E4778A7F5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B43F7D9E-C32E-4D8A-B394-6D4E4778A7F5}.Debug|Win32.Build.0 = Debug|Win32
+		{B43F7D9E-C32E-4D8A-B394-6D4E4778A7F5}.Release|Win32.ActiveCfg = Release|Win32
+		{B43F7D9E-C32E-4D8A-B394-6D4E4778A7F5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
