@@ -19,12 +19,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pvr.hdhomerundvr", "pvr.hdh
 	ProjectSection(SolutionItems) = preProject
 		pvr.hdhomerundvr\addon-linux.xml = pvr.hdhomerundvr\addon-linux.xml
 		pvr.hdhomerundvr\addon-windows.xml = pvr.hdhomerundvr\addon-windows.xml
-		pvr.hdhomerundvr\icon.png = pvr.hdhomerundvr\icon.png
-		pvr.hdhomerundvr\README.md = pvr.hdhomerundvr\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resources", "resources", "{AE3C3D3D-5525-4E65-9944-3CFF8718778F}"
 	ProjectSection(SolutionItems) = preProject
+		pvr.hdhomerundvr\resources\icon.png = pvr.hdhomerundvr\resources\icon.png
 		pvr.hdhomerundvr\resources\settings.xml = pvr.hdhomerundvr\resources\settings.xml
 	EndProjectSection
 EndProject
