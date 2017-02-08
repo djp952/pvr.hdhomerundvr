@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon id="pvr.hdhomerundvr" version="1.0.0" name="HDHomeRun DVR PVR" provider-name="Michael Brehm (djp952)">
+<addon id="pvr.hdhomerundvr" version="1.0.0" name="HDHomeRun DVR PVR Client" provider-name="Michael Brehm (djp952)">
   <requires>
     <import addon="xbmc.pvr" version="5.2.1"/>
   </requires>
   <extension point="xbmc.pvrclient" needs_configuration="false" library_linux="zuki.pvr.hdhomerundvr.so"/>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en_GB">HDHomeRun DVR PVR</summary>
-    <description lang="en_GB">HDHomeRun DVR PVR Client</description>
+    <summary lang="en_GB">HDHomeRun DVR PVR Client</summary>
+    <description lang="en_GB">HDHomeRun DVR frontend. Supports streaming Live TV, Recordings, Electronic Program Guide (EPG) and Timers. Requires a SiliconDust HDHomeRun DVR Service subscription (https://www.silicondust.com/dvr-service) and an active HDHomeRun RECORD device on the local network.</description>
     <platform>linux</platform>
   </extension>
 </addon>
