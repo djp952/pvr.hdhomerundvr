@@ -5,8 +5,8 @@
   </requires>
 	<extension point="xbmc.pvrclient" needs_configuration="false" library_windx="zuki.pvr.hdhomerundvr.dll"/>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en_US">HDHomeRun DVR PVR</summary>
-    <description lang="en_US">HDHomeRun DVR PVR Client</description>
+    <summary lang="en_GB">HDHomeRun DVR PVR</summary>
+    <description lang="en_GB">HDHomeRun DVR PVR Client</description>
     <platform>windx</platform>
   </extension>
 </addon>
