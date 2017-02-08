@@ -7,7 +7,7 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="en_GB">HDHomeRun DVR PVR Client</summary>
     <description lang="en_GB">HDHomeRun DVR frontend. Supports streaming Live TV, Recordings, Electronic Program Guide (EPG) and Timers. Requires a SiliconDust HDHomeRun DVR Service subscription (https://www.silicondust.com/dvr-service) and an active HDHomeRun RECORD device on the local network.</description>
-    <news>v1.0.0 (BETA)
+    <news>v1.0.0
     - Initial release</news>
     <license>MIT License (https://opensource.org/licenses/MIT)</license>
     <website>https://github.com/djp952/pvr.hdhomerundvr/wiki</website>
