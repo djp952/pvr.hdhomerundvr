@@ -1,139 +1,141 @@
-# XBMC Media Center language file
+# Kodi Media Center language file
+# Addon Name: HDHomeRun DVR PVR
+# Addon id: pvr.hdhomerundvr
+# Addon Provider: djp952
 msgid ""
 msgstr ""
-"Project-Id-Version: XBMC-Addons\n"
-"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
-"POT-Creation-Date: 2013-12-12 22:56+0000\n"
+"Project-Id-Version: Kodi Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@kodi.org\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE\n"
+"Last-Translator: Kodi Translation Team\n"
+"Language-Team: English (http://www.transifex.com/projects/p/xbmc-addons/language/en/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: en\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgctxt "#30000"
 msgid "General"
-msgstr "General"
+msgstr ""
 
 msgctxt "#30001"
 msgid "Discovery Intervals"
-msgstr "Discovery Intervals"
+msgstr ""
 
 msgctxt "#30100"
 msgid "Pause discovery while streaming Live TV channels"
-msgstr "Pause discovery while streaming Live TV channels"
+msgstr ""
 
 msgctxt "#30101"
 msgid "Devices"
-msgstr "Devices"
+msgstr ""
 
 msgctxt "#30102"
 msgid "Channel Lineups"
-msgstr "Channel Lineups"
+msgstr ""
 
 msgctxt "#30103"
 msgid "Electronic Program Guide (EPG)"
-msgstr "Electronic Program Guide (EPG)"
+msgstr ""
 
 msgctxt "#30104"
 msgid "Recordings"
-msgstr "Recordings"
+msgstr ""
 
 msgctxt "#30105"
 msgid "Recording Rules"
-msgstr "Recording Rules"
+msgstr ""
 
 msgctxt "#30106"
 msgid "Recording Rule Episodes"
-msgstr "Recording Rule Episodes"
+msgstr ""
 
 msgctxt "#30107"
 msgid "Prepend channel numbers to channel names"
-msgstr "Prepend channel numbers to channel names"
+msgstr ""
 
 msgctxt "#30108"
 msgid "Delete expired date/time recording rules after"
-msgstr "Delete expired date/time recording rules after"
+msgstr ""
 
 msgctxt "#30201"
 msgid "5 Minutes"
-msgstr "5 Minutes"
+msgstr ""
 
 msgctxt "#30202"
 msgid "10 Minutes"
-msgstr "10 Minutes"
+msgstr ""
 
 msgctxt "#30203"
 msgid "15 Minutes"
-msgstr "15 Minutes"
+msgstr ""
 
 msgctxt "#30204"
 msgid "30 Minutes"
-msgstr "30 Minutes"
+msgstr ""
 
 msgctxt "#30205"
 msgid "45 Minutes"
-msgstr "45 Minutes"
+msgstr ""
 
 msgctxt "#30206"
 msgid "1 Hour"
-msgstr "1 Hour"
+msgstr ""
 
 msgctxt "#30207"
 msgid "2 Hours"
-msgstr "2 Hours"
+msgstr ""
 
 msgctxt "#30208"
 msgid "4 Hours"
-msgstr "4 Hours"
+msgstr ""
 
 msgctxt "#30209"
 msgid "6 Hours"
-msgstr "6 Hours"
+msgstr ""
 
 msgctxt "#30210"
 msgid "12 Hours"
-msgstr "12 Hours"
+msgstr ""
 
 msgctxt "#30211"
 msgid "1 Day"
-msgstr "1 Day"
+msgstr ""
 
 msgctxt "#30212"
 msgid "2 Days"
-msgstr "2 Days"
+msgstr ""
 
 msgctxt "#30213"
 msgid "Never"
-msgstr "Never"
+msgstr ""
 
 msgctxt "#30301"
 msgid "Delete episode"
-msgstr "Delete episode"
+msgstr ""
 
 msgctxt "#30302"
 msgid "Delete and re-record episode"
-msgstr "Delete and re-record episode"
+msgstr ""
 
 msgctxt "#30303"
 msgid "Trigger device discovery"
-msgstr "Trigger device discovery"
+msgstr ""
 
 msgctxt "#30304"
 msgid "Trigger channel lineup discovery"
-msgstr "Trigger channel lineup discovery"
+msgstr ""
 
 msgctxt "#30305"
 msgid "Trigger Electronic Program Guide (EPG) discovery"
-msgstr "Trigger Electronic Program Guide (EPG) discovery"
+msgstr ""
 
 msgctxt "#30306"
 msgid "Trigger recording discovery"
-msgstr "Trigger recording discovery"
+msgstr ""
 
 msgctxt "#30307"
 msgid "Trigger recording rule discovery"
-msgstr "Trigger recording rule discovery"
-
+msgstr ""
