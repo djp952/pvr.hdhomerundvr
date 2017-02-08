@@ -78,7 +78,7 @@
     <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) d $(PackageFile-win32) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) pvr.hdhomerundvr\addon-windows.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
     <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) out\Win32\$(Configuration)\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
     <!-- Linux/i686 -->
@@ -86,7 +86,7 @@
     <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-i686) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) d $(PackageFile-i686) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
     <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) out\i686\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
     <!-- Linux/x86_64 -->
@@ -94,7 +94,7 @@
     <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) d $(PackageFile-x86_64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\LICENSE" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
     <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) out\x86_64\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
   </Target>
