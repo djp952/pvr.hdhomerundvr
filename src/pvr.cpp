@@ -2332,15 +2332,15 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		// Attempt to add the new recording rule to the database/backend service
 		add_recordingrule(dbhandle, recordingrule);
 
+		// Force a timer update in Kodi to refresh whatever this did on the backend
+		g_pvr->TriggerTimerUpdate();
+
 		// Adding a timer may expose new information for the EPG, refresh all affected channels
 		enumerate_series_channelids(dbhandle, seriesid.c_str(), [&](union channelid const& channelid) -> void { g_pvr->TriggerEpgUpdate(channelid.value); });
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
-
-	// Force a timer update in Kodi to refresh whatever this did on the backend
-	g_pvr->TriggerTimerUpdate();
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
