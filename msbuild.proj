@@ -20,7 +20,7 @@
 
     <PropertyGroup>
       <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
-      <CPPFLAGS>-I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/include -I../external-sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/include -I../external-sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>

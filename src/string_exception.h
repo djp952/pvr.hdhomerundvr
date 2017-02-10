@@ -79,6 +79,7 @@ private:
 	{
 		std::ostringstream stream;
 		int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
+		(void)unpack;
 
 		return stream.str();
 	}
