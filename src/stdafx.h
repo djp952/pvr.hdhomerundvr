@@ -36,6 +36,7 @@
 #define NOMINMAX					// Disable min()/max() macros
 #define _USE_32BIT_TIME_T			// time_t has to be 32 bit for Kodi
 
+#include "vc2013.h"					// Include VC++ 2013 compatibility declarations
 #include <windows.h>				// Include main Windows declarations
 
 #endif // _WINDOWS

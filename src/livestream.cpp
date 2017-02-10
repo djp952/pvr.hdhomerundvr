@@ -20,15 +20,26 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------
 
-#include "stdafx.h"
 #include "livestream.h"
 
 #include <algorithm>
+#include <assert.h>
 #include <chrono>
 #include <string.h>
 #include <type_traits>
 
 #include "string_exception.h"
+#include "vc2013.h"
+
+// NOMINMAX
+//
+// Disables min() and max() on Windows
+#define NOMINMAX
+
+// libcurl
+//
+#define CURL_STATICLIB
+#include <curl.h>
 
 #pragma warning(push, 4)
 
@@ -111,7 +122,7 @@ size_t livestream::curl_responseheaders(char const* data, size_t size, size_t co
 //	ultotal		- Number of bytes expected to be uploaded
 //	ulnow		- Number of bytes already uploaded
 
-int livestream::curl_transfercontrol(void* context, curl_off_t /*dltotal*/, curl_off_t /*dlnow*/, curl_off_t /*ultotal*/, curl_off_t /*ulnow*/)
+int livestream::curl_transfercontrol(void* context, long long /*dltotal*/, long long /*dlnow*/, long long /*ultotal*/, long long /*ulnow*/)
 {
 	// Cast the livestream instance pointer out from the context pointer
 	livestream* instance = reinterpret_cast<livestream*>(context);

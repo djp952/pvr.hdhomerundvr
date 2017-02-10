@@ -90,6 +90,9 @@
     <ClInclude Include="compat\pthread.h">
       <Filter>Header Files\compat</Filter>
     </ClInclude>
+    <ClInclude Include="vc2013.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -132,6 +135,9 @@
       <Filter>Source Files\compat</Filter>
     </ClCompile>
     <ClCompile Include="compat\pthread.cpp">
+      <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\snprintf.cpp">
       <Filter>Source Files\compat</Filter>
     </ClCompile>
   </ItemGroup>

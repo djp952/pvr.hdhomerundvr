@@ -20,6 +20,10 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------
 
+// Visual C++ 2013 Compatibility
+//
+#include "vc2013.h"
+
 // string support
 //
 #include <string.h>

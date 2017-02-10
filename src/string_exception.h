@@ -28,6 +28,8 @@
 #include <sstream>
 #include <string>
 
+#include "vc2013.h"
+
 #pragma warning(push, 4)	
 
 //-----------------------------------------------------------------------------

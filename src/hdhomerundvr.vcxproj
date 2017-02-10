@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -126,6 +126,7 @@
     <ClInclude Include="sqlite_exception.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="string_exception.h" />
+    <ClInclude Include="vc2013.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\external-sqlite\sqlite3.c">
@@ -138,16 +139,23 @@
     <ClCompile Include="compat\crypto.cpp" />
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\pthread.cpp" />
+    <ClCompile Include="compat\snprintf.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="livestream.cpp" />
+    <ClCompile Include="livestream.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="pvr.cpp" />
     <ClCompile Include="pvrcallbacks.cpp" />
-    <ClCompile Include="scheduler.cpp" />
+    <ClCompile Include="scheduler.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="sqlite_exception.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

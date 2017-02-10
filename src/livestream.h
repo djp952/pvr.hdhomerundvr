@@ -99,7 +99,7 @@ private:
 	// curl_transfercontrol (static)
 	//
 	// libcurl callback to handle transfer information/progress
-	static int curl_transfercontrol(void* context, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
+	static int curl_transfercontrol(void* context, long long dltotal, long long dlnow, long long ultotal, long long ulnow);
 
 	// curl_write (static)
 	//
@@ -116,7 +116,7 @@ private:
 
 	std::thread					m_worker;					// Data transfer thread
 	mutable std::mutex			m_lock;						// Synchronization object
-	CURL*						m_curl = nullptr;			// CURL transfer object
+	void*						m_curl = nullptr;			// CURL transfer object
 
 	// STREAM CONTROL
 	//
