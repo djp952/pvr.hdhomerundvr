@@ -132,8 +132,8 @@ private:
 
 	// RING BUFFER
 	//
-	std::unique_ptr<uint8_t[]>	m_buffer;					// Ring buffer stroage
 	size_t const				m_buffersize;				// Size of the ring buffer
+	std::unique_ptr<uint8_t[]>	m_buffer;					// Ring buffer stroage
 	bool						m_bufferempty = true;		// Flag for empty ring buffer
 	bool						m_bufferfull = false;		// Flag for full ring buffer
 	std::atomic<size_t>			m_bufferhead{0};			// Head (write) buffer position

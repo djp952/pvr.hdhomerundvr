@@ -798,6 +798,7 @@ static void log_message(addoncallbacks::addon_log_t level, _args&&... args)
 {
 	std::ostringstream stream;
 	int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
+	(void)unpack;
 
 	if(g_addon) g_addon->Log(level, stream.str().c_str());
 	if (level == addoncallbacks::addon_log_t::LOG_ERROR) fprintf(stderr, "ERROR: %s\r\n", stream.str().c_str());
