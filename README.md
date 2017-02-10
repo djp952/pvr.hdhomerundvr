@@ -10,6 +10,7 @@ Copyright (C)2017 Michael G. Brehm
    
 **BUILD ENVIRONMENT**  
 * Windows 10 x64 15025   
+* Visual Studio 2013   
 * Visual Studio 2015 (with Git for Windows)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
    
