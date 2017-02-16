@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon id="pvr.hdhomerundvr" version="1.0.0" name="HDHomeRun DVR PVR Client" provider-name="Michael Brehm (djp952)">
+<addon id="pvr.hdhomerundvr" version="1.0.1" name="HDHomeRun DVR PVR Client" provider-name="Michael Brehm (djp952)">
   <requires>
     <import addon="xbmc.pvr" version="5.2.1"/>
   </requires>
@@ -7,8 +7,14 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="en_GB">HDHomeRun DVR PVR Client</summary>
     <description lang="en_GB">HDHomeRun DVR frontend. Supports streaming Live TV, Recordings, Electronic Program Guide (EPG) and Timers. Requires a SiliconDust HDHomeRun DVR Service subscription (https://www.silicondust.com/dvr-service) and an active HDHomeRun RECORD device on the local network.</description>
-    <news>v1.0.0
-    - Initial release</news>
+    <news>
+v1.0.1
+  - Fix minor problem with one database table not being truncated at startup
+  - (Linux) Use older GNU C++ Compiler (g++ 4.9) for better system compatibility
+
+v1.0.0
+  - Initial release
+    </news>
     <license>MIT License (https://opensource.org/licenses/MIT)</license>
     <website>https://github.com/djp952/pvr.hdhomerundvr/wiki</website>
     <source>https://github.com/djp952/pvr.hdhomerundvr</source>
