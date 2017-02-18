@@ -10,6 +10,7 @@
     <news>
 v1.0.2
   - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
+  - Update SQLite database engine to v3.17.0
 
 v1.0.1
   - Fix minor problem with one database table not being truncated at startup

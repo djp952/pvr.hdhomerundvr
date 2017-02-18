@@ -27,7 +27,7 @@ Open "Developer Command Prompt for VS2015"
 ```
 git clone https://github.com/djp952/build --depth=1
 git clone https://github.com/djp952/external-kodi-addon-dev-kit -b Krypton --depth=1
-git clone https://github.com/djp952/external-sqlite -b sqlite-3.16.2 --depth=1
+git clone https://github.com/djp952/external-sqlite -b sqlite-3.17.0 --depth=1
 git clone https://github.com/djp952/prebuilt-libcurl -b libcurl-7.52.1 --depth=1
 git clone https://github.com/djp952/prebuilt-libuuid -b libuuid-1.0.3 --depth=1
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Krypton
