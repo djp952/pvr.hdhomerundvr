@@ -2,6 +2,7 @@
 <settings>
 
   <category label="30000">
+    <setting id="guide_data_level" label="30109" type="enum" lvalues="30214|30215" default="0"/>
     <setting id="pause_discovery_while_streaming" label="30100" type="bool" default="false"/>
     <setting id="prepend_channel_numbers" label="30107" type="bool" default="false"/>
     <setting id="delete_datetime_rules_after" label="30108" type="enum" lvalues="30213|30209|30210|30211|30212" default="3"/>

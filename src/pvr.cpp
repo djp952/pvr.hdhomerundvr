@@ -99,10 +99,47 @@ static void discover_recordings_task(void);
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
 
+// duplicate_prevention
+//
+// Defines the identifiers for series duplicate prevention values
+enum duplicate_prevention {
+
+	none					= 0,
+	newonly					= 1,
+	recentonly				= 2,
+};
+
+// guide_data
+//
+// Defines the level of guide data to load from the backend
+enum guide_data {
+
+	basic					= 0,
+	extended				= 1,
+};
+
+// timer_type
+//
+// Defines the identifiers for the various timer types (1-based)
+enum timer_type {
+
+	seriesrule				= 1,
+	datetimeonlyrule		= 2,
+	epgseriesrule			= 3,
+	epgdatetimeonlyrule		= 4,
+	seriestimer				= 5,
+	datetimeonlytimer		= 6,
+};
+
 // addon_settings
 //
 // Defines all of the configurable addon settings
 struct addon_settings {
+
+	// use_extended_guide_data
+	//
+	// Flag to load the (somewhat) extended guide data
+	enum guide_data guide_data_level;
 
 	// pause_discovery_while_streaming
 	//
@@ -148,29 +185,6 @@ struct addon_settings {
 	//
 	// Interval at which the recording rule discovery will occur (seconds)
 	int discover_recordingrules_interval;
-};
-
-// duplicate_prevention
-//
-// Defines the identifiers for series duplicate prevention values
-enum duplicate_prevention {
-
-	none					= 0,
-	newonly					= 1,
-	recentonly				= 2,
-};
-
-// timer_type
-//
-// Defines the identifiers for the various timer types (1-based)
-enum timer_type {
-
-	seriesrule				= 1,
-	datetimeonlyrule		= 2,
-	epgseriesrule			= 3,
-	epgdatetimeonlyrule		= 4,
-	seriestimer				= 5,
-	datetimeonlytimer		= 6,
 };
 
 //---------------------------------------------------------------------------
@@ -233,15 +247,16 @@ static scheduler g_scheduler([](std::exception const& ex) -> void { handle_stdex
 // Global addon settings instance
 static addon_settings g_settings = {
 
-	false,			// pause_discovery_while_streaming
-	false,			// prepend_channel_numbers
-	86400,			// delete_datetime_rules_after			default = 1 day
-	300, 			// discover_devices_interval;			default = 5 minutes
-	7200,			// discover_episodes_interval			default = 2 hours
-	1800,			// discover_guide_interval				default = 30 minutes
-	600,			// discover_lineups_interval			default = 10 minutes
-	600,			// discover_recordings_interval			default = 10 minutes
-	7200,			// discover_recordingrules_interval		default = 2 hours
+	guide_data::basic,		// guide_data_level
+	false,					// pause_discovery_while_streaming
+	false,					// prepend_channel_numbers
+	86400,					// delete_datetime_rules_after			default = 1 day
+	300, 					// discover_devices_interval;			default = 5 minutes
+	7200,					// discover_episodes_interval			default = 2 hours
+	1800,					// discover_guide_interval				default = 30 minutes
+	600,					// discover_lineups_interval			default = 10 minutes
+	600,					// discover_recordings_interval			default = 10 minutes
+	7200,					// discover_recordingrules_interval		default = 2 hours
 };
 
 // g_settings_lock
@@ -439,6 +454,11 @@ static void discover_devices_task(void)
 	assert(g_addon && g_pvr);
 	log_notice(__func__, ": initiated local network device discovery");
 
+	// Grab copies of the required setting(s) up front
+	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+	int discover_devices_interval = g_settings.discover_devices_interval;
+	settings_lock.unlock();
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -466,10 +486,9 @@ static void discover_devices_task(void)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this discovery task
-	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-	auto due = std::chrono::system_clock::now() + std::chrono::seconds(g_settings.discover_devices_interval);
+	auto due = std::chrono::system_clock::now() + std::chrono::seconds(discover_devices_interval);
 
-	log_notice(__func__, ": scheduling next device discovery to initiate in ", g_settings.discover_devices_interval, " seconds");
+	log_notice(__func__, ": scheduling next device discovery to initiate in ", discover_devices_interval, " seconds");
 	g_scheduler.add(due, discover_devices_task);
 }
 
@@ -482,6 +501,11 @@ static void discover_episodes_task(void)
 
 	assert(g_addon && g_pvr);
 	log_notice(__func__, ": initiated recording rule episode discovery");
+
+	// Grab copies of the required setting(s) up front
+	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+	int discover_episodes_interval = g_settings.discover_episodes_interval;
+	settings_lock.unlock();
 
 	try {
 
@@ -507,10 +531,9 @@ static void discover_episodes_task(void)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this discovery task
-	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-	auto due = std::chrono::system_clock::now() + std::chrono::seconds(g_settings.discover_episodes_interval);
+	auto due = std::chrono::system_clock::now() + std::chrono::seconds(discover_episodes_interval);
 
-	log_notice(__func__, ": scheduling next recording rule episode discovery to initiate in ", g_settings.discover_episodes_interval, " seconds");
+	log_notice(__func__, ": scheduling next recording rule episode discovery to initiate in ", discover_episodes_interval, " seconds");
 	g_scheduler.add(due, discover_episodes_task);
 }
 
@@ -524,13 +547,26 @@ static void discover_guide_task(void)
 	assert(g_addon && g_pvr);
 	log_notice(__func__, ": initiated electronic program guide discovery");
 
+	// Grab copies of the required setting(s) up front
+	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+	enum guide_data guide_data_level = g_settings.guide_data_level;
+	int discover_guide_interval = g_settings.discover_guide_interval;
+	settings_lock.unlock();
+
 	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Discover the updated electronic program guide data from the backend service
-		discover_guide(dbhandle, changed);
+		if(guide_data_level == guide_data::basic) discover_guide_basic(dbhandle, changed);
+		else if(guide_data_level == guide_data::extended) discover_guide_extended(dbhandle, changed);
+		else {
+
+			// If the guide_data_level setting is bad, default to using the basic guide data
+			log_error(__func__, ": guide_data_level setting invalid state -- defaulting to guide_data::basic");
+			discover_guide_basic(dbhandle, changed);
+		}
 		
 		if(changed) {
 
@@ -548,10 +584,9 @@ static void discover_guide_task(void)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this discovery task
-	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-	auto due = std::chrono::system_clock::now() + std::chrono::seconds(g_settings.discover_guide_interval);
+	auto due = std::chrono::system_clock::now() + std::chrono::seconds(discover_guide_interval);
 
-	log_notice(__func__, ": scheduling next guide discovery to initiate in ", g_settings.discover_guide_interval, " seconds");
+	log_notice(__func__, ": scheduling next guide discovery to initiate in ", discover_guide_interval, " seconds");
 	g_scheduler.add(due, discover_guide_task);
 }
 
@@ -564,6 +599,11 @@ static void discover_lineups_task(void)
 
 	assert(g_addon && g_pvr);
 	log_notice(__func__, ": initiated local tuner device lineup discovery");
+
+	// Grab copies of the required setting(s) up front
+	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+	int discover_lineups_interval = g_settings.discover_lineups_interval;
+	settings_lock.unlock();
 
 	try {
 
@@ -594,10 +634,9 @@ static void discover_lineups_task(void)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this discovery task
-	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-	auto due = std::chrono::system_clock::now() + std::chrono::seconds(g_settings.discover_lineups_interval);
+	auto due = std::chrono::system_clock::now() + std::chrono::seconds(discover_lineups_interval);
 
-	log_notice(__func__, ": scheduling next lineup discovery to initiate in ", g_settings.discover_lineups_interval, " seconds");
+	log_notice(__func__, ": scheduling next lineup discovery to initiate in ", discover_lineups_interval, " seconds");
 	g_scheduler.add(due, discover_lineups_task);
 }
 
@@ -611,6 +650,12 @@ static void discover_recordingrules_task(void)
 	assert(g_addon && g_pvr);
 	log_notice(__func__, ": initiated recording rule discovery");
 
+	// Grab copies of the required setting(s) up front
+	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+	int delete_datetime_rules_after = g_settings.delete_datetime_rules_after;
+	int discover_recordingrules_interval = g_settings.discover_recordingrules_interval;
+	settings_lock.unlock();
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -618,11 +663,6 @@ static void discover_recordingrules_task(void)
 
 		// Discover the recording rules from the backend service
 		discover_recordingrules(dbhandle, changed);
-
-		// Get the setting for how long expired date/time only rules should exist
-		std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-		int delete_datetime_rules_after = g_settings.delete_datetime_rules_after;
-		settings_lock.unlock();
 
 		// Generate a vector<> of all expired recording rules to be deleted from the backend
 		std::vector<unsigned int> expired;
@@ -663,10 +703,9 @@ static void discover_recordingrules_task(void)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this discovery task
-	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-	auto due = std::chrono::system_clock::now() + std::chrono::seconds(g_settings.discover_recordingrules_interval);
+	auto due = std::chrono::system_clock::now() + std::chrono::seconds(discover_recordingrules_interval);
 
-	log_notice(__func__, ": scheduling next recording rule discovery to initiate in ", g_settings.discover_recordingrules_interval, " seconds");
+	log_notice(__func__, ": scheduling next recording rule discovery to initiate in ", discover_recordingrules_interval, " seconds");
 	g_scheduler.add(due, discover_recordingrules_task);
 }
 
@@ -679,6 +718,11 @@ static void discover_recordings_task(void)
 
 	assert(g_addon && g_pvr);
 	log_notice(__func__, ": initiated local storage device recording discovery");
+
+	// Grab copies of the required setting(s) up front
+	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+	int discover_recordings_interval = g_settings.discover_recordings_interval;
+	settings_lock.unlock();
 
 	try {
 
@@ -700,11 +744,24 @@ static void discover_recordings_task(void)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this discovery task
-	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
-	auto due = std::chrono::system_clock::now() + std::chrono::seconds(g_settings.discover_recordings_interval);
+	auto due = std::chrono::system_clock::now() + std::chrono::seconds(discover_recordings_interval);
 
-	log_notice(__func__, ": scheduling next recording discovery to initiate in ", g_settings.discover_recordings_interval, " seconds");
+	log_notice(__func__, ": scheduling next recording discovery to initiate in ", discover_recordings_interval, " seconds");
 	g_scheduler.add(due, discover_recordings_task);
+}
+
+// guidedatalevel_enum_to_guidedata
+//
+// Converts the guide data level enumeration value into a guide_data value
+static enum guide_data guidedatalevel_enum_to_guidedata(int nvalue)
+{
+	switch(nvalue) {
+
+		case 0: return guide_data::basic;
+		case 1: return guide_data::extended;
+	}
+
+	return guide_data::basic;
 }
 
 // handle_generalexception
@@ -877,12 +934,13 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// The user data path doesn't always exist when an addon has been installed
 			if(!g_addon->DirectoryExists(pvrprops->strUserPath)) {
 
-				log_notice("user data directory ", pvrprops->strUserPath, " does not exist");
+				log_notice(__func__, ": user data directory ", pvrprops->strUserPath, " does not exist");
 				if(!g_addon->CreateDirectory(pvrprops->strUserPath)) throw string_exception("unable to create addon user data directory");
-				log_notice("user data directory ", pvrprops->strUserPath, " created");
+				log_notice(__func__, ": user data directory ", pvrprops->strUserPath, " created");
 			}
 
 			// Load the general settings
+			if(g_addon->GetSetting("guide_data_level", &nvalue)) g_settings.guide_data_level = guidedatalevel_enum_to_guidedata(nvalue);
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
@@ -1125,15 +1183,35 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
 
+	// guide_data_level
+	//
+	if(strcmp(name, "guide_data_level") == 0) {
+
+		enum guide_data nvalue = guidedatalevel_enum_to_guidedata(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.guide_data_level) {
+
+			g_settings.guide_data_level = nvalue;
+			log_notice(__func__, ": setting guide_data_level changed to ", (nvalue == guide_data::basic) ? "basic" : "extended");
+
+			// If the change enabled extended data, reschedule the task to run as soon as possible
+			if(g_settings.guide_data_level == guide_data::extended) {
+
+				g_scheduler.remove(discover_guide_task);
+				g_scheduler.add(now + std::chrono::seconds(1), discover_guide_task);
+				log_notice(__func__, ": extended guide data enabled -- rescheduling task to initiate in 1 second");
+			}
+		}
+	}
+
 	// pause_discovery_while_streaming
 	//
-	if(strcmp(name, "pause_discovery_while_streaming") == 0) {
+	else if(strcmp(name, "pause_discovery_while_streaming") == 0) {
 
 		bool bvalue = *reinterpret_cast<bool const*>(value);
 		if(bvalue != g_settings.pause_discovery_while_streaming) {
 
 			g_settings.pause_discovery_while_streaming = bvalue;
-			log_notice("setting pause_discovery_while_streaming changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting pause_discovery_while_streaming changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -1145,7 +1223,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.prepend_channel_numbers) {
 
 			g_settings.prepend_channel_numbers = bvalue;
-			log_notice("setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
+			log_notice(__func__, ": setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
 		}
 	}
@@ -1158,7 +1236,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.delete_datetime_rules_after) {
 
 			g_settings.delete_datetime_rules_after = nvalue;
-			log_notice("setting delete_datetime_rules_after changed to ", nvalue, " seconds");
+			log_notice(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds");
 		}
 	}
 
@@ -1173,7 +1251,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.discover_devices_interval = nvalue;
 			g_scheduler.remove(discover_devices_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_devices_task);
-			log_notice("setting discover_devices_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			log_notice(__func__, ": setting discover_devices_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1188,7 +1266,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.discover_lineups_interval = nvalue;
 			g_scheduler.remove(discover_lineups_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_lineups_task);
-			log_notice("setting discover_lineups_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			log_notice(__func__, ": setting discover_lineups_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1203,7 +1281,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.discover_guide_interval = nvalue;
 			g_scheduler.remove(discover_guide_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_guide_task);
-			log_notice("setting discover_guide_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			log_notice(__func__, ": setting discover_guide_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1218,7 +1296,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.discover_recordings_interval = nvalue;
 			g_scheduler.remove(discover_recordings_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_recordings_task);
-			log_notice("setting discover_recordings_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			log_notice(__func__, ": setting discover_recordings_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1233,7 +1311,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.discover_recordingrules_interval = nvalue;
 			g_scheduler.remove(discover_recordingrules_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_recordingrules_task);
-			log_notice("setting discover_recordingrules_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			log_notice(__func__, ": setting discover_recordingrules_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1248,7 +1326,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.discover_episodes_interval = nvalue;
 			g_scheduler.remove(discover_episodes_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_episodes_task);
-			log_notice("setting discover_episodes_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			log_notice(__func__, ": setting discover_episodes_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
