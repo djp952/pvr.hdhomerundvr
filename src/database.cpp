@@ -619,45 +619,45 @@ void discover_episodes(sqlite3* instance, bool& changed)
 }
 
 //---------------------------------------------------------------------------
-// discover_guide
+// discover_guide_basic
 //
-// Reloads the electronic program guide information
+// Reloads the basic electronic program guide information
 //
 // Arguments:
 //
 //	instance	- SQLite database instance
 
-void discover_guide(sqlite3* instance)
+void discover_guide_basic(sqlite3* instance)
 {
 	bool ignored;
-	return discover_guide(instance, ignored);
+	return discover_guide_basic(instance, ignored);
 }
 
 //---------------------------------------------------------------------------
-// discover_guide
+// discover_guide_basic
 //
-// Reloads the electronic program guide information
+// Reloads the basic electronic program guide information
 //
 // Arguments:
 //
 //	instance	- SQLite database instance
 //	changed		- Flag indicating if the data has changed
 
-void discover_guide(sqlite3* instance, bool& changed)
+void discover_guide_basic(sqlite3* instance, bool& changed)
 {
 	changed = false;							// Initialize [out] argument
 
 	if(instance == nullptr) throw std::invalid_argument("instance");
 
 	// Clone the guide table schema into a temporary table
-	execute_non_query(instance, "drop table if exists discover_guide");
-	execute_non_query(instance, "create temp table discover_guide as select * from guide limit 0");
+	execute_non_query(instance, "drop table if exists discover_guide_basic");
+	execute_non_query(instance, "create temp table discover_guide_basic as select * from guide limit 0");
 
 	try {
 
 		// Discover the electronic program guide from the network and insert it into a temporary table
 		execute_non_query(instance, "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
-			"insert into discover_guide select "
+			"insert into discover_guide_basic select "
 			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
 			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
@@ -670,13 +670,13 @@ void discover_guide(sqlite3* instance, bool& changed)
 		try {
 
 			// Delete any entries in the main guide table that are no longer present in the data
-			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide)") > 0) changed = true;
+			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide_basic)") > 0) changed = true;
 
 			// Insert/replace entries in the main guide table that are new or different
-			if(execute_non_query(instance, "replace into guide select discover_guide.* from discover_guide left outer join guide using(channelid) "
-				"where coalesce(guide.channelname, '') <> coalesce(discover_guide.channelname, '') "
-				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide.iconurl, '') "
-				"or coalesce(guide.data, '') <> coalesce(discover_guide.data, '')") > 0) changed = true;
+			if(execute_non_query(instance, "replace into guide select discover_guide_basic.* from discover_guide_basic left outer join guide using(channelid) "
+				"where coalesce(guide.channelname, '') <> coalesce(discover_guide_basic.channelname, '') "
+				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide_basic.iconurl, '') "
+				"or coalesce(guide.data, '') <> coalesce(discover_guide_basic.data, '')") > 0) changed = true;
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
@@ -686,11 +686,119 @@ void discover_guide(sqlite3* instance, bool& changed)
 		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 
 		// Drop the temporary table
-		execute_non_query(instance, "drop table discover_guide");
+		execute_non_query(instance, "drop table discover_guide_basic");
 	}
 
 	// Drop the temporary table on any exception
-	catch(...) { execute_non_query(instance, "drop table discover_guide"); throw; }
+	catch(...) { execute_non_query(instance, "drop table discover_guide_basic"); throw; }
+}
+
+//---------------------------------------------------------------------------
+// discover_guide_extended
+//
+// Reloads the extended electronic program guide information
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+
+void discover_guide_extended(sqlite3* instance)
+{
+	bool ignored;
+	return discover_guide_extended(instance, ignored);
+}
+
+//---------------------------------------------------------------------------
+// discover_guide_extended
+//
+// Reloads the extended electronic program guide information
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	changed		- Flag indicating if the data has changed
+
+void discover_guide_extended(sqlite3* instance, bool& changed)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+
+	changed = false;								// Initialize [out] argument
+
+	if(instance == nullptr) throw std::invalid_argument("instance");
+
+	// Generate a vector<> containing all of the currently active channel identifiers
+	std::vector<union channelid> channels;
+	enumerate_channelids(instance, [&](union channelid const& item) -> void { channels.push_back(item); });
+
+	// Clone the guide table schema into a temporary table
+	execute_non_query(instance, "drop table if exists discover_guide_extended");
+	execute_non_query(instance, "create temp table discover_guide_extended as select * from guide limit 0");
+
+	try {
+
+		// channelid | channelname | iconurl | data
+		auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+			"insert into discover_guide_extended select "
+			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
+			"json_extract(discovery.value, '$.GuideName') as channelname, "
+			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
+			"json_extract(discovery.value, '$.Guide') as data "
+			"from deviceauth, json_each(http_request('https://my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) )) as discovery";
+
+		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		try {
+
+			// Load all of the guide information for each channel individually
+			for(auto const& iterator : channels) {
+
+				// Bind the query parameter(s)
+				result = sqlite3_bind_int(statement, 1, iterator.value);
+				if(result != SQLITE_OK) throw sqlite_exception(result);
+
+				// This is a non-query, it's not expected to return any rows
+				result = sqlite3_step(statement);
+				if(result != SQLITE_DONE) throw string_exception("non-query failed or returned an unexpected result set");
+
+				// Reset the prepared statement so that it can be executed again
+				result = sqlite3_reset(statement);
+				if(result != SQLITE_OK) throw sqlite_exception(result);
+			}
+
+			sqlite3_finalize(statement);
+		}
+		
+		catch(...) { sqlite3_finalize(statement); throw; }
+
+		// This requires a multi-step operation against the guide table; start a transaction
+		execute_non_query(instance, "begin immediate transaction");
+
+		try {
+
+			// Delete any entries in the main guide table that are no longer present in the data
+			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide_extended)") > 0) changed = true;
+
+			// Insert/replace entries in the main guide table that are new or different
+			if(execute_non_query(instance, "replace into guide select discover_guide_extended.* from discover_guide_extended left outer join guide using(channelid) "
+				"where coalesce(guide.channelname, '') <> coalesce(discover_guide_extended.channelname, '') "
+				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide_extended.iconurl, '') "
+				"or coalesce(guide.data, '') <> coalesce(discover_guide_extended.data, '')") > 0) changed = true;
+
+			// Commit the database transaction
+			execute_non_query(instance, "commit transaction");
+		}
+
+		// Rollback the transaction on any exception
+		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
+
+		// Drop the temporary table
+		execute_non_query(instance, "drop table discover_guide_extended");
+	}
+
+	// Drop the temporary table on any exception
+	catch(...) { execute_non_query(instance, "drop table discover_guide_extended"); throw; }
 }
 
 //---------------------------------------------------------------------------

@@ -60,6 +60,10 @@ msgctxt "#30108"
 msgid "Delete expired date/time recording rules after"
 msgstr ""
 
+msgctxt "#30109"
+msgid "Electronic Program Guide (EPG) data"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -110,6 +114,14 @@ msgstr ""
 
 msgctxt "#30213"
 msgid "Never"
+msgstr ""
+
+msgctxt "#30214"
+msgid "Basic (4 Hours)"
+msgstr ""
+
+msgctxt "#30215"
+msgid "Extended (8 Hours)"
 msgstr ""
 
 msgctxt "#30301"

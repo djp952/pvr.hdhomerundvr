@@ -1,3 +1,6 @@
+v1.0.2
+- Add option to enable discovery of extended (8 hour) Electronic Program Guide data
+
 v1.0.1
 - Fix minor problem with one database table not being truncated at startup
 - (Linux) Use older GNU C++ Compiler (g++ 4.9) for better system compatibility
