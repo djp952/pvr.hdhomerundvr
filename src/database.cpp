@@ -2304,8 +2304,10 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 		// If a default result was provided, use it rather than returning an error result
 		if(argc >= 2) return sqlite3_result_value(context, argv[1]);
 	
-		std::string message = std::string("http request on [") + url + "] failed: " + curl_easy_strerror(curlresult);
-		return sqlite3_result_error(context, message.c_str(), -1);
+		// Use sqlite3_mprintf to generate the formatted error message
+		auto message = sqlite3_mprintf("http request on [%s] failed: %s", url, curl_easy_strerror(curlresult));
+		sqlite3_result_error(context, message, -1);
+		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
 
 	// Check the HTTP response code and return an error condition if unsuccessful
@@ -2314,8 +2316,10 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 		// If a default result was provided, use it rather than returning an error result
 		if(argc >= 2) return sqlite3_result_value(context, argv[1]);
 	
-		std::string message = std::string("http request on url [") + url + "] failed with http response code " + std::to_string(responsecode);
-		return sqlite3_result_error(context, message.c_str(), -1);
+		// Use sqlite3_mprintf to generate the formatted error message
+		auto message = sqlite3_mprintf("http request on url [%s] failed with http response code %ld", url, responsecode);
+		sqlite3_result_error(context, message, -1);
+		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
 
 	// Send the resultant blob to SQLite as the result from this scalar function
