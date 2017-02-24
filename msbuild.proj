@@ -20,7 +20,8 @@
 
     <PropertyGroup>
       <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/include -I../external-sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/linux-i686/include -I../external-sqlite -Itmp/version</CPPFLAGS-linux-i686>
+      <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/linux-x86_64/include -I../external-sqlite -Itmp/version</CPPFLAGS-linux-x86_64>
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
@@ -32,32 +33,32 @@
     <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
 
     <!-- Linux/i686 -->
-    <MakeDir Directories="out\i686" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1 -c ../external-sqlite/sqlite3.c -o out/i686/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/addoncallbacks.cpp -o out/i686/addoncallbacks.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/database.cpp -o out/i686/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/dbextension.cpp -o out/i686/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/livestream.cpp -o out/i686/livestream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/pvr.cpp -o out/i686/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/pvrcallbacks.cpp -o out/i686/pvrcallbacks.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/i686/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 -m32 -shared out/i686/addoncallbacks.o out/i686/database.o out/i686/dbextension.o out/i686/livestream.o out/i686/pvr.o out/i686/pvrcallbacks.o out/i686/scheduler.o out/i686/sqlite3.o out/i686/sqlite_exception.o ../prebuilt-libcurl/lib/linux-i686/libcurl.a ../prebuilt-libuuid/lib/linux-i686/libuuid.a -ldl -lpthread -lssl -lcrypto -lz -o out/i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -m32 -DSQLITE_ENABLE_JSON1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/i686/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1 -c ../external-sqlite/sqlite3.c -o out/linux-i686/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/addoncallbacks.cpp -o out/linux-i686/addoncallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/database.cpp -o out/linux-i686/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/dbextension.cpp -o out/linux-i686/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/livestream.cpp -o out/linux-i686/livestream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/pvr.cpp -o out/linux-i686/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/pvrcallbacks.cpp -o out/linux-i686/pvrcallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/linux-i686/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/linux-i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 -m32 -shared out/linux-i686/addoncallbacks.o out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/livestream.o out/linux-i686/pvr.o out/linux-i686/pvrcallbacks.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o ../prebuilt-libcurl/lib/linux-i686/libcurl.a ../prebuilt-libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -lssl -lcrypto -lz -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -m32 -DSQLITE_ENABLE_JSON1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/linux-i686/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
     <!-- Linux/x86_64 -->
-    <MakeDir Directories="out\x86_64" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1 -c ../external-sqlite/sqlite3.c -o out/x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/addoncallbacks.cpp -o out/x86_64/addoncallbacks.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/x86_64/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/x86_64/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/livestream.cpp -o out/x86_64/livestream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/x86_64/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvrcallbacks.cpp -o out/x86_64/pvrcallbacks.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/x86_64/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 -shared out/x86_64/addoncallbacks.o out/x86_64/database.o out/x86_64/dbextension.o out/x86_64/livestream.o out/x86_64/pvr.o out/x86_64/pvrcallbacks.o out/x86_64/scheduler.o out/x86_64/sqlite3.o out/x86_64/sqlite_exception.o ../prebuilt-libcurl/lib/linux-x86_64/libcurl.a ../prebuilt-libuuid/lib/linux-x86_64/libuuid.a -ldl -lpthread -lssl -lcrypto -lz -o out/x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -DSQLITE_ENABLE_JSON1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1 -c ../external-sqlite/sqlite3.c -o out/linux-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/addoncallbacks.cpp -o out/linux-x86_64/addoncallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/database.cpp -o out/linux-x86_64/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-x86_64/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/livestream.cpp -o out/linux-x86_64/livestream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-x86_64/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/pvrcallbacks.cpp -o out/linux-x86_64/pvrcallbacks.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-x86_64/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 -shared out/linux-x86_64/addoncallbacks.o out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/livestream.o out/linux-x86_64/pvr.o out/linux-x86_64/pvrcallbacks.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o ../prebuilt-libcurl/lib/linux-x86_64/libcurl.a ../prebuilt-libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -lssl -lcrypto -lz -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -DSQLITE_ENABLE_JSON1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -67,12 +68,12 @@
       <SevenZipExe>&quot;$(SolutionDir)tools\7z.exe&quot;</SevenZipExe>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
       <PackageFile-win32>out\zuki.pvr.hdhomerundvr-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-win32>
-      <PackageFile-i686>out\zuki.pvr.hdhomerundvr-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-i686>
-      <PackageFile-x86_64>out\zuki.pvr.hdhomerundvr-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-x86_64>
+      <PackageFile-linux-i686>out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-i686>
+      <PackageFile-linux-x86_64>out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-x86_64>
 
     </PropertyGroup>
     
-    <!-- Windows/Win32 -->
+    <!-- win32 -->
     <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.dll" ContinueOnError="false"/>
     <Exec Condition="'$(Configuration)'=='Debug'" Command="$(SevenZipExe) a -tzip $(PackageFile-win32) out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.pdb" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
@@ -81,21 +82,21 @@
     <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
     <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) out\Win32\$(Configuration)\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
-    <!-- Linux/i686 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-i686) out\i686\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-i686) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-i686) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-i686) out\i686\ pvr.hdhomerundvr\" ContinueOnError="false" />
+    <!-- linux-i686 -->
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-i686) out\linux-i686\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-i686) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-linux-i686) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-i686) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-i686) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-i686) out\linux-i686\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
-    <!-- Linux/x86_64 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-x86_64) out\x86_64\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-x86_64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-x86_64) out\x86_64\ pvr.hdhomerundvr\" ContinueOnError="false" />
+    <!-- linux-x86_64 -->
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-x86_64) out\linux-x86_64\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-x86_64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-linux-x86_64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-x86_64) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-x86_64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-x86_64) out\linux-x86_64\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
   </Target>
 
