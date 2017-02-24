@@ -20,12 +20,11 @@
 
     <PropertyGroup>
       <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
-      <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/linux-i686/include -I../external-sqlite -Itmp/version</CPPFLAGS-linux-i686>
-      <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libcurl/include/curl -I../prebuilt-libuuid/linux-x86_64/include -I../external-sqlite -Itmp/version</CPPFLAGS-linux-x86_64>
+      <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libssl/linux-i686/include -I../prebuilt-libcurl/linux-i686/include/curl -I../prebuilt-libuuid/linux-i686/include -I../external-sqlite -Itmp/version</CPPFLAGS-linux-i686>
+      <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -I../external-kodi-addon-dev-kit/kodi -I../prebuilt-libssl/linux-x86_64/include -I../prebuilt-libcurl/linux-x86_64/include/curl -I../prebuilt-libuuid/linux-x86_64/include -I../external-sqlite -Itmp/version</CPPFLAGS-linux-x86_64>
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
-    
   </PropertyGroup>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
@@ -44,7 +43,7 @@
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/pvrcallbacks.cpp -o out/linux-i686/pvrcallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/linux-i686/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/linux-i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 -m32 -shared out/linux-i686/addoncallbacks.o out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/livestream.o out/linux-i686/pvr.o out/linux-i686/pvrcallbacks.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o ../prebuilt-libcurl/lib/linux-i686/libcurl.a ../prebuilt-libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -lssl -lcrypto -lz -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 -m32 -shared out/linux-i686/addoncallbacks.o out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/livestream.o out/linux-i686/pvr.o out/linux-i686/pvrcallbacks.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o ../prebuilt-libcurl/linux-i686/lib/libcurl.a ../prebuilt-libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -m32 -DSQLITE_ENABLE_JSON1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/linux-i686/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
     <!-- Linux/x86_64 -->
@@ -58,7 +57,7 @@
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/pvrcallbacks.cpp -o out/linux-x86_64/pvrcallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-x86_64/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 -shared out/linux-x86_64/addoncallbacks.o out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/livestream.o out/linux-x86_64/pvr.o out/linux-x86_64/pvrcallbacks.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o ../prebuilt-libcurl/lib/linux-x86_64/libcurl.a ../prebuilt-libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -lssl -lcrypto -lz -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 -shared out/linux-x86_64/addoncallbacks.o out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/livestream.o out/linux-x86_64/pvr.o out/linux-x86_64/pvrcallbacks.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o ../prebuilt-libcurl/linux-x86_64/lib/libcurl.a ../prebuilt-libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -DSQLITE_ENABLE_JSON1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
   </Target>
