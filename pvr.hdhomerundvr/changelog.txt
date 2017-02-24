@@ -1,6 +1,7 @@
 v1.0.2
 - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
 - Update SQLite database engine to v3.17.0
+- (Linux) Switch to statically linked OpenSSL (1.0.2k) and zlib (1.2.8) libraries for better system compatibility
 
 v1.0.1
 - Fix minor problem with one database table not being truncated at startup
