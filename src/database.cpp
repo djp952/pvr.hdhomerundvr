@@ -34,6 +34,18 @@
 
 #pragma warning(push, 4)
 
+// Check SQLITE_THREADSAFE
+//
+#if (SQLITE_THREADSAFE != 2)
+#error SQLITE_THREADSAFE must be defined and set to 2
+#endif
+
+// Check SQLITE_ENABLE_JSON1
+//
+#if (SQLITE_ENABLE_JSON1 != 1)
+#error SQLITE_ENABLE_JSON1 must be defined and set to 1
+#endif
+
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------

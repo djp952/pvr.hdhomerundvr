@@ -28,10 +28,6 @@
 
 #include "string_exception.h"
 
-// DemuxPacket is an incomplete type; causes LNK4248 in /clr projects
-//
-struct DemuxPacket {};
-
 #pragma warning(push, 4)
 
 // LIBXBMC_PVR_MODULE
@@ -43,8 +39,12 @@ struct DemuxPacket {};
 #define LIBXBMC_PVR_MODULE "/library.xbmc.pvr/libXBMC_pvr-x86_64-linux.so"
 #elif defined(__i386__)
 #define LIBXBMC_PVR_MODULE "/library.xbmc.pvr/libXBMC_pvr-i486-linux.so"
+#elif defined(__ANDROID__) && (defined __ARMEL__)
+#define LIBXBMC_PVR_MODULE "/libXBMC_pvr-arm.so"
+#elif defined(__ANDROID__) && (defined __aarch64__)
+#define LIBXBMC_PVR_MODULE "/libXBMC_pvr-aarch64.so"
 #else
-#error pvrcallbacks.cpp -- unknown architecture; only Windows, Linux i686 and Linux x86_64 are supported
+#error pvrcallbacks.cpp -- unknown architecture -- only win32, linux-i686, linux-x86_64, android-armeabi-v7a and android-arm64-v8a are supported
 #endif
 
 // GetFunctionPointer (local)
