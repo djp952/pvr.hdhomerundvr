@@ -62,7 +62,7 @@
 // SQLite Declarations
 
 #define SQLITE_THREADSAFE 2			// SQLITE_CONFIG_MULTITHREAD
-#define SQLITE_ENABLE_JSON1			// Enable the JSON1 extensions
+#define SQLITE_ENABLE_JSON1	1		// Enable the JSON1 extensions
 #include <sqlite3.h>				// Include SQLite declarations
 
 //--------------------------------------------------------------------------
