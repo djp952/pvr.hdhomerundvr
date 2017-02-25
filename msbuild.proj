@@ -83,7 +83,7 @@
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 -I../external-sqlite -DSQLITE_ENABLE_JSON1=1 ../external-sqlite/sqlite3.c ../external-sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
     <!-- android-arm -->
-    <!-- android-aarch64 -->
+    <!-- android-x86 -->
     <Exec Command="..\android-ndk-r12b\ndk-build.cmd NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out NDK_LIBS_OUT=out" ContinueOnError="false"/>
 
   </Target>
@@ -97,7 +97,7 @@
       <PackageFile-linux-i686>out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-i686>
       <PackageFile-linux-x86_64>out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-x86_64>
       <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
-      <PackageFile-android-aarch64>out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-aarch64>
+      <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
 
     </PropertyGroup>
     
@@ -138,14 +138,14 @@
     <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
     <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) out\armeabi-v7a\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
-    <!-- android-aarch64 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-aarch64) out\arm64-v8a\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-aarch64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) out\arm64-v8a\ pvr.hdhomerundvr\" ContinueOnError="false" />
+    <!-- android-x86 -->
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-x86) out\x86\libhdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-x86) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-android-x86) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) d $(PackageFile-android-x86) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-x86) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-x86) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-x86) out\x86\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
   </Target>
 
