@@ -3,7 +3,7 @@
   <requires>
     <import addon="xbmc.pvr" version="5.2.1"/>
   </requires>
-  <extension point="xbmc.pvrclient" needs_configuration="false" library_linux="zuki.pvr.hdhomerundvr.so"/>
+  <extension point="xbmc.pvrclient" needs_configuration="false" library_android="libhdhomerundvr.so"/>
   <extension point="xbmc.addon.metadata">
     <summary lang="en_GB">HDHomeRun DVR PVR Client</summary>
     <description lang="en_GB">HDHomeRun DVR frontend. Supports streaming Live TV, Recordings, Electronic Program Guide (EPG) and Timers. Requires a SiliconDust HDHomeRun DVR Service subscription (https://www.silicondust.com/dvr-service) and an active HDHomeRun RECORD device on the local network.</description>

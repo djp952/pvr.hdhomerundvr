@@ -136,7 +136,7 @@
     <Exec Command="$(SevenZipExe) d $(PackageFile-android-arm) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) out\armeabi-v7a\libhdhomerundvr.so pvr.hdhomerundvr\zuki.pvr.hdhomerundvr.so" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) out\armeabi-v7a\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
     <!-- android-aarch64 -->
     <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-aarch64) out\arm64-v8a\libhdhomerundvr.so" ContinueOnError="false"/>
@@ -145,7 +145,7 @@
     <Exec Command="$(SevenZipExe) d $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
     <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) out\arm64-v8a\libhdhomerundvr.so pvr.hdhomerundvr\zuki.pvr.hdhomerundvr.so" ContinueOnError="false" />
+    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) out\arm64-v8a\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
   </Target>
 
