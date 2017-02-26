@@ -84,7 +84,8 @@
 
     <!-- android-arm -->
     <!-- android-aarch64 -->
-    <Exec Command="..\android-ndk-r12b\ndk-build.cmd NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out NDK_LIBS_OUT=out" ContinueOnError="false"/>
+    <!-- android-x86 -->    
+    <Exec Command="&quot;%ANDROID_NDK_ROOT%\ndk-build.cmd&quot; NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out NDK_LIBS_OUT=out" ContinueOnError="false"/>
 
   </Target>
 

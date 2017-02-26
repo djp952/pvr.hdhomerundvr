@@ -92,9 +92,9 @@ LOCAL_STATIC_LIBRARIES += \
 	libcrypto-prebuilt \
 	libz-prebuilt
 
-LOCAL_LD_LIBS += \
-	-ldl -lpthread
-	
+LOCAL_LDLIBS += \
+	-llog
+
 LOCAL_SRC_FILES := \
 	../external-sqlite/sqlite3.c \
 	src/addoncallbacks.cpp \
