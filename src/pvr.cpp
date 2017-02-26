@@ -859,7 +859,7 @@ static void log_message(addoncallbacks::addon_log_t level, _args&&... args)
 	(void)unpack;
 
 	if(g_addon) g_addon->Log(level, stream.str().c_str());
-	if (level == addoncallbacks::addon_log_t::LOG_ERROR) fprintf(stderr, "ERROR: %s\r\n", stream.str().c_str());
+	if(level == addoncallbacks::addon_log_t::LOG_ERROR) fprintf(stderr, "ERROR: %s\r\n", stream.str().c_str());
 }
 
 // log_notice
@@ -884,7 +884,7 @@ unsigned long openssl_id_callback(void)
 // OpenSSL locking function callback
 void openssl_locking_callback(int mode, int n, char const* /*file*/, int /*line*/)
 {
-	if ((mode & CRYPTO_LOCK) == CRYPTO_LOCK) g_openssl_locks[n].lock();
+	if((mode & CRYPTO_LOCK) == CRYPTO_LOCK) g_openssl_locks[n].lock();
 	else g_openssl_locks[n].unlock();
 }
 

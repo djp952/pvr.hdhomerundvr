@@ -26,6 +26,11 @@
 #include <dlfcn.h>
 #include <string>
 
+#ifdef __ANDROID__
+#include <stdlib.h>
+#include <sys/stat.h>
+#endif
+
 #include "string_exception.h"
 
 #pragma warning(push, 4)
@@ -35,16 +40,16 @@
 // Macro indicating the location of the libXBMC_pvr module, which is architecture-specific
 #if defined(_WINDOWS)
 #define LIBXBMC_PVR_MODULE "\\library.xbmc.pvr\\libXBMC_pvr.dll"
-#elif defined(__x86_64__)
+#elif defined(__x86_64__) && !defined(__ANDROID__)
 #define LIBXBMC_PVR_MODULE "/library.xbmc.pvr/libXBMC_pvr-x86_64-linux.so"
-#elif defined(__i386__)
+#elif defined(__i386__) && !defined(__ANDROID__)
 #define LIBXBMC_PVR_MODULE "/library.xbmc.pvr/libXBMC_pvr-i486-linux.so"
-#elif defined(__ANDROID__) && (defined __ARMEL__)
+#elif defined(__ANDROID__) && defined(__arm__)
 #define LIBXBMC_PVR_MODULE "/libXBMC_pvr-arm.so"
-#elif defined(__ANDROID__) && (defined __aarch64__)
-#define LIBXBMC_PVR_MODULE "/libXBMC_pvr-aarch64.so"
+#elif defined(__ANDROID__) && defined(__i386__)
+#define LIBXBMC_PVR_MODULE "/libXBMC_pvr-i486-linux.so"
 #else
-#error pvrcallbacks.cpp -- unknown architecture -- only win32, linux-i686, linux-x86_64, android-armeabi-v7a and android-arm64-v8a are supported
+#error pvrcallbacks.cpp -- unknown architecture -- only win32, linux-i686, linux-x86_64, android-armeabi-v7a and android-x86 are supported
 #endif
 
 // GetFunctionPointer (local)
@@ -73,6 +78,15 @@ pvrcallbacks::pvrcallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle(add
 
 	// Construct the path to the PVR addon library based on the provided base path
 	std::string pvrmodule = std::string(addonpath) + LIBXBMC_PVR_MODULE;
+
+#ifdef __ANDROID__
+	struct stat st;
+	if(stat(pvrmodule.c_str(), &st) != 0)
+	{
+		std::string libpath = getenv("XBMC_ANDROID_LIBS");
+		pvrmodule = libpath + LIBXBMC_PVR_MODULE;
+	}
+#endif
 
 	// Attempt to load the PVR addon library dynamically, it should already be in the process
 	m_hmodule = dlopen(pvrmodule.c_str(), RTLD_LAZY);

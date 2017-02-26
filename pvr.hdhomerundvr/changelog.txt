@@ -2,6 +2,7 @@ v1.0.2
 - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
 - Update SQLite database engine to v3.17.0
 - (Linux) Switch to statically linked OpenSSL (1.0.2k) and zlib (1.2.8) libraries for better system compatibility
+- (Android) Initial release for Android ARM and x86 devices. Experimental with known issues -- see documentation (https://github.com/djp952/pvr.hdhomerundvr/wiki)
 
 v1.0.1
 - Fix minor problem with one database table not being truncated at startup

@@ -41,8 +41,8 @@
 
 int snprintf(char* buffer, size_t count, char const* format, ...)
 {
-	if ((buffer == nullptr) && (count > 0)) return -1;
-	if (format == nullptr) return -1;
+	if((buffer == nullptr) && (count > 0)) return -1;
+	if(format == nullptr) return -1;
 
 	va_list args;
 	va_start(args, format);

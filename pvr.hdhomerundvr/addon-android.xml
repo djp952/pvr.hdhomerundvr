@@ -10,6 +10,6 @@
     <license>MIT License (https://opensource.org/licenses/MIT)</license>
     <website>https://github.com/djp952/pvr.hdhomerundvr/wiki</website>
     <source>https://github.com/djp952/pvr.hdhomerundvr</source>
-    <platform>linux</platform>
+    <platform>android</platform>
   </extension>
 </addon>
