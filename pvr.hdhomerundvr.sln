@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pvr.hdhomerundvr", "pvr.hdhomerundvr", "{ADB6AA8A-8216-4963-8E01-B8439B5C3FAF}"
 	ProjectSection(SolutionItems) = preProject
+		pvr.hdhomerundvr\.nomedia = pvr.hdhomerundvr\.nomedia
 		pvr.hdhomerundvr\addon-android.xml = pvr.hdhomerundvr\addon-android.xml
 		pvr.hdhomerundvr\addon-linux.xml = pvr.hdhomerundvr\addon-linux.xml
 		pvr.hdhomerundvr\addon-windows.xml = pvr.hdhomerundvr\addon-windows.xml
@@ -44,7 +45,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sqlite3", "src\sqlite3.vcxp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03E257C2-B115-4D59-AB37-DB0AD52F5366}"
 	ProjectSection(SolutionItems) = preProject
-		manifest\android-aarch64.manifest = manifest\android-aarch64.manifest
 		manifest\android-arm.manifest = manifest\android-arm.manifest
 		manifest\android-x86.manifest = manifest\android-x86.manifest
 		manifest\linux-i686.manifest = manifest\linux-i686.manifest
