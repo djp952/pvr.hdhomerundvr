@@ -258,7 +258,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 			"value as data "
 			"from "
 			"json_each((with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
-			"select http_request('https://my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
+			"select http_request('http://ipv4.my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
 			"case when ?2 is null then '' else '&RecentOnly=' || ?2 end || "
 			"case when ?3 is null then '' else '&ChannelOnly=' || decode_channel_id(?3) end || "
 			"case when ?4 is null then '' else '&AfterOriginalAirdateOnly=' || strftime('%s', date(?4, 'unixepoch')) end || "
@@ -298,7 +298,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 		sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 			"replace into episode "
 			"select ?1 as seriesid, "
-			"http_request('https://my.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || ?1) as data "
+			"http_request('http://ipv4.my.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || ?1) as data "
 			"from deviceauth "
 			"where cast(data as text) <> 'null'";
 
@@ -447,7 +447,7 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 		// Delete the recording rule from the backend services and the local database
 		auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 			"delete from recordingrule where recordingruleid in "
-			"(select case when cast(http_request('https://my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || "
+			"(select case when cast(http_request('http://ipv4.my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || "
 			"'&Cmd=delete&RecordingRuleID=' || ?1) as text) = 'null' then ?1 else null end from deviceauth)";
 
 		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -525,7 +525,7 @@ void discover_devices(sqlite3* instance, bool& changed)
 			"coalesce(json_extract(discovery.value, '$.DeviceID'), json_extract(discovery.value, '$.StorageID')) as deviceid, "
 			"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
 			"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data "
-			"from json_each(http_request('http://my.hdhomerun.com/discover')) as discovery "
+			"from json_each(http_request('http://ipv4.my.hdhomerun.com/discover')) as discovery "
 			"where data is not null");
 
 		// This requires a multi-step operation against the device table; start a transaction
@@ -599,7 +599,7 @@ void discover_episodes(sqlite3* instance, bool& changed)
 		// Discover the episode information for each series that has a recording rule
 		execute_non_query(instance, "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 			"insert into discover_episode select entry.seriesid as seriesid, "
-			"http_request('https://my.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || entry.seriesid) as data "
+			"http_request('http://ipv4.my.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || entry.seriesid) as data "
 			"from deviceauth, (select distinct json_extract(data, '$.SeriesID') as seriesid from recordingrule where seriesid is not null) as entry");
 
 		// This requires a multi-step operation against the episode table; start a transaction
@@ -674,7 +674,7 @@ void discover_guide_basic(sqlite3* instance, bool& changed)
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
 			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
 			"json_extract(discovery.value, '$.Guide') as data "
-			"from deviceauth, json_each(http_request('https://my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, ''))) as discovery");
+			"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, ''))) as discovery");
 
 		// This requires a multi-step operation against the guide table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -756,7 +756,7 @@ void discover_guide_extended(sqlite3* instance, bool& changed)
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
 			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
 			"json_extract(discovery.value, '$.Guide') as data "
-			"from deviceauth, json_each(http_request('https://my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) )) as discovery";
+			"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) )) as discovery";
 
 		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -924,7 +924,7 @@ void discover_recordingrules(sqlite3* instance, bool& changed)
 			"json_extract(value, '$.RecordingRuleID') as recordingruleid, "
 			"json_extract(value, '$.SeriesID') as seriesid, "
 			"value as data "
-			"from deviceauth, json_each(http_request('https://my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '')))");
+			"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '')))");
 
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -1825,7 +1825,7 @@ std::string find_seriesid(sqlite3* instance, char const* title)
 	sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 		"select "
 		"json_extract(value, '$.SeriesID') as seriesid "
-		"from deviceauth, json_each(http_request('https://my.hdhomerun.com/api/search?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Search=' || url_encode(?1))) "
+		"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/search?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Search=' || url_encode(?1))) "
 		"where json_extract(value, '$.Title') like ?1"
 		"limit 1";
 
@@ -2368,7 +2368,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 			"value as data "
 			"from "
 			"json_each((with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
-			"select http_request('https://my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=change&RecordingRuleID=' || ?1 || "
+			"select http_request('http://ipv4.my.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=change&RecordingRuleID=' || ?1 || "
 			"'&RecentOnly=' || case when ?2 is null then '' else ?2 end || "
 			"'&ChannelOnly=' || case when ?3 is null then '' else decode_channel_id(?3) end || "
 			"'&AfterOriginalAirdateOnly=' || case when ?4 is null then '' else strftime('%s', date(?4, 'unixepoch')) end || "
@@ -2406,7 +2406,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 		sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 			"replace into episode "
 			"select recordingrule.seriesid, "
-			"http_request('https://my.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || recordingrule.seriesid) as data "
+			"http_request('http://ipv4.my.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || recordingrule.seriesid) as data "
 			"from recordingrule, deviceauth "
 			"where recordingrule.recordingruleid = ?1 "
 			"and cast(data as text) <> 'null'";
