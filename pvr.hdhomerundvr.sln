@@ -42,6 +42,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "version", "src\version.vcxp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sqlite3", "src\sqlite3.vcxproj", "{B43F7D9E-C32E-4D8A-B394-6D4E4778A7F5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03E257C2-B115-4D59-AB37-DB0AD52F5366}"
+	ProjectSection(SolutionItems) = preProject
+		manifest\android-aarch64.manifest = manifest\android-aarch64.manifest
+		manifest\android-arm.manifest = manifest\android-arm.manifest
+		manifest\android-x86.manifest = manifest\android-x86.manifest
+		manifest\linux-i686.manifest = manifest\linux-i686.manifest
+		manifest\linux-x86_64.manifest = manifest\linux-x86_64.manifest
+		manifest\win32.manifest = manifest\win32.manifest
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -69,5 +79,6 @@ Global
 		{AE3C3D3D-5525-4E65-9944-3CFF8718778F} = {ADB6AA8A-8216-4963-8E01-B8439B5C3FAF}
 		{AB93AD67-82B8-4012-9299-C301D583CAE2} = {AE3C3D3D-5525-4E65-9944-3CFF8718778F}
 		{A32210DB-B4C6-410C-8B9D-5B4BE3CA5A2E} = {AB93AD67-82B8-4012-9299-C301D583CAE2}
+		{03E257C2-B115-4D59-AB37-DB0AD52F5366} = {BC723F63-F0D7-4CC4-8789-D6A7DD8AA6E1}
 	EndGlobalSection
 EndGlobal
