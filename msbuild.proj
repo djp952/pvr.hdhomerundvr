@@ -47,7 +47,7 @@
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
-  </PropertyGroup>
+    </PropertyGroup>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
     
@@ -91,8 +91,7 @@
 
   <Target Name="Package" DependsOnTargets="Build">
     <PropertyGroup>
-      <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
-      <SevenZipExe>&quot;$(SolutionDir)tools\7z.exe&quot;</SevenZipExe>
+      <ZipperExe>&quot;$(SolutionDir)..\build\zuki.build.tools.zipper.exe&quot;</ZipperExe>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
       <PackageFile-win32>out\zuki.pvr.hdhomerundvr-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-win32>
       <PackageFile-linux-i686>out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-i686>
@@ -100,64 +99,14 @@
       <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
       <PackageFile-android-aarch64>out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-aarch64>
       <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
-
     </PropertyGroup>
-    
-    <!-- win32 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.dll" ContinueOnError="false"/>
-    <Exec Condition="'$(Configuration)'=='Debug'" Command="$(SevenZipExe) a -tzip $(PackageFile-win32) out\Win32\$(Configuration)\zuki.pvr.hdhomerundvr.pdb" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-win32) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-win32) pvr.hdhomerundvr\addon-android.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-win32) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) pvr.hdhomerundvr\addon-windows.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-win32) out\Win32\$(Configuration)\ pvr.hdhomerundvr\" ContinueOnError="false" />
 
-    <!-- linux-i686 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-i686) out\linux-i686\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-i686) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-linux-i686) pvr.hdhomerundvr\addon-android.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-linux-i686) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-i686) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-i686) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-i686) out\linux-i686\ pvr.hdhomerundvr\" ContinueOnError="false" />
-
-    <!-- linux-x86_64 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-x86_64) out\linux-x86_64\zuki.pvr.hdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-linux-x86_64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-linux-x86_64) pvr.hdhomerundvr\addon-android.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-linux-x86_64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-x86_64) pvr.hdhomerundvr\addon-linux.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-x86_64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-linux-x86_64) out\linux-x86_64\ pvr.hdhomerundvr\" ContinueOnError="false" />
-
-    <!-- android-arm -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-arm) out\armeabi-v7a\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-arm) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-arm) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-arm) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-arm) out\armeabi-v7a\ pvr.hdhomerundvr\" ContinueOnError="false" />
-
-    <!-- android-aarch64 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-aarch64) out\arm64-v8a\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-aarch64) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-aarch64) out\arm64-v8a\ pvr.hdhomerundvr\" ContinueOnError="false" />
-
-    <!-- android-x86 -->
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-x86) out\x86\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) a -tzip $(PackageFile-android-x86) LICENSE pvr.hdhomerundvr\*" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-x86) pvr.hdhomerundvr\addon-linux.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) d $(PackageFile-android-x86) pvr.hdhomerundvr\addon-windows.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-x86) pvr.hdhomerundvr\addon-android.xml pvr.hdhomerundvr\addon.xml" ContinueOnError="false"/>
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-x86) LICENSE pvr.hdhomerundvr\LICENSE.txt" ContinueOnError="false" />
-    <Exec Command="$(SevenZipExe) rn $(PackageFile-android-x86) out\x86\ pvr.hdhomerundvr\" ContinueOnError="false" />
-
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-win32)&quot; manifest\win32.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-i686)&quot; manifest\linux-i686.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-x86_64)&quot; manifest\linux-x86_64.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-arm)&quot; manifest\android-arm.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-aarch64)&quot; manifest\android-aarch64.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-x86)&quot; manifest\android-x86.manifest" ContinueOnError="false"/>
   </Target>
 
 </Project>
