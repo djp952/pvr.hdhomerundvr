@@ -56,7 +56,7 @@
 
     <!-- Linux/i686 -->
     <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -c ../external-sqlite/sqlite3.c -o out/linux-i686/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c ../external-sqlite/sqlite3.c -o out/linux-i686/sqlite3.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/addoncallbacks.cpp -o out/linux-i686/addoncallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/database.cpp -o out/linux-i686/database.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/dbextension.cpp -o out/linux-i686/dbextension.o&quot;" ContinueOnError="false"/>
@@ -70,7 +70,7 @@
 
     <!-- Linux/x86_64 -->
     <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -c ../external-sqlite/sqlite3.c -o out/linux-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c ../external-sqlite/sqlite3.c -o out/linux-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/addoncallbacks.cpp -o out/linux-x86_64/addoncallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/database.cpp -o out/linux-x86_64/database.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-x86_64/dbextension.o&quot;" ContinueOnError="false"/>

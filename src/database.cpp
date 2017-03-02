@@ -46,6 +46,12 @@
 #error SQLITE_ENABLE_JSON1 must be defined and set to 1
 #endif
 
+// Check SQLITE_TEMP_STORE
+//
+#if (SQLITE_TEMP_STORE != 3)
+#error SQLITE_TEMP_STORE must be defined and set to 3
+#endif
+
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
@@ -2466,7 +2472,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 }
 
 //---------------------------------------------------------------------------
-// opens_database
+// open_database
 //
 // Opens the SQLite database instance
 //
@@ -2482,6 +2488,9 @@ sqlite3* open_database(char const* connstring, int flags)
 	// Create the SQLite database using the provided connection string
 	int result = sqlite3_open_v2(connstring, &instance, flags, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result);
+
+	// Set the connection to report extended error codes
+	sqlite3_extended_result_codes(instance, -1);
 
 	try {
 
