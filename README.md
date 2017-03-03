@@ -54,4 +54,6 @@ msbuild msbuild.proj
 > out\zuki.pvr.hdhomerundvr-win32-jarvis-x.x.x.x.zip (Windows / Win32)
 > out\zuki.pvr.hdhomerundvr-linux-i686-jarvis-x.x.x.x.zip (Linux / i686)
 > out\zuki.pvr.hdhomerundvr-linux-x86_64-jarvis-x.x.x.x.zip (Linux / x86_64)
+> out\zuki.pvr.hdhomerundvr-android-arm-jarvis-x.x.x.x.zip (android-arm)
+> out\zuki.pvr.hdhomerundvr-android-x86-jarvis-x.x.x.x.zip (android-x86)
 ```
