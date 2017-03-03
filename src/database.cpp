@@ -1578,6 +1578,47 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 }
 
 //---------------------------------------------------------------------------
+// enumerate_sd_channelids
+//
+// Enumerates the channels not marked as 'HD' in the lineups
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	callback	- Callback function
+
+void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback callback)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (callback == nullptr)) return;
+
+	// channelid
+	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') is null";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Execute the query and iterate over all returned rows
+		while(sqlite3_step(statement) == SQLITE_ROW) {
+
+			union channelid channelid;
+			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
+			
+			callback(channelid);
+		}
+	
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // enumerate_series_channelids
 //
 // Enumerates all of the channel identifiers associated with a series
