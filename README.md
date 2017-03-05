@@ -47,6 +47,7 @@ git clone https://github.com/djp952/external-sqlite -b sqlite-3.17.0 --depth=1
 git clone https://github.com/djp952/prebuilt-libcurl -b libcurl-7.52.1 --depth=1
 git clone https://github.com/djp952/prebuilt-libssl -b libssl-1.0.2k --depth=1
 git clone https://github.com/djp952/prebuilt-libuuid -b libuuid-1.0.3 --depth=1
+git clone https://github.com/djp952/prebuilt-libz -b libz-1.2.8 --depth=1
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Jarvis
 cd pvr.hdhomerundvr
 msbuild msbuild.proj

@@ -1,3 +1,8 @@
+v1.0.3
+- Add "SD Channels" channel group
+- Use IPv4 specific backend discovery URLs (ipv4.my.hdhomerun.com)
+- Resolve issue with SQLite database being locked during initialization of a new connection
+
 v1.0.2
 - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
 - Update SQLite database engine to v3.17.0

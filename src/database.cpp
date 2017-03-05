@@ -172,9 +172,9 @@ connectionpool::connectionpool(char const* connstring, int flags) : m_connstr((c
 
 	if(connstring == nullptr) throw std::invalid_argument("connstring");
 
-	// Create and pool an initial connection now to give the caller an opportunity
-	// to catch any exceptions during construction of the connection pool 
-	handle = open_database(m_connstr.c_str(), m_flags);
+	// Create and pool the initial connection now to give the caller an opportunity
+	// to catch any exceptions during initialization of the database
+	handle = open_database(m_connstr.c_str(), m_flags, true);
 	m_connections.push_back(handle);
 	m_queue.push(handle);
 }
@@ -205,9 +205,8 @@ sqlite3* connectionpool::acquire(void)
 
 	if(m_queue.empty()) {
 
-		// No connections are available, open a new one using the same connection data
-		// and add it to the vector<> of all active connection objects
-		handle = open_database(m_connstr.c_str(), m_flags);
+		// No connections are available, open a new one using the same flags
+		handle = open_database(m_connstr.c_str(), m_flags, false);
 		m_connections.push_back(handle);
 	}
 
@@ -2524,16 +2523,41 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 
 sqlite3* open_database(char const* connstring, int flags)
 {
+	return open_database(connstring, flags, false);
+}
+
+//---------------------------------------------------------------------------
+// open_database
+//
+// Opens the SQLite database instance
+//
+// Arguments:
+//
+//	connstring		- Database connection string
+//	flags			- Database open flags (see sqlite3_open_v2)
+//	initialize		- Flag indicating database schema should be (re)initialized
+
+sqlite3* open_database(char const* connstring, int flags, bool initialize)
+{
 	sqlite3*			instance = nullptr;			// SQLite database instance
 
 	// Create the SQLite database using the provided connection string
 	int result = sqlite3_open_v2(connstring, &instance, flags, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result);
 
-	// Set the connection to report extended error codes
+	// set the connection to report extended error codes
+	//
 	sqlite3_extended_result_codes(instance, -1);
 
+	// set a busy_timeout handler for this connection
+	//
+	sqlite3_busy_timeout(instance, 30000);
+	
 	try {
+
+		// switch the database to write-ahead logging
+		//
+		execute_non_query(instance, "pragma journal_mode=wal");
 
 		// scalar function: decode_channel_id
 		//
@@ -2580,70 +2604,68 @@ sqlite3* open_database(char const* connstring, int flags)
 		result = sqlite3_create_function_v2(instance, "url_encode", 1, SQLITE_UTF8, nullptr, url_encode, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		// table: client
+		// Only execute schema creation steps if the database is being initialized; the caller needs
+		// to ensure that this is set for only one connection otherwise locking issues can occur
 		//
-		// clientid(pk)
-		execute_non_query(instance, "create table if not exists client(clientid text primary key not null)");
+		if(initialize) {
 
-		// table: device
-		// 
-		// deviceid(pk) | type | data
-		execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, type text, data text)");
+			// table: client
+			//
+			// clientid(pk)
+			execute_non_query(instance, "create table if not exists client(clientid text primary key not null)");
 
-		// table: lineup
-		//
-		// deviceid(pk) | data
-		execute_non_query(instance, "create table if not exists lineup(deviceid text primary key not null, data text)");
+			// table: device
+			// 
+			// deviceid(pk) | type | data
+			execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, type text, data text)");
 
-		// table: recording
-		//
-		// deviceid(pk) | data
-		execute_non_query(instance, "create table if not exists recording(deviceid text primary key not null, data text)");
+			// table: lineup
+			//
+			// deviceid(pk) | data
+			execute_non_query(instance, "create table if not exists lineup(deviceid text primary key not null, data text)");
 
-		// table: guide
-		//
-		// channelid(pk) | channelname | iconurl | data
-		execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text, data text)");
+			// table: recording
+			//
+			// deviceid(pk) | data
+			execute_non_query(instance, "create table if not exists recording(deviceid text primary key not null, data text)");
 
-		// table: recordingrule
-		//
-		// recordingruleid(pk) | data
-		execute_non_query(instance, "create table if not exists recordingrule(recordingruleid text primary key not null, seriesid text not null, data text)");
+			// table: guide
+			//
+			// channelid(pk) | channelname | iconurl | data
+			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text, data text)");
 
-		// table: episode
-		//
-		// seriesid(pk) | data
-		execute_non_query(instance, "create table if not exists episode(seriesid text primary key not null, data text)");
+			// table: recordingrule
+			//
+			// recordingruleid(pk) | data
+			execute_non_query(instance, "create table if not exists recordingrule(recordingruleid text primary key not null, seriesid text not null, data text)");
 
-		// table: genremap
-		//
-		// filter(pk) | genretype
-		execute_non_query(instance, "create table if not exists genremap(filter text primary key not null, genretype integer)");
+			// table: episode
+			//
+			// seriesid(pk) | data
+			execute_non_query(instance, "create table if not exists episode(seriesid text primary key not null, data text)");
 
-		// (re)generate the clientid
-		//
-		execute_non_query(instance, "delete from client");
-		execute_non_query(instance, "insert into client values(generate_uuid())");
+			// table: genremap
+			//
+			// filter(pk) | genretype
+			execute_non_query(instance, "create table if not exists genremap(filter text primary key not null, genretype integer)");
 
-		// (re)build the genremap table
-		//
-		sqlite3_exec(instance, "replace into genremap values('Movies', 0x10)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_MOVIEDRAMA 
-		sqlite3_exec(instance, "replace into genremap values('News', 0x20)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-		sqlite3_exec(instance, "replace into genremap values('Comedy', 0x30)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SHOW
-		sqlite3_exec(instance, "replace into genremap values('Drama', 0x30)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SHOW 
-		sqlite3_exec(instance, "replace into genremap values('Game Show', 0x30)", nullptr, nullptr, nullptr);	// EPG_EVENT_CONTENTMASK_SHOW
-		sqlite3_exec(instance, "replace into genremap values('Talk Show', 0x30)", nullptr, nullptr, nullptr);	// EPG_EVENT_CONTENTMASK_SHOW
-		sqlite3_exec(instance, "replace into genremap values('Sports', 0x40)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SPORTS
-		sqlite3_exec(instance, "replace into genremap values('Kids', 0x50)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_CHILDRENYOUTH
-		sqlite3_exec(instance, "replace into genremap values('Food', 0xA0)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_LEISUREHOBBIES
+			// (re)generate the clientid
+			//
+			execute_non_query(instance, "delete from client");
+			execute_non_query(instance, "insert into client values(generate_uuid())");
 
-		// set a busy_timeout handler for this connection
-		//
-		sqlite3_busy_timeout(instance, 30000);
-	
-		// switch the database to write-ahead logging
-		//
-		execute_non_query(instance, "pragma journal_mode=wal");
+			// (re)build the genremap table
+			//
+			sqlite3_exec(instance, "replace into genremap values('Movies', 0x10)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_MOVIEDRAMA 
+			sqlite3_exec(instance, "replace into genremap values('News', 0x20)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+			sqlite3_exec(instance, "replace into genremap values('Comedy', 0x30)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SHOW
+			sqlite3_exec(instance, "replace into genremap values('Drama', 0x30)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SHOW 
+			sqlite3_exec(instance, "replace into genremap values('Game Show', 0x30)", nullptr, nullptr, nullptr);	// EPG_EVENT_CONTENTMASK_SHOW
+			sqlite3_exec(instance, "replace into genremap values('Talk Show', 0x30)", nullptr, nullptr, nullptr);	// EPG_EVENT_CONTENTMASK_SHOW
+			sqlite3_exec(instance, "replace into genremap values('Sports', 0x40)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SPORTS
+			sqlite3_exec(instance, "replace into genremap values('Kids', 0x50)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_CHILDRENYOUTH
+			sqlite3_exec(instance, "replace into genremap values('Food', 0xA0)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_LEISUREHOBBIES
+		}
 	}
 
 	// Close the database instance on any thrown exceptions
