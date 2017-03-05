@@ -8,6 +8,11 @@
     <summary lang="en_GB">HDHomeRun DVR PVR Client</summary>
     <description lang="en_GB">HDHomeRun DVR frontend. Supports streaming Live TV, Recordings, Electronic Program Guide (EPG) and Timers. Requires a SiliconDust HDHomeRun DVR Service subscription (https://www.silicondust.com/dvr-service) and an active HDHomeRun RECORD device on the local network.</description>
     <news>
+v1.0.3
+  - Add "SD Channels" channel group
+  - Use IPv4 specific backend discovery URLs (ipv4.my.hdhomerun.com)
+  - Resolve issue with SQLite database being locked during initialization of a new connection
+  
 v1.0.2
   - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
   - Update SQLite database engine to v3.17.0

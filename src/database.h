@@ -448,6 +448,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 //
 // Opens a handle to the backend SQLite database
 sqlite3* open_database(char const* connstring, int flags);
+sqlite3* open_database(char const* connstring, int flags, bool initialize);
 
 // try_execute_non_query
 //

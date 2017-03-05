@@ -32,8 +32,11 @@
 //
 //	code		- SQLite error code
 
-sqlite_exception::sqlite_exception(int code) : m_what(sqlite3_errstr(code))
+sqlite_exception::sqlite_exception(int code)
 {
+	char* what = sqlite3_mprintf("(%d) %s", code, sqlite3_errstr(code));
+	m_what.assign(what);
+	sqlite3_free(reinterpret_cast<void*>(what));
 }
 
 //-----------------------------------------------------------------------------
@@ -46,8 +49,9 @@ sqlite_exception::sqlite_exception(int code) : m_what(sqlite3_errstr(code))
 
 sqlite_exception::sqlite_exception(int code, char const* message) : m_what(sqlite3_errstr(code))
 {
-	// If a message was provided, append it to the generated error message
-	if(message) m_what += std::string(": ") + message;
+	char* what = sqlite3_mprintf("%s: (%d) %s", message, code, sqlite3_errstr(code));
+	m_what.assign(what);
+	sqlite3_free(reinterpret_cast<void*>(what));
 }
 
 //-----------------------------------------------------------------------------
