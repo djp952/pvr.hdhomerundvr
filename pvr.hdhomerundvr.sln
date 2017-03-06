@@ -20,9 +20,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pvr.hdhomerundvr", "pvr.hdhomerundvr", "{ADB6AA8A-8216-4963-8E01-B8439B5C3FAF}"
 	ProjectSection(SolutionItems) = preProject
 		pvr.hdhomerundvr\.nomedia = pvr.hdhomerundvr\.nomedia
-		pvr.hdhomerundvr\addon-android.xml = pvr.hdhomerundvr\addon-android.xml
-		pvr.hdhomerundvr\addon-linux.xml = pvr.hdhomerundvr\addon-linux.xml
-		pvr.hdhomerundvr\addon-windows.xml = pvr.hdhomerundvr\addon-windows.xml
 		pvr.hdhomerundvr\changelog.txt = pvr.hdhomerundvr\changelog.txt
 		pvr.hdhomerundvr\icon.png = pvr.hdhomerundvr\icon.png
 	EndProjectSection

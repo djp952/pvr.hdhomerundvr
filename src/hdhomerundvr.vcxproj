@@ -163,10 +163,30 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="addon.xml.tt">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
+"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
+"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
+"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
+"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating addon.xml files</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
+    </CustomBuild>
     <None Include="hdhomerundvr.def" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\tmp\addon-android.xml" />
+    <Xml Include="..\tmp\addon-linux.xml" />
+    <Xml Include="..\tmp\addon-windows.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

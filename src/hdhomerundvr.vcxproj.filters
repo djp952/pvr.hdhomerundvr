@@ -34,6 +34,10 @@
     <Filter Include="Header Files\compat\openssl">
       <UniqueIdentifier>{0ce47b53-5ed3-4c52-b3ee-4af174fa40eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{81164fcc-a1a1-481b-a904-95f9e7758c47}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -150,5 +154,21 @@
     <ResourceCompile Include="..\tmp\version\version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="addon.xml.tt">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\tmp\addon-android.xml">
+      <Filter>Generated Files</Filter>
+    </Xml>
+    <Xml Include="..\tmp\addon-linux.xml">
+      <Filter>Generated Files</Filter>
+    </Xml>
+    <Xml Include="..\tmp\addon-windows.xml">
+      <Filter>Generated Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>
