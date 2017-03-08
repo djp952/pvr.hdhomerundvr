@@ -41,7 +41,7 @@ msbuild msbuild.proj
 Open "Developer Command Prompt for VS2015"   
 ```
 git clone https://github.com/djp952/build --depth=1
-git clone https://github.com/djp952/external-kodi-addon-dev-kit -b Krypton --depth=1
+git clone https://github.com/djp952/external-kodi-addon-dev-kit -b Krypton-17.0 --depth=1
 git clone https://github.com/djp952/external-sqlite -b sqlite-3.17.0 --depth=1
 git clone https://github.com/djp952/prebuilt-libcurl -b libcurl-7.52.1 --depth=1
 git clone https://github.com/djp952/prebuilt-libssl -b libssl-1.0.2k --depth=1
