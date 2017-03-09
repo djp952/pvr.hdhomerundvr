@@ -1,0 +1,21 @@
+[submodule "build"]
+	path = depends/build
+	url = https://github.com/djp952/build.git
+[submodule "kodi-addon-dev-kit"]
+	path = depends/kodi-addon-dev-kit
+	url = https://github.com/djp952/external-kodi-addon-dev-kit.git
+[submodule "sqlite"]
+	path = depends/sqlite
+	url = https://github.com/djp952/external-sqlite.git
+[submodule "libcurl"]
+	path = depends/libcurl
+	url = https://github.com/djp952/prebuilt-libcurl.git
+[submodule "libssl"]
+	path = depends/libssl
+	url = https://github.com/djp952/prebuilt-libssl.git
+[submodule "libuuid"]
+	path = depends/libuuid
+	url = https://github.com/djp952/prebuilt-libuuid.git
+[submodule "libz"]
+	path = depends/libz
+	url = https://github.com/djp952/prebuilt-libz.git

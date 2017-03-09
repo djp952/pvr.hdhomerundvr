@@ -19,7 +19,7 @@
     <Filter Include="External Libraries\sqlite">
       <UniqueIdentifier>{824cb369-40c3-4c93-b00f-26a89f80cb70}</UniqueIdentifier>
     </Filter>
-    <Filter Include="External Libraries\external-kodi-addon-dev-kit">
+    <Filter Include="External Libraries\kodi-addon-dev-kit">
       <UniqueIdentifier>{4da93225-415f-4268-bca9-e1f9caf7f267}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\compat">
@@ -43,17 +43,17 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\external-sqlite\sqlite3.h">
+    <ClInclude Include="..\depends\sqlite\sqlite3.h">
       <Filter>External Libraries\sqlite</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\external-sqlite\sqlite3ext.h">
+    <ClInclude Include="..\depends\sqlite\sqlite3ext.h">
       <Filter>External Libraries\sqlite</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\external-kodi-addon-dev-kit\kodi\xbmc_addon_dll.h">
-      <Filter>External Libraries\external-kodi-addon-dev-kit</Filter>
+    <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_addon_dll.h">
+      <Filter>External Libraries\kodi-addon-dev-kit</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\external-kodi-addon-dev-kit\kodi\xbmc_pvr_dll.h">
-      <Filter>External Libraries\external-kodi-addon-dev-kit</Filter>
+    <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_pvr_dll.h">
+      <Filter>External Libraries\kodi-addon-dev-kit</Filter>
     </ClInclude>
     <ClInclude Include="database.h">
       <Filter>Header Files</Filter>
@@ -99,7 +99,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\external-sqlite\sqlite3.c">
+    <ClCompile Include="..\depends\sqlite\sqlite3.c">
       <Filter>External Libraries\sqlite</Filter>
     </ClCompile>
     <ClCompile Include="dbextension.cpp">

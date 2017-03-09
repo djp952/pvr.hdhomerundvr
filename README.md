@@ -40,15 +40,9 @@ msbuild msbuild.proj
 **BUILD**   
 Open "Developer Command Prompt for VS2015"   
 ```
-git clone https://github.com/djp952/build --depth=1
-git clone https://github.com/djp952/external-kodi-addon-dev-kit -b Krypton-17.0 --depth=1
-git clone https://github.com/djp952/external-sqlite -b sqlite-3.17.0 --depth=1
-git clone https://github.com/djp952/prebuilt-libcurl -b libcurl-7.52.1 --depth=1
-git clone https://github.com/djp952/prebuilt-libssl -b libssl-1.0.2k --depth=1
-git clone https://github.com/djp952/prebuilt-libuuid -b libuuid-1.0.3 --depth=1
-git clone https://github.com/djp952/prebuilt-libz -b libz-1.2.8 --depth=1
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Krypton
 cd pvr.hdhomerundvr
+git submodule update --init
 msbuild msbuild.proj
 
 > out\zuki.pvr.hdhomerundvr-win32-krypton-x.x.x.x.zip (windows-Win32)

@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\external-sqlite\sqlite3.h">
+    <ClInclude Include="..\depends\sqlite\sqlite3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\external-sqlite\shell.c">
+    <ClCompile Include="..\depends\sqlite\shell.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\external-sqlite\sqlite3.c">
+    <ClCompile Include="..\depends\sqlite\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
