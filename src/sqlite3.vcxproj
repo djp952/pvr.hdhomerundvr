@@ -61,7 +61,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;SQLITE_ENABLE_JSON1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\external-sqlite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\sqlite</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -77,7 +77,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;SQLITE_ENABLE_JSON1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\external-sqlite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\sqlite</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -87,11 +87,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\external-sqlite\sqlite3.h" />
+    <ClInclude Include="..\depends\sqlite\sqlite3.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\external-sqlite\shell.c" />
-    <ClCompile Include="..\..\external-sqlite\sqlite3.c" />
+    <ClCompile Include="..\depends\sqlite\shell.c" />
+    <ClCompile Include="..\depends\sqlite\sqlite3.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
