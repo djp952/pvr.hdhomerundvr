@@ -26,35 +26,35 @@ LOCAL_PATH := $(call my-dir)
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcrypto-prebuilt
-LOCAL_SRC_FILES := ../prebuilt-libssl/android-$(TARGET_ARCH_ABI)/lib/libcrypto.a
+LOCAL_SRC_FILES := depends/libssl/android-$(TARGET_ARCH_ABI)/lib/libcrypto.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libcurl
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcurl-prebuilt
-LOCAL_SRC_FILES := ../prebuilt-libcurl/android-$(TARGET_ARCH_ABI)/lib/libcurl.a
+LOCAL_SRC_FILES := depends/libcurl/android-$(TARGET_ARCH_ABI)/lib/libcurl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libssl
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libssl-prebuilt
-LOCAL_SRC_FILES := ../prebuilt-libssl/android-$(TARGET_ARCH_ABI)/lib/libssl.a
+LOCAL_SRC_FILES := depends/libssl/android-$(TARGET_ARCH_ABI)/lib/libssl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libuuid
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libuuid-prebuilt
-LOCAL_SRC_FILES := ../prebuilt-libuuid/android-$(TARGET_ARCH_ABI)/lib/libuuid.a
+LOCAL_SRC_FILES := depends/libuuid/android-$(TARGET_ARCH_ABI)/lib/libuuid.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libz
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libz-prebuilt
-LOCAL_SRC_FILES := ../prebuilt-libz/android-$(TARGET_ARCH_ABI)/lib/libz.a
+LOCAL_SRC_FILES := depends/libz/android-$(TARGET_ARCH_ABI)/lib/libz.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libhdhomerundvr
@@ -63,12 +63,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := hdhomerundvr
 
 LOCAL_C_INCLUDES += \
-	../external-kodi-addon-dev-kit/kodi \
-	../prebuilt-libcurl/android-$(TARGET_ARCH_ABI)/include/curl \
-	../prebuilt-libssl/android-$(TARGET_ARCH_ABI)/include \
-	../prebuilt-libuuid/android-$(TARGET_ARCH_ABI)/include \
-	../prebuilt-libz/android-$(TARGET_ARCH_ABI)/include \
-	../external-sqlite \
+	depends/kodi-addon-dev-kit/kodi \
+	depends/libcurl/android-$(TARGET_ARCH_ABI)/include/curl \
+	depends/libssl/android-$(TARGET_ARCH_ABI)/include \
+	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
+	depends/libz/android-$(TARGET_ARCH_ABI)/include \
+	depends/sqlite \
 	tmp/version
 	
 LOCAL_CFLAGS += \
@@ -97,7 +97,7 @@ LOCAL_LDLIBS += \
 	-llog
 
 LOCAL_SRC_FILES := \
-	../external-sqlite/sqlite3.c \
+	depends/sqlite/sqlite3.c \
 	src/addoncallbacks.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \

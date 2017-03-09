@@ -74,9 +74,9 @@
   <ItemGroup>
     <CustomBuild Include="version.ini">
       <FileType>Text</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProjectDir)..\..\build\zuki.build.tools.mkversion.exe" "$(ProjectDir)..\tmp\version" "-ini:%(FullPath)" -format:h,rc,txt</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProjectDir)..\depends\build\zuki.build.tools.mkversion.exe" "$(ProjectDir)..\tmp\version" "-ini:%(FullPath)" -format:h,rc,txt</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\version\version.h;$(ProjectDir)..\tmp\version\version.rc;$(ProjectDir)..\tmp\version\version.txt;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProjectDir)..\..\build\zuki.build.tools.mkversion.exe" "$(ProjectDir)..\tmp\version" "-ini:%(FullPath)" -format:h,rc,txt</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProjectDir)..\depends\build\zuki.build.tools.mkversion.exe" "$(ProjectDir)..\tmp\version" "-ini:%(FullPath)" -format:h,rc,txt</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\tmp\version\version.h;$(ProjectDir)..\tmp\version\version.rc;$(ProjectDir)..\tmp\version\version.txt;%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>
