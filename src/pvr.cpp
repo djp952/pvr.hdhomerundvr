@@ -46,6 +46,7 @@
 #include "database.h"
 #include "livestream.h"
 #include "pvrcallbacks.h"
+#include "scalar_condition.h"
 #include "scheduler.h"
 #include "string_exception.h"
 
@@ -92,12 +93,12 @@ template<typename... _args> static void log_notice(_args&&... args);
 
 // Scheduled Tasks
 //
-static void discover_devices_task(void);
-static void discover_episodes_task(void);
-static void discover_guide_task(void);
-static void discover_lineups_task(void);
-static void discover_recordingrules_task(void);
-static void discover_recordings_task(void);
+static void discover_devices_task(scalar_condition<bool> const& cancel);
+static void discover_episodes_task(scalar_condition<bool> const& cancel);
+static void discover_guide_task(scalar_condition<bool> const& cancel);
+static void discover_lineups_task(scalar_condition<bool> const& cancel);
+static void discover_recordingrules_task(scalar_condition<bool> const& cancel);
+static void discover_recordings_task(scalar_condition<bool> const& cancel);
 
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
@@ -451,7 +452,7 @@ static int delete_expired_enum_to_seconds(int nvalue)
 // discover_devices_task
 //
 // Scheduled task implementation to discover the HDHomeRun devices
-static void discover_devices_task(void)
+static void discover_devices_task(scalar_condition<bool> const& cancel)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -478,11 +479,11 @@ static void discover_devices_task(void)
 
 			log_notice(__func__, ": device discovery data changed -- execute lineup discovery now");
 			g_scheduler.remove(discover_lineups_task);
-			discover_lineups_task();
+			discover_lineups_task(cancel);
 
 			log_notice(__func__, ": device discovery data changed -- execute recording discovery now");
 			g_scheduler.remove(discover_recordings_task);
-			discover_recordings_task();
+			discover_recordings_task(cancel);
 		}
 	}
 
@@ -499,7 +500,7 @@ static void discover_devices_task(void)
 // discover_episodes_task
 //
 // Scheduled task implementation to discover the episode data associated with recording rules
-static void discover_episodes_task(void)
+static void discover_episodes_task(scalar_condition<bool> const& /*cancel*/)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -544,7 +545,7 @@ static void discover_episodes_task(void)
 // discover_guide_task
 //
 // Scheduled task implementation to discover the electronic program guide
-static void discover_guide_task(void)
+static void discover_guide_task(scalar_condition<bool> const& /*cancel*/)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -597,7 +598,7 @@ static void discover_guide_task(void)
 // discover_lineups_task
 //
 // Scheduled task implementation to discover the channel lineups
-static void discover_lineups_task(void)
+static void discover_lineups_task(scalar_condition<bool> const& cancel)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -630,7 +631,7 @@ static void discover_lineups_task(void)
 			// if new channels were added they may be able to be populated in the guide immediately
 			log_notice(__func__, ": lineup discovery data changed -- execute electronic program guide discovery now");
 			g_scheduler.remove(discover_guide_task);
-			discover_guide_task();
+			discover_guide_task(cancel);
 		}
 	}
 
@@ -647,7 +648,7 @@ static void discover_lineups_task(void)
 // discover_recordingrules_task
 //
 // Scheduled task implementation to discover the recording rules and timers
-static void discover_recordingrules_task(void)
+static void discover_recordingrules_task(scalar_condition<bool> const& /*cancel*/)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -716,7 +717,7 @@ static void discover_recordingrules_task(void)
 // discover_recordings_task
 //
 // Scheduled task implementation to discover the storage recordings
-static void discover_recordings_task(void)
+static void discover_recordings_task(scalar_condition<bool> const& /*cancel*/)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -923,6 +924,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	PVR_MENUHOOK			menuhook;			// For registering menu hooks
 	bool					bvalue = false;		// Setting value
 	int						nvalue = 0;			// Setting value
+	scalar_condition<bool>	cancel{false};		// Dummy cancellation flag for tasks
 
 	if((handle == nullptr) || (props == nullptr)) return ADDON_STATUS::ADDON_STATUS_PERMANENT_FAILURE;
 
@@ -1050,8 +1052,8 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 						log_notice(__func__, ": no channels detected in the database -- execute device and lineup discovery now");
 
-						discover_devices_task();				// Discover the initial set of devices
-						discover_lineups_task();				// Discover the initial set of channels
+						discover_devices_task(cancel);				// Discover the initial set of devices
+						discover_lineups_task(cancel);				// Discover the initial set of channels
 					}
 
 					else {
@@ -1518,6 +1520,8 @@ PVR_ERROR GetDriveSpace(long long* /*total*/, long long* /*used*/)
 
 PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& item)
 {
+	scalar_condition<bool>		cancel{false};			// Dummy cancellation flag
+
 	assert(g_pvr);
 
 	// MENUHOOK_RECORD_DELETENORERECORD
@@ -1553,7 +1557,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		log_notice(__func__, ": manually triggering device discovery task");
 		g_scheduler.remove(discover_devices_task);
-		discover_devices_task();
+		discover_devices_task(cancel);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
@@ -1562,7 +1566,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		log_notice(__func__, ": manually triggering lineup discovery task");
 		g_scheduler.remove(discover_lineups_task);
-		discover_lineups_task();
+		discover_lineups_task(cancel);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
@@ -1571,7 +1575,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		log_notice(__func__, ": manually triggering guide discovery task");
 		g_scheduler.remove(discover_guide_task);
-		discover_guide_task();
+		discover_guide_task(cancel);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
@@ -1580,7 +1584,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		log_notice(__func__, ": manually triggering recording discovery task");
 		g_scheduler.remove(discover_recordings_task);
-		discover_recordings_task();
+		discover_recordings_task(cancel);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
@@ -1589,7 +1593,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		log_notice(__func__, ": manually triggering recording rule discovery task");
 		g_scheduler.remove(discover_recordingrules_task);
-		discover_recordingrules_task();
+		discover_recordingrules_task(cancel);
 	}
 
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;

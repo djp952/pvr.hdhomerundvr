@@ -68,7 +68,7 @@ public:
 	// test
 	//
 	// Tests the condition by executing a zero-millisecond wait
-	bool test(_type const& value)
+	bool test(_type const& value) const
 	{
 		return wait_until_equals(value, 0);
 	}
@@ -76,7 +76,7 @@ public:
 	// wait_until_equals
 	//
 	// Waits indefinitely until the value has been set to the specified value
-	void wait_until_equals(_type const& value)
+	void wait_until_equals(_type const& value) const
 	{
 		std::unique_lock<std::mutex> critsec(m_lock);
 
@@ -87,7 +87,7 @@ public:
 	// wait_until_equals
 	//
 	// Waits until the value has been set to the specified value
-	bool wait_until_equals(_type const& value, uint32_t timeoutms)
+	bool wait_until_equals(_type const& value, uint32_t timeoutms) const
 	{
 		std::unique_lock<std::mutex> critsec(m_lock);
 
@@ -104,9 +104,9 @@ private:
 	//-------------------------------------------------------------------------
 	// Member Variables
 
-	std::condition_variable		m_condition;	// Condition variable
-	std::mutex					m_lock;			// Synchronization object
-	_type						m_value;		// Contained value
+	mutable std::condition_variable		m_condition;	// Condition variable
+	mutable std::mutex					m_lock;			// Synchronization object
+	_type								m_value;		// Contained value
 };
 
 //-----------------------------------------------------------------------------
