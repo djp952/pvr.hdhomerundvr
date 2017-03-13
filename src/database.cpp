@@ -29,6 +29,7 @@
 #include <string.h>
 #include <uuid/uuid.h>
 
+#include "discover.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
 
@@ -57,6 +58,8 @@
 //---------------------------------------------------------------------------
 
 void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
+void discover_devices_broadcast(sqlite3* instance);
+void discover_devices_http(sqlite3* instance);
 void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
 void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv);
 void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** argv);
@@ -495,12 +498,13 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 //
 // Arguments:
 //
-//	instance	- SQLite database instance
+//	instance		- SQLite database instance
+//	usebroadcast	- Flag to use broadcast rather than HTTP discovery
 
-void discover_devices(sqlite3* instance)
+void discover_devices(sqlite3* instance, bool usebroadcast)
 {
 	bool ignored;
-	return discover_devices(instance, ignored);
+	return discover_devices(instance, usebroadcast, ignored);
 }
 
 //---------------------------------------------------------------------------
@@ -510,10 +514,11 @@ void discover_devices(sqlite3* instance)
 //
 // Arguments:
 //
-//	instance	- SQLite database instance
-//	changed		- Flag indicating if the data has changed
+//	instance		- SQLite database instance
+//	usebroadcast	- Flag to use broadcast rather than HTTP discovery
+//	changed			- Flag indicating if the data has changed
 
-void discover_devices(sqlite3* instance, bool& changed)
+void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 {
 	changed = false;							// Initialize [out] argument
 
@@ -525,13 +530,10 @@ void discover_devices(sqlite3* instance, bool& changed)
 
 	try {
 
-		// Discover the devices from the network and insert them into a temporary table
-		execute_non_query(instance, "insert into discover_device select "
-			"coalesce(json_extract(discovery.value, '$.DeviceID'), json_extract(discovery.value, '$.StorageID')) as deviceid, "
-			"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
-			"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data "
-			"from json_each(http_request('http://ipv4.my.hdhomerun.com/discover')) as discovery "
-			"where data is not null");
+		// The logic required to load the temp table from broadcast differs greatly from the method
+		// used to load from the HTTP API; the specific mechanisms have been broken out into helpers
+		if(usebroadcast) discover_devices_broadcast(instance);
+		else discover_devices_http(instance);
 
 		// This requires a multi-step operation against the device table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -562,6 +564,79 @@ void discover_devices(sqlite3* instance, bool& changed)
 
 	// Drop the temporary table on any exception
 	catch(...) { execute_non_query(instance, "drop table discover_device"); throw; }
+}
+
+//---------------------------------------------------------------------------
+// discover_devices_broadcast
+//
+// discover_devices helper -- loads the discover_device table from UDP broadcast
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+
+void discover_devices_broadcast(sqlite3* instance)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+
+	// deviceid | type | data
+	auto sql = "insert into discover_device values(printf('%08X', ?1), ?2, ?3)";
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Enumerate the devices on the local network accessible via UDP broadcast and insert them
+		// into the temp table using the baseurl as 'data' rather than the discovery JSON
+		enumerate_devices([&](struct discover_device const& device) -> void { 
+			
+			// Bind the query parameter(s)
+			result = sqlite3_bind_int(statement, 1, device.deviceid);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, (device.devicetype == device_type::tuner) ? "tuner" : "storage", -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 3, device.baseurl, -1, SQLITE_STATIC);
+			if(result != SQLITE_OK) throw sqlite_exception(result);
+
+			// This is a non-query, it's not expected to return any rows
+			result = sqlite3_step(statement);
+			if(result != SQLITE_DONE) throw string_exception("non-query failed or returned an unexpected result set");
+
+			// Reset the prepared statement so that it can be executed again
+			result = sqlite3_reset(statement);
+			if(result != SQLITE_OK) throw sqlite_exception(result);
+		});
+
+		// Finalize the statement after all devices have been processed
+		sqlite3_finalize(statement);
+	}
+		
+	catch(...) { sqlite3_finalize(statement); throw; }
+
+	// Replace the base URL temporarily stored in the data column with the full discovery JSON
+	execute_non_query(instance, "update discover_device set data = http_request(data || '/discover.json')");
+
+	// Update the deviceid column for storage devices, the broadcast mechanism has no means to return the StorageID
+	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where type = 'storage'");
+}
+
+//---------------------------------------------------------------------------
+// discover_devices_http
+//
+// discover_devices helper -- loads the discover_device table from the HTTP API
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+
+void discover_devices_http(sqlite3* instance)
+{
+	// Otherwise, discover the devices from the HTTP API and insert them into a temporary table
+	execute_non_query(instance, "insert into discover_device select "
+		"coalesce(json_extract(discovery.value, '$.DeviceID'), json_extract(discovery.value, '$.StorageID')) as deviceid, "
+		"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
+		"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data "
+		"from json_each(http_request('http://ipv4.my.hdhomerun.com/discover')) as discovery "
+		"where data is not null");
 }
 
 //---------------------------------------------------------------------------

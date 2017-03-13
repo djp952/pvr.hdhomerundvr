@@ -42,8 +42,8 @@
 
     <PropertyGroup>
       <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
-      <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -Idepends/kodi-addon-dev-kit/kodi -Idepends/libssl/linux-i686/include -Idepends/libcurl/linux-i686/include/curl -Idepends/libuuid/linux-i686/include -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-i686>
-      <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -Idepends/kodi-addon-dev-kit/kodi -Idepends/libssl/linux-x86_64/include -Idepends/libcurl/linux-x86_64/include/curl -Idepends/libuuid/linux-x86_64/include -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-x86_64>
+      <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -Idepends/kodi-addon-dev-kit/kodi -Idepends/libssl/linux-i686/include -Idepends/libcurl/linux-i686/include/curl -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-i686>
+      <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -Idepends/kodi-addon-dev-kit/kodi -Idepends/libssl/linux-x86_64/include -Idepends/libcurl/linux-x86_64/include/curl -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-x86_64>
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
@@ -56,30 +56,42 @@
 
     <!-- Linux/i686 -->
     <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-i686/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-i686/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-i686/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-i686/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-i686/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-i686/sqlite3.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/addoncallbacks.cpp -o out/linux-i686/addoncallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/database.cpp -o out/linux-i686/database.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/dbextension.cpp -o out/linux-i686/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/discover.cpp -o out/linux-i686/discover.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/livestream.cpp -o out/linux-i686/livestream.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/pvr.cpp -o out/linux-i686/pvr.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/pvrcallbacks.cpp -o out/linux-i686/pvrcallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/linux-i686/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/linux-i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 -m32 -shared out/linux-i686/addoncallbacks.o out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/livestream.o out/linux-i686/pvr.o out/linux-i686/pvrcallbacks.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o depends/libcurl/linux-i686/lib/libcurl.a depends/libssl/linux-i686/lib/libcrypto.a depends/libssl/linux-i686/lib/libssl.a depends/libz/linux-i686/lib/libz.a depends/libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 -m32 -shared out/linux-i686/addoncallbacks.o out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/discover.o out/linux-i686/hdhomerun_debug.o out/linux-i686/hdhomerun_discover.o out/linux-i686/hdhomerun_os_posix.o out/linux-i686/hdhomerun_pkt.o out/linux-i686/hdhomerun_sock_posix.o out/linux-i686/livestream.o out/linux-i686/pvr.o out/linux-i686/pvrcallbacks.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o depends/libcurl/linux-i686/lib/libcurl.a depends/libssl/linux-i686/lib/libcrypto.a depends/libssl/linux-i686/lib/libssl.a depends/libz/linux-i686/lib/libz.a depends/libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 -Idepends/sqlite -m32 -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-i686/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
     <!-- Linux/x86_64 -->
     <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-x86_64/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-x86_64/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-x86_64/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-x86_64/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-x86_64/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/addoncallbacks.cpp -o out/linux-x86_64/addoncallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/database.cpp -o out/linux-x86_64/database.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-x86_64/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/discover.cpp -o out/linux-x86_64/discover.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/livestream.cpp -o out/linux-x86_64/livestream.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-x86_64/pvr.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/pvrcallbacks.cpp -o out/linux-x86_64/pvrcallbacks.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-x86_64/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 -shared out/linux-x86_64/addoncallbacks.o out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/livestream.o out/linux-x86_64/pvr.o out/linux-x86_64/pvrcallbacks.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o depends/libcurl/linux-x86_64/lib/libcurl.a depends/libssl/linux-x86_64/lib/libcrypto.a depends/libssl/linux-x86_64/lib/libssl.a depends/libz/linux-x86_64/lib/libz.a depends/libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 -shared out/linux-x86_64/addoncallbacks.o out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/discover.o out/linux-x86_64/hdhomerun_debug.o out/linux-x86_64/hdhomerun_discover.o out/linux-x86_64/hdhomerun_os_posix.o out/linux-x86_64/hdhomerun_pkt.o out/linux-x86_64/hdhomerun_sock_posix.o out/linux-x86_64/livestream.o out/linux-x86_64/pvr.o out/linux-x86_64/pvrcallbacks.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o depends/libcurl/linux-x86_64/lib/libcurl.a depends/libssl/linux-x86_64/lib/libcrypto.a depends/libssl/linux-x86_64/lib/libssl.a depends/libz/linux-x86_64/lib/libz.a depends/libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 -Idepends/sqlite -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
     <!-- android-arm -->

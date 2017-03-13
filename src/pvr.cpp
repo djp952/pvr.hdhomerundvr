@@ -162,6 +162,11 @@ struct addon_settings {
 	// Amount of time (seconds) after which an expired date/time rule is deleted
 	int delete_datetime_rules_after;
 
+	// use_broadcast_device_discovery
+	//
+	// Flag to discover devices via local network broadcast instead of HTTP
+	bool use_broadcast_device_discovery;
+
 	// discover_devices_interval
 	//
 	// Interval at which the local network device discovery will occur (seconds)
@@ -257,6 +262,7 @@ static addon_settings g_settings = {
 	false,					// pause_discovery_while_streaming
 	false,					// prepend_channel_numbers
 	86400,					// delete_datetime_rules_after			default = 1 day
+	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
 	7200,					// discover_episodes_interval			default = 2 hours
 	1800,					// discover_guide_interval				default = 30 minutes
@@ -463,6 +469,7 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 	// Grab copies of the required setting(s) up front
 	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
 	int discover_devices_interval = g_settings.discover_devices_interval;
+	bool use_broadcast_device_discovery = g_settings.use_broadcast_device_discovery;
 	settings_lock.unlock();
 
 	try {
@@ -471,7 +478,7 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Discover the devices on the local network and check for changes
-		discover_devices(dbhandle, changed);
+		discover_devices(dbhandle, use_broadcast_device_discovery, changed);
 
 		if(changed) {
 
@@ -990,7 +997,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
 
 	try {
-		
+
+#ifdef _WINDOWS
+		// On Windows, initialize winsock in case broadcast discovery is used; WSAStartup is
+		// reference-counted so if it's already been called this won't hurt anything
+		WSADATA wsaData;
+		WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+
 		// Initialize libcurl using the standard default options
 		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception("curl_global_init(CURL_GLOBAL_DEFAULT) failed");
 
@@ -1022,6 +1036,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
+			if(g_addon->GetSetting("use_broadcast_device_discovery", &bvalue)) g_settings.use_broadcast_device_discovery = bvalue;
 			if(g_addon->GetSetting("discover_devices_interval", &nvalue)) g_settings.discover_devices_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_lineups_interval", &nvalue)) g_settings.discover_lineups_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_guide_interval", &nvalue)) g_settings.discover_guide_interval = interval_enum_to_seconds(nvalue);
@@ -1205,6 +1220,10 @@ void ADDON_Destroy(void)
 	
 	// Clean up libcurl
 	curl_global_cleanup();
+
+#ifdef _WINDOWS
+	WSACleanup();			// Release winsock reference added in ADDON_Create
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -1318,6 +1337,22 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.delete_datetime_rules_after = nvalue;
 			log_notice(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds");
+		}
+	}
+
+	// use_broadcast_device_discovery
+	//
+	else if(strcmp(name, "use_broadcast_device_discovery") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_broadcast_device_discovery) {
+
+			g_settings.use_broadcast_device_discovery = bvalue;
+			log_notice(__func__, ": setting use_broadcast_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device discovery");
+
+			// Reschedule the device discovery task to run as soon as possible
+			g_scheduler.remove(discover_devices_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 		}
 	}
 
