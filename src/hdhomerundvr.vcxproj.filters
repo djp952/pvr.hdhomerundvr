@@ -38,6 +38,9 @@
       <UniqueIdentifier>{81164fcc-a1a1-481b-a904-95f9e7758c47}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
+    <Filter Include="External Libraries\libhdhomerun">
+      <UniqueIdentifier>{885c13cb-38dd-4c5c-97ed-9c6269c92dc3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -94,6 +97,27 @@
     <ClInclude Include="compat\pthread.h">
       <Filter>Header Files\compat</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_discover.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="discover.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_sock.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_pkt.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_debug.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -137,6 +161,24 @@
     </ClCompile>
     <ClCompile Include="compat\pthread.cpp">
       <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="discover.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_os_windows.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_sock_windows.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_pkt.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_debug.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

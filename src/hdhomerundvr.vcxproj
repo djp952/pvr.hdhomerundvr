@@ -62,22 +62,16 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent>
-      <Command>
-      </Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -88,7 +82,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -96,20 +90,20 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent>
-      <Command>
-      </Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_addon_dll.h" />
     <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_pvr_dll.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_debug.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_discover.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_pkt.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_sock.h" />
     <ClInclude Include="..\depends\sqlite\sqlite3.h" />
     <ClInclude Include="..\depends\sqlite\sqlite3ext.h" />
     <ClInclude Include="..\tmp\version\version.h" />
@@ -119,6 +113,7 @@
     <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
+    <ClInclude Include="discover.h" />
     <ClInclude Include="livestream.h" />
     <ClInclude Include="pvrcallbacks.h" />
     <ClInclude Include="scalar_condition.h" />
@@ -128,6 +123,26 @@
     <ClInclude Include="string_exception.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_debug.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_os_windows.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_pkt.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_sock_windows.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\depends\sqlite\sqlite3.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -141,6 +156,10 @@
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="discover.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

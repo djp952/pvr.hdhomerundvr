@@ -68,6 +68,7 @@ LOCAL_C_INCLUDES += \
 	depends/libssl/android-$(TARGET_ARCH_ABI)/include \
 	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
 	depends/libz/android-$(TARGET_ARCH_ABI)/include \
+	depends/libhdhomerun \
 	depends/sqlite \
 	tmp/version
 	
@@ -97,10 +98,16 @@ LOCAL_LDLIBS += \
 	-llog
 
 LOCAL_SRC_FILES := \
+	depends/libhdhomerun/hdhomerun_debug.c \
+	depends/libhdhomerun/hdhomerun_discover.c \
+	depends/libhdhomerun/hdhomerun_os_posix.c \
+	depends/libhdhomerun/hdhomerun_pkt.c \
+	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/sqlite/sqlite3.c \
 	src/addoncallbacks.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
+	src/discover.cpp \
 	src/livestream.cpp \
 	src/pvr.cpp \
 	src/pvrcallbacks.cpp \

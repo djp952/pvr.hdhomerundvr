@@ -64,6 +64,10 @@ msgctxt "#30109"
 msgid "Electronic Program Guide (EPG) data"
 msgstr ""
 
+msgctxt "#30110"
+msgid "Use network broadcast for device discovery"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

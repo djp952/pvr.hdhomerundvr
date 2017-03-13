@@ -67,7 +67,6 @@ struct channel {
 	char const*			iconurl;
 };
 
-
 // guideentry
 //
 // Information about a single guide entry enumerated from the database
@@ -294,8 +293,8 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid);
 // discover_devices
 //
 // Reloads the information about the available devices
-void discover_devices(sqlite3* instance);
-void discover_devices(sqlite3* instance, bool& changed);
+void discover_devices(sqlite3* instance, bool usebroadcast);
+void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed);
 
 // discover_episodes
 //
