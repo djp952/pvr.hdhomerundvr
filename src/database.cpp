@@ -1763,10 +1763,11 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 
 	// recordingruleid | parenttype | timerid | channelid | starttime | endtime | title | synopsis
 	auto sql = "with guidenumbers(guidenumber) as (select distinct(json_extract(value, '$.GuideNumber')) as guidenumber from lineup, json_each(lineup.data)) "
-		"select case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then recordingrule.recordingruleid else (select recordingruleid from recordingrule where seriesid = episode.seriesid limit 1) end as recordingruleid, "
+		"select case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then recordingrule.recordingruleid else "
+		"(select recordingruleid from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and seriesid = episode.seriesid limit 1) end as recordingruleid, "
 		"case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then 1 else 0 end as parenttype, "
+		"fnv_hash(json_extract(value, '$.ProgramID'), json_extract(value, '$.StartTime'), json_extract(value, '$.ChannelNumber')) as timerid, "
 		"case when guidenumbers.guidenumber is null then -1 else encode_channel_id(json_extract(value, '$.ChannelNumber')) end as channelid, "
-		"encode_channel_id(json_extract(value, '$.ChannelNumber')) as channelid, "
 		"json_extract(value, '$.StartTime') as starttime, "
 		"json_extract(value, '$.EndTime') as endtime, "
 		"json_extract(value, '$.Title') as title, "
