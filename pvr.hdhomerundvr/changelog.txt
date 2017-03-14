@@ -2,18 +2,19 @@ v1.0.4 (2017.03.14)
   - Add "Use network broadcast for device discovery" option
   - Fix problem with Record Series and Record Once timers that overlap on an episode only exposing the Record Series Episode timer
   - Fix problem where only one episode of a Record Series timer rule was being exposed as a timer
-  - Allow discovery of extended Electronic Program Guide data to be cancelled when Kodi is exiting or the system is entering sleep
+  - Cancel discovery of extended (8 hour) Electronic Program Guide data when Kodi is exiting or the system is entering a sleep state
+  - Execute discovery tasks initiated through the PVR Client Specific settings asynchronously
 
 v1.0.3 (2017.03.05)
   - Add "SD Channels" channel group
   - Use IPv4 specific backend discovery URLs (ipv4.my.hdhomerun.com)
   - Resolve issue with SQLite database being locked during initialization of a new connection
   
-v1.0.2 (2017.02.06)
+v1.0.2 (2017.02.26)
   - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
   - Update SQLite database engine to v3.17.0
   - (Linux) Switch to statically linked OpenSSL (1.0.2k) and zlib (1.2.8) libraries for better system compatibility
-  - (Android) Initial release for Android ARM, ARM64 and x86 devices. Experimental with known issues -- see documentation (https://github.com/djp952/pvr.hdhomerundvr/wiki)
+  - (Android) Initial release for Android ARM, ARM64 and x86 devices. Experimental -- see documentation (https://github.com/djp952/pvr.hdhomerundvr/wiki)
 
 v1.0.1 (2017.02.15)
   - Fix minor problem with one database table not being truncated at startup
