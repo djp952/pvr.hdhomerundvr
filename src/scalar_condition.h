@@ -26,9 +26,15 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 
 #pragma warning(push, 4)				
+
+// cv_wait_until_equals (condition_variable.cpp)
+//
+// Helper function used to overcome problem with VC2013 and _USE_32BIT_TIME_T
+bool cv_wait_until_equals(std::condition_variable& cv, std::unique_lock<std::mutex>& lock, uint32_t timeoutms, std::function<bool(void)> predicate);
 
 //-----------------------------------------------------------------------------
 // scalar_condition
@@ -91,9 +97,8 @@ public:
 	{
 		std::unique_lock<std::mutex> critsec(m_lock);
 
-		// If the value does not already match the provided value, wait for it
-		return m_condition.wait_until(critsec, std::chrono::system_clock::now() + std::chrono::milliseconds(timeoutms), 
-			[&]() -> bool { return m_value == value; });
+		// Use the helper function that avoids the problem on VC2013 when _USE_32BIT_TIME_T is defined
+		return cv_wait_until_equals(m_condition, critsec, timeoutms, [&]() -> bool { return m_value == value; });
 	}
 
 private:

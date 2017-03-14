@@ -105,6 +105,7 @@ LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/sqlite/sqlite3.c \
 	src/addoncallbacks.cpp \
+	src/condition_variable.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
 	src/discover.cpp \

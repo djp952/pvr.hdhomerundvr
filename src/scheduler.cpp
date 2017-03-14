@@ -20,6 +20,7 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------
 
+#include "stdafx.h"
 #include "scheduler.h"
 
 #include "string_exception.h"

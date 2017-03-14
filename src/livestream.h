@@ -33,6 +33,11 @@
 #include <thread>
 #include "scalar_condition.h"
 
+// cv_wait_until_equals (condition_variable.cpp)
+//
+// Helper function used to overcome problem with VC2013 and _USE_32BIT_TIME_T
+bool cv_wait_until_equals(std::condition_variable& cv, std::unique_lock<std::mutex>& lock, uint32_t timeoutms, std::function<bool(void)> predicate);
+
 //---------------------------------------------------------------------------
 // Class livestream
 //
@@ -99,7 +104,7 @@ private:
 	// curl_transfercontrol (static)
 	//
 	// libcurl callback to handle transfer information/progress
-	static int curl_transfercontrol(void* context, long long dltotal, long long dlnow, long long ultotal, long long ulnow);
+	static int curl_transfercontrol(void* context, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
 	// curl_write (static)
 	//
@@ -116,7 +121,7 @@ private:
 
 	std::thread					m_worker;					// Data transfer thread
 	mutable std::mutex			m_lock;						// Synchronization object
-	void*						m_curl = nullptr;			// CURL transfer object
+	CURL*						m_curl = nullptr;			// CURL transfer object
 
 	// STREAM CONTROL
 	//
