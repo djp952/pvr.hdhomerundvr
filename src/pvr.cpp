@@ -1635,9 +1635,10 @@ PVR_ERROR GetDriveSpace(long long* /*total*/, long long* /*used*/)
 
 PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& item)
 {
-	scalar_condition<bool>		cancel{false};			// Dummy cancellation flag
-
 	assert(g_pvr);
+
+	// Get the current time to reschedule tasks as requested
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
 	// MENUHOOK_RECORD_DELETENORERECORD
 	//
@@ -1670,45 +1671,45 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY) {
 
-		log_notice(__func__, ": manually triggering device discovery task");
+		log_notice(__func__, ": scheduling device discovery task to execute in 1 second");
 		g_scheduler.remove(discover_devices_task);
-		discover_devices_task(cancel);
+		g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY) {
 
-		log_notice(__func__, ": manually triggering lineup discovery task");
+		log_notice(__func__, ": scheduling lineup discovery task to execute in 1 second");
 		g_scheduler.remove(discover_lineups_task);
-		discover_lineups_task(cancel);
+		g_scheduler.add(now + std::chrono::seconds(1), discover_lineups_task);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY) {
 
-		log_notice(__func__, ": manually triggering guide discovery task");
+		log_notice(__func__, ": scheduling guide discovery task to execute in 1 second");
 		g_scheduler.remove(discover_guide_task);
-		discover_guide_task(cancel);
+		g_scheduler.add(now + std::chrono::seconds(1), discover_guide_task);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY) {
 
-		log_notice(__func__, ": manually triggering recording discovery task");
+		log_notice(__func__, ": scheduling recording discovery task to execute in 1 second");
 		g_scheduler.remove(discover_recordings_task);
-		discover_recordings_task(cancel);
+		g_scheduler.add(now + std::chrono::seconds(1), discover_recordings_task);
 	}
 
 	// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY) {
 
-		log_notice(__func__, ": manually triggering recording rule discovery task");
+		log_notice(__func__, ": scheduling recording rule discovery task to execute in 1 second");
 		g_scheduler.remove(discover_recordingrules_task);
-		discover_recordingrules_task(cancel);
+		g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
 	}
 
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
