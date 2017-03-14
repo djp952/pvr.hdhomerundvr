@@ -793,11 +793,12 @@ void discover_guide_basic(sqlite3* instance, bool& changed)
 // Arguments:
 //
 //	instance	- SQLite database instance
+//	cancel		- Condition variable used to cancel the operation
 
-void discover_guide_extended(sqlite3* instance)
+void discover_guide_extended(sqlite3* instance, scalar_condition<bool> const& cancel)
 {
 	bool ignored;
-	return discover_guide_extended(instance, ignored);
+	return discover_guide_extended(instance, cancel, ignored);
 }
 
 //---------------------------------------------------------------------------
@@ -808,9 +809,10 @@ void discover_guide_extended(sqlite3* instance)
 // Arguments:
 //
 //	instance	- SQLite database instance
+//	cancel		- Condition variable used to cancel the operation
 //	changed		- Flag indicating if the data has changed
 
-void discover_guide_extended(sqlite3* instance, bool& changed)
+void discover_guide_extended(sqlite3* instance, scalar_condition<bool> const& cancel, bool& changed)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -845,6 +847,9 @@ void discover_guide_extended(sqlite3* instance, bool& changed)
 
 			// Load all of the guide information for each channel individually
 			for(auto const& iterator : channels) {
+
+				// Check if the operation should be cancelled prior to executing the next query
+				if(cancel.test(true)) throw string_exception(__func__, ": operation cancelled");
 
 				// Bind the query parameter(s)
 				result = sqlite3_bind_int(statement, 1, iterator.value);
