@@ -1,7 +1,8 @@
-v1.0.4 (2017.xx.xx)
+v1.0.4 (2017.03.14)
   - Add "Use network broadcast for device discovery" option
   - Fix problem with Record Series and Record Once timers that overlap on an episode only exposing the Record Series Episode timer
   - Fix problem where only one episode of a Record Series timer rule was being exposed as a timer
+  - Allow discovery of extended Electronic Program Guide data to be cancelled when Kodi is exiting or the system is entering sleep
 
 v1.0.3 (2017.03.05)
   - Add "SD Channels" channel group

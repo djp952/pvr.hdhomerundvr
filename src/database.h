@@ -31,6 +31,8 @@
 #include <string>
 #include <vector>
 
+#include "scalar_condition.h"
+
 #pragma warning(push, 4)				// Enable maximum compiler warnings
 
 //---------------------------------------------------------------------------
@@ -311,8 +313,8 @@ void discover_guide_basic(sqlite3* instance, bool& changed);
 // discover_guide_extended
 //
 // Reloads the extended electronic program guide data
-void discover_guide_extended(sqlite3* instance);
-void discover_guide_extended(sqlite3* instance, bool& changed);
+void discover_guide_extended(sqlite3* instance, scalar_condition<bool> const& cancel);
+void discover_guide_extended(sqlite3* instance, scalar_condition<bool> const& cancel, bool& changed);
 
 // discover_lineups
 //

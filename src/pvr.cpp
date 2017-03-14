@@ -552,7 +552,7 @@ static void discover_episodes_task(scalar_condition<bool> const& /*cancel*/)
 // discover_guide_task
 //
 // Scheduled task implementation to discover the electronic program guide
-static void discover_guide_task(scalar_condition<bool> const& /*cancel*/)
+static void discover_guide_task(scalar_condition<bool> const& cancel)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
@@ -572,7 +572,7 @@ static void discover_guide_task(scalar_condition<bool> const& /*cancel*/)
 
 		// Discover the updated electronic program guide data from the backend service
 		if(guide_data_level == guide_data::basic) discover_guide_basic(dbhandle, changed);
-		else if(guide_data_level == guide_data::extended) discover_guide_extended(dbhandle, changed);
+		else if(guide_data_level == guide_data::extended) discover_guide_extended(dbhandle, cancel, changed);
 		else {
 
 			// If the guide_data_level setting is bad, default to using the basic guide data
