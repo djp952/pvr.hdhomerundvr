@@ -1,5 +1,7 @@
 v1.0.4 (2017.xx.xx)
   - Add "Use network broadcast for device discovery" option
+  - Fix problem with Record Series and Record Once timers that overlap on an episode only exposing the Record Series Episode timer
+  - Fix problem where only one episode of a Record Series timer rule was being exposed as a timer
 
 v1.0.3 (2017.03.05)
   - Add "SD Channels" channel group
