@@ -44,12 +44,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
-    <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
-    <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
