@@ -98,10 +98,13 @@ public:
 	{
 		if((data == nullptr) || (length == 0)) return 0;
 
+		// sqlite3_malloc accepts a signed integer value, not a size_t
+		if(length > static_cast<size_t>(std::numeric_limits<int>::max())) throw std::bad_alloc();
+
 		// If the buffer has not been allocated, allocate a single chunk
 		if(m_data == nullptr) {
 
-			m_data = reinterpret_cast<uint8_t*>(sqlite3_malloc(length));
+			m_data = reinterpret_cast<uint8_t*>(sqlite3_malloc(static_cast<int>(length)));
 			if(m_data == nullptr) throw std::bad_alloc();
 
 			m_size = length;
@@ -111,7 +114,10 @@ public:
 		// If the buffer has been exhausted, allocate another chunk
 		else {
 
-			uint8_t* newdata = reinterpret_cast<uint8_t*>(sqlite3_realloc(m_data, m_size + length));
+			// sqlite3_realloc accepts a signed integer value, not a size_t
+			if(m_size + length > static_cast<size_t>(std::numeric_limits<int>::max())) throw std::bad_alloc();
+
+			uint8_t* newdata = reinterpret_cast<uint8_t*>(sqlite3_realloc(m_data, static_cast<int>(m_size + length)));
 			if(newdata == nullptr) throw std::bad_alloc();
 
 			m_data = newdata;
@@ -285,8 +291,8 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 			result = sqlite3_bind_text(statement, 1, recordingrule.seriesid, -1, SQLITE_STATIC);
 			if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
 			if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
-			if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, recordingrule.afteroriginalairdateonly);
-			if((result == SQLITE_OK) && (recordingrule.datetimeonly != 0)) result = sqlite3_bind_int(statement, 5, recordingrule.datetimeonly);
+			if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
+			if((result == SQLITE_OK) && (recordingrule.datetimeonly != 0)) result = sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.datetimeonly));
 			if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 6, recordingrule.startpadding);
 			if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 7, recordingrule.endpadding);
 			if(result != SQLITE_OK) throw sqlite_exception(result);
@@ -1457,7 +1463,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, int ma
 
 		// Bind the query parameters
 		result = sqlite3_bind_int(statement, 1, channelid.value);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, maxstarttime);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(maxstarttime));
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
@@ -1884,7 +1890,7 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 
 		// Bind the query parameters(s)
 		result = sqlite3_bind_int(statement, 1, channelid.value);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, timestamp);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(timestamp));
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 		
 		// Execute the scalar query
@@ -2461,9 +2467,13 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
 
-	// Send the resultant blob to SQLite as the result from this scalar function
+	// Watch for data that exceeds int::max, sqlite3_result_blob does not accept a size_t for the length
 	size_t cb = blob.size();
-	return (cb > 0) ? sqlite3_result_blob(context, blob.detach(), cb, sqlite3_free) : sqlite3_result_null(context);
+	if(cb > static_cast<size_t>(std::numeric_limits<int>::max())) 
+		return sqlite3_result_error(context, "blob data exceeds std::numeric_limits<int>::max() in length", -1);
+
+	// Send the resultant blob to SQLite as the result from this scalar function; detach from the sqlite_buffer
+	return (cb > 0) ? sqlite3_result_blob(context, blob.detach(), static_cast<int>(cb), sqlite3_free) : sqlite3_result_null(context);
 }
 
 //---------------------------------------------------------------------------
@@ -2513,7 +2523,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 			result = sqlite3_bind_int(statement, 1, recordingrule.recordingruleid);
 			if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
 			if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
-			if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, recordingrule.afteroriginalairdateonly);
+			if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
 			if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 5, recordingrule.startpadding);
 			if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 6, recordingrule.endpadding);
 			if(result != SQLITE_OK) throw sqlite_exception(result);

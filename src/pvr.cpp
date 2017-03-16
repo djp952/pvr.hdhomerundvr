@@ -1749,7 +1749,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
 			// iUniqueBroadcastId (required)
-			epgtag.iUniqueBroadcastId = item.starttime;
+			epgtag.iUniqueBroadcastId = static_cast<unsigned int>(item.starttime);
 
 			// strTitle (required)
 			if(item.title == nullptr) return;
@@ -2464,7 +2464,7 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			if(item.synopsis != nullptr) snprintf(timer.strSummary, std::extent<decltype(timer.strSummary)>::value, "%s", item.synopsis);
 
 			// iEpgUid
-			timer.iEpgUid = item.starttime;
+			timer.iEpgUid = static_cast<unsigned int>(item.starttime);
 
 			g_pvr->TransferTimerEntry(handle, &timer);
 		});
@@ -2760,10 +2760,14 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 		// waiting a ridiculously long time to avoid a zero-length read over poor connections
 		size_t read = g_livestream.read(buffer, size, 5000);
 
+		// Watch for reads that exceeds int::max in length, however unlikely that would be
+		if(read > static_cast<size_t>(std::numeric_limits<int>::max())) 
+			throw string_exception("livestream.read() returned more data than can be represented by data type int");
+
 		// Report a zero-length read in the log associated with the stream that failed
 		if(read == 0) log_error("zero-length read at position ", g_livestream.position());
 
-		return read;
+		return static_cast<int>(read);
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }

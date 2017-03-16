@@ -140,7 +140,7 @@ public:
 	// ReadFile
 	//
 	// Reads data from an open file handle
-	int ReadFile(void* handle, void* buffer, size_t count) const;
+	intptr_t ReadFile(void* handle, void* buffer, size_t count) const;
 
 	// SeekFile
 	//
