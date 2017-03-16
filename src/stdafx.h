@@ -34,7 +34,10 @@
 #define	_WIN32_IE		_WIN32_IE_IE80
 
 #define NOMINMAX					// Disable min()/max() macros
-#define _USE_32BIT_TIME_T			// time_t has to be 32 bit for Kodi
+
+#ifndef _WIN64
+#define _USE_32BIT_TIME_T			// time_t has to be 32bit with 32bit Kodi
+#endif
 
 #include <windows.h>				// Include main Windows declarations
 

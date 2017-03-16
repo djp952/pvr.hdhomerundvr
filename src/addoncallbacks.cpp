@@ -385,7 +385,7 @@ void* addoncallbacks::OpenFile(char const* filename, unsigned int flags) const
 //	buffer			- Destination buffer to receive the data
 //	count			- Size of the destination buffer
 
-int addoncallbacks::ReadFile(void* handle, void* buffer, size_t count) const
+intptr_t addoncallbacks::ReadFile(void* handle, void* buffer, size_t count) const
 {
 	assert((XbmcReadFile) && (m_handle) && (m_callbacks));
 	return XbmcReadFile(m_handle, m_callbacks, handle, buffer, count);
