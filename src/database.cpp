@@ -642,7 +642,7 @@ void discover_devices_http(sqlite3* instance)
 		"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
 		"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data "
 		"from json_each(http_request('http://ipv4.my.hdhomerun.com/discover')) as discovery "
-		"where data is not null");
+		"where data is not null and json_extract(data, '$.Legacy') is null");
 }
 
 //---------------------------------------------------------------------------
@@ -941,9 +941,9 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 	try {
 
-		// Discover the channel lineups for all available tuner devices
+		// Discover the channel lineups for all available tuner devices; watch for results that return 'null'
 		execute_non_query(instance, "insert into discover_lineup select deviceid, http_request(json_extract(device.data, '$.LineupURL')) "
-			"from device where device.type = 'tuner'");
+			"as json from device where device.type = 'tuner' and cast(json as text) <> 'null'");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
