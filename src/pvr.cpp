@@ -29,10 +29,8 @@
 #include <mutex>
 #include <openssl/crypto.h>
 #include <pthread.h>
-#include <queue>
 #include <string>
 #include <sstream>
-#include <type_traits>
 #include <vector>
 
 #ifdef __ANDROID__

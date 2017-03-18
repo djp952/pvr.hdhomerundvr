@@ -164,7 +164,7 @@ private:
 };
 
 //
-// CONNECTIONPOOL IMPLEMENTATON
+// CONNECTIONPOOL IMPLEMENTATION
 //
 
 //---------------------------------------------------------------------------
