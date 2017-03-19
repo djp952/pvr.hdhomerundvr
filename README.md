@@ -12,7 +12,7 @@ Copyright (C)2017 Michael G. Brehm
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2016 Silicondust USA Inc     
    
 **BUILD ENVIRONMENT**  
-* Windows 10 x64 15025   
+* Windows 10 x64 15058   
 * Visual Studio 2013   
 * Visual Studio 2015 (with Git for Windows)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
