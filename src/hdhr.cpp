@@ -20,10 +20,12 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------
 
-#include <memory>
 #include <hdhomerun.h>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "discover.h"
+#include "hdhr.h"
 #include "string_exception.h"
 
 #pragma warning(push, 4)
@@ -68,6 +70,56 @@ void enumerate_devices(enumerate_devices_callback callback)
 
 		callback(device);
 	}
+}
+
+//---------------------------------------------------------------------------
+// select_tuner
+//
+// Selects an available tuner device from a list of possibilities
+//
+// Arguments:
+//
+//	possibilities	- vector<> of tuners to select from
+
+std::string select_tuner(std::vector<std::string> const& possibilities)
+{
+	std::string					tunerid;			// Selected tuner identifier
+
+	// Allocate and initialize the device selector
+	struct hdhomerun_device_selector_t* selector = hdhomerun_device_selector_create(nullptr);
+	if(selector == nullptr) throw string_exception("hdhomerun_device_selector_create() failed");
+
+	try {
+
+		// Add each of the possible device/tuner combinations to the selector
+		for(auto const& iterator : possibilities) {
+
+			struct hdhomerun_device_t* device = hdhomerun_device_create_from_str(iterator.c_str(), nullptr);
+			if(device == nullptr) throw string_exception("hdhomerun_device_create_from_str() failed");
+
+			hdhomerun_device_selector_add_device(selector, device);
+		}
+
+		// NOTE: There is an inherent race condition here with the tuner lock implementation.  When the tuner
+		// is selected here it will be locked, but it cannot remain locked since the ultimate purpose here is
+		// to generate an HTTP URL for the application to use.  The HTTP stream will attempt it's own lock
+		// and would fail if left locked after this function completes.  No way to tell it to use an existing lock.
+
+		// Let libhdhomerun pick a free tuner for us from the available possibilities
+		struct hdhomerun_device_t* selected = hdhomerun_device_selector_choose_and_lock(selector, nullptr);
+		if(selected) {
+
+			tunerid = hdhomerun_device_get_name(selected);			// DDDDDDDD-T; D=DeviceID, T=TunerID
+			hdhomerun_device_tuner_lockkey_release(selected);		// Release the acquired lock
+		}
+
+		// Release the selector along with all of the generated device structures
+		hdhomerun_device_selector_destroy(selector, true);
+	}
+
+	catch(...) { hdhomerun_device_selector_destroy(selector, true); }
+
+	return tunerid;
 }
 
 //---------------------------------------------------------------------------

@@ -20,11 +20,13 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------
 
-#ifndef __DISCOVER_H_
-#define __DISCOVER_H_
+#ifndef __HDHR_H_
+#define __HDHR_H_
 #pragma once
 
 #include <functional>
+#include <string>
+#include <vector>
 
 #pragma warning(push, 4)				// Enable maximum compiler warnings
 
@@ -65,8 +67,13 @@ using enumerate_devices_callback = std::function<void(struct discover_device con
 // Enumerates all of the HDHomeRun devices discovered via broadcast (libhdhomerun)
 void enumerate_devices(enumerate_devices_callback callback);
 
+// select_tuner
+//
+// Selects an available tuner device from a list of possibilities
+std::string select_tuner(std::vector<std::string> const& possibilities);
+
 //---------------------------------------------------------------------------
 
 #pragma warning(pop)
 
-#endif	// __DISCOVER_H_
+#endif	// __HDHR_H_

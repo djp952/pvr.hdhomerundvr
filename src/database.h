@@ -163,6 +163,11 @@ using enumerate_channels_callback = std::function<void(struct channel const& cha
 // Callback function passed to enumerate functions that return channelids
 using enumerate_channelids_callback = std::function<void(union channelid const& channelid)>;
 
+// enumerate_channeltuners_callback
+//
+// Callback function passed to enumerate_channeltuners
+using enumerate_channeltuners_callback = std::function<void(char const* tuner)>;
+
 // enumerate_guideentries_callback
 //
 // Callback function passed to enumerate_guideentries
@@ -345,6 +350,11 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, enumerate_channe
 // Enumerates the available channelids
 void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callback);
 
+// enumerate_channeltuners
+//
+// Enumerates the tuners that can tune a specific channel
+void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback callback);
+
 // enumerate_episode_channelids
 //
 // Enumerates all channels associated with any series episodes
@@ -425,20 +435,25 @@ int get_channel_count(sqlite3* instance);
 // Gets the number of available recordings in the database
 int get_recording_count(sqlite3* instance);
 
-// get_stream_url
-//
-// Generates a stream URL for the specified channel
-std::string get_stream_url(sqlite3* instance, union channelid channelid);
-
 // get_recordingrule_count
 //
 // Gets the number of available recording rules in the database
 int get_recordingrule_count(sqlite3* instance);
 
+// get_stream_url
+//
+// Generates a stream URL for the specified channel
+std::string get_stream_url(sqlite3* instance, union channelid channelid);
+
 // get_timer_count
 //
 // Gets the number of timers in the database
 int get_timer_count(sqlite3* instance, int maxdays);
+
+// get_tuner_stream_url
+//
+// Generates a stream URL for the specified channel on the specified tuner
+std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union channelid channelid);
 
 // modify_recordingrule
 //
