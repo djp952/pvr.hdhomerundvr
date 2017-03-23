@@ -24,6 +24,10 @@ msgctxt "#30001"
 msgid "Discovery Intervals"
 msgstr ""
 
+msgctxt "#30002"
+msgid "Advanced"
+msgstr ""
+
 msgctxt "#30100"
 msgid "Pause discovery while streaming Live TV channels"
 msgstr ""
@@ -66,6 +70,10 @@ msgstr ""
 
 msgctxt "#30110"
 msgid "Use network broadcast for device discovery"
+msgstr ""
+
+msgctxt "#30111"
+msgid "Stream Live TV channels directly from tuner device(s)"
 msgstr ""
 
 msgctxt "#30201"
@@ -154,4 +162,8 @@ msgstr ""
 
 msgctxt "#30307"
 msgid "Trigger recording rule discovery"
+msgstr ""
+
+msgctxt "#30401"
+msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""

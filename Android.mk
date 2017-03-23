@@ -98,16 +98,22 @@ LOCAL_LDLIBS += \
 	-llog
 
 LOCAL_SRC_FILES := \
+	depends/libhdhomerun/hdhomerun_channels.c \
+	depends/libhdhomerun/hdhomerun_channelscan.c \
+	depends/libhdhomerun/hdhomerun_control.c \
 	depends/libhdhomerun/hdhomerun_debug.c \
+	depends/libhdhomerun/hdhomerun_device.c \
+	depends/libhdhomerun/hdhomerun_device_selector.c \
 	depends/libhdhomerun/hdhomerun_discover.c \
 	depends/libhdhomerun/hdhomerun_os_posix.c \
 	depends/libhdhomerun/hdhomerun_pkt.c \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
+	depends/libhdhomerun/hdhomerun_video.c \
 	depends/sqlite/sqlite3.c \
 	src/addoncallbacks.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
-	src/discover.cpp \
+	src/hdhr.cpp \
 	src/livestream.cpp \
 	src/pvr.cpp \
 	src/pvrcallbacks.cpp \
