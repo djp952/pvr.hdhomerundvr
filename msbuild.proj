@@ -122,7 +122,7 @@
     <PropertyGroup>
       <ZipperExe>&quot;$(SolutionDir)depends\build\zuki.build.tools.zipper.exe&quot;</ZipperExe>
       <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
-      <PackageFile-win32>out\zuki.pvr.hdhomerundvr-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-win32>
+      <PackageFile-windows-win32>out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-windows-win32>
       <PackageFile-windows-x64>out\zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-windows-x64>
       <PackageFile-linux-i686>out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-i686>
       <PackageFile-linux-x86_64>out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-x86_64>
@@ -130,7 +130,7 @@
       <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
     </PropertyGroup>
 
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-win32)&quot; manifest\win32.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-windows-win32)&quot; manifest\windows-win32.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-windows-x64)&quot; manifest\windows-x64.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-i686)&quot; manifest\linux-i686.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-x86_64)&quot; manifest\linux-x86_64.manifest" ContinueOnError="false"/>

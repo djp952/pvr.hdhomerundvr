@@ -46,7 +46,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03
 		manifest\android-x86.manifest = manifest\android-x86.manifest
 		manifest\linux-i686.manifest = manifest\linux-i686.manifest
 		manifest\linux-x86_64.manifest = manifest\linux-x86_64.manifest
-		manifest\win32.manifest = manifest\win32.manifest
+		manifest\windows-win32.manifest = manifest\windows-win32.manifest
 		manifest\windows-x64.manifest = manifest\windows-x64.manifest
 	EndProjectSection
 EndProject
