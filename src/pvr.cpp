@@ -43,6 +43,7 @@
 
 #include "addoncallbacks.h"
 #include "database.h"
+#include "hdhr.h"
 #include "livestream.h"
 #include "pvrcallbacks.h"
 #include "scalar_condition.h"
@@ -194,6 +195,11 @@ struct addon_settings {
 	//
 	// Interval at which the recording rule discovery will occur (seconds)
 	int discover_recordingrules_interval;
+
+	// use_direct_tuning
+	//
+	// Flag indicating that Live TV will be handled directly from the tuner(s)
+	bool use_direct_tuning;
 };
 
 //---------------------------------------------------------------------------
@@ -220,6 +226,27 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,		// bSupportsChannelScan
 	false,		// bSupportsChannelSettings
 	true,		// bHandlesInputStream
+	false,		// bHandlesDemuxing
+	false,		// bSupportsRecordingPlayCount
+	false,		// bSupportsLastPlayedPosition
+	false,		// bSupportsRecordingEdl
+};
+
+// g_capabilities_directtune (const)
+//
+// PVR implementation capability flags when 'direct tuning' is enabled
+static const PVR_ADDON_CAPABILITIES g_capabilities_directtune = {
+
+	true,		// bSupportsEPG
+	true,		// bSupportsTV
+	false,		// bSupportsRadio
+	true,		// bSupportsRecordings
+	false,		// bSupportsRecordingsUndelete
+	true,		// bSupportsTimers
+	true,		// bSupportsChannelGroups
+	false,		// bSupportsChannelScan
+	false,		// bSupportsChannelSettings
+	false,		// bHandlesInputStream
 	false,		// bHandlesDemuxing
 	false,		// bSupportsRecordingPlayCount
 	false,		// bSupportsLastPlayedPosition
@@ -267,6 +294,7 @@ static addon_settings g_settings = {
 	600,					// discover_lineups_interval			default = 10 minutes
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
+	false,					// use_direct_tuning
 };
 
 // g_settings_lock
@@ -1042,6 +1070,9 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("discover_recordingrules_interval", &nvalue)) g_settings.discover_recordingrules_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_episodes_interval", &nvalue)) g_settings.discover_episodes_interval = interval_enum_to_seconds(nvalue);
 
+			// Load the advanced settings
+			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
+
 			// Create the global pvrcallbacks instance
 			g_pvr = std::make_unique<pvrcallbacks>(handle); 
 		
@@ -1444,6 +1475,19 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
+	// use_direct_tuning
+	//
+	else if(strcmp(name, "use_direct_tuning") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_direct_tuning) {
+
+			// This setting is only read during ADDON_Create(); notify the user to restart Kodi
+			g_addon->QueueNotification(addoncallbacks::queue_msg_t::QUEUE_INFO, g_addon->GetLocalizedString(30401));
+			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false", " -- restart required");
+		}
+	}
+
 	return ADDON_STATUS_OK;
 }
 
@@ -1536,7 +1580,10 @@ char const* GetMininumGUIAPIVersion(void)
 PVR_ERROR GetAddonCapabilities(PVR_ADDON_CAPABILITIES *capabilities)
 {
 	if(capabilities == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
-	*capabilities = g_capabilities;
+
+	// g_settings.use_direct_tuning does not require synchronization
+	if(g_settings.use_direct_tuning) *capabilities = g_capabilities_directtune;
+	else *capabilities = g_capabilities;
 	
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -1987,7 +2034,15 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 			if(item.channelname != nullptr) snprintf(channel.strChannelName, std::extent<decltype(channel.strChannelName)>::value, "%s", item.channelname);
 
 			// strInputFormat
-			snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/MP2T");
+			//
+			// Only set if 'direct tuning' is disabled
+			if(!g_settings.use_direct_tuning) snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/MP2T");
+
+			// strStreamURL
+			//
+			// Only set if 'direct tuning' is enabled, this activates a hack in Kodi that will call GetLiveStreamURL
+			// to dynamically retrieve the URL for a live TV stream (may disappear in future Kodi releases)
+			if(g_settings.use_direct_tuning) snprintf(channel.strStreamURL, std::extent<decltype(channel.strStreamURL)>::value, "pvr://stream/%u", item.channelid.value);
 
 			// strIconPath
 			if(item.iconurl != nullptr) snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
@@ -2685,6 +2740,11 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 
 bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
+	char			channelstr[64];			// Channel number as a string
+
+	// This function is not available when direct tuning is enabled
+	if(g_settings.use_direct_tuning) return false;
+
 	// If the user wants to pause discovery during live streaming, do so
 	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
 	if(g_settings.pause_discovery_while_streaming) g_scheduler.pause();
@@ -2698,6 +2758,10 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	union channelid channelid;
 	channelid.value = channel.iUniqueId;
 
+	// Generate a string version of the channel number for logging purposes
+	if(channelid.parts.subchannel == 0) snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d", channelid.parts.channel);
+	else snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -2708,6 +2772,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified channel");
 
 		// Start the new channel live stream
+		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
 		g_livestream.start(streamurl.c_str());
 
 		// Set the current channel number
@@ -2752,8 +2817,11 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
+	// This function is not available when direct tuning is enabled
+	if(g_settings.use_direct_tuning) return -1;
+
 	try { 
-	
+
 		// Attempt to read up to the specified amount of data from the live stream buffer,
 		// waiting a ridiculously long time to avoid a zero-length read over poor connections
 		size_t read = g_livestream.read(buffer, size, 5000);
@@ -2784,6 +2852,9 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
+	// This function is not available when direct tuning is enabled
+	if(g_settings.use_direct_tuning) return -1;
+
 	try {
 
 		if(whence == SEEK_SET) { /* use position */ }
@@ -2809,6 +2880,9 @@ long long SeekLiveStream(long long position, int whence)
 
 long long PositionLiveStream(void)
 {
+	// This function is not available when direct tuning is enabled
+	if(g_settings.use_direct_tuning) return -1;
+
 	// Return the current position within the live stream
 	try { return g_livestream.position(); }
 
@@ -2827,6 +2901,9 @@ long long PositionLiveStream(void)
 
 long long LengthLiveStream(void)
 {
+	// This function is not available when direct tuning is enabled
+	if(g_settings.use_direct_tuning) return -1;
+
 	// Return the length of the current live stream
 	try { return g_livestream.length(); }
 
@@ -2871,9 +2948,58 @@ PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS& /*status*/)
 //
 //	channel		- The channel to get the stream URL for
 
-char const* GetLiveStreamURL(PVR_CHANNEL const& /*channel*/)
+char const* GetLiveStreamURL(PVR_CHANNEL const& channel)
 {
-	return nullptr;
+	static std::string		streamurl;			// The generated stream URL (static)
+	char					channelstr[64];		// Channel number as a string
+
+	streamurl.clear();			// streamurl is static and reused across invocations
+
+	// This function is only enabled if the addon was started with use_direct_tuning
+	if(!g_settings.use_direct_tuning) return "";
+
+	// The only interesting thing about PVR_CHANNEL is the channel id
+	union channelid channelid;
+	channelid.value = channel.iUniqueId;
+
+	// Generate a string version of the channel number for logging purposes
+	if(channelid.parts.subchannel == 0) snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d", channelid.parts.channel);
+	else snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
+
+	try {
+		
+		// The available tuners for the channel are captured into a vector<>
+		std::vector<std::string> tuners;
+
+		// Pull a database connection out from the connection pool
+		connectionpool::handle dbhandle(g_connpool);
+
+		// Create a collection of all the tuners that can possibly stream the requested channel
+		enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { tuners.emplace_back(item); });
+		if(tuners.size() == 0) throw string_exception("unable to find any possible tuners for channel ", channelstr);
+		
+		// Select an available tuner from all of the captured possibilities
+		std::string selected = select_tuner(tuners);
+		
+		// NOTE: There is an inherent race condition here; the tuner is intentionally not
+		// left locked by select_tuner() as the HTTP stream won't be able to use it, causing
+		// the attempt to tune the stream to fail.  I originally left the tuner locked until 
+		// right before returning to Kodi, but that wouldn't have solved anything and just 
+		// caused an additional (albeit minor) delay in getting the URL generated ...
+
+		// Generate the tuner-specific URL to send back to Kodi to tune the channel
+		streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
+		if(streamurl.length() == 0) throw string_exception("unable to generate streaming URL for channel ", channelstr);
+
+		// Set the current channel number
+		g_currentchannel.store(channel.iUniqueId);
+
+		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
+		return streamurl.c_str();
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, ""); }
+	catch(...) { return handle_generalexception(__func__, ""); }
 }
 
 //---------------------------------------------------------------------------
@@ -3069,7 +3195,9 @@ bool CanPauseStream(void)
 
 bool CanSeekStream(void)
 {
-
+	// NOTE: This technically doesn't work right with 'direct tune' enabled, but
+	// returning false here prevents pause from being enabled.  The user that
+	// direct tuning was added for preferred broken seek to not having pause
 	return true;
 }
 
