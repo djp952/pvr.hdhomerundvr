@@ -343,6 +343,21 @@ bool addoncallbacks::GetSetting(char const* name, void* value) const
 }
 
 //-----------------------------------------------------------------------------
+// GetLocalizedString
+//
+// Retrieves a pointer to a localized string for this addon
+//
+// Arguments:
+//
+//	code		- Code of the localized resource string
+
+char const* addoncallbacks::GetLocalizedString(int code) const
+{
+	assert((XbmcGetLocalizedString) && (m_handle) && (m_callbacks));
+	return XbmcGetLocalizedString(m_handle, m_callbacks, code);
+}
+
+//-----------------------------------------------------------------------------
 // addoncallbacks::Log
 //
 // Writes an entry into the Kodi application log
@@ -372,6 +387,22 @@ void* addoncallbacks::OpenFile(char const* filename, unsigned int flags) const
 {
 	assert((XbmcOpenFile) && (m_handle) && (m_callbacks));
 	return XbmcOpenFile(m_handle, m_callbacks, filename, flags);
+}
+
+//-----------------------------------------------------------------------------
+// addoncallbacks::QueueNotification
+//
+// Queues a notification message
+//
+// Arguments:
+//
+//	type			- Type of notification to be queued
+//	message			- Notification message
+
+void addoncallbacks::QueueNotification(queue_msg_t const type, char const* message) const
+{
+	assert((XbmcQueueNotification) && (m_handle) && (m_callbacks));
+	return XbmcQueueNotification(m_handle, m_callbacks, type, message);
 }
 
 //-----------------------------------------------------------------------------

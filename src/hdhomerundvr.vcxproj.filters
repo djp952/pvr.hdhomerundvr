@@ -103,9 +103,6 @@
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_discover.h">
       <Filter>External Libraries\libhdhomerun</Filter>
     </ClInclude>
-    <ClInclude Include="discover.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h">
       <Filter>External Libraries\libhdhomerun</Filter>
     </ClInclude>
@@ -117,6 +114,27 @@
     </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_debug.h">
       <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device_selector.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_control.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_video.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channelscan.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channels.h">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClInclude>
+    <ClInclude Include="hdhr.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -165,9 +183,6 @@
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
       <Filter>External Libraries\libhdhomerun</Filter>
     </ClCompile>
-    <ClCompile Include="discover.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_os_windows.c">
       <Filter>External Libraries\libhdhomerun</Filter>
     </ClCompile>
@@ -179,6 +194,27 @@
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_debug.c">
       <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_control.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_video.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channelscan.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channels.c">
+      <Filter>External Libraries\libhdhomerun</Filter>
+    </ClCompile>
+    <ClCompile Include="hdhr.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
