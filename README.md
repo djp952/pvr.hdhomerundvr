@@ -7,12 +7,11 @@ Copyright (C)2017 Michael G. Brehm
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
 [__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2017, Daniel Stenberg, daniel@haxx.se, and many contributors   
-[__OPENSSL__](https://www.openssl.org/) - Copyright (C)1998-2016 The OpenSSL Project   
 [__ZLIB__](http://www.zlib.net/) - Copyright (C)1995-2017 Jean-loup Gailly and Mark Adler   
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2016 Silicondust USA Inc     
    
 **BUILD ENVIRONMENT**  
-* Windows 10 x64 15058   
+* Windows 10 x64 15063   
 * Visual Studio 2015 (with Git for Windows)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
 * Android NDK r12b for Windows 64-bit
@@ -46,7 +45,8 @@ cd pvr.hdhomerundvr
 git submodule update --init
 msbuild msbuild.proj
 
-> out\zuki.pvr.hdhomerundvr-win32-krypton-x.x.x.x.zip (windows-Win32)
+> out\zuki.pvr.hdhomerundvr-windows-win32-krypton-x.x.x.x.zip (windows-Win32)
+> out\zuki.pvr.hdhomerundvr-windows-x64-krypton-x.x.x.x.zip (windows-x64)
 > out\zuki.pvr.hdhomerundvr-linux-i686-krypton-x.x.x.x.zip (linux-i686)
 > out\zuki.pvr.hdhomerundvr-linux-x86_64-krypton-x.x.x.x.zip (linux-x86_64)
 > out\zuki.pvr.hdhomerundvr-android-arm-krypton-x.x.x.x.zip (android-arm)
