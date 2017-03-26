@@ -5,17 +5,9 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
-      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -32,20 +24,7 @@
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
@@ -60,37 +39,19 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>$(RootNamespace)</TargetName>
-    <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\windows-$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
     <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>$(RootNamespace)</TargetName>
-    <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\windows-$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
     <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -101,31 +62,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PreBuildEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -139,7 +82,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,29 +90,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PreBuildEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -194,7 +115,6 @@
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="addoncallbacks.h" />
     <ClInclude Include="compat\dlfcn.h" />
-    <ClInclude Include="compat\openssl\crypto.h" />
     <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
@@ -212,81 +132,54 @@
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channels.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channelscan.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_control.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_debug.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_os_windows.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_pkt.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_sock_windows.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_video.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\sqlite\sqlite3.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="addoncallbacks.cpp" />
-    <ClCompile Include="compat\crypto.cpp" />
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\snprintf.cpp" />
@@ -294,15 +187,11 @@
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="hdhr.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="livestream.cpp" />
     <ClCompile Include="pvr.cpp" />
@@ -310,16 +199,12 @@
     <ClCompile Include="condition_variable.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="sqlite_exception.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -329,26 +214,14 @@
 "$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
 "$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
 </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
-"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
-"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
 "$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
 "$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
 </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
-"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
-"$(CommonProgramFiles)\Microsoft Shared\TextTemplating\14.0\TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating addon.xml files</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating addon.xml files</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating addon.xml files</Message>
     </CustomBuild>
     <None Include="hdhomerundvr.def" />
   </ItemGroup>

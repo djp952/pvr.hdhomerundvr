@@ -22,25 +22,11 @@
 
 LOCAL_PATH := $(call my-dir)
 
-# libcrypto
-#
-include $(CLEAR_VARS)
-LOCAL_MODULE := libcrypto-prebuilt
-LOCAL_SRC_FILES := depends/libssl/android-$(TARGET_ARCH_ABI)/lib/libcrypto.a
-include $(PREBUILT_STATIC_LIBRARY)
-
 # libcurl
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcurl-prebuilt
-LOCAL_SRC_FILES := depends/libcurl/android-$(TARGET_ARCH_ABI)/lib/libcurl.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-# libssl
-#
-include $(CLEAR_VARS)
-LOCAL_MODULE := libssl-prebuilt
-LOCAL_SRC_FILES := depends/libssl/android-$(TARGET_ARCH_ABI)/lib/libssl.a
+LOCAL_SRC_FILES := depends/libcurl-nossl/android-$(TARGET_ARCH_ABI)/lib/libcurl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libuuid
@@ -64,8 +50,7 @@ LOCAL_MODULE := hdhomerundvr
 
 LOCAL_C_INCLUDES += \
 	depends/kodi-addon-dev-kit/kodi \
-	depends/libcurl/android-$(TARGET_ARCH_ABI)/include/curl \
-	depends/libssl/android-$(TARGET_ARCH_ABI)/include \
+	depends/libcurl-nossl/android-$(TARGET_ARCH_ABI)/include/curl \
 	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
 	depends/libz/android-$(TARGET_ARCH_ABI)/include \
 	depends/libhdhomerun \
@@ -86,12 +71,9 @@ LOCAL_CPPFLAGS += \
 	-Wall \
 	-Wno-unknown-pragmas
 	
-# NOTE: The order is important here: libcurl->libssl->libcrypto->libz
 LOCAL_STATIC_LIBRARIES += \
 	libuuid-prebuilt \
 	libcurl-prebuilt \
-	libssl-prebuilt \
-	libcrypto-prebuilt \
 	libz-prebuilt
 
 LOCAL_LDLIBS += \
