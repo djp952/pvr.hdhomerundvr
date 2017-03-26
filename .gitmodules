@@ -7,12 +7,6 @@
 [submodule "sqlite"]
 	path = depends/sqlite
 	url = https://github.com/djp952/external-sqlite.git
-[submodule "libcurl"]
-	path = depends/libcurl
-	url = https://github.com/djp952/prebuilt-libcurl.git
-[submodule "libssl"]
-	path = depends/libssl
-	url = https://github.com/djp952/prebuilt-libssl.git
 [submodule "libuuid"]
 	path = depends/libuuid
 	url = https://github.com/djp952/prebuilt-libuuid.git
@@ -22,3 +16,6 @@
 [submodule "libhdhomerun"]
 	path = depends/libhdhomerun
 	url = https://github.com/silicondust/libhdhomerun.git
+[submodule "libcurl-nossl"]
+	path = depends/libcurl-nossl
+	url = https://github.com/djp952/prebuilt-libcurl-nossl.git
