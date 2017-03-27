@@ -1,6 +1,8 @@
 v1.0.5 (2017.03.xx)
   - Fix problem with legacy devices detected through HTTP discovery adding a phantom channel and skewing the lineups
   - Add "Stream LiveTV channels directly from tuner device(s)" advanced option
+  - Remove Secure Sockets Layer (SSL) support -- unnecessary and potentially problematic for some Linux builds
+  - (Linux) Restrict exported symbols to prevent name collisions with shared libraries
 
 v1.0.4 (2017.03.14)
   - Add "Use network broadcast for device discovery" option

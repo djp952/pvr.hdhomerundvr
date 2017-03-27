@@ -224,6 +224,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
     </CustomBuild>
     <None Include="hdhomerundvr.def" />
+    <None Include="hdhomerundvr.map" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc" />
