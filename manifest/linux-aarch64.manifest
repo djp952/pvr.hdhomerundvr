@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<zip>
+  <file path="pvr.hdhomerundvr\addon.xml" source="tmp\addon-linux.xml" normalize="unix"/>
+  <file path="pvr.hdhomerundvr\LICENSE.txt" source="LICENSE" normalize="unix"/>
+  <file path="pvr.hdhomerundvr\zuki.pvr.hdhomerundvr.so" source="out\linux-aarch64\zuki.pvr.hdhomerundvr.so"/>
+  <file path="pvr.hdhomerundvr\resources\icon.png" source="pvr.hdhomerundvr\resources\icon.png"/>
+  <file path="pvr.hdhomerundvr\resources\settings.xml" source="pvr.hdhomerundvr\resources\settings.xml" normalize="unix"/>
+  <file path="pvr.hdhomerundvr\resources\language\resource.language.en_gb\strings.po" source="pvr.hdhomerundvr\resources\language\resource.language.en_gb\strings.po" normalize="unix"/>
+</zip>
