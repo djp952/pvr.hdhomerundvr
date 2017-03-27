@@ -212,6 +212,9 @@
     <None Include="hdhomerundvr.def">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="hdhomerundvr.map">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc">
