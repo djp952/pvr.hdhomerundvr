@@ -1,0 +1,5 @@
+{
+	global: ADDON_*; get_addon; sqlite3_extension_init;
+	local: *;
+};
+
