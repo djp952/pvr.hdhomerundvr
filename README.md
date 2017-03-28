@@ -7,12 +7,11 @@ Copyright (C)2017 Michael G. Brehm
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
 [__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2017, Daniel Stenberg, daniel@haxx.se, and many contributors   
-[__OPENSSL__](https://www.openssl.org/) - Copyright (C)1998-2016 The OpenSSL Project   
 [__ZLIB__](http://www.zlib.net/) - Copyright (C)1995-2017 Jean-loup Gailly and Mark Adler   
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2016 Silicondust USA Inc     
    
 **BUILD ENVIRONMENT**  
-* Windows 10 x64 15058   
+* Windows 10 x64 15063   
 * Visual Studio 2015 (with Git for Windows)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
 * Android NDK r12b for Windows 64-bit
@@ -20,8 +19,10 @@ Copyright (C)2017 Michael G. Brehm
 **CONFIGURE BASH ON UBUNTU ON WINDOWS**   
 Open "Bash on Ubuntu on Windows"   
 ```
+sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install gcc g++ gcc-multilib g++-multilib gcc-4.9 g++-4.9 gcc-4.9-multilib g++-4.9-multilib
+sudo apt-get install gcc-4.9 g++-4.9 libc6-dev:i386 libstdc++-4.9-dev:i386 lib32gcc-4.9-dev 
+sudo apt-get install gcc-4.9-arm-linux-gnueabihf g++-4.9-arm-linux-gnueabihf gcc-4.9-arm-linux-gnueabi g++-4.9-arm-linux-gnueabi gcc-4.9-aarch64-linux-gnu g++-4.9-aarch64-linux-gnu
 ```
    
 **CONFIGURE ANDROID NDK**   
@@ -46,9 +47,13 @@ cd pvr.hdhomerundvr
 git submodule update --init
 msbuild msbuild.proj
 
-> out\zuki.pvr.hdhomerundvr-win32-krypton-x.x.x.x.zip (windows-Win32)
+> out\zuki.pvr.hdhomerundvr-windows-win32-krypton-x.x.x.x.zip (windows-Win32)
+> out\zuki.pvr.hdhomerundvr-windows-x64-krypton-x.x.x.x.zip (windows-x64)
 > out\zuki.pvr.hdhomerundvr-linux-i686-krypton-x.x.x.x.zip (linux-i686)
 > out\zuki.pvr.hdhomerundvr-linux-x86_64-krypton-x.x.x.x.zip (linux-x86_64)
+> out\zuki.pvr.hdhomerundvr-linux-armel-krypton-x.x.x.x.zip (linux-armel)
+> out\zuki.pvr.hdhomerundvr-linux-armhf-krypton-x.x.x.x.zip (linux-armhf)
+> out\zuki.pvr.hdhomerundvr-linux-aarch64-krypton-x.x.x.x.zip (linux-aarch64)
 > out\zuki.pvr.hdhomerundvr-android-arm-krypton-x.x.x.x.zip (android-arm)
 > out\zuki.pvr.hdhomerundvr-android-aarch64-krypton-x.x.x.x.zip (android-aarch64)
 > out\zuki.pvr.hdhomerundvr-android-x86-krypton-x.x.x.x.zip (android-x86)

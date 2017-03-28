@@ -72,25 +72,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\windows-$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
     <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\windows-$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
     <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\windows-$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
     <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)out\windows-$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(RootNamespace)</TargetName>
     <IntDir>$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -101,13 +101,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -119,13 +119,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -139,7 +139,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,7 +147,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -161,7 +161,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -169,7 +169,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
-      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -194,7 +194,6 @@
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="addoncallbacks.h" />
     <ClInclude Include="compat\dlfcn.h" />
-    <ClInclude Include="compat\openssl\crypto.h" />
     <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
@@ -285,7 +284,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="addoncallbacks.cpp" />
-    <ClCompile Include="compat\crypto.cpp" />
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
@@ -343,6 +341,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating addon.xml files</Message>
     </CustomBuild>
     <None Include="hdhomerundvr.def" />
+    <None Include="hdhomerundvr.map" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc" />
