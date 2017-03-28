@@ -44,12 +44,16 @@
 #define LIBXBMC_ADDON_MODULE "/library.xbmc.addon/libXBMC_addon-x86_64-linux.so"
 #elif defined(__i386__) && !defined(__ANDROID__)
 #define LIBXBMC_ADDON_MODULE "/library.xbmc.addon/libXBMC_addon-i486-linux.so"
+#elif defined(__arm__) && !defined(__ANDROID__)
+#define LIBXBMC_ADDON_MODULE "/library.xbmc.addon/libXBMC_addon-arm.so"
+#elif defined(__aarch64__) && !defined(__ANDROID__)
+#define LIBXBMC_ADDON_MODULE "/library.xbmc.addon/libXBMC_addon-aarch64.so"
 #elif defined(__ANDROID__) && defined(__arm__)
 #define LIBXBMC_ADDON_MODULE "/libXBMC_addon-arm.so"
 #elif defined(__ANDROID__) && defined(__i386__)
 #define LIBXBMC_ADDON_MODULE "/libXBMC_addon-i486-linux.so"
 #else
-#error addoncallbacks.cpp -- unknown architecture -- only win32, linux-i686, linux-x86_64, android-armeabi-v7a and android-x86 are supported
+#error addoncallbacks.cpp -- unsupported architecture
 #endif
 
 // GetFunctionPointer (local)

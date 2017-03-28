@@ -20,8 +20,10 @@ Copyright (C)2017 Michael G. Brehm
 **CONFIGURE BASH ON UBUNTU ON WINDOWS**   
 Open "Bash on Ubuntu on Windows"   
 ```
+sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install gcc g++ gcc-multilib g++-multilib gcc-4.9 g++-4.9 gcc-4.9-multilib g++-4.9-multilib
+sudo apt-get install gcc-4.9 g++-4.9 libc6-dev:i386 libstdc++-4.9-dev:i386 lib32gcc-4.9-dev 
+sudo apt-get install gcc-4.9-arm-linux-gnueabihf g++-4.9-arm-linux-gnueabihf gcc-4.9-arm-linux-gnueabi g++-4.9-arm-linux-gnueabi gcc-4.9-aarch64-linux-gnu g++-4.9-aarch64-linux-gnu
 ```
    
 **CONFIGURE ANDROID NDK**   
@@ -49,6 +51,9 @@ msbuild msbuild.proj
 > out\zuki.pvr.hdhomerundvr-windows-win32-jarvis-x.x.x.x.zip (windows-Win32)
 > out\zuki.pvr.hdhomerundvr-linux-i686-jarvis-x.x.x.x.zip (linux-i686)
 > out\zuki.pvr.hdhomerundvr-linux-x86_64-jarvis-x.x.x.x.zip (linux-x86_64)
+> out\zuki.pvr.hdhomerundvr-linux-armel-jarvis-x.x.x.x.zip (linux-armel)
+> out\zuki.pvr.hdhomerundvr-linux-armhf-jarvis-x.x.x.x.zip (linux-armhf)
+> out\zuki.pvr.hdhomerundvr-linux-aarch64-jarvis-x.x.x.x.zip (linux-aarch64)
 > out\zuki.pvr.hdhomerundvr-android-arm-jarvis-x.x.x.x.zip (android-arm)
 > out\zuki.pvr.hdhomerundvr-android-x86-jarvis-x.x.x.x.zip (android-x86)
 ```
