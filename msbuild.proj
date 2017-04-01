@@ -25,7 +25,24 @@
   <PropertyGroup>
     <Configuration>Release</Configuration>
     <KodiBaseline>krypton</KodiBaseline>
+    <Keystore></Keystore> <!-- must be set on command line with /p:Keystore=xxx -->
+    <KeystorePassword></KeystorePassword> <!-- must be set on command line with /p:KeystorePassword=xxx -->
   </PropertyGroup>
+
+  <!-- ReplaceInFile: Replaces text in a file based on a regular expression -->
+  <UsingTask TaskName="ReplaceInFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <filename ParameterType="System.String" Required="true"/>
+      <match ParameterType="System.String" Required="true"/>
+      <replacewith ParameterType="System.String" Required="true"/>
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core"/>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[System.IO.File.WriteAllText(filename, System.Text.RegularExpressions.Regex.Replace(System.IO.File.ReadAllText(filename), match, replacewith));]]>
+      </Code>
+    </Task>
+  </UsingTask>
 
   <Target Name="Clean">
     <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Clean" ContinueOnError="false"/>
@@ -224,6 +241,65 @@
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-arm)&quot; manifest\android-arm.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-aarch64)&quot; manifest\android-aarch64.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-x86)&quot; manifest\android-x86.manifest" ContinueOnError="false"/>
+  </Target>
+
+  <Target Name="PackageApk" DependsOnTargets="Package">
+
+    <Error Condition="'$(ANDROID_SDK_ROOT)' == ''" Text="Environment variable ANDROID_SDK_ROOT has not been set"/>
+    <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
+    <Error Condition="'$(Keystore)' == ''" Text="Variable Keystore has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
+    <Error Condition="'$(KeystorePassword)' == ''" Text="Variable KeystorePassword has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
+
+    <!-- This task requires a lot of hard-coded paths and versions; keep everything that is subject to change as Properties -->
+    <PropertyGroup>
+      <ApkToolJar>apktool_2.2.2.jar</ApkToolJar>
+      <ZipAlignExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\zipalign</ZipAlignExe>
+      <ApkSignerExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\apksigner</ApkSignerExe>
+      <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
+      <BuildNumber>$([System.Version]::Parse($(PackageVersion)).Revision)</BuildNumber>
+      <ApkVersionCode>1710$(BuildNumber)</ApkVersionCode>
+      <ApkVersionName>17.1-zuki.pvr.hdhomerundvr-$(PackageVersion)</ApkVersionName>
+      <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
+      <PackageFile-android-aarch64>out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-aarch64>
+      <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
+      <KodiApk-android-arm>kodi-17.1-Krypton-armeabi-v7a</KodiApk-android-arm>
+      <KodiApk-android-aarch64>kodi-17.1-Krypton-arm64-v8a</KodiApk-android-aarch64>
+      <KodiApk-android-x86>kodi-17.1-Krypton-x86</KodiApk-android-x86>
+      <ZukiApk-android-arm>kodi-17.1-zuki.pvr.hdhomerundvr-arm-$(PackageVersion)</ZukiApk-android-arm>
+      <ZukiApk-android-aarch64>kodi-17.1-zuki.pvr.hdhomerundvr-aarch64-$(PackageVersion)</ZukiApk-android-aarch64>
+      <ZukiApk-android-x86>kodi-17.1-zuki.pvr.hdhomerundvr-x86-$(PackageVersion)</ZukiApk-android-x86>
+    </PropertyGroup>
+
+    <!-- android-arm -->
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-arm)-framework -s depends\kodi-apks\$(KodiApk-android-arm).apk -o out\$(KodiApk-android-arm)" ContinueOnError="false"/>
+    <ReplaceInFile filename="out\$(KodiApk-android-arm)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
+    <ReplaceInFile filename="out\$(KodiApk-android-arm)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
+    <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-arm) -DestinationPath out\$(KodiApk-android-arm)\assets\addons\" ContinueOnError="false"/>
+    <Copy SourceFiles="out\armeabi-v7a\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk-android-arm)\lib\armeabi-v7a\libhdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-arm)-framework out\$(KodiApk-android-arm)" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm).apk out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm)-aligned.apk" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-arm).apk out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm)-aligned.apk" ContinueOnError="false"/>
+
+    <!-- android-aarch64 -->
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-aarch64)-framework -s depends\kodi-apks\$(KodiApk-android-aarch64).apk -o out\$(KodiApk-android-aarch64)" ContinueOnError="false"/>
+    <ReplaceInFile filename="out\$(KodiApk-android-aarch64)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
+    <ReplaceInFile filename="out\$(KodiApk-android-aarch64)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
+    <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-aarch64) -DestinationPath out\$(KodiApk-android-aarch64)\assets\addons\" ContinueOnError="false"/>
+    <Copy SourceFiles="out\arm64-v8a\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk-android-aarch64)\lib\arm64-v8a\libhdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-aarch64)-framework out\$(KodiApk-android-aarch64)" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-aarch64)\dist\$(KodiApk-android-aarch64).apk out\$(KodiApk-android-aarch64)\dist\$(KodiApk-android-aarch64)-aligned.apk" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-aarch64).apk out\$(KodiApk-android-aarch64)\dist\$(KodiApk-android-aarch64)-aligned.apk" ContinueOnError="false"/>
+
+    <!-- android-x86 -->
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-x86)-framework -s depends\kodi-apks\$(KodiApk-android-x86).apk -o out\$(KodiApk-android-x86)" ContinueOnError="false"/>
+    <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
+    <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
+    <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-x86) -DestinationPath out\$(KodiApk-android-x86)\assets\addons\" ContinueOnError="false"/>
+    <Copy SourceFiles="out\x86\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk-android-x86)\lib\x86\libhdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-x86)-framework out\$(KodiApk-android-x86)" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86).apk out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86)-aligned.apk" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-x86).apk out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86)-aligned.apk" ContinueOnError="false"/>
+
   </Target>
 
 </Project>
