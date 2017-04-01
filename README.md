@@ -1,7 +1,7 @@
 # __pvr.hdhomerundvr__  
 
 Unofficial Kodi HDHomeRun DVR PVR Client   
-## [__DOCUMENTATION AND DOWNLOADS__](https://github.com/djp952/pvr.hdhomerundvr/wiki)   
+## [__USER DOCUMENTATION AND DOWNLOADS__](https://github.com/djp952/pvr.hdhomerundvr/wiki)   
    
 Copyright (C)2017 Michael G. Brehm    
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
@@ -14,7 +14,9 @@ Copyright (C)2017 Michael G. Brehm
 * Windows 10 x64 15063   
 * Visual Studio 2015 (with Git for Windows)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
-* Android NDK r12b for Windows 64-bit
+* Android NDK r12b for Windows 64-bit   
+* Optional: Android SDK tools r25.2.3 for Windows   
+* Optional: Oracle Java SE Runtime Environment 8   
    
 **CONFIGURE BASH ON UBUNTU ON WINDOWS**   
 Open "Bash on Ubuntu on Windows"   
@@ -30,16 +32,36 @@ Download the Android NDK r12b for Windows 64-bit:
 [https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip](https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip)   
 
 * Extract the contents of the .zip file somewhere   
-* Set a System Environment Variable named ANDROID_NDK_ROOT that points to the extraction location (android-ndk-r12b)   
-* Optionally, ANDROID_NDK_ROOT can also be set on the command line prior to executing msbuild:   
+* Set a System Environment Variable named ANDROID_NDK_ROOT that points to the extracted android-ndk-r12b folder
+   
+**CONFIGURE ANDROID SDK TOOLS (OPTIONAL)**   
+_Android SDK tools are only required for Android APK generation; see "BUILD AND GENERATE MODIFIED KODI ANDROID APKS" below_  
+   
+Download the Android SDK tools r25.2.3 for Windows:   
+[https://dl.google.com/android/repository/tools_r25.2.3-windows.zip](https://dl.google.com/android/repository/tools_r25.2.3-windows.zip)   
+   
+* Extract the contents of the .zip file somewhere   
+* Set a System Environment Variable named ANDROID_SDK_ROOT that points to the location the .zip was extracted   
+* Install the build-tools-25.0.2 package:   
 ```
-...
-set ANDROID_NDK_ROOT=D:\android-ndk-r12b
-msbuild msbuild.proj
-...
+cd /d %ANDROID_SDK_ROOT%\tools
+android update sdk --all -u -t build-tools-25.0.2
 ```
    
-**BUILD**   
+**CONFIGURE ORACLE JAVA SE RUNTIME ENVIRONMENT (OPTIONAL)**   
+_Oracle Java SE Runtime Environment is only required for Android APK generation; see "BUILD AND GENERATE MODIFIED KODI ANDROID APKS" below_   
+   
+Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:   
+[Java SE Runtime Environment 8 - Downloads](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)   
+
+* Extract the contents of the jre-8xxx-windows-x64.tar.gz file somewhere   
+* Set a System Environment Variable named JAVA_HOME that points to the location the tar.gz was extracted   
+* Test Java:   
+```
+%JAVA_HOME%\bin\java -version
+```
+   
+**BUILD AND GENERATE KODI ADDON PACKAGES**   
 Open "Developer Command Prompt for VS2015"   
 ```
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Krypton
@@ -57,6 +79,21 @@ msbuild msbuild.proj
 > out\zuki.pvr.hdhomerundvr-android-arm-krypton-x.x.x.x.zip (android-arm)
 > out\zuki.pvr.hdhomerundvr-android-aarch64-krypton-x.x.x.x.zip (android-aarch64)
 > out\zuki.pvr.hdhomerundvr-android-x86-krypton-x.x.x.x.zip (android-x86)
+```
+   
+**BUILD AND GENERATE MODIFIED KODI ANDROID APKS**   
+Building the modified Kodi Android APKs requires a Java keystore to be specified on the build command line in order to sign the resultant APK files.  For more information about APK signing and how to generate the keystore, please see [Sign Your App](https://developer.android.com/studio/publish/app-signing.html).   
+   
+Open "Developer Command Prompt for VS2015"   
+```
+git clone https://github.com/djp952/pvr.hdhomerundvr -b Krypton
+cd pvr.hdhomerundvr
+git submodule update --init
+msbuild msbuild.proj /t:PackageApk /p:Keystore={path_to_keystore};KeystorePassword={keystore_password}
+
+> out\kodi-x.x-zuki.pvr.hdhomerundvr-arm-x.x.x.x.apk (android-arm)
+> out\kodi-x.x-zuki.pvr.hdhomerundvr-aarch64-x.x.x.x.apk (android-aarch64)
+> out\kodi-x.x-zuki.pvr.hdhomerundvr-x86-x.x.x.x.apk (android-x86)
 ```
    
 **LIBHDHOMERUN LICENSE INFORMATION**   
