@@ -76,6 +76,10 @@ msgctxt "#30111"
 msgid "Stream Live TV channels directly from tuner device(s)"
 msgstr ""
 
+msgctxt "#30112"
+msgid "Use season/episode number as title for recordings"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

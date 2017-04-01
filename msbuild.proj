@@ -23,15 +23,13 @@
 <Project DefaultTargets="Package" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
   <PropertyGroup>
-    <SolutionDir>.\</SolutionDir>
     <Configuration>Release</Configuration>
     <KodiBaseline>jarvis</KodiBaseline>
 </PropertyGroup>
 
   <Target Name="Clean">
     <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Clean" ContinueOnError="false"/>
-    <RemoveDir Directories="$(SolutionDir)tmp"/>
-    <RemoveDir Directories="$(SolutionDir)out"/>
+    <RemoveDir Directories="tmp;out"/>
   </Target>
   
   <Target Name="Version" DependsOnTargets="Clean">
@@ -41,7 +39,7 @@
   <Target Name="Build" DependsOnTargets="Version">
 
     <PropertyGroup>
-      <BashExe>%WINDIR%\Sysnative\bash.exe</BashExe>
+      <BashExe>$(WINDIR)\Sysnative\bash.exe</BashExe>
       <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/kodi-addon-dev-kit/kodi -Idepends/libcurl-nossl/linux-i686/include/curl -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS-linux-i686>
       <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/kodi-addon-dev-kit/kodi -Idepends/libcurl-nossl/linux-x86_64/include/curl -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS-linux-x86_64>
       <CPPFLAGS-linux-armel>-Wall -Wno-unknown-pragmas -Idepends/kodi-addon-dev-kit/kodi -Idepends/libcurl-nossl/linux-armel/include/curl -Idepends/libuuid/linux-armel/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-armel>
@@ -49,8 +47,10 @@
       <CPPFLAGS-linux-aarch64>-Wall -Wno-unknown-pragmas -Idepends/kodi-addon-dev-kit/kodi -Idepends/libcurl-nossl/linux-aarch64/include/curl -Idepends/libuuid/linux-aarch64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-aarch64>
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++14</CXXFLAGS>
-      <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
+      <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
     </PropertyGroup>
+
+    <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
 
@@ -193,15 +193,15 @@
     <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-aarch64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
     <!-- android-arm -->
-    <!-- android-x86 -->
-    <Exec Command="&quot;%ANDROID_NDK_ROOT%\ndk-build.cmd&quot; NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out NDK_LIBS_OUT=out" ContinueOnError="false"/>
+    <!-- android-x86 -->    
+    <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out NDK_LIBS_OUT=out" ContinueOnError="false"/>
 
   </Target>
 
   <Target Name="Package" DependsOnTargets="Build">
     <PropertyGroup>
-      <ZipperExe>&quot;$(SolutionDir)depends\build\zuki.build.tools.zipper.exe&quot;</ZipperExe>
-      <PackageVersion>$([System.IO.File]::ReadAllText($(SolutionDir)tmp\version\version.txt))</PackageVersion>
+      <ZipperExe>&quot;depends\build\zuki.build.tools.zipper.exe&quot;</ZipperExe>
+      <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
       <PackageFile-windows-win32>out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-windows-win32>
       <PackageFile-linux-i686>out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-i686>
       <PackageFile-linux-x86_64>out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-x86_64>
