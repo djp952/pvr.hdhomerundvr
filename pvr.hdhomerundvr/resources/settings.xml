@@ -6,6 +6,7 @@
     <setting id="use_broadcast_device_discovery" label="30110" type="bool" default="false"/>
     <setting id="pause_discovery_while_streaming" label="30100" type="bool" default="false"/>
     <setting id="prepend_channel_numbers" label="30107" type="bool" default="false"/>
+    <setting id="use_episode_number_as_title" label="30112" type="bool" default="false"/>
     <setting id="delete_datetime_rules_after" label="30108" type="enum" lvalues="30213|30209|30210|30211|30212" default="3"/>
   </category>
   

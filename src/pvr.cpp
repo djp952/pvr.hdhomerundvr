@@ -154,6 +154,11 @@ struct addon_settings {
 	// Flag to include the channel number in the channel name
 	bool prepend_channel_numbers;
 
+	// use_episode_number_as_title
+	//
+	// Flag to include the episode number in recording titles
+	bool use_episode_number_as_title;
+
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -284,6 +289,7 @@ static addon_settings g_settings = {
 	guide_data::basic,		// guide_data_level
 	false,					// pause_discovery_while_streaming
 	false,					// prepend_channel_numbers
+	false,					// use_episode_number_as_title
 	86400,					// delete_datetime_rules_after			default = 1 day
 	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
@@ -974,6 +980,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("guide_data_level", &nvalue)) g_settings.guide_data_level = guidedatalevel_enum_to_guidedata(nvalue);
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
+			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
@@ -1259,6 +1266,19 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.prepend_channel_numbers = bvalue;
 			log_notice(__func__, ": setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
+		}
+	}
+
+	// use_episode_number_as_title
+	//
+	else if(strcmp(name, "use_episode_number_as_title") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_episode_number_as_title) {
+
+			g_settings.use_episode_number_as_title = bvalue;
+			log_notice(__func__, ": setting use_episode_number_as_title changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			g_pvr->TriggerRecordingUpdate();
 		}
 	}
 
@@ -2053,11 +2073,16 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 	try {
 
+		// Get the use_episode_number_as_title setting
+		std::unique_lock<std::mutex> settings_lock(g_settings_lock);
+		bool useepisodenumber = g_settings.use_episode_number_as_title;
+		settings_lock.unlock();
+
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the recordings in the database
-		enumerate_recordings(dbhandle, [&](struct recording const& item) -> void {
+		enumerate_recordings(dbhandle, useepisodenumber, [&](struct recording const& item) -> void {
 
 			PVR_RECORDING recording;							// PVR_RECORDING to be transferred to Kodi
 			memset(&recording, 0, sizeof(PVR_RECORDING));		// Initialize the structure
@@ -2087,7 +2112,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			snprintf(recording.strStreamURL, std::extent<decltype(recording.strStreamURL)>::value, "%s", item.streamurl);
 
 			// strDirectory
-			if(item.title != nullptr) snprintf(recording.strDirectory, std::extent<decltype(recording.strDirectory)>::value, "%s", item.title);
+			if(item.directory != nullptr) snprintf(recording.strDirectory, std::extent<decltype(recording.strDirectory)>::value, "%s", item.directory);
 
 			// strPlot
 			if(item.plot != nullptr) snprintf(recording.strPlot, std::extent<decltype(recording.strPlot)>::value, "%s", item.plot);

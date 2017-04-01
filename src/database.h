@@ -101,6 +101,7 @@ struct recording {
 	int					episodenumber;
 	int					year;
 	char const*			streamurl;
+	char const*			directory;
 	char const*			plot;
 	char const*			channelname;
 	char const*			thumbnailpath;
@@ -384,6 +385,7 @@ void enumerate_hd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 //
 // Enumerates the available recordings
 void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callback);
+void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_recordings_callback callback);
 
 // enumerate_recordingrules
 //

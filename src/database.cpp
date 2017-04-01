@@ -1590,20 +1590,37 @@ void enumerate_hd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 
 void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callback)
 {
+	return enumerate_recordings(instance, false, callback);
+}
+
+//---------------------------------------------------------------------------
+// enumerate_recordings
+//
+// Enumerates the available recordings
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	episodeastitle	- Flag to use the episode number in place of the recording title
+//	callback		- Callback function
+
+void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_recordings_callback callback)
+{
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// recordingid | title | episodename | seriesnumber | episodenumber | year | streamurl | plot | channelname | thumbnailpath | recordingtime | duration
+	// recordingid | title | episodename | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration
 	auto sql = "select "
 		"json_extract(value, '$.CmdURL') as recordingid, "
-		"json_extract(value, '$.Title') as title, "
+		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber'), json_extract(value, '$.Title')) else json_extract(value, '$.Title') end as title, "
 		"json_extract(value, '$.EpisodeTitle') as episodename, "
 		"get_season_number(json_extract(value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
 		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
 		"json_extract(value, '$.PlayURL') as streamurl, "
+		"json_extract(value, '$.Title') as directory, "
 		"json_extract(value, '$.Synopsis') as plot, "
 		"json_extract(value, '$.ChannelName') as channelname, "
 		"json_extract(value, '$.ImageURL') as thumbnailpath, "
@@ -1617,6 +1634,10 @@ void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callb
 
 	try {
 
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (episodeastitle) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
@@ -1628,12 +1649,13 @@ void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callb
 			item.episodenumber = sqlite3_column_int(statement, 4);
 			item.year = sqlite3_column_int(statement, 5);
 			item.streamurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
-			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
-			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
-			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
-			item.recordingtime = sqlite3_column_int(statement, 10);
-			item.duration = sqlite3_column_int(statement, 11);
-			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 12));
+			item.directory = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
+			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
+			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
+			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
+			item.recordingtime = sqlite3_column_int(statement, 11);
+			item.duration = sqlite3_column_int(statement, 12);
+			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 13));
 
 			callback(item);						// Invoke caller-supplied callback
 		}
