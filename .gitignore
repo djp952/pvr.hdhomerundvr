@@ -254,3 +254,7 @@ paket-files/
 # Temporary Directories
 tmp/
 out/
+
+# Java Keystores
+*.jks
+*.keystore
