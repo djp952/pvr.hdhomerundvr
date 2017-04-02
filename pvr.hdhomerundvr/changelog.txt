@@ -1,5 +1,6 @@
-v1.0.6 (2017.04.xx)
+v1.0.6 (2017.04.01)
   - Add "Use season/episode number as title for recordings" option
+  - (Android) Initial release of modified Kodi APKs for Android ARM and x86 devices
 
 v1.0.5 (2017.03.27)
   - Fix problem with legacy devices detected through HTTP discovery adding a phantom channel and skewing the lineups
@@ -24,7 +25,7 @@ v1.0.2 (2017.02.26)
   - Add option to enable discovery of extended (8 hour) Electronic Program Guide data
   - Update SQLite database engine to v3.17.0
   - (Linux) Switch to statically linked OpenSSL (1.0.2k) and zlib (1.2.8) libraries for better system compatibility
-  - (Android) Initial release for Android ARM, ARM64 and x86 devices
+  - (Android) Initial release for Android ARM and x86 devices
 
 v1.0.1 (2017.02.15)
   - Fix minor problem with one database table not being truncated at startup
