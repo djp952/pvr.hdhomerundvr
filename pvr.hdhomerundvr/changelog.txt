@@ -1,5 +1,6 @@
-v1.0.6 (2017.04.xx)
+v1.0.6 (2017.04.01)
   - Add "Use season/episode number as title for recordings" option
+  - (Android) Initial release of modified Kodi APKs for Android ARM, ARM64 and x86 devices
 
 v1.0.5 (2017.03.27)
   - Fix problem with legacy devices detected through HTTP discovery adding a phantom channel and skewing the lineups
