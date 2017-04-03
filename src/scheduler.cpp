@@ -118,13 +118,25 @@ void scheduler::remove(std::function<void(scalar_condition<bool> const&)> task)
 {
 	queue_t			newqueue;			// The new queue_t instance
 
+	// targetptr_t
+	//
+	// Type returned by std::function::target<> below
+	using targetptr_t = void(*const*)(scalar_condition<bool> const&);
+
 	std::unique_lock<std::mutex> lock(m_queue_lock);
 
 	// priority_queue<> doesn't actually allow elements to be removed, create
 	// a new queue with all the elements that don't have the same target
 	while(!m_queue.empty()) {
 
-		if(m_queue.top().second.target<void(*)(void)>() != task.target<void(*)(void)>()) newqueue.push(m_queue.top());
+		// Pull out pointers to the left-hand and right-hand std::function targets to be compared
+		targetptr_t left = m_queue.top().second.target<void(*)(scalar_condition<bool> const&)>();
+		targetptr_t right = task.target<void(*)(scalar_condition<bool> const&)>();
+
+		// If the current item does not match the task being removed, move it into the new queue<>
+		if((left != nullptr) && (right != nullptr) && (*left != *right)) newqueue.push(m_queue.top());
+
+		// Always remove the current item from the old queue<>
 		m_queue.pop();
 	}
 

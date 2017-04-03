@@ -1,3 +1,6 @@
+v1.0.7 (2017.04.02)
+  - Fix problem introduced in v1.0.4 causing all discovery tasks to be cancelled if devices/lineups change or certain settings are changed
+
 v1.0.6 (2017.04.01)
   - Add "Use season/episode number as title for recordings" option
   - (Android) Initial release of modified Kodi APKs for Android ARM, ARM64 and x86 devices
