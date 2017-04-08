@@ -13,7 +13,7 @@ Copyright (C)2017 Michael G. Brehm
 **BUILD ENVIRONMENT**  
 * Windows 10 x64 15063   
 * Visual Studio 2013   
-* Visual Studio 2015 (with Git for Windows)   
+* Visual Studio 2017 (with VC++ 2015.3 v140 toolset)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
 * Android NDK r12b for Windows 64-bit   
 * Optional: Android SDK tools r25.2.3 for Windows   
