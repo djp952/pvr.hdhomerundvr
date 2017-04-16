@@ -40,7 +40,7 @@
 //
 //	buffersize	- Size in bytes of the stream ring buffer
 
-livestream::livestream(size_t buffersize) : m_buffersize(buffersize), m_buffer(std::make_unique<uint8_t[]>(buffersize))
+livestream::livestream(size_t buffersize) : m_buffersize(buffersize), m_buffer(new uint8_t[buffersize])
 {
 	if(!m_buffer) throw std::bad_alloc();
 }
@@ -83,7 +83,7 @@ size_t livestream::curl_responseheaders(char const* data, size_t size, size_t co
 		unsigned long long rangestart = 0;
 
 		// Copy the header data into a local buffer to ensure null termination, which is not guaranteed
-		std::unique_ptr<char[]> buffer = std::make_unique<char[]>(cb + 1);
+		std::unique_ptr<char[]> buffer(new char[cb + 1]);
 		memcpy(&buffer[0], data, cb);
 		buffer[cb] = 0;
 
