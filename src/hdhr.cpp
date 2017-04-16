@@ -41,10 +41,8 @@
 
 void enumerate_devices(enumerate_devices_callback callback)
 {
-	std::unique_ptr<struct hdhomerun_discover_device_t[]> devices;
-	
 	// Allocate enough heap storage to hold up to 64 enumerated devices on the network
-	devices = std::make_unique<struct hdhomerun_discover_device_t[]>(64);
+	std::unique_ptr<struct hdhomerun_discover_device_t[]> devices(new struct hdhomerun_discover_device_t[64]);
 
 	// Use the libhdhomerun broadcast discovery mechanism to find all devices on the local network
 	int result = hdhomerun_discover_find_devices_custom_v2(0, HDHOMERUN_DEVICE_TYPE_WILDCARD,
