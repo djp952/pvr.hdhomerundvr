@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdhomerundvr", "src\hdhomerundvr.vcxproj", "{5B5A17F1-4312-4A64-A796-2818CE0906B4}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -50,6 +50,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03
 		manifest\linux-armhf.manifest = manifest\linux-armhf.manifest
 		manifest\linux-i686.manifest = manifest\linux-i686.manifest
 		manifest\linux-x86_64.manifest = manifest\linux-x86_64.manifest
+		manifest\raspbian-armhf.manifest = manifest\raspbian-armhf.manifest
 		manifest\windows-win32.manifest = manifest\windows-win32.manifest
 		manifest\windows-x64.manifest = manifest\windows-x64.manifest
 	EndProjectSection

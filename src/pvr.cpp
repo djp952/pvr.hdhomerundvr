@@ -961,7 +961,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception("curl_global_init(CURL_GLOBAL_DEFAULT) failed");
 
 		// Create the global addoncallbacks instance
-		g_addon = std::make_unique<addoncallbacks>(handle);
+		g_addon.reset(new addoncallbacks(handle));
 
 		// Throw a banner out to the Kodi log indicating that the add-on is being loaded
 		log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
@@ -996,7 +996,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 
 			// Create the global pvrcallbacks instance
-			g_pvr = std::make_unique<pvrcallbacks>(handle); 
+			g_pvr.reset(new pvrcallbacks(handle));
 		
 			try {
 

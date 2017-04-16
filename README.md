@@ -12,9 +12,10 @@ Copyright (C)2017 Michael G. Brehm
    
 **BUILD ENVIRONMENT**  
 * Windows 10 x64 15063   
-* Visual Studio 2017 (with VC++ 2015.3 v140 toolset)   
+* Visual Studio 2017 (with VC++ 2015.3 v140 toolset and Windows 8.1 SDK)   
 * Bash on Ubuntu on Windows 16.04.1 LTS   
 * Android NDK r12b for Windows 64-bit   
+* Raspberry Pi development tools
 * Optional: Android SDK tools r25.2.3 for Windows   
 * Optional: Oracle Java SE Runtime Environment 8   
    
@@ -25,6 +26,7 @@ sudo dpkg --add-architecture i386
 sudo apt-get update
 sudo apt-get install gcc-4.9 g++-4.9 libc6-dev:i386 libstdc++-4.9-dev:i386 lib32gcc-4.9-dev 
 sudo apt-get install gcc-4.9-arm-linux-gnueabihf g++-4.9-arm-linux-gnueabihf gcc-4.9-arm-linux-gnueabi g++-4.9-arm-linux-gnueabi gcc-4.9-aarch64-linux-gnu g++-4.9-aarch64-linux-gnu
+git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 ```
    
 **CONFIGURE ANDROID NDK**   
@@ -62,7 +64,7 @@ Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:
 ```
    
 **BUILD AND GENERATE KODI ADDON PACKAGES**   
-Open "Developer Command Prompt for VS2015"   
+Open "Developer Command Prompt for VS2017"   
 ```
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Krypton
 cd pvr.hdhomerundvr
@@ -79,6 +81,7 @@ msbuild msbuild.proj
 > out\zuki.pvr.hdhomerundvr-android-arm-krypton-x.x.x.x.zip (android-arm)
 > out\zuki.pvr.hdhomerundvr-android-aarch64-krypton-x.x.x.x.zip (android-aarch64)
 > out\zuki.pvr.hdhomerundvr-android-x86-krypton-x.x.x.x.zip (android-x86)
+> out\zuki.pvr.hdhomerundvr-raspbian-armhf-krypton-x.x.x.x.zip (raspbian-armhf)
 ```
    
 **BUILD AND GENERATE MODIFIED KODI ANDROID APKS**   
