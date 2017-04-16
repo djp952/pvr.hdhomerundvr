@@ -87,7 +87,7 @@ msbuild msbuild.proj
 **BUILD AND GENERATE MODIFIED KODI ANDROID APKS**   
 Building the modified Kodi Android APKs requires a Java keystore to be specified on the build command line in order to sign the resultant APK files.  For more information about APK signing and how to generate the keystore, please see [Sign Your App](https://developer.android.com/studio/publish/app-signing.html).   
    
-Open "Developer Command Prompt for VS2015"   
+Open "Developer Command Prompt for VS2017"   
 ```
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Krypton
 cd pvr.hdhomerundvr
