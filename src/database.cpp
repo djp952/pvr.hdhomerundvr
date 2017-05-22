@@ -1365,7 +1365,8 @@ void enumerate_favorite_channelids(sqlite3* instance, enumerate_channelids_callb
 
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.Favorite') = 1";
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.Favorite') = 1 "
+		"and json_extract(entry.value, '$.DRM') is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1556,7 +1557,8 @@ void enumerate_hd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') = 1";
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') = 1 "
+		"and json_extract(entry.value, '$.DRM') is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1747,7 +1749,8 @@ void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') is null";
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') is null "
+		"and json_extract(entry.value, '$.DRM') is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
