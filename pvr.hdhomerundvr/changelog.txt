@@ -1,3 +1,6 @@
+v1.0.8 (2017.05.22)
+  - Filter out DRM channels from Channel Groups; resolves PVRTransferChannelGroupMember errors in log
+
 v1.0.7 (2017.04.02)
   - Fix problem introduced in v1.0.4 causing all discovery tasks to be cancelled if devices/lineups change or certain settings are changed
 
