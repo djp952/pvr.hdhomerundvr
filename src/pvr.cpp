@@ -1641,45 +1641,86 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY) {
 
-		log_notice(__func__, ": scheduling device discovery task to execute in 1 second");
-		g_scheduler.remove(discover_devices_task);
-		g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
+		try {
+
+			log_notice(__func__, ": scheduling device discovery task to execute in 1 second");
+			g_scheduler.remove(discover_devices_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
 	// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY) {
 
-		log_notice(__func__, ": scheduling lineup discovery task to execute in 1 second");
-		g_scheduler.remove(discover_lineups_task);
-		g_scheduler.add(now + std::chrono::seconds(1), discover_lineups_task);
+		try {
+
+			log_notice(__func__, ": scheduling lineup discovery task to execute in 1 second");
+			g_scheduler.remove(discover_lineups_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_lineups_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
 	// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY) {
 
-		log_notice(__func__, ": scheduling guide discovery task to execute in 1 second");
-		g_scheduler.remove(discover_guide_task);
-		g_scheduler.add(now + std::chrono::seconds(1), discover_guide_task);
+		try {
+
+			log_notice(__func__, ": scheduling guide discovery task to execute in 1 second");
+			g_scheduler.remove(discover_guide_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_guide_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
 	// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY) {
 
-		log_notice(__func__, ": scheduling recording discovery task to execute in 1 second");
-		g_scheduler.remove(discover_recordings_task);
-		g_scheduler.add(now + std::chrono::seconds(1), discover_recordings_task);
+		try {
+
+			log_notice(__func__, ": scheduling recording discovery task to execute in 1 second");
+			g_scheduler.remove(discover_recordings_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_recordings_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
 	// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
 	//
 	else if(menuhook.iHookId == MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY) {
 
-		log_notice(__func__, ": scheduling recording rule discovery task to execute in 1 second");
-		g_scheduler.remove(discover_recordingrules_task);
-		g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
+		try {
+
+			log_notice(__func__, ": scheduling recording rule discovery task to execute in 1 second");
+			g_scheduler.remove(discover_recordingrules_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
 	}
 
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;

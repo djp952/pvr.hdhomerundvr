@@ -3,6 +3,7 @@ v1.0.9 (2017.06.xx)
   - Clear pending scheduled discovery tasks during addon stop and destroy operations
   - Prevent PVR triggers from being signaled by background discovery tasks still running during addon stop and destroy operations
   - Filter out DRM channels from Electronic Program Guide discovery change triggers; resolves CEpgContainer errors in log
+  - Fix internal exception handling and return values returned from menu hooks
 
 v1.0.8 (2017.05.22)
   - Filter out DRM channels from Channel Groups; resolves PVRTransferChannelGroupMember errors in log
