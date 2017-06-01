@@ -1085,11 +1085,19 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 					// Perform discovery tasks for all local network resources during startup in order to 
 					// have as much data as possible available for Kodi when the PVR Manager asks for it
-					log_notice(__func__, ": initiating local network resource discovery (startup)");
-					connectionpool::handle dbhandle(g_connpool);
-					discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
-					discover_lineups(dbhandle);
-					discover_recordings(dbhandle);
+					try {
+
+						connectionpool::handle dbhandle(g_connpool);
+
+						log_notice(__func__, ": initiating local network resource discovery (startup)");
+						discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
+						discover_lineups(dbhandle);
+						discover_recordings(dbhandle);
+					}
+
+					// Log any errors encountered during startup discovery, but don't abort
+					catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+					catch(...) { handle_generalexception(__func__); }
 
 					// Add asynchronous tasks to periodically refresh the local network resources based on settings
 					g_scheduler.add(now + std::chrono::seconds(g_settings.discover_devices_interval), discover_devices_task);
@@ -1720,7 +1728,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 		
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
-	}
 	}
 
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
