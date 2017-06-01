@@ -2770,7 +2770,7 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 	// set a busy_timeout handler for this connection
 	//
-	sqlite3_busy_timeout(instance, 30000);
+	sqlite3_busy_timeout(instance, 5000);
 	
 	try {
 

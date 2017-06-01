@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <chrono>
 #include <functional>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <pthread.h>
@@ -1754,6 +1755,12 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	// Retrieve the channel identifier from the PVR_CHANNEL structure
 	union channelid channelid;
 	channelid.value = channel.iUniqueId;
+
+	// Collect all of the EPG_TAG structures locally so that the database connection isn't
+	// open any longer than necessary.  Unforunately the EPG_TAG structure also expects pointers 
+	// to the strings so those have to be collected into a list<> as well ...
+	std::vector<EPG_TAG> epgtags;
+	std::list<std::string> epgstrings;
 		
 	try {
 
@@ -1771,7 +1778,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 			// strTitle (required)
 			if(item.title == nullptr) return;
-			epgtag.strTitle = item.title;
+			epgtag.strTitle = epgstrings.insert(epgstrings.end(), item.title)->c_str();
 
 			// iChannelNumber (required)
 			epgtag.iChannelNumber = item.channelid;
@@ -1783,13 +1790,13 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			epgtag.endTime = item.endtime;
 
 			// strPlot
-			epgtag.strPlot = item.synopsis;
+			if(item.synopsis != nullptr) epgtag.strPlot = epgstrings.insert(epgstrings.end(), item.synopsis)->c_str();
 
 			// iYear
 			epgtag.iYear = item.year;
 
 			// strIconPath
-			epgtag.strIconPath = item.iconurl;
+			if(item.iconurl != nullptr) epgtag.strIconPath = epgstrings.insert(epgstrings.end(), item.iconurl)->c_str();
 
 			// iGenreType
 			epgtag.iGenreType = item.genretype;
@@ -1807,15 +1814,21 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			epgtag.iEpisodePartNumber = -1;
 
 			// strEpisodeName
-			epgtag.strEpisodeName = item.episodename;
+			if(item.episodename != nullptr) epgtag.strEpisodeName = epgstrings.insert(epgstrings.end(), item.episodename)->c_str();
 
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
 
-			g_pvr->TransferEpgEntry(handle, &epgtag);
+			// Copy the EPG_TAG into the local vector<>
+			epgtags.push_back(epgtag);
 		});
 	}
 	
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	// Transfer all of the EPG_TAG structures over to Kodi
+	try { for(auto const& it : epgtags) g_pvr->TransferEpgEntry(handle, &it); }	
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -1899,6 +1912,10 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	// If neither enumerator was selected, there isn't any work to do here
 	if(enumerator == nullptr) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
+	// Collect all of the PVR_CHANNEL_GROUP_MEMBER structures locally so that the database
+	// connection isn't open any longer than necessary
+	std::vector<PVR_CHANNEL_GROUP_MEMBER> members;
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -1916,10 +1933,16 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 			// iChannelUniqueId (required)
 			member.iChannelUniqueId = item.value;
 
-			g_pvr->TransferChannelGroupMember(handle, &member);
+			// Copy the PVR_CHANNEL_GROUP_MEMBER into the local vector<>
+			members.push_back(std::move(member));
 		});
 	}
-	
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	// Transfer all of the PVR_CHANNEL_GROUP_MEMBER structures over to Kodi
+	try { for(auto const& it : members) g_pvr->TransferChannelGroupMember(handle, &it); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -1975,6 +1998,10 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 	// The PVR doesn't support radio channels
 	if(radio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
+	// Collect all of the PVR_CHANNEL structures locally so that the database
+	// connection isn't open any longer than necessary
+	std::vector<PVR_CHANNEL> channels;
+
 	try {
 
 		// Get the prepend_channel_numbers setting
@@ -2020,10 +2047,16 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 			// strIconPath
 			if(item.iconurl != nullptr) snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
 
-			g_pvr->TransferChannelEntry(handle, &channel);
+			// Copy the PVR_CHANNEL structure into the local vector<>
+			channels.push_back(channel);
 		});
 	}
 	
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	// Transfer all of the PVR_CHANNEL structures over to Kodi
+	try { for(auto const& it : channels) g_pvr->TransferChannelEntry(handle, &it); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -2137,6 +2170,10 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 	// The PVR doesn't support tracking deleted recordings
 	if(deleted) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
+	// Collect all of the PVR_RECORDING structures locally so that the database
+	// connection isn't open any longer than necessary
+	std::vector<PVR_RECORDING> recordings;
+
 	try {
 
 		// Get the use_episode_number_as_title setting
@@ -2201,10 +2238,16 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// channelType
 			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
 
-			g_pvr->TransferRecordingEntry(handle, &recording);
+			// Copy the PVR_RECORDING structure into the local vector<>
+			recordings.push_back(recording);
 		});
 	}
 	
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	// Transfer all of the PVR_RECORDING structures over to Kodi
+	try { for(auto const& it : recordings) g_pvr->TransferRecordingEntry(handle, &it); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -2401,6 +2444,10 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 
 	time(&now);								// Get the current date/time for comparison
 
+	// Collect all of the PVR_TIMER structures locally so that the database
+	// connection isn't open any longer than necessary
+	std::vector<PVR_TIMER> timers;
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -2461,7 +2508,8 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			// iMarginEnd
 			timer.iMarginEnd = (item.endpadding / 60);
 
-			g_pvr->TransferTimerEntry(handle, &timer);
+			// Copy the PVR_TIMER structure into the local vector<>
+			timers.push_back(timer);
 		});
 
 		// Enumerate all of the timers in the database
@@ -2503,10 +2551,16 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			// iEpgUid
 			timer.iEpgUid = static_cast<unsigned int>(item.starttime);
 
-			g_pvr->TransferTimerEntry(handle, &timer);
+			// Copy the PVR_TIMER structure into the local vector<>
+			timers.push_back(timer);
 		});
 	}
 	
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	// Transfer all of the PVR_TIMER structures over to Kodi
+	try { for(auto const& it : timers) g_pvr->TransferTimerEntry(handle, &it); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
