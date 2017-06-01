@@ -1,3 +1,9 @@
+v1.0.9 (2017.06.xx)
+  - Perform immediate discovery of all local network resources (devices, lineups, recordings) during addon startup
+  - Clear pending scheduled discovery tasks during addon stop and destroy operations
+  - Prevent PVR triggers from being signaled by background discovery tasks still running during addon stop and destroy operations
+  - Filter out DRM channels from Electronic Program Guide discovery change triggers; resolves CEpgContainer errors in log
+
 v1.0.8 (2017.05.22)
   - Filter out DRM channels from Channel Groups; resolves PVRTransferChannelGroupMember errors in log
 

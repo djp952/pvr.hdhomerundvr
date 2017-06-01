@@ -1239,7 +1239,7 @@ void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callb
 
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry";
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.DRM') is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
