@@ -348,6 +348,28 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 }
 
 //---------------------------------------------------------------------------
+// clear_database
+//
+// Clears all discovery data from the database
+//
+// Arguments:
+//
+//	instance	- Database instance handle
+
+void clear_database(sqlite3* instance)
+{
+	if(instance == nullptr) return;
+
+	// Not very interesting, just delete all the data from each discovery table
+	execute_non_query(instance, "delete from episode");
+	execute_non_query(instance, "delete from recordingrule");
+	execute_non_query(instance, "delete from guide");
+	execute_non_query(instance, "delete from recording");
+	execute_non_query(instance, "delete from lineup");
+	execute_non_query(instance, "delete from device");
+}
+
+//---------------------------------------------------------------------------
 // close_database
 //
 // Closes a SQLite database handle
@@ -1239,7 +1261,7 @@ void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callb
 
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry";
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.DRM') is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2770,7 +2792,7 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 	// set a busy_timeout handler for this connection
 	//
-	sqlite3_busy_timeout(instance, 30000);
+	sqlite3_busy_timeout(instance, 5000);
 	
 	try {
 

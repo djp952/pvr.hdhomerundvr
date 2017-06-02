@@ -168,6 +168,10 @@ msgctxt "#30307"
 msgid "Trigger recording rule discovery"
 msgstr ""
 
+msgctxt "#30308"
+msgid "Reset discovery database"
+msgstr ""
+
 msgctxt "#30401"
 msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""

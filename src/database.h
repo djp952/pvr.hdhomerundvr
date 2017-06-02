@@ -283,6 +283,11 @@ private:
 // Adds a new recording rule to the database
 void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule);
 
+// clear_database
+//
+// Clears all discovery data out of the database
+void clear_database(sqlite3* instance);
+
 // close_database
 //
 // Creates a SQLite database instance handle
