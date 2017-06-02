@@ -70,6 +70,7 @@
 #define MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY			5
 #define MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY		6
 #define MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY	7
+#define MENUHOOK_SETTING_RESETDATABASE					8
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -1075,6 +1076,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 				menuhook.category = PVR_MENUHOOK_SETTING;
 				g_pvr->AddMenuHook(&menuhook);
 
+				// MENUHOOK_SETTING_RESETDATABASE
+				//
+				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+				menuhook.iHookId = MENUHOOK_SETTING_RESETDATABASE;
+				menuhook.iLocalizedStringId = 30308;
+				menuhook.category = PVR_MENUHOOK_SETTING;
+				g_pvr->AddMenuHook(&menuhook);
+
 				// Create the global database connection pool instance, the file name is based on the versionb
 				std::string databasefile = "file:///" + std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
 				g_connpool = std::make_shared<connectionpool>(databasefile.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
@@ -1723,6 +1732,40 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			log_notice(__func__, ": scheduling recording rule discovery task to execute in 1 second");
 			g_scheduler.remove(discover_recordingrules_task);
 			g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_SETTING_RESETDATABASE
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_RESETDATABASE) {
+
+		scalar_condition<bool>	cancel{false};		// Dummy cancellation flag for tasks
+
+		try {
+
+			log_notice(__func__, ": clearing database and rescheduling all discovery tasks");
+
+			g_scheduler.stop();					// Stop the task scheduler
+			g_scheduler.clear();				// Clear all pending tasks
+
+			// Clear the database using an automatically scoped connection
+			clear_database(connectionpool::handle(g_connpool));
+
+			// Reschedule all discoveries to execute sequentially to update everything; stagger them out in 500ms
+			// intervals to prevent the scheduler (1000ms granularity) from pausing for a cycle between them
+			g_scheduler.add(now + std::chrono::milliseconds(500), discover_devices_task);
+			g_scheduler.add(now + std::chrono::milliseconds(1000), discover_lineups_task);
+			g_scheduler.add(now + std::chrono::milliseconds(1500), discover_recordings_task);
+			g_scheduler.add(now + std::chrono::milliseconds(2000), discover_guide_task);
+			g_scheduler.add(now + std::chrono::milliseconds(2500), discover_recordingrules_task);
+			g_scheduler.add(now + std::chrono::milliseconds(3000), discover_episodes_task);
+	
+			g_scheduler.start();				// Restart the task scheduler
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }

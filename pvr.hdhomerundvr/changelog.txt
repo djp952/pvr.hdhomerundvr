@@ -8,6 +8,7 @@ v1.0.9 (2017.06.xx)
   - Fix internal exception handling and return values returned from menu hooks
   - Reduce database contention during operations that transfer data back to Kodi via callback functions
   - Reduce SQLite busy handler wait period from 30 seconds to 5 seconds
+  - Add "Reset discovery database" PVR Client Specific setting
 
 v1.0.8 (2017.05.22)
   - Filter out DRM channels from Channel Groups; resolves PVRTransferChannelGroupMember errors in log
