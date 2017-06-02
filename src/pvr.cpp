@@ -2357,12 +2357,6 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// iDuration
 			recording.iDuration = item.duration;
 
-			// iChannelUid
-			recording.iChannelUid = item.channelid.value;
-
-			// channelType
-			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
-
 			// Copy the PVR_RECORDING structure into the local vector<>
 			recordings.push_back(recording);
 		});
