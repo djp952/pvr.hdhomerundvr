@@ -99,6 +99,7 @@ static void discover_guide_task(scalar_condition<bool> const& cancel);
 static void discover_lineups_task(scalar_condition<bool> const& cancel);
 static void discover_recordingrules_task(scalar_condition<bool> const& cancel);
 static void discover_recordings_task(scalar_condition<bool> const& cancel);
+static void discover_startup_task(scalar_condition<bool> const& cancel);
 
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
@@ -205,6 +206,11 @@ struct addon_settings {
 	//
 	// Flag indicating that Live TV will be handled directly from the tuner(s)
 	bool use_direct_tuning;
+
+	// startup_discovery_task_delay
+	//
+	// Indicates the number of seconds to pause before initiating the startup discovery task
+	int startup_discovery_task_delay;
 };
 
 //---------------------------------------------------------------------------
@@ -301,6 +307,7 @@ static addon_settings g_settings = {
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
+	3,						// startup_discovery_task_delay
 };
 
 // g_settings_lock
@@ -808,6 +815,115 @@ static void discover_recordings_task(scalar_condition<bool> const& cancel)
 	g_scheduler.add(due, discover_recordings_task);
 }
 
+// discover_startup_task
+//
+// Scheduled task implementation to discover all data during PVR startup
+static void discover_startup_task(scalar_condition<bool> const& cancel)
+{
+	addon_settings		settings;							// Local copy of all PVR settings
+	bool				lineups_changed = false;			// Flag if lineups have changed
+	bool				recordings_changed = false;			// Flag if recordings have changed
+	bool				guide_changed = false;				// Flag if guide data has changed
+	bool				recordingrules_changed = false;		// Flag if recording rules have changed
+	bool				episodes_changed = false;			// Flag if episode data has changed
+
+	assert(g_addon && g_pvr);
+	log_notice(__func__, ": initiated startup discovery task");
+
+	// Atomically make a local copy of all the addon settings, most of them will be used here
+	g_settings_lock.lock();
+	settings = g_settings;
+	g_settings_lock.unlock();
+
+	// Execute all of the database discoveries sequentially, watching for cancel at each step
+	try {
+
+		// Pull a database connection out from the connection pool
+		connectionpool::handle dbhandle(g_connpool);
+
+		// Discover all local devices, channel lineups and recordings
+		if(cancel.test(false)) discover_devices(dbhandle, settings.use_broadcast_device_discovery);
+		if(cancel.test(false)) discover_lineups(dbhandle, lineups_changed);
+		if(cancel.test(false)) discover_recordings(dbhandle, recordings_changed);
+		
+		// Discover the updated electronic program guide data from the backend service
+		if(cancel.test(false) && (settings.guide_data_level == guide_data::basic)) discover_guide_basic(dbhandle, guide_changed);
+		else if(cancel.test(false) && (settings.guide_data_level == guide_data::extended)) discover_guide_extended(dbhandle, cancel, guide_changed);
+		else if(cancel.test(false)) {
+
+			// If the guide_data_level setting is bad, default to using the basic guide data
+			log_error(__func__, ": guide_data_level setting invalid state -- defaulting to guide_data::basic");
+			discover_guide_basic(dbhandle, guide_changed);
+		}
+
+		// Discover all recording rules and series episode information
+		if(cancel.test(false)) discover_recordingrules(dbhandle, recordingrules_changed);
+		if(cancel.test(false)) discover_episodes(dbhandle, episodes_changed);
+
+		// If the operation was cancelled at any point during discovery bail out now
+		if(cancel.test(true)) { log_notice(__func__, ": operation cancelled"); return; }
+
+		// TRIGGER: Channels
+		if(lineups_changed || guide_changed) {
+			
+			log_notice(__func__, ": discovery data changed -- trigger channel update");
+			g_pvr->TriggerChannelUpdate();
+		}
+
+		// TRIGGER: Channel Groups
+		if(lineups_changed) {
+			
+			log_notice(__func__, ": discovery data changed -- trigger channel group update");
+			g_pvr->TriggerChannelGroupsUpdate();
+		}
+
+		// TRIGGER: Recordings
+		if(recordings_changed) {
+			
+			log_notice(__func__, ": discovery data changed -- trigger recording update");
+			g_pvr->TriggerRecordingUpdate();
+		}
+
+		// TRIGGER: Timers
+		if(recordingrules_changed || episodes_changed) {
+			
+			log_notice(__func__, ": discovery data changed -- trigger timer update");
+			g_pvr->TriggerTimerUpdate();
+		}
+
+		// TRIGGER: Electronic Program Guide
+		if(guide_changed || recordingrules_changed || episodes_changed) {
+
+			log_notice(__func__, ": discovery data changed -- trigger electronic program guide update (all channels)");
+			enumerate_channelids(dbhandle, [&](union channelid const& item) -> void { g_pvr->TriggerEpgUpdate(item.value); });
+		}
+
+		// Schedule the standard periodic updates to occur at the specified intervals
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+
+		log_notice(__func__, ": scheduling next device discovery to initiate in ", settings.discover_devices_interval, " seconds");
+		g_scheduler.add(now + std::chrono::seconds(settings.discover_devices_interval), discover_devices_task);
+
+		log_notice(__func__, ": scheduling next lineup discovery to initiate in ", settings.discover_lineups_interval, " seconds");
+		g_scheduler.add(now + std::chrono::seconds(settings.discover_lineups_interval), discover_lineups_task);
+
+		log_notice(__func__, ": scheduling next recording discovery to initiate in ", settings.discover_recordings_interval, " seconds");
+		g_scheduler.add(now + std::chrono::seconds(settings.discover_recordings_interval), discover_recordings_task);
+
+		log_notice(__func__, ": scheduling next guide discovery to initiate in ", settings.discover_guide_interval, " seconds");
+		g_scheduler.add(now + std::chrono::seconds(settings.discover_guide_interval), discover_guide_task);
+
+		log_notice(__func__, ": scheduling next recording rule discovery to initiate in ", settings.discover_recordingrules_interval, " seconds");
+		g_scheduler.add(now + std::chrono::seconds(settings.discover_recordingrules_interval), discover_recordingrules_task);
+
+		log_notice(__func__, ": scheduling next recording rule episode discovery to initiate in ", settings.discover_episodes_interval, " seconds");
+		g_scheduler.add(now + std::chrono::seconds(settings.discover_episodes_interval), discover_episodes_task);	
+	}
+
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+	catch(...) { handle_generalexception(__func__); }
+}
+
 // guidedatalevel_enum_to_guidedata
 //
 // Converts the guide data level enumeration value into a guide_data value
@@ -1014,6 +1130,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
+			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 
 			// Create the global pvrcallbacks instance
 			g_pvr.reset(new pvrcallbacks(handle));
@@ -1090,37 +1207,30 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 				try {
 
-					// Find out what time it is now to set up the scheduler
-					std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-
-					// Perform discovery tasks for all local network resources during startup in order to 
-					// have as much data as possible available for Kodi when the PVR Manager asks for it
 					try {
-
+						
+						// Kodi currently has no means to create EPG entries in the database for channels that are
+						// added after the PVR manager has been started.  Synchronously execute a device and lineup
+						// discovery so that the initial set of channels are immediately available to Kodi
 						connectionpool::handle dbhandle(g_connpool);
 
 						log_notice(__func__, ": initiating local network resource discovery (startup)");
 						discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
 						discover_lineups(dbhandle);
-						discover_recordings(dbhandle);
 					}
 
-					// Log any errors encountered during startup discovery, but don't abort
+					// Failure to perform the synchronous device and lineup discovery is not fatal
 					catch(std::exception& ex) { handle_stdexception(__func__, ex); }
 					catch(...) { handle_generalexception(__func__); }
 
-					// Add asynchronous tasks to periodically refresh the local network resources based on settings
-					g_scheduler.add(now + std::chrono::seconds(g_settings.discover_devices_interval), discover_devices_task);
-					g_scheduler.add(now + std::chrono::seconds(g_settings.discover_lineups_interval), discover_lineups_task);
-					g_scheduler.add(now + std::chrono::seconds(g_settings.discover_recordings_interval), discover_recordings_task);
-
-					// Add asynchronous tasks for the remaining cloud data discovery tasks, stagger them out in 500ms
-					// intervals so that the scheduler (1000ms granularity) will not wait extra cycles between them
-					g_scheduler.add(now + std::chrono::milliseconds(500), discover_guide_task);
-					g_scheduler.add(now + std::chrono::milliseconds(1000), discover_recordingrules_task);
-					g_scheduler.add(now + std::chrono::milliseconds(1500), discover_episodes_task);
-
-					g_scheduler.start();				// <--- Start the task scheduler
+					// To help reduce trigger 'chatter' at startup, a special optimized task was created that loads
+					// all discovery data and only triggers the PVR update(s) once per category.  Delay the launch 
+					// of this initial startup discovery task for a reasonable amount of time to allow the PVR to 
+					// finish it's start up processing -- failure to do so may trigger a race condition that leads
+					// to a deadlock in Kodi that can occur when channel information changes while the EPGs are created
+					log_notice(__func__, ": delaying startup discovery task for ", g_settings.startup_discovery_task_delay, " seconds");					
+					g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(g_settings.startup_discovery_task_delay), discover_startup_task);
+					g_scheduler.start();
 				}
 
 				// Clean up the database connection pool on exception
@@ -1449,6 +1559,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
+	// startup_discovery_task_delay
+	//
+	else if(strcmp(name, "startup_discovery_task_delay") == 0) {
+
+		int nvalue = *reinterpret_cast<int const*>(value);
+		if(nvalue != g_settings.startup_discovery_task_delay) {
+
+			g_settings.startup_discovery_task_delay = nvalue;
+			log_notice(__func__, ": setting startup_discovery_task_delay changed to ", nvalue, " seconds");
+		}
+	}
+
 	return ADDON_STATUS_OK;
 }
 
@@ -1661,9 +1783,9 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling device discovery task to execute in 1 second");
+			log_notice(__func__, ": scheduling device discovery task");
 			g_scheduler.remove(discover_devices_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
+			g_scheduler.add(now, discover_devices_task);
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -1678,9 +1800,9 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling lineup discovery task to execute in 1 second");
+			log_notice(__func__, ": scheduling lineup discovery task");
 			g_scheduler.remove(discover_lineups_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_lineups_task);
+			g_scheduler.add(now, discover_lineups_task);
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -1695,9 +1817,9 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling guide discovery task to execute in 1 second");
+			log_notice(__func__, ": scheduling guide discovery task");
 			g_scheduler.remove(discover_guide_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_guide_task);
+			g_scheduler.add(now, discover_guide_task);
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -1712,9 +1834,9 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling recording discovery task to execute in 1 second");
+			log_notice(__func__, ": scheduling recording discovery task");
 			g_scheduler.remove(discover_recordings_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_recordings_task);
+			g_scheduler.add(now, discover_recordings_task);
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -1729,9 +1851,9 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling recording rule discovery task to execute in 1 second");
+			log_notice(__func__, ": scheduling recording rule discovery task");
 			g_scheduler.remove(discover_recordingrules_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
+			g_scheduler.add(now, discover_recordingrules_task);
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -1756,14 +1878,10 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			// Clear the database using an automatically scoped connection
 			clear_database(connectionpool::handle(g_connpool));
 
-			// Reschedule all discoveries to execute sequentially to update everything; stagger them out in 500ms
-			// intervals to prevent the scheduler (1000ms granularity) from pausing for a cycle between them
-			g_scheduler.add(now + std::chrono::milliseconds(500), discover_devices_task);
-			g_scheduler.add(now + std::chrono::milliseconds(1000), discover_lineups_task);
-			g_scheduler.add(now + std::chrono::milliseconds(1500), discover_recordings_task);
-			g_scheduler.add(now + std::chrono::milliseconds(2000), discover_guide_task);
-			g_scheduler.add(now + std::chrono::milliseconds(2500), discover_recordingrules_task);
-			g_scheduler.add(now + std::chrono::milliseconds(3000), discover_episodes_task);
+			// Schedule a startup discovery to occur and reload the entire database from scratch;
+			// the startup task is more efficient with the callbacks to Kodi than the periodic ones
+			log_notice(__func__, ": scheduling startup discovery task");
+			g_scheduler.add(now, discover_startup_task);
 	
 			g_scheduler.start();				// Restart the task scheduler
 		}
@@ -3454,19 +3572,15 @@ void OnSystemWake()
 {
 	try {
 
-		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		g_scheduler.stop();					// Ensure scheduler was stopped
+		g_scheduler.clear();				// Ensure there are no pending tasks
 
-		// Reschedule all discoveries to execute sequentially to update everything; stagger them out in 500ms
-		// intervals to prevent the scheduler (1000ms granularity) from pausing for a cycle between them
-		g_scheduler.add(now + std::chrono::milliseconds(500), discover_devices_task);
-		g_scheduler.add(now + std::chrono::milliseconds(1000), discover_lineups_task);
-		g_scheduler.add(now + std::chrono::milliseconds(1500), discover_recordings_task);
-		g_scheduler.add(now + std::chrono::milliseconds(2000), discover_guide_task);
-		g_scheduler.add(now + std::chrono::milliseconds(2500), discover_recordingrules_task);
-		g_scheduler.add(now + std::chrono::milliseconds(3000), discover_episodes_task);
+		// The special discover_startup_task takes care of all discoveries in a more
+		// optimized fashion than invoking the periodic ones; use that on wakeup too
+		log_notice(__func__, ": scheduling startup discovery task");
+		g_scheduler.add(std::chrono::system_clock::now(), discover_startup_task);
 	
-		// Restart the scheduler
-		g_scheduler.start();
+		g_scheduler.start();				// Restart the scheduler
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }

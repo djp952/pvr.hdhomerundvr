@@ -1,3 +1,9 @@
+v1.0.10 (2017.06.xx)
+  - Optimize number of Kodi callbacks produced during initial/full discovery tasks
+  - Delay initial discovery tasks a configurable number of seconds to work around Kodi deadlock condition
+  - Remove unnecessary 1 second delays when manually triggering discoveries via PVR Client Specific settings
+  - Add "Startup discovery task delay (seconds)" advanced option
+
 v1.0.9 (2017.06.02)
   - Update SQLite database engine to version 3.19.2
   - Update cURL library to version 7.54.0

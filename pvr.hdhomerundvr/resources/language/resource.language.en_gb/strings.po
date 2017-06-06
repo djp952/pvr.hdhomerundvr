@@ -80,6 +80,10 @@ msgctxt "#30112"
 msgid "Use season/episode number as title for recordings"
 msgstr ""
 
+msgctxt "#30113"
+msgid "Startup discovery task delay (seconds)"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
