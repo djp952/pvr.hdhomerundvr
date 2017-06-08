@@ -21,6 +21,7 @@
 
   <category label="30002">
     <setting id="use_direct_tuning" label="30111" type="bool" default="false"/>
+    <setting id="startup_discovery_task_delay" label="30113" type="slider" default="3" range="1,1,10" option="int"/>
   </category>
 
 </settings>
