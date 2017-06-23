@@ -130,6 +130,9 @@
     <ClInclude Include="hdhr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="guicallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -205,6 +208,9 @@
       <Filter>External Libraries\libhdhomerun</Filter>
     </ClCompile>
     <ClCompile Include="hdhr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="guicallbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

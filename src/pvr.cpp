@@ -42,6 +42,7 @@
 
 #include "addoncallbacks.h"
 #include "database.h"
+#include "guicallbacks.h"
 #include "hdhr.h"
 #include "livestream.h"
 #include "pvrcallbacks.h"
@@ -273,6 +274,11 @@ static std::shared_ptr<connectionpool> g_connpool;
 //
 // Maximum number of days to report for EPG and series timers
 static int g_epgmaxtime = EPG_TIMEFRAME_UNLIMITED;
+
+// g_gui
+//
+// Kodi GUI library callback implementation
+static std::unique_ptr<guicallbacks> g_gui;
 
 // g_livestream
 //
@@ -1074,113 +1080,122 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 
-			// Create the global pvrcallbacks instance
-			g_pvr.reset(new pvrcallbacks(handle));
-		
+			// Create the global guicallbacks instance
+			g_gui.reset(new guicallbacks(handle));
+
 			try {
 
-				// PVR_MENUHOOK_TIMER
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_RECORD_DELETENORERECORD;
-				menuhook.iLocalizedStringId = 30301;
-				menuhook.category = PVR_MENUHOOK_RECORDING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// PVR_MENUHOOK_RECORDING
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_RECORD_DELETERERECORD;
-				menuhook.iLocalizedStringId = 30302;
-				menuhook.category = PVR_MENUHOOK_RECORDING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY;
-				menuhook.iLocalizedStringId = 30303;
-				menuhook.category = PVR_MENUHOOK_SETTING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY;
-				menuhook.iLocalizedStringId = 30304;
-				menuhook.category = PVR_MENUHOOK_SETTING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY;
-				menuhook.iLocalizedStringId = 30305;
-				menuhook.category = PVR_MENUHOOK_SETTING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY;
-				menuhook.iLocalizedStringId = 30306;
-				menuhook.category = PVR_MENUHOOK_SETTING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY;
-				menuhook.iLocalizedStringId = 30307;
-				menuhook.category = PVR_MENUHOOK_SETTING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// MENUHOOK_SETTING_RESETDATABASE
-				//
-				memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-				menuhook.iHookId = MENUHOOK_SETTING_RESETDATABASE;
-				menuhook.iLocalizedStringId = 30308;
-				menuhook.category = PVR_MENUHOOK_SETTING;
-				g_pvr->AddMenuHook(&menuhook);
-
-				// Create the global database connection pool instance, the file name is based on the versionb
-				std::string databasefile = "file:///" + std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
-				g_connpool = std::make_shared<connectionpool>(databasefile.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
-
+				// Create the global pvrcallbacks instance
+				g_pvr.reset(new pvrcallbacks(handle));
+		
 				try {
 
-					try {
-						
-						// Kodi currently has no means to create EPG entries in the database for channels that are
-						// added after the PVR manager has been started.  Synchronously execute a device and lineup
-						// discovery so that the initial set of channels are immediately available to Kodi
-						connectionpool::handle dbhandle(g_connpool);
+					// PVR_MENUHOOK_TIMER
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_RECORD_DELETENORERECORD;
+					menuhook.iLocalizedStringId = 30301;
+					menuhook.category = PVR_MENUHOOK_RECORDING;
+					g_pvr->AddMenuHook(&menuhook);
 
-						log_notice(__func__, ": initiating local network resource discovery (startup)");
-						discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
-						discover_lineups(dbhandle);
+					// PVR_MENUHOOK_RECORDING
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_RECORD_DELETERERECORD;
+					menuhook.iLocalizedStringId = 30302;
+					menuhook.category = PVR_MENUHOOK_RECORDING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY;
+					menuhook.iLocalizedStringId = 30303;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY;
+					menuhook.iLocalizedStringId = 30304;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY;
+					menuhook.iLocalizedStringId = 30305;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY;
+					menuhook.iLocalizedStringId = 30306;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY;
+					menuhook.iLocalizedStringId = 30307;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_SETTING_RESETDATABASE
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_RESETDATABASE;
+					menuhook.iLocalizedStringId = 30308;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// Create the global database connection pool instance, the file name is based on the versionb
+					std::string databasefile = "file:///" + std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
+					g_connpool = std::make_shared<connectionpool>(databasefile.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
+
+					try {
+
+						try {
+						
+							// Kodi currently has no means to create EPG entries in the database for channels that are
+							// added after the PVR manager has been started.  Synchronously execute a device and lineup
+							// discovery so that the initial set of channels are immediately available to Kodi
+							connectionpool::handle dbhandle(g_connpool);
+
+							log_notice(__func__, ": initiating local network resource discovery (startup)");
+							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
+							discover_lineups(dbhandle);
+						}
+
+						// Failure to perform the synchronous device and lineup discovery is not fatal
+						catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+						catch(...) { handle_generalexception(__func__); }
+
+						// To help reduce trigger 'chatter' at startup, a special optimized task was created that loads
+						// all discovery data and only triggers the PVR update(s) once per category.  Delay the launch 
+						// of this initial startup discovery task for a reasonable amount of time to allow the PVR to 
+						// finish it's start up processing -- failure to do so may trigger a race condition that leads
+						// to a deadlock in Kodi that can occur when channel information changes while the EPGs are created
+						log_notice(__func__, ": delaying startup discovery task for ", g_settings.startup_discovery_task_delay, " seconds");					
+						g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(g_settings.startup_discovery_task_delay), discover_startup_task);
+						g_scheduler.start();
 					}
 
-					// Failure to perform the synchronous device and lineup discovery is not fatal
-					catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-					catch(...) { handle_generalexception(__func__); }
-
-					// To help reduce trigger 'chatter' at startup, a special optimized task was created that loads
-					// all discovery data and only triggers the PVR update(s) once per category.  Delay the launch 
-					// of this initial startup discovery task for a reasonable amount of time to allow the PVR to 
-					// finish it's start up processing -- failure to do so may trigger a race condition that leads
-					// to a deadlock in Kodi that can occur when channel information changes while the EPGs are created
-					log_notice(__func__, ": delaying startup discovery task for ", g_settings.startup_discovery_task_delay, " seconds");					
-					g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(g_settings.startup_discovery_task_delay), discover_startup_task);
-					g_scheduler.start();
+					// Clean up the database connection pool on exception
+					catch(...) { g_connpool.reset(); throw; }
 				}
-
-				// Clean up the database connection pool on exception
-				catch(...) { g_connpool.reset(); throw; }
+			
+				// Clean up the pvrcallbacks instance on exception
+				catch(...) { g_pvr.reset(nullptr); throw; }
 			}
 			
-			// Clean up the pvrcallbacks instance on exception
-			catch(...) { g_pvr.reset(nullptr); throw; }
+			// Clean up the guicallbacks instance on exception
+			catch(...) { g_gui.reset(nullptr); throw; }
 		}
 
 		// Clean up the addoncallbacks on exception; but log the error first -- once the callbacks
@@ -1245,6 +1260,7 @@ void ADDON_Destroy(void)
 	// Destroy all the dynamically created objects
 	g_connpool.reset();
 	g_pvr.reset(nullptr);
+	g_gui.reset(nullptr);
 	g_addon.reset(nullptr);
 
 	// Clean up libcurl
@@ -1564,7 +1580,7 @@ char const* GetMininumPVRAPIVersion(void)
 //---------------------------------------------------------------------------
 // GetGUIAPIVersion
 //
-// Get the XBMC_GUI_API_VERSION that was used to compile this add-on
+// Get the KODI_GUILIB_API_VERSION that was used to compile this add-on
 //
 // Arguments:
 //
@@ -1572,13 +1588,13 @@ char const* GetMininumPVRAPIVersion(void)
 
 char const* GetGUIAPIVersion(void)
 {
-	return "";
+	return KODI_GUILIB_API_VERSION;
 }
 
 //---------------------------------------------------------------------------
 // GetMininumGUIAPIVersion
 //
-// Get the XBMC_GUI_MIN_API_VERSION that was used to compile this add-on
+// Get the KODI_GUILIB_MIN_API_VERSION that was used to compile this add-on
 //
 // Arguments:
 //
@@ -1586,7 +1602,7 @@ char const* GetGUIAPIVersion(void)
 
 char const* GetMininumGUIAPIVersion(void)
 {
-	return "";
+	return KODI_GUILIB_MIN_API_VERSION;
 }
 
 //---------------------------------------------------------------------------
