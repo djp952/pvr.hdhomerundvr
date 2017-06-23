@@ -1,3 +1,6 @@
+v2.0.0 (2017.06.xx)
+  - Update SQLite database engine to version 3.19.3
+  
 v1.0.10 (2017.06.07)
   - Reduce number of Kodi callbacks generated during initial discovery tasks
   - Delay initial discovery tasks a configurable number of seconds to work around Kodi deadlock condition
