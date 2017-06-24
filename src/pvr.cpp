@@ -116,15 +116,6 @@ enum duplicate_prevention {
 	recentonly				= 2,
 };
 
-// guide_data
-//
-// Defines the level of guide data to load from the backend
-enum guide_data {
-
-	basic					= 0,
-	extended				= 1,
-};
-
 // timer_type
 //
 // Defines the identifiers for the various timer types (1-based)
@@ -142,11 +133,6 @@ enum timer_type {
 //
 // Defines all of the configurable addon settings
 struct addon_settings {
-
-	// use_extended_guide_data
-	//
-	// Flag to load the (somewhat) extended guide data
-	enum guide_data guide_data_level;
 
 	// pause_discovery_while_streaming
 	//
@@ -300,7 +286,6 @@ static scheduler g_scheduler([](std::exception const& ex) -> void { handle_stdex
 // Global addon settings instance
 static addon_settings g_settings = {
 
-	guide_data::basic,		// guide_data_level
 	false,					// pause_discovery_while_streaming
 	false,					// prepend_channel_numbers
 	false,					// use_episode_number_as_title
@@ -308,7 +293,7 @@ static addon_settings g_settings = {
 	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
 	7200,					// discover_episodes_interval			default = 2 hours
-	1800,					// discover_guide_interval				default = 30 minutes
+	3600,					// discover_guide_interval				default = 1 hour
 	600,					// discover_lineups_interval			default = 10 minutes
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
@@ -574,10 +559,6 @@ static void discover_episodes_task(scalar_condition<bool> const& /*cancel*/)
 			// Changes in the episode data affects the PVR timers
 			log_notice(__func__, ": recording rule episode discovery data changed -- trigger timer update");
 			g_pvr->TriggerTimerUpdate();
-
-			// Trigger electronic program guide updates for all channels with episode information
-			log_notice(__func__, ": recording rule episode discovery data changed -- trigger electronic program guide update for affected channels");
-			enumerate_episode_channelids(dbhandle, [&](union channelid const& item) -> void { g_pvr->TriggerEpgUpdate(item.value); });
 		}
 	}
 
@@ -592,12 +573,12 @@ static void discover_episodes_task(scalar_condition<bool> const& /*cancel*/)
 // discover_guide_task
 //
 // Scheduled task implementation to discover the electronic program guide
-static void discover_guide_task(scalar_condition<bool> const& cancel)
+static void discover_guide_task(scalar_condition<bool> const& /*cancel*/)
 {
 	bool		changed = false;			// Flag if the discovery data changed
 
 	assert(g_addon && g_pvr);
-	log_notice(__func__, ": initiated electronic program guide discovery");
+	log_notice(__func__, ": initiated guide discovery");
 
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
@@ -608,24 +589,13 @@ static void discover_guide_task(scalar_condition<bool> const& cancel)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Discover the updated electronic program guide data from the backend service
-		if(settings.guide_data_level == guide_data::basic) discover_guide_basic(dbhandle, changed);
-		else if(settings.guide_data_level == guide_data::extended) discover_guide_extended(dbhandle, cancel, changed);
-		else {
-
-			// If the guide_data_level setting is bad, default to using the basic guide data
-			log_error(__func__, ": guide_data_level setting invalid state -- defaulting to guide_data::basic");
-			discover_guide_basic(dbhandle, changed);
-		}
+		discover_guide(dbhandle, changed);
 		
 		if(changed) {
 
 			// Trigger a channel update; the guide data is used to resolve channel names and icon image urls
 			log_notice(__func__, ": guide channel discovery data changed -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
-
-			// Trigger an EPG update for every channel; it will be typical that they all change
-			log_notice(__func__, ": guide discovery data changed -- trigger electronic program guide updates");
-			enumerate_channelids(dbhandle, [&](union channelid const& item) -> void { g_pvr->TriggerEpgUpdate(item.value); });
 		}
 	}
 
@@ -779,7 +749,7 @@ static void discover_recordings_task(scalar_condition<bool> const& /*cancel*/)
 // discover_startup_task
 //
 // Scheduled task implementation to discover all data during PVR startup
-static void discover_startup_task(scalar_condition<bool> const& cancel)
+static void discover_startup_task(scalar_condition<bool> const& /*cancel*/)
 {
 	bool				lineups_changed = false;			// Flag if lineups have changed
 	bool				recordings_changed = false;			// Flag if recordings have changed
@@ -798,16 +768,11 @@ static void discover_startup_task(scalar_condition<bool> const& cancel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Discover all local devices, channel lineups and recordings
+		// Discover all of the local device and backend service data
 		discover_devices(dbhandle, settings.use_broadcast_device_discovery);
 		discover_lineups(dbhandle, lineups_changed);
 		discover_recordings(dbhandle, recordings_changed);
-		
-		// Discover the updated electronic program guide data from the backend service
-		if(settings.guide_data_level == guide_data::extended) discover_guide_extended(dbhandle, cancel, guide_changed);
-		else discover_guide_basic(dbhandle, guide_changed);
-
-		// Discover all recording rules and series episode information
+		discover_guide(dbhandle, guide_changed);
 		discover_recordingrules(dbhandle, recordingrules_changed);
 		discover_episodes(dbhandle, episodes_changed);
 
@@ -839,13 +804,6 @@ static void discover_startup_task(scalar_condition<bool> const& cancel)
 			g_pvr->TriggerTimerUpdate();
 		}
 
-		// TRIGGER: Electronic Program Guide
-		if(guide_changed || recordingrules_changed || episodes_changed) {
-
-			log_notice(__func__, ": discovery data changed -- trigger electronic program guide update (all channels)");
-			enumerate_channelids(dbhandle, [&](union channelid const& item) -> void { g_pvr->TriggerEpgUpdate(item.value); });
-		}
-
 		// Schedule the standard periodic updates to occur at the specified intervals
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
@@ -870,20 +828,6 @@ static void discover_startup_task(scalar_condition<bool> const& cancel)
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
 	catch(...) { handle_generalexception(__func__); }
-}
-
-// guidedatalevel_enum_to_guidedata
-//
-// Converts the guide data level enumeration value into a guide_data value
-static enum guide_data guidedatalevel_enum_to_guidedata(int nvalue)
-{
-	switch(nvalue) {
-
-		case 0: return guide_data::basic;
-		case 1: return guide_data::extended;
-	}
-
-	return guide_data::basic;
 }
 
 // handle_generalexception
@@ -1061,7 +1005,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			}
 
 			// Load the general settings
-			if(g_addon->GetSetting("guide_data_level", &nvalue)) g_settings.guide_data_level = guidedatalevel_enum_to_guidedata(nvalue);
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
@@ -1328,29 +1271,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
 
-	// guide_data_level
-	//
-	if(strcmp(name, "guide_data_level") == 0) {
-
-		enum guide_data nvalue = guidedatalevel_enum_to_guidedata(*reinterpret_cast<int const*>(value));
-		if(nvalue != g_settings.guide_data_level) {
-
-			g_settings.guide_data_level = nvalue;
-			log_notice(__func__, ": setting guide_data_level changed to ", (nvalue == guide_data::basic) ? "basic" : "extended");
-
-			// If the change enabled extended data, reschedule the task to run as soon as possible
-			if(g_settings.guide_data_level == guide_data::extended) {
-
-				g_scheduler.remove(discover_guide_task);
-				g_scheduler.add(now + std::chrono::seconds(1), discover_guide_task);
-				log_notice(__func__, ": extended guide data enabled -- rescheduling task to initiate in 1 second");
-			}
-		}
-	}
-
 	// pause_discovery_while_streaming
 	//
-	else if(strcmp(name, "pause_discovery_while_streaming") == 0) {
+	if(strcmp(name, "pause_discovery_while_streaming") == 0) {
 
 		bool bvalue = *reinterpret_cast<bool const*>(value);
 		if(bvalue != g_settings.pause_discovery_while_streaming) {
@@ -1865,7 +1788,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 //	start		- Get events after this time (UTC)
 //	end			- Get events before this time (UTC)
 
-PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t /*start*/, time_t /*end*/)
+PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end)
 {
 	assert(g_pvr);
 
@@ -1875,19 +1798,19 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	union channelid channelid;
 	channelid.value = channel.iUniqueId;
 
-	// Collect all of the EPG_TAG structures locally so that the database connection isn't
-	// open any longer than necessary.  Unforunately the EPG_TAG structure also expects pointers 
-	// to the strings so those have to be collected into a list<> as well ...
-	std::vector<EPG_TAG> epgtags;
-	std::list<std::string> epgstrings;
-		
+	//
+	// NOTE: This does not cache all of the enumerated guide data locally before
+	// transferring it over to Kodi, it's done realtime to reduce the heap footprint
+	// and allow Kodi to process the entries as they are generated
+	//
+
 	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the guide entries in the database for this channel and time frame
-		enumerate_guideentries(dbhandle, channelid, g_epgmaxtime, [&](struct guideentry const& item) -> void {
+		enumerate_guideentries(dbhandle, channelid, start, end, [&](struct guideentry const& item) -> void {
 
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
@@ -1897,7 +1820,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 			// strTitle (required)
 			if(item.title == nullptr) return;
-			epgtag.strTitle = epgstrings.insert(epgstrings.end(), item.title)->c_str();
+			epgtag.strTitle = item.title;
 
 			// iChannelNumber (required)
 			epgtag.iChannelNumber = item.channelid;
@@ -1909,13 +1832,13 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			epgtag.endTime = item.endtime;
 
 			// strPlot
-			if(item.synopsis != nullptr) epgtag.strPlot = epgstrings.insert(epgstrings.end(), item.synopsis)->c_str();
+			if(item.synopsis != nullptr) epgtag.strPlot = item.synopsis;
 
 			// iYear
 			epgtag.iYear = item.year;
 
 			// strIconPath
-			if(item.iconurl != nullptr) epgtag.strIconPath = epgstrings.insert(epgstrings.end(), item.iconurl)->c_str();
+			if(item.iconurl != nullptr) epgtag.strIconPath = item.iconurl;
 
 			// iGenreType
 			epgtag.iGenreType = item.genretype;
@@ -1933,21 +1856,16 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			epgtag.iEpisodePartNumber = -1;
 
 			// strEpisodeName
-			if(item.episodename != nullptr) epgtag.strEpisodeName = epgstrings.insert(epgstrings.end(), item.episodename)->c_str();
+			if(item.episodename != nullptr) epgtag.strEpisodeName = item.episodename;
 
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
 
-			// Copy the EPG_TAG into the local vector<>
-			epgtags.push_back(epgtag);
+			// Transfer the EPG_TAG structure over to Kodi
+			g_pvr->TransferEpgEntry(handle, &epgtag);
 		});
 	}
 	
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
-	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
-
-	// Transfer all of the EPG_TAG structures over to Kodi
-	try { for(auto const& it : epgtags) g_pvr->TransferEpgEntry(handle, &it); }	
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -2755,9 +2673,6 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 
 		// Force a timer update in Kodi to refresh whatever this did on the backend
 		g_pvr->TriggerTimerUpdate();
-
-		// Adding a timer may expose new information for the EPG, refresh all affected channels
-		enumerate_series_channelids(dbhandle, seriesid.c_str(), [&](union channelid const& channelid) -> void { g_pvr->TriggerEpgUpdate(channelid.value); });
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -2868,9 +2783,6 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 
 		// Attempt to modify the recording rule in the database/backend service
 		modify_recordingrule(dbhandle, recordingrule, seriesid);
-
-		// Updating a timer may expose new information for the EPG, refresh all affected channels
-		enumerate_series_channelids(dbhandle, seriesid.c_str(), [&](union channelid const& channelid) -> void { g_pvr->TriggerEpgUpdate(channelid.value); });
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }

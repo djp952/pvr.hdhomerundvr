@@ -739,7 +739,7 @@ void discover_episodes(sqlite3* instance, bool& changed)
 }
 
 //---------------------------------------------------------------------------
-// discover_guide_basic
+// discover_guide
 //
 // Reloads the basic electronic program guide information
 //
@@ -747,14 +747,14 @@ void discover_episodes(sqlite3* instance, bool& changed)
 //
 //	instance	- SQLite database instance
 
-void discover_guide_basic(sqlite3* instance)
+void discover_guide(sqlite3* instance)
 {
 	bool ignored;
-	return discover_guide_basic(instance, ignored);
+	return discover_guide(instance, ignored);
 }
 
 //---------------------------------------------------------------------------
-// discover_guide_basic
+// discover_guide
 //
 // Reloads the basic electronic program guide information
 //
@@ -763,25 +763,24 @@ void discover_guide_basic(sqlite3* instance)
 //	instance	- SQLite database instance
 //	changed		- Flag indicating if the data has changed
 
-void discover_guide_basic(sqlite3* instance, bool& changed)
+void discover_guide(sqlite3* instance, bool& changed)
 {
 	changed = false;							// Initialize [out] argument
 
 	if(instance == nullptr) throw std::invalid_argument("instance");
 
 	// Clone the guide table schema into a temporary table
-	execute_non_query(instance, "drop table if exists discover_guide_basic");
-	execute_non_query(instance, "create temp table discover_guide_basic as select * from guide limit 0");
+	execute_non_query(instance, "drop table if exists discover_guide");
+	execute_non_query(instance, "create temp table discover_guide as select * from guide limit 0");
 
 	try {
 
 		// Discover the electronic program guide from the network and insert it into a temporary table
 		execute_non_query(instance, "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
-			"insert into discover_guide_basic select "
+			"insert into discover_guide select "
 			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
-			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
-			"json_extract(discovery.value, '$.Guide') as data "
+			"json_extract(discovery.value, '$.ImageURL') as iconurl "
 			"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, ''))) as discovery");
 
 		// This requires a multi-step operation against the guide table; start a transaction
@@ -790,13 +789,12 @@ void discover_guide_basic(sqlite3* instance, bool& changed)
 		try {
 
 			// Delete any entries in the main guide table that are no longer present in the data
-			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide_basic)") > 0) changed = true;
+			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide)") > 0) changed = true;
 
 			// Insert/replace entries in the main guide table that are new or different
-			if(execute_non_query(instance, "replace into guide select discover_guide_basic.* from discover_guide_basic left outer join guide using(channelid) "
-				"where coalesce(guide.channelname, '') <> coalesce(discover_guide_basic.channelname, '') "
-				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide_basic.iconurl, '') "
-				"or coalesce(guide.data, '') <> coalesce(discover_guide_basic.data, '')") > 0) changed = true;
+			if(execute_non_query(instance, "replace into guide select discover_guide.* from discover_guide left outer join guide using(channelid) "
+				"where coalesce(guide.channelname, '') <> coalesce(discover_guide.channelname, '') "
+				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide.iconurl, '')") > 0) changed = true;
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
@@ -806,124 +804,11 @@ void discover_guide_basic(sqlite3* instance, bool& changed)
 		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 
 		// Drop the temporary table
-		execute_non_query(instance, "drop table discover_guide_basic");
+		execute_non_query(instance, "drop table discover_guide");
 	}
 
 	// Drop the temporary table on any exception
-	catch(...) { execute_non_query(instance, "drop table discover_guide_basic"); throw; }
-}
-
-//---------------------------------------------------------------------------
-// discover_guide_extended
-//
-// Reloads the extended electronic program guide information
-//
-// Arguments:
-//
-//	instance	- SQLite database instance
-//	cancel		- Condition variable used to cancel the operation
-
-void discover_guide_extended(sqlite3* instance, scalar_condition<bool> const& cancel)
-{
-	bool ignored;
-	return discover_guide_extended(instance, cancel, ignored);
-}
-
-//---------------------------------------------------------------------------
-// discover_guide_extended
-//
-// Reloads the extended electronic program guide information
-//
-// Arguments:
-//
-//	instance	- SQLite database instance
-//	cancel		- Condition variable used to cancel the operation
-//	changed		- Flag indicating if the data has changed
-
-void discover_guide_extended(sqlite3* instance, scalar_condition<bool> const& cancel, bool& changed)
-{
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-
-	changed = false;								// Initialize [out] argument
-
-	if(instance == nullptr) throw std::invalid_argument("instance");
-
-	// Generate a vector<> containing all of the currently active channel identifiers
-	std::vector<union channelid> channels;
-	enumerate_channelids(instance, [&](union channelid const& item) -> void { channels.push_back(item); });
-
-	// Clone the guide table schema into a temporary table
-	execute_non_query(instance, "drop table if exists discover_guide_extended");
-	execute_non_query(instance, "create temp table discover_guide_extended as select * from guide limit 0");
-
-	try {
-
-		// channelid | channelname | iconurl | data
-		auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
-			"insert into discover_guide_extended select "
-			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
-			"json_extract(discovery.value, '$.GuideName') as channelname, "
-			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
-			"json_extract(discovery.value, '$.Guide') as data "
-			"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) )) as discovery";
-
-		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		try {
-
-			// Load all of the guide information for each channel individually
-			for(auto const& iterator : channels) {
-
-				// Check if the operation should be cancelled prior to executing the next query
-				if(cancel.test(true)) throw string_exception(__func__, ": operation cancelled");
-
-				// Bind the query parameter(s)
-				result = sqlite3_bind_int(statement, 1, iterator.value);
-				if(result != SQLITE_OK) throw sqlite_exception(result);
-
-				// This is a non-query, it's not expected to return any rows
-				result = sqlite3_step(statement);
-				if(result != SQLITE_DONE) throw string_exception("non-query failed or returned an unexpected result set");
-
-				// Reset the prepared statement so that it can be executed again
-				result = sqlite3_reset(statement);
-				if(result != SQLITE_OK) throw sqlite_exception(result);
-			}
-
-			sqlite3_finalize(statement);
-		}
-		
-		catch(...) { sqlite3_finalize(statement); throw; }
-
-		// This requires a multi-step operation against the guide table; start a transaction
-		execute_non_query(instance, "begin immediate transaction");
-
-		try {
-
-			// Delete any entries in the main guide table that are no longer present in the data
-			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide_extended)") > 0) changed = true;
-
-			// Insert/replace entries in the main guide table that are new or different
-			if(execute_non_query(instance, "replace into guide select discover_guide_extended.* from discover_guide_extended left outer join guide using(channelid) "
-				"where coalesce(guide.channelname, '') <> coalesce(discover_guide_extended.channelname, '') "
-				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide_extended.iconurl, '') "
-				"or coalesce(guide.data, '') <> coalesce(discover_guide_extended.data, '')") > 0) changed = true;
-
-			// Commit the database transaction
-			execute_non_query(instance, "commit transaction");
-		}
-
-		// Rollback the transaction on any exception
-		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
-
-		// Drop the temporary table
-		execute_non_query(instance, "drop table discover_guide_extended");
-	}
-
-	// Drop the temporary table on any exception
-	catch(...) { execute_non_query(instance, "drop table discover_guide_extended"); throw; }
+	catch(...) { execute_non_query(instance, "drop table discover_guide"); throw; }
 }
 
 //---------------------------------------------------------------------------
@@ -1459,55 +1344,21 @@ void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate
 //
 //	instance	- Database instance
 //	channelid	- Channel to be enumerated
-//	maxdays		- Maximum number of days to report
+//	starttime	- Starting time to be queried
+//	endtime		- Ending time to be queried
 //	callback	- Callback function
 
-void enumerate_guideentries(sqlite3* instance, union channelid channelid, int maxdays, enumerate_guideentries_callback callback)
+void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_guideentries_callback callback)
 {
-	time_t						maxstarttime;		// Maximum starttime as a time_t
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
-	
+
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// If the maximum number of days wasn't provided, use a month as the boundary
-	if(maxdays < 0) maxdays = 31;
-
-	// Calculate out the maximum boundary of the starttime to be returned
-	time(&maxstarttime);
-	maxstarttime += (maxdays * 86400);
-
-	// This rather lengthy query unions together the information available in the episode table with the information
-	// available in the guide table so that the timers can access the corresponding entry in the epg and provide the
-	// episode title/synopsis information to the user.  Rows in guide table override any matching rows in episode
-	//
-	// GROUP BY is used with no aggregate as a synonym for DISTINCT in this case, it prevents entries from the guide
-	// and episode tables that differ by trivial things (like genretype, which is always zero from episode) from being
-	// duplicated.  If similar entries from both tables match on starttime, this will pick the row from the guide table ...
-	//
-	// seriesid | title | channelid | starttime | endtime | synopsis | year | iconurl | genretype | originalairdate | seriesnumber | episodenumber | episodename
-	auto sql = "select * from (select "
-		"seriesid, "
+	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | originalairdate | seriesnumber | episodenumber | episodename
+	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		"select json_extract(entry.value, '$.SeriesID') as seriesid, "
 		"json_extract(entry.value, '$.Title') as title, "
-		"encode_channel_id(json_extract(entry.value, '$.ChannelNumber')) as channelid, "
-		"json_extract(entry.value, '$.StartTime') as starttime, "
-		"json_extract(entry.value, '$.EndTime') as endtime, "
-		"json_extract(entry.value, '$.Synopsis') as synopsis, "
-		"cast(strftime('%Y', coalesce(json_extract(entry.value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
-		"json_extract(entry.value, '$.ImageURL') as iconurl, "
-		"0 as genretype, "
-		"json_extract(entry.value, '$.OriginalAirdate') as originalairdate, "
-		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
-		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
-		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from episode, json_each(episode.data) as entry "
-		"where json_extract(entry.value, '$.ChannelNumber') = decode_channel_id(?1) "
-		"and starttime <= ?2 "
-		//"and json_extract(entry.value, '$.RecordingRule') is not null "		// <--- only add entries for episodes that will record
-		"union select "
-		"json_extract(entry.value, '$.SeriesID') as seriesid, "
-		"json_extract(entry.value, '$.Title') as title, "
-		"channelid as channelid, "
 		"json_extract(entry.value, '$.StartTime') as starttime, "
 		"json_extract(entry.value, '$.EndTime') as endtime, "
 		"json_extract(entry.value, '$.Synopsis') as synopsis, "
@@ -1518,41 +1369,57 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, int ma
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
 		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from guide, json_each(guide.data) as entry "
-		"where channelid = ?1 "
-		"and starttime <= ?2 "
-		") group by starttime";			// <-- GROUP BY here is not a bug; see comments above
+		"from deviceauth, "
+		"json_each(json_extract(nullif(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) || '&Start=' || ?2), 'null'), '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
 
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, channelid.value);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(maxstarttime));
-		if(result != SQLITE_OK) throw sqlite_exception(result);
+		do {
 
-		// Execute the query and iterate over all returned rows
-		while(sqlite3_step(statement) == SQLITE_ROW) {
+			// Bind the query parameters
+			result = sqlite3_bind_int(statement, 1, channelid.value);
+			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(starttime));
+			if(result != SQLITE_OK) throw sqlite_exception(result);
 
-			struct guideentry item;
-			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
-			item.channelid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
-			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
-			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
-			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
-			item.year = sqlite3_column_int(statement, 6);
-			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
-			item.genretype = sqlite3_column_int(statement, 8);
-			item.originalairdate = sqlite3_column_int(statement, 9);
-			item.seriesnumber = sqlite3_column_int(statement, 10);
-			item.episodenumber = sqlite3_column_int(statement, 11);
-			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
+			// Execute the SQL statement
+			result = sqlite3_step(statement);
 
-			callback(item);						// Invoke caller-supplied callback
-		}
+			// If no rows were returned from the query, there is no more available guide data
+			// from the backend, break the loop even though endtime may not have been reached
+			if(result == SQLITE_DONE) break;
+
+			while(result == SQLITE_ROW) {
+
+				struct guideentry item;
+				item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+				item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+				item.channelid = channelid.value;
+				item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
+				item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
+				item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 4));
+				item.year = sqlite3_column_int(statement, 5);
+				item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
+				item.genretype = sqlite3_column_int(statement, 7);
+				item.originalairdate = sqlite3_column_int(statement, 8);
+				item.seriesnumber = sqlite3_column_int(statement, 9);
+				item.episodenumber = sqlite3_column_int(statement, 10);
+				item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
+
+				// Move the starttime to the last seen endtime to continue the backend queries
+				if(item.endtime > starttime) starttime = item.endtime;
+
+				callback(item);							// Invoke caller-supplied callback
+				result = sqlite3_step(statement);		// Move to the next row of data
+			}
+
+			// Reset the prepared statement so that it can be executed again
+			result = sqlite3_reset(statement);
+			if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		} while(starttime < endtime);
 	
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
@@ -1795,54 +1662,6 @@ void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 }
 
 //---------------------------------------------------------------------------
-// enumerate_series_channelids
-//
-// Enumerates all of the channel identifiers associated with a series
-//
-// Arguments:
-//
-//	instance	- Database instance
-//	seriesid	- Series identifier
-//	callback	- Callback function
-
-void enumerate_series_channelids(sqlite3* instance, char const* seriesid, enumerate_channelids_callback callback)
-{
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
-	if((instance == nullptr) || (callback == nullptr)) return;
-
-	// channelid
-	auto sql = "select distinct(channelid) from guide, json_each(guide.data) "
-		"where json_extract(value, '$.SeriesID') = ?1 "
-		"union select distinct(encode_channel_id(json_extract(value, '$.ChannelNumber'))) as channelid "
-		"from episode, json_each(episode.data) where episode.seriesid = ?1 and channelid <> 0";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameter(s)
-		result = sqlite3_bind_text(statement, 1, seriesid, -1, SQLITE_STATIC);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the query and iterate over all returned rows
-		while(sqlite3_step(statement) == SQLITE_ROW) {
-
-			union channelid channelid;
-			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
-			
-			callback(channelid);
-		}
-	
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
-}
-
-//---------------------------------------------------------------------------
 // enumerate_timers
 //
 // Enumerates all episodes that are scheduled to be recorded
@@ -1958,21 +1777,11 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 
 	if(instance == nullptr) return 0;
 
-	// The entries in the guide that can be used as one-shot (datetimeonly) timers come from
-	// both the guide and the episode table; either one can be used to get the right seriesid
-
-	// seriesid
-	auto sql = "select "
-		"json_extract(value, '$.SeriesID') as seriesid "
-		"from guide, json_each(guide.data) "
-		"where channelid = ?1 "
-		"and (?2 between json_extract(value, '$.StartTime') and json_extract(value, '$.EndTime') - 1) "
-		"union select "
-		"seriesid "
-		"from episode, json_each(episode.data) "
-		"where json_extract(value, '$.ChannelNumber') = decode_channel_id(?1) "
-		"and (?2 between json_extract(value, '$.StartTime') and json_extract(value, '$.EndTime') - 1) "
-		"limit 1";
+	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
+	// Use the electronic program guide API to locate a seriesid based on a channel and timestamp
+	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		"select json_extract(json_extract(nullif(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) || '&Start=' || ?2), 'null'), '$[0].Guide[0]'), '$.SeriesID') "
+		"from deviceauth";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1991,7 +1800,7 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 		if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
-		sqlite3_finalize(statement);		
+		sqlite3_finalize(statement);
 		return seriesid;
 	}
 
@@ -2016,37 +1825,9 @@ std::string find_seriesid(sqlite3* instance, char const* title)
 
 	if(instance == nullptr) return 0;
 
-	// first try to find a match in the local guide table
-	auto sql = "select "
-		"json_extract(value, '$.SeriesID') as seriesid "
-		"from guide, json_each(guide.data) "
-		"where json_extract(value, '$.Title') like ?1 "
-		"limit 1";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters(s)
-		result = sqlite3_bind_text(statement, 1, title, -1, SQLITE_STATIC);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		if(result == SQLITE_ROW) return seriesid;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
-
-	// If the seriesid could not be retrieved from the guide data, go online to look for it instead
-	sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
+	// Use the search API to locate a series id based on the series title
+	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 		"select "
 		"json_extract(value, '$.SeriesID') as seriesid "
 		"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/search?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Search=' || url_encode(?1))) "
@@ -2872,8 +2653,8 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: guide
 			//
-			// channelid(pk) | channelname | iconurl | data
-			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text, data text)");
+			// channelid(pk) | channelname | iconurl
+			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text)");
 
 			// table: recordingrule
 			//
