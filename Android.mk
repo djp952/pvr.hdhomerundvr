@@ -95,6 +95,7 @@ LOCAL_SRC_FILES := \
 	src/addoncallbacks.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
+	src/guicallbacks.cpp \
 	src/hdhr.cpp \
 	src/livestream.cpp \
 	src/pvr.cpp \
