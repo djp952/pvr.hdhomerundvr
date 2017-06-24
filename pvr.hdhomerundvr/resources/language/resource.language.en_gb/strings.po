@@ -157,7 +157,7 @@ msgid "Trigger channel lineup discovery"
 msgstr ""
 
 msgctxt "#30305"
-msgid "Trigger Electronic Program Guide (EPG) discovery"
+msgid "Trigger guide metadata discovery"
 msgstr ""
 
 msgctxt "#30306"
