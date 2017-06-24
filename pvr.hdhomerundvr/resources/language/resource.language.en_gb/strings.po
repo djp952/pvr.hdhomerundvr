@@ -41,7 +41,7 @@ msgid "Channel Lineups"
 msgstr ""
 
 msgctxt "#30103"
-msgid "Electronic Program Guide (EPG)"
+msgid "Electronic Program Guide (EPG) Metadata"
 msgstr ""
 
 msgctxt "#30104"
@@ -62,10 +62,6 @@ msgstr ""
 
 msgctxt "#30108"
 msgid "Delete expired date/time recording rules after"
-msgstr ""
-
-msgctxt "#30109"
-msgid "Electronic Program Guide (EPG) data"
 msgstr ""
 
 msgctxt "#30110"
