@@ -2153,7 +2153,7 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 			// strInputFormat
 			//
 			// Only set if 'direct tuning' is disabled
-			if(!settings.use_direct_tuning) snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/MP2T");
+			if(!settings.use_direct_tuning) snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/mp2t");
 
 			// strStreamURL
 			//
