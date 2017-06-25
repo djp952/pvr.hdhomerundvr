@@ -2700,10 +2700,50 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		//
 		if((timer.iTimerType == timer_type::seriesrule) || (timer.iTimerType == timer_type::epgseriesrule)) {
 
-			// The seriesid for the recording rule has to be located by name for a series rule
-			seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
+			// seriesrule --> execute a title match operation against the backend and let the user choose the series they want
+			//
+			if(timer.iTimerType == timer_type::seriesrule) {
+			
+				// Generate a vector of all series that are a title match with the requested EPG search string; the
+				// selection dialog will be displayed even if there is only one match in order to confirm the result
+				std::vector<std::tuple<std::string, std::string>> matches;
+				enumerate_series(dbhandle, timer.strEpgSearchString, [&](struct series const& item) -> void { matches.emplace_back(item.title, item.seriesid); });
+				
+				// No matches found; display an error message to the user and bail out
+				if(matches.size() == 0) {
+
+					g_gui->DialogOK("Series Search Failed", "Unable to locate a series with a title that contains:", timer.strEpgSearchString, "");
+					return PVR_ERROR::PVR_ERROR_NO_ERROR;
+				}
+
+				// Create a vector<> of c-style string pointers to pass into the selection dialog
+				std::vector<char const*> items;
+				for(auto const& iterator : matches) items.emplace_back(std::get<0>(iterator).c_str());
+
+				// Create and display the selection dialog to get the specific series the user wants
+				int result = g_gui->DialogSelect("Select Series", items.data(), items.size(), 0);
+				if(result == -1) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+				
+				seriesid = std::get<1>(matches[result]);
+			}
+
+			// epgseriesrule --> the title must be an exact match with a known series on the backend
+			//
+			else {
+
+				// Perform an exact-match search against the backend to locate the seriesid
+				seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
+				if(seriesid.length() == 0) {
+					
+					g_gui->DialogOK("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
+					return PVR_ERROR::PVR_ERROR_NO_ERROR;
+				}
+			}
+
+			// If the seriesid is still not set the operation cannot continue; throw an exception
 			if(seriesid.length() == 0) throw string_exception(std::string("could not locate seriesid for title '") + timer.strEpgSearchString + "'");
 
+			// Generate a series recording rule
 			recordingrule.type = recordingrule_type::series;
 			recordingrule.seriesid = seriesid.c_str();
 			recordingrule.channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
@@ -2723,7 +2763,13 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			// Try to find the seriesid for the recording rule by the channel and starttime first, then do a title match
 			seriesid = find_seriesid(dbhandle, channelid, timer.startTime);
 			if(seriesid.length() == 0) seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
-			if(seriesid.length() == 0) throw string_exception(std::string("could not locate seriesid for title '") + timer.strEpgSearchString + "'");
+
+			// If no match was found, the timer cannot be added; use a dialog box rather than returning an error
+			if(seriesid.length() == 0) {
+					
+				g_gui->DialogOK("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
+				return PVR_ERROR::PVR_ERROR_NO_ERROR;
+			}
 
 			recordingrule.type = recordingrule_type::datetimeonly;
 			recordingrule.seriesid = seriesid.c_str();
