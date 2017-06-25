@@ -137,6 +137,15 @@ struct recordingrule {
 	unsigned int				endpadding;
 };
 
+// series
+//
+// Information about a series
+struct series {
+
+	char const*					title;
+	char const*					seriesid;
+};
+
 // timer
 //
 // Information about a timer
@@ -188,6 +197,11 @@ using enumerate_recordingrules_callback = std::function<void(struct recordingrul
 //
 // Callback function passed to enumerate functions that return recordingruleids
 using enumerate_recordingruleids_callback = std::function<void(unsigned int const& recordingruleid)>;
+
+// enumerate_series_callback
+//
+// Callback function passed to enumerate series information
+using enumerate_series_callback = std::function<void(struct series const& series)>;
 
 // enumerate_timers_callback
 //
@@ -395,6 +409,11 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 //
 // Enumerates channels not marked as 'HD' in the lineups
 void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback callback);
+
+// enumerate_series
+//
+// Enumerates series based on a title matching search
+void enumerate_series(sqlite3* instance, char const* title, enumerate_series_callback callback);
 
 // enumerate_timers
 //

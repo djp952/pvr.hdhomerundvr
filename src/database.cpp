@@ -1662,6 +1662,57 @@ void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 }
 
 //---------------------------------------------------------------------------
+// enumerate_series
+//
+// Enumerates series based on a title matching search
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	title		- Title on which to search
+//	callback	- Callback function
+
+void enumerate_series(sqlite3* instance, char const* title, enumerate_series_callback callback)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (callback == nullptr)) return;
+
+	// title | seriesid
+	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		"select "
+		"json_extract(value, '$.Title') as title, "
+		"json_extract(value, '$.SeriesID') as seriesid "
+		"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/search?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Search=' || url_encode(?1))) "
+		"where title like '%' || ?1 || '%'";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameter(s)
+		result = sqlite3_bind_text(statement, 1, title, -1, SQLITE_STATIC);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the query and iterate over all returned rows
+		while(sqlite3_step(statement) == SQLITE_ROW) {
+
+			struct series item;
+			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+
+			callback(item);						// Invoke caller-supplied callback
+		}
+	
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // enumerate_timers
 //
 // Enumerates all episodes that are scheduled to be recorded
