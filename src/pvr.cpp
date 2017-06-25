@@ -974,6 +974,9 @@ void ADDON_Announce(char const* flag, char const* sender, char const* message, v
 	if(strcmp(flag, "xbmc") != 0) return;
 	if(strcmp(sender, "System") != 0) return;
 
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
 	// xbmc::System::OnSleep
 	if(strcmp(message, "OnSleep") == 0) {
 
@@ -996,11 +999,11 @@ void ADDON_Announce(char const* flag, char const* sender, char const* message, v
 			g_scheduler.stop();					// Ensure scheduler was stopped
 			g_scheduler.clear();				// Ensure there are no pending tasks
 
-			// The special discover_startup_task takes care of all discoveries in a more
-			// optimized fashion than invoking the periodic ones; use that on wakeup too
-			log_notice(__func__, ": scheduling startup discovery task");
-			g_scheduler.add(std::chrono::system_clock::now(), discover_startup_task);
-	
+			// The special discover_startup_task takes care of all discoveries in a more optimized
+			// fashion than invoking the periodic ones; use that on wakeup too
+			log_notice(__func__, ": scheduling startup discovery task (delayed ", settings.startup_discovery_task_delay, " seconds)");
+			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.startup_discovery_task_delay), discover_startup_task);
+
 			g_scheduler.start();				// Restart the scheduler
 		}
 

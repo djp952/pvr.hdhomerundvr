@@ -3,6 +3,7 @@ v2.0.0 (2017.06.xx)
   - New Electronic Program Guide (EPG) implementation
   - Use GUI dialog boxes to indicate errors that occur when adding timers rather than throwing an exception
   - Add a selection dialog box when adding Record Series Rule timers to allow user to choose from matching titles
+  - Apply the "Startup discovery task delay" to the discovery executed on wake from sleep
   
 v1.0.10 (2017.06.07)
   - Reduce number of Kodi callbacks generated during initial discovery tasks
