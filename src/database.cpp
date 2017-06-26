@@ -780,7 +780,8 @@ void discover_guide(sqlite3* instance, bool& changed)
 			"insert into discover_guide select "
 			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
-			"json_extract(discovery.value, '$.ImageURL') as iconurl "
+			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
+			"null as data "
 			"from deviceauth, json_each(http_request('http://ipv4.my.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, ''))) as discovery");
 
 		// This requires a multi-step operation against the guide table; start a transaction
@@ -2704,8 +2705,8 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: guide
 			//
-			// channelid(pk) | channelname | iconurl
-			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text)");
+			// channelid(pk) | channelname | iconurl | data
+			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text, data text)");
 
 			// table: recordingrule
 			//
