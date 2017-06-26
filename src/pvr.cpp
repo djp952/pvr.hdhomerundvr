@@ -2724,7 +2724,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 				for(auto const& iterator : matches) items.emplace_back(std::get<0>(iterator).c_str());
 
 				// Create and display the selection dialog to get the specific series the user wants
-				int result = g_gui->DialogSelect("Select Series", items.data(), items.size(), 0);
+				int result = g_gui->DialogSelect("Select Series", items.data(), static_cast<unsigned int>(items.size()), 0);
 				if(result == -1) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 				
 				seriesid = std::get<1>(matches[result]);
