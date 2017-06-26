@@ -1,4 +1,4 @@
-v2.0.0 (2017.06.xx)
+v1.1.0 (2017.06.xx)
   - Update SQLite database engine to version 3.19.3
   - New Electronic Program Guide (EPG) implementation
   - Use GUI dialog boxes to indicate errors that occur when adding timers rather than throwing an exception
