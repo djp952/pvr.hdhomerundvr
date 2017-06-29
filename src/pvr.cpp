@@ -35,6 +35,7 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
+#include <sys/prctl.h>
 #endif
 
 #include <version.h>
@@ -975,6 +976,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	// Copy anything relevant from the provided parameters
 	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
 	g_epgmaxtime = pvrprops->iEpgMaxDays;
+
+#ifdef __ANDROID__
+	// Uncomment this to allow normal crash dumps to be generated on Android
+	// prctl(PR_SET_DUMPABLE, 1);
+#endif
 
 	try {
 

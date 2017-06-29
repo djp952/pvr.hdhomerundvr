@@ -400,6 +400,8 @@ uint64_t livestream::start(char const* url)
 
 		// Set the options for the easy interface curl object
 		CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_URL, url);
+		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
+		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_FAILONERROR, 1L);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, &livestream::curl_responseheaders);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, this);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &livestream::curl_write);
