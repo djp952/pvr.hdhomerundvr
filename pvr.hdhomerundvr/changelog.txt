@@ -1,9 +1,12 @@
-v1.1.0 (2017.06.xx)
+v1.1.0 (2017.07.xx)
   - Update SQLite database engine to version 3.19.3
+  - Update cURL library to version 7.54.1
   - New Electronic Program Guide (EPG) implementation
+  - Fix demuxer format hint for Live TV streams
   - Use GUI dialog boxes to indicate errors that occur when adding timers rather than throwing an exception
   - Add a selection dialog box when adding Record Series Rule timers to allow user to choose from matching titles
   - Apply the "Startup discovery task delay" to the discovery executed on wake from sleep
+  - (Linux/Android) Prevent cURL from raising signals on name resolution failures or data transfer time-outs
   
 v1.0.10 (2017.06.07)
   - Reduce number of Kodi callbacks generated during initial discovery tasks
