@@ -1203,13 +1203,18 @@ void ADDON_Destroy(void)
 	g_scheduler.stop();
 	g_scheduler.clear();
 
-	// Throw a message out to the Kodi log indicating that the add-on has been unloaded
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
-
-	// Destroy all the dynamically created objects
+	// Check for more than just the global connection pool reference during shutdown,
+	// there shouldn't still be any active callbacks running during ADDON_Destroy
+	long poolrefs = g_connpool.use_count();
+	if(poolrefs != 1) log_notice(__func__, ": warning: g_connpool.use_count = ", g_connpool.use_count());
 	g_connpool.reset();
+
+	// Destroy the PVR and GUI callback instances
 	g_pvr.reset(nullptr);
 	g_gui.reset(nullptr);
+
+	// Send a notice out to the Kodi log as late as possible and destroy the addon callbacks
+	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
 	g_addon.reset(nullptr);
 
 	// Clean up libcurl
