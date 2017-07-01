@@ -26,6 +26,11 @@
 #include <dlfcn.h>
 #include <string>
 
+#ifdef __ANDROID__
+#include <stdlib.h>
+#include <sys/stat.h>
+#endif
+
 #include "string_exception.h"
 
 #pragma warning(push, 4)
