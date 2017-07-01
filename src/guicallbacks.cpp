@@ -80,6 +80,15 @@ guicallbacks::guicallbacks(void* addonhandle) : m_hmodule(nullptr), m_handle(add
 	// Construct the path to the guilib library based on the provided base path
 	std::string guimodule = std::string(addonpath) + LIBKODI_GUILIB_MODULE;
 
+#ifdef __ANDROID__
+	struct stat st;
+	if(stat(guimodule.c_str(), &st) != 0)
+	{
+		std::string libpath = getenv("XBMC_ANDROID_LIBS");
+		guimodule = libpath + LIBKODI_GUILIB_MODULE;
+	}
+#endif
+
 	// Attempt to load the guilib library dynamically, it should already be in the process
 	m_hmodule = dlopen(guimodule.c_str(), RTLD_LAZY);
 	if(m_hmodule == nullptr) throw string_exception(std::string("failed to load dynamic guilib library ") + guimodule);
