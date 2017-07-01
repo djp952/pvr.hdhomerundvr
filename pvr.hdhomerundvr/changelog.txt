@@ -1,4 +1,4 @@
-v1.1.0 (2017.06.30)
+v1.1.0 (2017.07.01)
   - Update SQLite database engine to version 3.19.3
   - Update cURL library to version 7.54.1
   - New Electronic Program Guide (EPG) implementation
