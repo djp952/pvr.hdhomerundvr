@@ -3284,7 +3284,7 @@ long long PositionRecordedStream(void)
 }
 
 //---------------------------------------------------------------------------
-// PositionRecordedStream
+// LengthRecordedStream
 //
 // Gets the total length of the stream that's currently being read
 //
