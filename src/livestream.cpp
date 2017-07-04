@@ -281,7 +281,8 @@ size_t livestream::read(uint8_t* buffer, size_t count, uint32_t timeoutms)
 		if(tail >= m_buffersize) tail = 0;
 
 		// If the tail has reached the head, the buffer is now empty
-		if(tail == head) { m_bufferempty = true; break; }
+		m_bufferempty = (tail == head);
+		if(m_bufferempty) break;
 	}
 
 	// Modify the atomic<> tail position after the operation has completed
@@ -450,8 +451,9 @@ uint64_t livestream::stop(void)
 	// Grab the final position of the stream before resetting
 	position = m_readpos;
 
-	// Reset the stream state
+	// Reset the stream state as well as the length
 	reset_stream_state(lock);
+	m_length.store(0);
 
 	// Clean up the CURL easy interface object
 	curl_easy_cleanup(m_curl);
