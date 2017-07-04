@@ -2751,6 +2751,64 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 }
 
 //---------------------------------------------------------------------------
+// set_channel_visibility
+//
+// Sets the visibility of a channel on all known tuner devices
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	channelid	- Channel to set the visibility
+//	visibility	- New visibility of the channel
+
+void set_channel_visibility(sqlite3* instance, union channelid channelid, enum channel_visibility visibility)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	char						flag;					// Visibility flag to be set
+	int							result;					// Result from SQLite function call
+
+	if(instance == nullptr) throw std::invalid_argument("instance");
+
+	// Convert the visibility into the character code to send to the tuner(s)
+	switch(visibility) {
+
+		case channel_visibility::enabled: flag = '-'; break;
+		case channel_visibility::favorite: flag = '+'; break;
+		case channel_visibility::disabled: flag = 'x'; break;
+		default: throw std::invalid_argument("visibility");
+	}
+
+	// Prepate a query to generate the necessary URLs for each tuner that supports the channel
+	auto sql = "with deviceurls(url) as "
+		"(select distinct(json_extract(device.data, '$.BaseURL') || '/lineup.post?favorite=' || ?1 || decode_channel_id(?2)) "
+		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
+		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?2)) "
+		"select http_request(url) from deviceurls";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_text(statement, 1, &flag, 1, SQLITE_STATIC);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, channelid.value);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the query; ignore any rows that are returned
+		do result = sqlite3_step(statement);
+		while(result == SQLITE_ROW);
+
+		// The final result from sqlite3_step should be SQLITE_DONE
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // try_execute_non_query
 //
 // Executes a non-query against the database and eats any exceptions
