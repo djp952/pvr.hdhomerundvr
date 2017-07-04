@@ -69,6 +69,16 @@ struct channel {
 	char const*			iconurl;
 };
 
+// channel_visibility
+//
+// Flag indicating a channel's visibility
+enum channel_visibility {
+
+	enabled				= 0,
+	favorite			= 1,
+	disabled			= 2,
+};
+
 // guideentry
 //
 // Information about a single guide entry enumerated from the database
@@ -480,6 +490,11 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 // Opens a handle to the backend SQLite database
 sqlite3* open_database(char const* connstring, int flags);
 sqlite3* open_database(char const* connstring, int flags, bool initialize);
+
+// set_channel_visibility
+//
+// Sets the visibility of a channel on all known tuner devices
+void set_channel_visibility(sqlite3* instance, union channelid channelid, enum channel_visibility visibility);
 
 // try_execute_non_query
 //
