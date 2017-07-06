@@ -1,3 +1,8 @@
+v1.1.1 (2017.07.xx)
+  - Allow for 30-second and 1-minute local network discovery intervals (devices, lineups, recordings)
+  - Adapt to backend recording attribute change; use DisplayGroupTitle instead of Title for recording folder names
+  - Detect special recording DisplayGroupTitle attributes 'movie' and 'sport' and convert to 'Movies'/'Sports' folders
+
 v1.1.0 (2017.07.01)
   - Update SQLite database engine to version 3.19.3
   - Update cURL library to version 7.54.1

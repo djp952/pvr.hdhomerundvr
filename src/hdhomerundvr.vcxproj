@@ -116,6 +116,7 @@
     <ClInclude Include="addoncallbacks.h" />
     <ClInclude Include="compat\dlfcn.h" />
     <ClInclude Include="compat\pthread.h" />
+    <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="guicallbacks.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\snprintf.cpp" />
+    <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
