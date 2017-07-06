@@ -111,6 +111,10 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -129,6 +133,10 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -151,6 +159,10 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -173,6 +185,10 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_addon_dll.h" />
@@ -194,6 +210,7 @@
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="addoncallbacks.h" />
     <ClInclude Include="compat\dlfcn.h" />
+    <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
@@ -287,6 +304,7 @@
     <ClCompile Include="addoncallbacks.cpp" />
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\pthread.cpp" />
+    <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">

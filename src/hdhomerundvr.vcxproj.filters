@@ -133,6 +133,9 @@
     <ClInclude Include="guicallbacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="compat\strings.h">
+      <Filter>Header Files\compat</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -212,6 +215,9 @@
     </ClCompile>
     <ClCompile Include="guicallbacks.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\strings.cpp">
+      <Filter>Source Files\compat</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

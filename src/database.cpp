@@ -1512,7 +1512,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
 		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
 		"json_extract(value, '$.PlayURL') as streamurl, "
-		"json_extract(value, '$.Title') as directory, "
+		"case when json_extract(value, '$.DisplayGroupTitle') is null then json_extract(value, '$.Title') else json_extract(value, '$.DisplayGroupTitle') end as directory, "
 		"json_extract(value, '$.Synopsis') as plot, "
 		"json_extract(value, '$.ChannelName') as channelname, "
 		"json_extract(value, '$.ImageURL') as thumbnailpath, "

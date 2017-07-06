@@ -183,3 +183,11 @@ msgstr ""
 msgctxt "#30401"
 msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""
+
+msgctxt "#30402"
+msgid "Movies"
+msgstr ""
+
+msgctxt "#30403"
+msgid "Sports"
+msgstr ""
