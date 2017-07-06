@@ -140,6 +140,14 @@ msgctxt "#30215"
 msgid "Extended (8 Hours)"
 msgstr ""
 
+msgctxt "#30216"
+msgid "30 Seconds"
+msgstr ""
+
+msgctxt "#30217"
+msgid "1 Minute"
+msgstr ""
+
 msgctxt "#30301"
 msgid "Delete episode"
 msgstr ""
