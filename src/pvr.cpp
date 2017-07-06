@@ -883,6 +883,13 @@ static int interval_enum_to_seconds(int nvalue)
 		case 5: return 3600;		// 1 hour
 		case 6: return 7200;		// 2 hours
 		case 7: return 14400;		// 4 hours
+		
+		// 30 seconds and 1 minute were added after the fact, for compatibility
+		// with existing settings they were put at the end.  Local network
+		// discoveries can be executed more quickly if the user prefers that
+
+		case 8: return 30;			// 30 seconds
+		case 9: return 60;			// 1 minute
 	};
 
 	return 600;						// 10 minutes = default
