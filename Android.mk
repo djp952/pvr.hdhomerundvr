@@ -49,7 +49,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := hdhomerundvr
 
 LOCAL_C_INCLUDES += \
-	depends/kodi-addon-dev-kit/kodi \
+	depends/xbmc/xbmc \
+	depends/xbmc/xbmc/linux \
+	depends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi \
 	depends/libcurl-nossl/android-$(TARGET_ARCH_ABI)/include/curl \
 	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
 	depends/libz/android-$(TARGET_ARCH_ABI)/include \
@@ -92,14 +94,11 @@ LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/libhdhomerun/hdhomerun_video.c \
 	depends/sqlite/sqlite3.c \
-	src/addoncallbacks.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
-	src/guicallbacks.cpp \
 	src/hdhr.cpp \
 	src/livestream.cpp \
 	src/pvr.cpp \
-	src/pvrcallbacks.cpp \
 	src/scheduler.cpp \
 	src/sqlite_exception.cpp
 	

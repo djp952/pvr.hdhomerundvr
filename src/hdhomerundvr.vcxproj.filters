@@ -64,13 +64,7 @@
     <ClInclude Include="compat\uuid\uuid.h">
       <Filter>Header Files\compat\uuid</Filter>
     </ClInclude>
-    <ClInclude Include="addoncallbacks.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="livestream.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="pvrcallbacks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scalar_condition.h">
@@ -130,9 +124,6 @@
     <ClInclude Include="hdhr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="guicallbacks.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="compat\strings.h">
       <Filter>Header Files\compat</Filter>
     </ClInclude>
@@ -159,13 +150,7 @@
     <ClCompile Include="compat\uuid.cpp">
       <Filter>Source Files\compat</Filter>
     </ClCompile>
-    <ClCompile Include="addoncallbacks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="livestream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="pvrcallbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scheduler.cpp">
@@ -211,9 +196,6 @@
       <Filter>External Libraries\libhdhomerun</Filter>
     </ClCompile>
     <ClCompile Include="hdhr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="guicallbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compat\strings.cpp">

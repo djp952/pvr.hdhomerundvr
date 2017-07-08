@@ -51,7 +51,12 @@
 // dlclose
 //
 // Closes a dynamic shared object handle obtained with dlopen
-void dlclose(void* handle);
+int dlclose(void* handle);
+
+// dlerror
+//
+// Gets a description of the last error that occurred during dynamic linking
+char* dlerror(void);
 
 // dlopen
 //

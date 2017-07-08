@@ -39,15 +39,17 @@
 #include <sys/prctl.h>
 #endif
 
-#include <version.h>
+#include <xbmc_addon_dll.h>
 #include <xbmc_pvr_dll.h>
+#include <version.h>
 
-#include "addoncallbacks.h"
+#include <libXBMC_addon.h>
+#include <libKODI_guilib.h>
+#include <libXBMC_pvr.h>
+
 #include "database.h"
-#include "guicallbacks.h"
 #include "hdhr.h"
 #include "livestream.h"
-#include "pvrcallbacks.h"
 #include "scalar_condition.h"
 #include "scheduler.h"
 #include "string_exception.h"
@@ -91,7 +93,7 @@ template<typename _result> static _result handle_stdexception(char const* functi
 template<typename... _args> static void log_debug(_args&&... args);
 template<typename... _args> static void log_error(_args&&... args);
 template<typename... _args> static void log_info(_args&&... args);
-template<typename... _args>	static void log_message(addoncallbacks::addon_log_t level, _args&&... args);
+template<typename... _args>	static void log_message(ADDON::addon_log_t level, _args&&... args);
 template<typename... _args> static void log_notice(_args&&... args);
 
 // Scheduled Tasks
@@ -208,8 +210,8 @@ struct addon_settings {
 
 // g_addon
 //
-// Kodi add-on callback implementation
-static std::unique_ptr<addoncallbacks> g_addon;
+// Kodi add-on callbacks
+static std::unique_ptr<ADDON::CHelper_libXBMC_addon> g_addon;
 
 // g_capabilities (const)
 //
@@ -265,8 +267,8 @@ static int g_epgmaxtime = EPG_TIMEFRAME_UNLIMITED;
 
 // g_gui
 //
-// Kodi GUI library callback implementation
-static std::unique_ptr<guicallbacks> g_gui;
+// Kodi GUI library callbacks
+static std::unique_ptr<CHelper_libKODI_guilib> g_gui;
 
 // g_livestream
 //
@@ -275,8 +277,8 @@ static livestream g_livestream(LIVESTREAM_BUFFER_SIZE);
 
 // g_pvr
 //
-// Kodi PVR add-on callback implementation
-static std::unique_ptr<pvrcallbacks> g_pvr;
+// Kodi PVR add-on callbacks
+static std::unique_ptr<CHelper_libXBMC_pvr> g_pvr;
 
 // g_scheduler
 //
@@ -901,7 +903,7 @@ static int interval_enum_to_seconds(int nvalue)
 template<typename... _args>
 static void log_debug(_args&&... args)
 {
-	log_message(addoncallbacks::addon_log_t::LOG_DEBUG, std::forward<_args>(args)...);
+	log_message(ADDON::addon_log_t::LOG_DEBUG, std::forward<_args>(args)...);
 }
 
 // log_error
@@ -910,7 +912,7 @@ static void log_debug(_args&&... args)
 template<typename... _args>
 static void log_error(_args&&... args)
 {
-	log_message(addoncallbacks::addon_log_t::LOG_ERROR, std::forward<_args>(args)...);
+	log_message(ADDON::addon_log_t::LOG_ERROR, std::forward<_args>(args)...);
 }
 
 // log_info
@@ -919,14 +921,14 @@ static void log_error(_args&&... args)
 template<typename... _args>
 static void log_info(_args&&... args)
 {
-	log_message(addoncallbacks::addon_log_t::LOG_INFO, std::forward<_args>(args)...);
+	log_message(ADDON::addon_log_t::LOG_INFO, std::forward<_args>(args)...);
 }
 
 // log_message
 //
 // Variadic method of writing an entry into the Kodi application log
 template<typename... _args>
-static void log_message(addoncallbacks::addon_log_t level, _args&&... args)
+static void log_message(ADDON::addon_log_t level, _args&&... args)
 {
 	std::ostringstream stream;
 	int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
@@ -935,7 +937,7 @@ static void log_message(addoncallbacks::addon_log_t level, _args&&... args)
 	if(g_addon) g_addon->Log(level, stream.str().c_str());
 
 	// Write LOG_ERROR level messages to an appropriate secondary log mechanism
-	if(level == addoncallbacks::addon_log_t::LOG_ERROR) {
+	if(level == ADDON::addon_log_t::LOG_ERROR) {
 
 #ifdef _WINDOWS
 		std::string message = "ERROR: " + stream.str() + "\r\n";
@@ -955,7 +957,7 @@ static void log_message(addoncallbacks::addon_log_t level, _args&&... args)
 template<typename... _args>
 static void log_notice(_args&&... args)
 {
-	log_message(addoncallbacks::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
+	log_message(ADDON::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -1002,8 +1004,9 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		// Initialize libcurl using the standard default options
 		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception("curl_global_init(CURL_GLOBAL_DEFAULT) failed");
 
-		// Create the global addoncallbacks instance
-		g_addon.reset(new addoncallbacks(handle));
+		// Create the global addon callbacks instance
+		g_addon.reset(new ADDON::CHelper_libXBMC_addon());
+		if(!g_addon->RegisterMe(handle)) throw string_exception("Failed to register addon handle (CHelper_libXBMC_addon::RegisterMe)");
 
 		// Throw a banner out to the Kodi log indicating that the add-on is being loaded
 		log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
@@ -1038,12 +1041,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 
 			// Create the global guicallbacks instance
-			g_gui.reset(new guicallbacks(handle));
+			g_gui.reset(new CHelper_libKODI_guilib());
+			if(!g_gui->RegisterMe(handle)) throw string_exception("Failed to register gui addon handle (CHelper_libKODI_guilib::RegisterMe)");
 
 			try {
 
 				// Create the global pvrcallbacks instance
-				g_pvr.reset(new pvrcallbacks(handle));
+				g_pvr.reset(new CHelper_libXBMC_pvr());
+				if(!g_pvr->RegisterMe(handle)) throw string_exception("Failed to register pvr addon handle (CHelper_libXBMC_pvr::RegisterMe)");
 		
 				try {
 
@@ -1147,15 +1152,15 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					catch(...) { g_connpool.reset(); throw; }
 				}
 			
-				// Clean up the pvrcallbacks instance on exception
+				// Clean up the pvr callbacks instance on exception
 				catch(...) { g_pvr.reset(nullptr); throw; }
 			}
 			
-			// Clean up the guicallbacks instance on exception
+			// Clean up the gui callbacks instance on exception
 			catch(...) { g_gui.reset(nullptr); throw; }
 		}
 
-		// Clean up the addoncallbacks on exception; but log the error first -- once the callbacks
+		// Clean up the addon callbacks on exception; but log the error first -- once the callbacks
 		// are destroyed so is the ability to write to the Kodi log file
 		catch(std::exception& ex) { handle_stdexception(__func__, ex); g_addon.reset(nullptr); throw; }
 		catch(...) { handle_generalexception(__func__); g_addon.reset(nullptr); throw; }
@@ -1454,7 +1459,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_direct_tuning) {
 
 			// This setting is only read during ADDON_Create(); notify the user to restart Kodi
-			g_addon->QueueNotification(addoncallbacks::queue_msg_t::QUEUE_INFO, g_addon->GetLocalizedString(30401));
+			g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_INFO, g_addon->GetLocalizedString(30401));
 			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false", " -- restart required");
 		}
 	}
@@ -2217,7 +2222,7 @@ int GetRecordingsAmount(bool deleted)
 
 PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 {
-	assert(g_addon && g_pvr);				
+	assert(g_pvr);				
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
@@ -2674,7 +2679,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 				// No matches found; display an error message to the user and bail out
 				if(matches.size() == 0) {
 
-					g_gui->DialogOK("Series Search Failed", "Unable to locate a series with a title that contains:", timer.strEpgSearchString, "");
+					g_gui->Dialog_OK_ShowAndGetInput("Series Search Failed", "Unable to locate a series with a title that contains:", timer.strEpgSearchString, "");
 					return PVR_ERROR::PVR_ERROR_NO_ERROR;
 				}
 
@@ -2683,7 +2688,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 				for(auto const& iterator : matches) items.emplace_back(std::get<0>(iterator).c_str());
 
 				// Create and display the selection dialog to get the specific series the user wants
-				int result = g_gui->DialogSelect("Select Series", items.data(), static_cast<unsigned int>(items.size()), 0);
+				int result = g_gui->Dialog_Select("Select Series", items.data(), static_cast<unsigned int>(items.size()), 0);
 				if(result == -1) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 				
 				seriesid = std::get<1>(matches[result]);
@@ -2697,7 +2702,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 				seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
 				if(seriesid.length() == 0) {
 					
-					g_gui->DialogOK("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
+					g_gui->Dialog_OK_ShowAndGetInput("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
 					return PVR_ERROR::PVR_ERROR_NO_ERROR;
 				}
 			}
@@ -2729,7 +2734,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			// If no match was found, the timer cannot be added; use a dialog box rather than returning an error
 			if(seriesid.length() == 0) {
 					
-				g_gui->DialogOK("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
+				g_gui->Dialog_OK_ShowAndGetInput("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
 				return PVR_ERROR::PVR_ERROR_NO_ERROR;
 			}
 
