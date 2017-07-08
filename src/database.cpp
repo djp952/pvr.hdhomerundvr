@@ -2245,7 +2245,7 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 	std::string					streamurl;				// Generated stream URL
 	int							result;					// Result from SQLite function call
 
-	if(instance == nullptr) return 0;
+	if(instance == nullptr) return streamurl;
 
 	// Prepare a scalar result query to generate a stream URL for the specified channel
 	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "

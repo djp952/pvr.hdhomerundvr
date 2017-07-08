@@ -355,8 +355,7 @@ uint64_t livestream::seek(uint64_t position)
 	reset_stream_state(lock);			// Reset the stream state
 
 	// The only option that gets changed on the original transfer object is RANGE
-	CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_RANGE, byterange);
-	if(curlresult != CURLE_OK) { 
+	if(curl_easy_setopt(m_curl, CURLOPT_RANGE, byterange) != CURLE_OK) {
 	
 		// If CURLOPT_RANGE couldn't be applied to the existing transfer object stop the transfer
 		// by closing out the existing CURL object as would be done by the stop() method
