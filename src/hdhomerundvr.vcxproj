@@ -62,7 +62,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\xbmc\xbmc\addons\include;$(SolutionDir)depends\xbmc\addons\library.xbmc.addon;$(SolutionDir)depends\xbmc\addons\library.kodi.guilib;$(SolutionDir)depends\xbmc\addons\library.xbmc.pvr;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -82,7 +82,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)depends\kodi-addon-dev-kit\kodi;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)depends\xbmc\xbmc\addons\include;$(SolutionDir)depends\xbmc\addons\library.xbmc.addon;$(SolutionDir)depends\xbmc\addons\library.kodi.guilib;$(SolutionDir)depends\xbmc\addons\library.xbmc.pvr;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\include\curl;$(SolutionDir)depends\libhdhomerun;$(SolutionDir)depends\sqlite;$(SolutionDir)tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -113,16 +113,13 @@
     <ClInclude Include="..\depends\sqlite\sqlite3.h" />
     <ClInclude Include="..\depends\sqlite\sqlite3ext.h" />
     <ClInclude Include="..\tmp\version\version.h" />
-    <ClInclude Include="addoncallbacks.h" />
     <ClInclude Include="compat\dlfcn.h" />
     <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
-    <ClInclude Include="guicallbacks.h" />
     <ClInclude Include="hdhr.h" />
     <ClInclude Include="livestream.h" />
-    <ClInclude Include="pvrcallbacks.h" />
     <ClInclude Include="scalar_condition.h" />
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="sqlite_exception.h" />
@@ -181,7 +178,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="addoncallbacks.cpp" />
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\snprintf.cpp" />
@@ -192,14 +188,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="guicallbacks.cpp" />
     <ClCompile Include="hdhr.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="livestream.cpp" />
     <ClCompile Include="pvr.cpp" />
-    <ClCompile Include="pvrcallbacks.cpp" />
     <ClCompile Include="condition_variable.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>

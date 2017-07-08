@@ -34,9 +34,25 @@
 //
 //	handle		- Handle returned from successful call to dlopen
 
-void dlclose(void* handle)
+int dlclose(void* handle)
 {
 	if(handle) FreeLibrary(reinterpret_cast<HMODULE>(handle));
+	return (handle) ? 0 : -1;
+}
+
+//---------------------------------------------------------------------------
+// dlerror
+//
+// Gets a description of the last error that occurred during dynamic linking
+//
+// Arguments:
+//
+//	NONE
+
+char* dlerror(void)
+{
+	// Not implemented
+	return nullptr;
 }
 
 //---------------------------------------------------------------------------

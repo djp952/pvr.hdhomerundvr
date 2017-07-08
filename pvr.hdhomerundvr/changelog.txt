@@ -1,3 +1,6 @@
+v1.2.0 (2017.07.xx)
+  - Update libhdhomerun library to version 2017.06.12
+
 v1.1.1 (2017.07.07)
   - Allow for 30-second and 1-minute local network discovery intervals (devices, lineups, recordings)
   - Adapt to backend recording attribute change; use DisplayGroupTitle instead of Title for recording folder names

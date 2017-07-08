@@ -60,8 +60,6 @@
 #define TARGET_WINDOWS
 #endif // _WINDOWS
 
-#include <xbmc_addon_dll.h>			// Include general addon declarations
-
 //---------------------------------------------------------------------------
 // SQLite Declarations
 
