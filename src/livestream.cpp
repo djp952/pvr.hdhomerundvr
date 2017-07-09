@@ -24,6 +24,7 @@
 #include "livestream.h"
 
 #include <algorithm>
+#include <assert.h>
 #include <chrono>
 #include <string.h>
 #include <type_traits>
@@ -43,6 +44,7 @@
 livestream::livestream(size_t buffersize) : m_buffersize(buffersize), m_buffer(new uint8_t[buffersize])
 {
 	if(!m_buffer) throw std::bad_alloc();
+	if(buffersize < WRITE_PADDING) throw string_exception("specified buffer size is too small");
 }
 
 //---------------------------------------------------------------------------
@@ -151,15 +153,15 @@ size_t livestream::curl_write(void const* data, size_t size, size_t count, void*
 	// If a stop has been signaled, terminate the transfer now rather than waiting for curl_transfercontrol
 	if(instance->m_stop.exchange(false) == true) return 0;
 
-	// Copy the current head and tail positions, this works without a lock
-	// by operating on the state of the buffer at the time of the request
+	// Copy the current head and tail positions, this works without a lock by operating
+	// on the state of the buffer at the time of the request
 	size_t head = instance->m_bufferhead;
 	size_t tail = instance->m_buffertail;
 
-	// This operation requires that all of the data be written, if it isn't going to fit
-	// in the available ring buffer space, the input stream has to be paused via CURL_WRITEFUNC_PAUSE
+	// This operation requires that all of the data be written, if it isn't going to fit in the
+	// available ring buffer space, the input stream has to be paused via CURL_WRITEFUNC_PAUSE
 	size_t available = (head < tail) ? tail - head : (instance->m_buffersize - head) + tail;
-	if((instance->m_bufferfull) || (available < cb)) { instance->m_paused.store(true); return CURL_WRITEFUNC_PAUSE; }
+	if(available < (cb + WRITE_PADDING)) { instance->m_paused.store(true); return CURL_WRITEFUNC_PAUSE; }
 
 	// Write until the buffer has been exhausted or the desired count has been reached
 	while(cb) {
@@ -175,9 +177,6 @@ size_t livestream::curl_write(void const* data, size_t size, size_t count, void*
 
 		// If the head has reached the end of the buffer, reset it back to zero
 		if(head >= instance->m_buffersize) head = 0;
-
-		// If the head has reached the tail, the buffer is now full
-		if(head == tail) { instance->m_bufferfull = true; break; }
 	}
 
 	// Modify the atomic<> head position after the operation has completed and notify
@@ -259,10 +258,9 @@ size_t livestream::read(uint8_t* buffer, size_t count, uint32_t timeoutms)
 		head = m_bufferhead;				// Copy the atomic<> head position
 		tail = m_buffertail;				// Copy the atomic<> tail position
 
-		// If the head and the tail are in the same position the buffer may be empty
-		if((head == tail) && (m_bufferempty)) return false;
-
-		return true;						// Data is available
+		// Padding was added in curl_write to ensure that the buffer can never become
+		// full, therefore if the head is the same as the tail the buffer is empty
+		return (head != tail);
 
 	})) return 0;
 
@@ -282,14 +280,12 @@ size_t livestream::read(uint8_t* buffer, size_t count, uint32_t timeoutms)
 		if(tail >= m_buffersize) tail = 0;
 
 		// If the tail has reached the head, the buffer is now empty
-		m_bufferempty = (tail == head);
-		if(m_bufferempty) break;
+		if(tail == head) break;
 	}
 
 	// Modify the atomic<> tail position after the operation has completed
+	// and increment the current position of the stream beyond what was read
 	m_buffertail.store(tail);
-
-	// Increment the current position of the stream beyond what was read
 	m_readpos += bytesread;
 
 	return bytesread;
@@ -321,10 +317,8 @@ void livestream::reset_stream_state(std::unique_lock<std::mutex> const& lock)
 	m_readpos = m_writepos = 0;
 
 	// Reset the ring buffer back to an empty state
-	m_bufferempty = true;
-	m_bufferfull = false;
-	m_bufferhead = 0;
-	m_buffertail = 0;
+	m_bufferhead.store(0);
+	m_buffertail.store(0);
 }
 
 //---------------------------------------------------------------------------
