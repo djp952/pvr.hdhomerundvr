@@ -88,6 +88,12 @@ private:
 	livestream(livestream const&)=delete;
 	livestream& operator=(livestream const&)=delete;
 
+	// WRITE_PADDING
+	//
+	// Constant used to prevent writes from ever filling the entire buffer,
+	// thereby eliminating the required housekeeping for that condition
+	static const size_t WRITE_PADDING = sizeof(uint32_t);
+
 	//-----------------------------------------------------------------------
 	// Private Member Functions
 
@@ -134,8 +140,6 @@ private:
 	//
 	size_t const				m_buffersize;				// Size of the ring buffer
 	std::unique_ptr<uint8_t[]>	m_buffer;					// Ring buffer stroage
-	bool						m_bufferempty = true;		// Flag for empty ring buffer
-	bool						m_bufferfull = false;		// Flag for full ring buffer
 	std::atomic<size_t>			m_bufferhead{0};			// Head (write) buffer position
 	std::atomic<size_t>			m_buffertail{0};			// Tail (read) buffer position
 	std::condition_variable		m_bufferhasdata;			// Signals that data is available
