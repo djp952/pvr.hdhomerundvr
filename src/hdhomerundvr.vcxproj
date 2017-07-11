@@ -175,8 +175,6 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_addon_dll.h" />
-    <ClInclude Include="..\depends\kodi-addon-dev-kit\kodi\xbmc_pvr_dll.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channels.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channelscan.h" />

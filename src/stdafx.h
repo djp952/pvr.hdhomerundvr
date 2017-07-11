@@ -35,10 +35,6 @@
 
 #define NOMINMAX					// Disable min()/max() macros
 
-#ifndef _WIN64
-#define _USE_32BIT_TIME_T			// time_t has to be 32bit with 32bit Kodi
-#endif
-
 #include <windows.h>				// Include main Windows declarations
 
 #endif // _WINDOWS

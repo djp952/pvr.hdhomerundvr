@@ -218,20 +218,25 @@ static std::unique_ptr<ADDON::CHelper_libXBMC_addon> g_addon;
 // PVR implementation capability flags
 static const PVR_ADDON_CAPABILITIES g_capabilities = {
 
-	true,		// bSupportsEPG
-	true,		// bSupportsTV
-	false,		// bSupportsRadio
-	true,		// bSupportsRecordings
-	false,		// bSupportsRecordingsUndelete
-	true,		// bSupportsTimers
-	true,		// bSupportsChannelGroups
-	false,		// bSupportsChannelScan
-	false,		// bSupportsChannelSettings
-	true,		// bHandlesInputStream
-	false,		// bHandlesDemuxing
-	false,		// bSupportsRecordingPlayCount
-	false,		// bSupportsLastPlayedPosition
-	false,		// bSupportsRecordingEdl
+	true,			// bSupportsEPG
+	true,			// bSupportsTV
+	false,			// bSupportsRadio
+	true,			// bSupportsRecordings
+	false,			// bSupportsRecordingsUndelete
+	true,			// bSupportsTimers
+	true,			// bSupportsChannelGroups
+	false,			// bSupportsChannelScan
+	false,			// bSupportsChannelSettings
+	true,			// bHandlesInputStream
+	false,			// bHandlesDemuxing
+	false,			// bSupportsRecordingPlayCount
+	false,			// bSupportsLastPlayedPosition
+	false,			// bSupportsRecordingEdl
+	false,			// bSupportsRecordingsRename
+	false,			// bSupportsRecordingsLifetimeChange
+	false,			// bSupportsDescrambleInfo
+	0,				// iRecordingsLifetimesSize
+	{ { 0, "" } }	// recordingsLifetimeValues
 };
 
 // g_capabilities_directtune (const)
@@ -239,20 +244,25 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 // PVR implementation capability flags when 'direct tuning' is enabled
 static const PVR_ADDON_CAPABILITIES g_capabilities_directtune = {
 
-	true,		// bSupportsEPG
-	true,		// bSupportsTV
-	false,		// bSupportsRadio
-	true,		// bSupportsRecordings
-	false,		// bSupportsRecordingsUndelete
-	true,		// bSupportsTimers
-	true,		// bSupportsChannelGroups
-	false,		// bSupportsChannelScan
-	false,		// bSupportsChannelSettings
-	false,		// bHandlesInputStream
-	false,		// bHandlesDemuxing
-	false,		// bSupportsRecordingPlayCount
-	false,		// bSupportsLastPlayedPosition
-	false,		// bSupportsRecordingEdl
+	true,			// bSupportsEPG
+	true,			// bSupportsTV
+	false,			// bSupportsRadio
+	true,			// bSupportsRecordings
+	false,			// bSupportsRecordingsUndelete
+	true,			// bSupportsTimers
+	true,			// bSupportsChannelGroups
+	false,			// bSupportsChannelScan
+	false,			// bSupportsChannelSettings
+	false,			// bHandlesInputStream
+	false,			// bHandlesDemuxing
+	false,			// bSupportsRecordingPlayCount
+	false,			// bSupportsLastPlayedPosition
+	false,			// bSupportsRecordingEdl
+	false,			// bSupportsRecordingsRename
+	false,			// bSupportsRecordingsLifetimeChange
+	false,			// bSupportsDescrambleInfo
+	0,				// iRecordingsLifetimesSize
+	{ { 0, "" } }	// recordingsLifetimeValues
 };
 
 // g_connpool
@@ -1176,28 +1186,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 }
 
 //---------------------------------------------------------------------------
-// ADDON_Stop
-//
-// Instructs the addon to stop all activities
-//
-// Arguments:
-//
-//	NONE
-
-void ADDON_Stop(void)
-{
-	// Throw a message out to the Kodi log indicating that the add-on is being stopped
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopping");
-
-	g_livestream.stop();			// Stop the live stream
-	g_scheduler.stop();				// Stop the task scheduler
-	g_scheduler.clear();			// Clear all scheduled tasks
-
-	// Throw a message out to the Kodi log indicating that the add-on has been stopped
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopped");
-}
-
-//---------------------------------------------------------------------------
 // ADDON_Destroy
 //
 // Destroys the Kodi addon instance
@@ -1250,34 +1238,6 @@ void ADDON_Destroy(void)
 ADDON_STATUS ADDON_GetStatus(void)
 {
 	return ADDON_STATUS::ADDON_STATUS_OK;
-}
-
-//---------------------------------------------------------------------------
-// ADDON_HasSettings
-//
-// Indicates if the Kodi addon has settings or not
-//
-// Arguments:
-//
-//	NONE
-
-bool ADDON_HasSettings(void)
-{
-	return true;
-}
-
-//---------------------------------------------------------------------------
-// ADDON_GetSettings
-//
-// Acquires the information about the Kodi addon settings
-//
-// Arguments:
-//
-//	settings		- Structure to receive the addon settings
-
-unsigned int ADDON_GetSettings(ADDON_StructSetting*** /*settings*/)
-{
-	return 0;
 }
 
 //---------------------------------------------------------------------------
@@ -1480,77 +1440,8 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 }
 
 //---------------------------------------------------------------------------
-// ADDON_FreeSettings
-//
-// Releases settings allocated by ADDON_GetSettings
-//
-// Arguments:
-//
-//	NONE
-
-void ADDON_FreeSettings(void)
-{
-}
-
-//---------------------------------------------------------------------------
 // KODI PVR ADDON ENTRY POINTS
 //---------------------------------------------------------------------------
-
-//---------------------------------------------------------------------------
-// GetPVRAPIVersion
-//
-// Get the XBMC_PVR_API_VERSION that was used to compile this add-on
-//
-// Arguments:
-//
-//	NONE
-
-char const* GetPVRAPIVersion(void)
-{
-	return XBMC_PVR_API_VERSION;
-}
-
-//---------------------------------------------------------------------------
-// GetMininumPVRAPIVersion
-//
-// Get the XBMC_PVR_MIN_API_VERSION that was used to compile this add-on
-//
-// Arguments:
-//
-//	NONE
-
-char const* GetMininumPVRAPIVersion(void)
-{
-	return XBMC_PVR_MIN_API_VERSION;
-}
-
-//---------------------------------------------------------------------------
-// GetGUIAPIVersion
-//
-// Get the KODI_GUILIB_API_VERSION that was used to compile this add-on
-//
-// Arguments:
-//
-//	NONE
-
-char const* GetGUIAPIVersion(void)
-{
-	return KODI_GUILIB_API_VERSION;
-}
-
-//---------------------------------------------------------------------------
-// GetMininumGUIAPIVersion
-//
-// Get the KODI_GUILIB_MIN_API_VERSION that was used to compile this add-on
-//
-// Arguments:
-//
-//	NONE
-
-char const* GetMininumGUIAPIVersion(void)
-{
-	return KODI_GUILIB_MIN_API_VERSION;
-}
 
 //---------------------------------------------------------------------------
 // GetAddonCapabilities
@@ -2383,6 +2274,20 @@ PVR_ERROR RenameRecording(PVR_RECORDING const& /*recording*/)
 }
 
 //---------------------------------------------------------------------------
+// SetRecordingLifetime
+//
+// Set the lifetime of a recording on the backend
+//
+// Arguments:
+//
+//	recording	- The recording to change the lifetime for
+
+PVR_ERROR SetRecordingLifetime(PVR_RECORDING const* /*recording*/)
+{
+	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
 // SetRecordingPlayCount
 //
 // Set the play count of a recording on the backend
@@ -3083,6 +2988,20 @@ PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS& /*status*/)
 }
 
 //---------------------------------------------------------------------------
+// GetDescrambleInfo
+//
+// Get the descramble information of the stream that's currently open
+//
+// Arguments:
+//
+//	descrambleinfo		- Descramble information
+
+PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
+{
+	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
 // GetLiveStreamURL
 //
 // Get the stream URL for a channel from the backend
@@ -3335,10 +3254,8 @@ bool CanPauseStream(void)
 
 bool CanSeekStream(void)
 {
-	// NOTE: This technically doesn't work right with 'direct tune' enabled, but
-	// returning false here prevents pause from being enabled.  The user that
-	// direct tuning was added for preferred broken seek to not having pause
-	return true;
+	// Seek doesn't work against streams directly from the tuner device(s)
+	return (g_settings.use_direct_tuning == false);
 }
 
 //---------------------------------------------------------------------------
