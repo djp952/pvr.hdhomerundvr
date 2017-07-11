@@ -34,6 +34,15 @@
 
 #pragma warning(push, 4)
 
+// align_up (local)
+//
+// Aligns a size_t up to a specified boundary
+static size_t align_up(size_t value, unsigned int alignment)
+{
+	if(alignment < 1) throw std::out_of_range("alignment");
+	return (value == 0) ? 0 : value + ((alignment - (value % alignment)) % alignment);
+}
+
 //---------------------------------------------------------------------------
 // livestream Constructor
 //
@@ -41,10 +50,10 @@
 //
 //	buffersize	- Size in bytes of the stream ring buffer
 
-livestream::livestream(size_t buffersize) : m_buffersize(buffersize), m_buffer(new uint8_t[buffersize])
+livestream::livestream(size_t buffersize) : m_buffersize(align_up(buffersize + WRITE_PADDING, 65536))
 {
+	m_buffer.reset(new uint8_t[m_buffersize]);
 	if(!m_buffer) throw std::bad_alloc();
-	if(buffersize < WRITE_PADDING) throw string_exception("specified buffer size is too small");
 }
 
 //---------------------------------------------------------------------------
@@ -93,8 +102,8 @@ size_t livestream::curl_responseheaders(char const* data, size_t size, size_t co
 		// perspective which is used to normalize the reported stream position
 		if(sscanf(data, "Content-Range: bytes %llu-", &rangestart) == 1) {
 			
-			// When the stream starts (or is restarted) set the read/write positions
-			instance->m_readpos = instance->m_writepos = rangestart;
+			// When the stream (re)starts, set the initial stream positions
+			instance->m_startpos = instance->m_readpos = instance->m_writepos = rangestart;
 		}
 	}
 
@@ -150,8 +159,9 @@ size_t livestream::curl_write(void const* data, size_t size, size_t count, void*
 	// Cast the context pointer back into a livestream instance
 	livestream* instance = reinterpret_cast<livestream*>(context);
 
-	// If a stop has been signaled, terminate the transfer now rather than waiting for curl_transfercontrol
-	if(instance->m_stop.exchange(false) == true) return 0;
+	// To support seeking within the ring buffer, some level of synchronization
+	// is required here -- there should be almost no contention on this lock
+	std::unique_lock<std::mutex> writelock(instance->m_writelock);
 
 	// Copy the current head and tail positions, this works without a lock by operating
 	// on the state of the buffer at the time of the request
@@ -225,7 +235,6 @@ uint64_t livestream::length(void) const
 uint64_t livestream::position(void) const
 {
 	std::unique_lock<std::mutex> lock(m_lock);
-
 	return m_readpos;
 }
 
@@ -313,8 +322,9 @@ void livestream::reset_stream_state(std::unique_lock<std::mutex> const& lock)
 	m_paused.store(false);
 	m_stop.store(false);
 
-	// Reset the stream positions (leave length intact)
-	m_readpos = m_writepos = 0;
+	// Reset the stream positions, but leave length intact -- length represents the
+	// largest position seen while streaming the content
+	m_startpos = m_readpos = m_writepos = 0;
 
 	// Reset the ring buffer back to an empty state
 	m_bufferhead.store(0);
@@ -332,10 +342,6 @@ void livestream::reset_stream_state(std::unique_lock<std::mutex> const& lock)
 
 uint64_t livestream::seek(uint64_t position)
 {
-	// Format the RANGE header value to be applied to the new request
-	char byterange[32];
-	snprintf(byterange, std::extent<decltype(byterange)>::value, "%llu-", static_cast<unsigned long long>(position));
-
 	std::unique_lock<std::mutex> lock(m_lock);
 
 	// If the position is the same as the current position, there is nothing to do
@@ -344,12 +350,43 @@ uint64_t livestream::seek(uint64_t position)
 	// The transfer must be active prior to the seek operation
 	if(!m_worker.joinable()) throw string_exception(__func__, ": cannot seek an inactive data transfer");
 
-	m_stop.store(true);					// Signal worker thread to stop
-	m_worker.join();					// Wait for it to actually stop
+	// Take the write lock to prevent any changes to the head position while calculating
+	// if the seek can be fulfilled with the data already in the buffer
+	std::unique_lock<std::mutex> writelock(m_writelock);
 
-	reset_stream_state(lock);			// Reset the stream state
+	// Calculate the minimum position represented in the ring buffer
+	uint64_t minpos = ((m_writepos - m_startpos) > m_buffersize) ? m_writepos - m_buffersize : m_startpos;
 
-	// The only option that gets changed on the original transfer object is RANGE
+	if((position >= minpos) && (position <= m_writepos)) {
+
+		// If the buffer hasn't wrapped around yet, the new tail position is relative to buffer[0]
+		if(minpos == m_startpos) m_buffertail = static_cast<size_t>(position - m_startpos);
+
+		else {
+
+			size_t tail = m_bufferhead;					// Start at the head (minpos)
+			uint64_t delta = position - minpos;			// Calculate the required delta
+
+			// Set the new tail position; if the delta is larger than the remaining space in the
+			// buffer it is relative to buffer[0], otherwise it is relative to buffer[minpos]
+			m_buffertail = static_cast<size_t>((delta >= (m_buffersize - tail)) ? delta - (m_buffersize - tail) : tail + delta);
+		}
+
+		// The stream was seeked within the buffer, set the new read (tail) position
+		m_readpos = position;
+		return position;
+	}
+
+	writelock.unlock();						// Release the write lock
+	m_stop.store(true);						// Signal worker thread to stop
+	m_worker.join();						// Wait for it to actually stop
+
+	reset_stream_state(lock);				// Reset the stream state
+
+	// Format the updated RANGE header value and apply it to the original transfer object
+	char byterange[32];
+	snprintf(byterange, std::extent<decltype(byterange)>::value, "%llu-", static_cast<unsigned long long>(position));
+
 	if(curl_easy_setopt(m_curl, CURLOPT_RANGE, byterange) != CURLE_OK) {
 	
 		// If CURLOPT_RANGE couldn't be applied to the existing transfer object stop the transfer
