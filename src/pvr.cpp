@@ -3413,10 +3413,8 @@ bool CanPauseStream(void)
 
 bool CanSeekStream(void)
 {
-	// NOTE: This technically doesn't work right with 'direct tune' enabled, but
-	// returning false here prevents pause from being enabled.  The user that
-	// direct tuning was added for preferred broken seek to not having pause
-	return true;
+	// Seek doesn't work against streams directly from the tuner device(s)
+	return (g_settings.use_direct_tuning == false);
 }
 
 //---------------------------------------------------------------------------
