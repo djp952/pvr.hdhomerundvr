@@ -129,9 +129,11 @@ private:
 	scalar_condition<bool>		m_started{false};			// Worker started condition
 	std::atomic<bool>			m_stop{false};				// Flag to stop the transfer
 	std::atomic<bool>			m_paused{false};			// Flag if transfer is paused
+	mutable std::mutex			m_writelock;				// Writer lock (for seeking)
 
 	// STREAM INFORMATION
 	//
+	uint64_t					m_startpos = 0;				// Starting position
 	uint64_t					m_readpos = 0;				// Current read position
 	uint64_t					m_writepos = 0;				// Current write position
 	std::atomic<uint64_t>		m_length{0};				// Known end of the stream
