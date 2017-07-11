@@ -1,5 +1,7 @@
 v1.2.0 (2017.07.xx)
   - Update libhdhomerun library to version 2017.06.12
+  - Fix issue with Live TV stream that could occur if internal buffer ever became completely filled
+  - Allow Live TV seek to operate within the internal buffer when possible rather than restarting stream
 
 v1.1.1 (2017.07.07)
   - Allow for 30-second and 1-minute local network discovery intervals (devices, lineups, recordings)
