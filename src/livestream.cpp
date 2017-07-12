@@ -51,8 +51,13 @@ static size_t align_up(size_t value, unsigned int alignment)
 
 livestream::livestream(size_t buffersize) : m_buffersize(align_up(buffersize + WRITE_PADDING, 65536))
 {
+	// Allocate the live stream ring buffer
 	m_buffer.reset(new uint8_t[m_buffersize]);
 	if(!m_buffer) throw std::bad_alloc();
+
+	// Allocate the buffer for any reported CURL error messages
+	m_curlerr.reset(new char[CURL_ERROR_SIZE]);
+	if(!m_curlerr) throw std::bad_alloc();
 }
 
 //---------------------------------------------------------------------------
@@ -397,11 +402,13 @@ uint64_t livestream::seek(uint64_t position)
 		throw string_exception(__func__, ": curl_easy_setopt() failed; transfer stopped");
 	}
 
-	// Create a worker thread on which to perform the transfer operations
-	m_worker = std::move(std::thread([=]() { curl_easy_perform(m_curl); m_started = true; }));
-
-	// Wait for some data to be delivered on the stream (or the worker to die prematurely)
+	// Create a new worker thread on which to perform the transfer operations and wait for it to start
+	m_worker = std::move(std::thread(&livestream::transfer_func, this));
 	m_started.wait_until_equals(true);
+
+	// If the transfer thread failed to initiate the data transfer throw an exception
+	if(m_curlresult != CURLE_OK) 
+		throw string_exception(__func__, ": failed to restart transfer at position ", position, ": ", &m_curlerr[0]);
 
 	// Return the starting position of the stream
 	return m_readpos;
@@ -440,13 +447,16 @@ uint64_t livestream::start(char const* url)
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, &livestream::curl_transfercontrol);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA, this);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
+		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_curlerr);
 		if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed");
 
-		// Create a worker thread on which to perform the transfer operations
-		m_worker = std::move(std::thread([=]() { curl_easy_perform(m_curl); m_started = true; }));
-
-		// Wait for some data to be delivered on the stream (or the worker to die prematurely)
+		// Create a new worker thread on which to perform the transfer operations and wait for it to start
+		m_worker = std::move(std::thread(&livestream::transfer_func, this));
 		m_started.wait_until_equals(true);
+
+		// If the transfer thread failed to initiate the data transfer throw an exception
+		if(m_curlresult != CURLE_OK) 
+			throw string_exception(__func__, ": failed to start transfer for url ", url, ": ", &m_curlerr[0]);
 
 		// Return the starting position of the stream
 		return m_readpos;
@@ -491,6 +501,27 @@ uint64_t livestream::stop(void)
 
 	// Return the final position of the stream
 	return position;
+}
+
+//---------------------------------------------------------------------------
+// livestream::transfer_func (private)
+//
+// Worker thread procedure for the CURL data transfer instance
+//
+// Arguments:
+//
+//	NONE
+
+void livestream::transfer_func(void)
+{
+	// Initialize the result code and clear out the CURL error buffer
+	m_curlresult = CURLE_OK;
+	memset(&m_curlerr[0], 0, CURL_ERROR_SIZE);
+
+	// Attempt to execute the current transfer operation, wait for the
+	// operation to complete or to fail prematurely with an error code
+	m_curlresult = curl_easy_perform(m_curl);
+	m_started = true;
 }
 
 //---------------------------------------------------------------------------

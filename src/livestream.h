@@ -117,12 +117,19 @@ private:
 	// Resets all of the stream state variables
 	void reset_stream_state(std::unique_lock<std::mutex> const& lock);
 
+	// transfer_func
+	//
+	// libcurl data transfer thread procedure
+	void transfer_func(void);
+
 	//-----------------------------------------------------------------------
 	// Member Variables
 
 	std::thread					m_worker;					// Data transfer thread
 	mutable std::mutex			m_lock;						// Synchronization object
 	CURL*						m_curl = nullptr;			// CURL transfer object
+	CURLcode					m_curlresult = CURLE_OK;	// CURL transfer result
+	std::unique_ptr<char[]>		m_curlerr = nullptr;		// CURL error string buffer
 
 	// STREAM CONTROL
 	//
