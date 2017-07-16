@@ -20,79 +20,79 @@
 // SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef __LIVESTREAM_H_
-#define __LIVESTREAM_H_
+#ifndef __DVRSTREAM_H_
+#define __DVRSTREAM_H_
 #pragma once
 
 #pragma warning(push, 4)
 
 #include <atomic>
 #include <condition_variable>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include "scalar_condition.h"
 
 //---------------------------------------------------------------------------
-// Class livestream
+// Class dvrstream
 //
-// Implements a live radio/tv http stream buffer
+// Implements an HTTP-based DVR stream ring buffer
 
-class livestream
+class dvrstream
 {
 public:
 
 	// Instance Constructor
 	//
-	livestream(size_t buffersize);
+	dvrstream(size_t buffersize, char const* url);
 
 	// Destructor
 	//
-	~livestream();
+	~dvrstream();
 
 	//-----------------------------------------------------------------------
 	// Member Functions
 
+	// canseek
+	//
+	// Flag indicating if the stream allows seek operations
+	bool canseek(void) const;
+
+	// close
+	//
+	// Closes the stream
+	void close(void);
+
 	// length
 	//
-	// Gets the length of the live stream as transferred thus far
-	uint64_t length(void) const;
+	// Gets the known length of the stream
+	unsigned long long length(void) const;
 
 	// position
 	//
-	// Gets the current position of the live stream
-	uint64_t position(void) const;
+	// Gets the current position of the stream
+	unsigned long long position(void) const;
 
 	// read
 	//
-	// Reads data from the live stream into a destination buffer
-	size_t read(uint8_t* buffer, size_t count, uint32_t timeoutms);
+	// Reads any available data from the stream
+	size_t read(uint8_t* buffer, size_t count);
+
+	// realtime
+	//
+	// Flag if the stream is real-time
+	bool realtime(void) const;
 
 	// seek
 	//
-	// Stops and restarts the transfer at a specific position
-	uint64_t seek(uint64_t position);
-
-	// start
-	//
-	// Begins the transfer into the live stream buffer
-	uint64_t start(char const* url);
-
-	// stop
-	//
-	// Stops the data transfer into the live stream buffer
-	uint64_t stop(void);
+	// Sets the stream pointer to a specific position
+	unsigned long long seek(long long position, int whence);
 
 private:
 
-	livestream(livestream const&)=delete;
-	livestream& operator=(livestream const&)=delete;
-
-	// WRITE_PADDING
-	//
-	// Constant used to prevent writes from ever filling the entire buffer,
-	// thereby eliminating the required housekeeping for that condition
-	static const size_t WRITE_PADDING = sizeof(uint32_t);
+	dvrstream(dvrstream const&)=delete;
+	dvrstream& operator=(dvrstream const&)=delete;
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -107,55 +107,59 @@ private:
 	// libcurl callback to handle transfer information/progress
 	static int curl_transfercontrol(void* context, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
+	// curl_transfer_func
+	//
+	// Worker thread procedure for the CURL data transfer
+	void curl_transfer_func(unsigned long long position);
+
 	// curl_write (static)
 	//
 	// libcurl callback to write received data into the buffer
 	static size_t curl_write(void const* data, size_t size, size_t count, void* context);
 
-	// reset_stream_state
+	// restart
 	//
-	// Resets all of the stream state variables
-	void reset_stream_state(std::unique_lock<std::mutex> const& lock);
-
-	// transfer_func
-	//
-	// libcurl data transfer thread procedure
-	void transfer_func(void);
+	// Restarts the stream at the specified position
+	unsigned long long restart(std::unique_lock<std::mutex> const& lock, unsigned long long position);
 
 	//-----------------------------------------------------------------------
 	// Member Variables
 
-	std::thread					m_worker;					// Data transfer thread
-	mutable std::mutex			m_lock;						// Synchronization object
-	CURL*						m_curl = nullptr;			// CURL transfer object
-	CURLcode					m_curlresult = CURLE_OK;	// CURL transfer result
-	std::unique_ptr<char[]>		m_curlerr = nullptr;		// CURL error string buffer
+	mutable std::mutex				m_lock;						// Consumer synchronization
+	mutable std::mutex				m_writelock;				// Producer synchronization
+
+	// DATA TRANSFER
+	//
+	std::future<void>				m_worker;					// Data transfer thread
+	CURL*							m_curl = nullptr;			// CURL transfer object
+	CURLcode						m_curlresult = CURLE_OK;	// CURL transfer result
+	char							m_curlerr[CURL_ERROR_SIZE];	// CURL error message
 
 	// STREAM CONTROL
 	//
-	scalar_condition<bool>		m_started{false};			// Worker started condition
-	std::atomic<bool>			m_stop{false};				// Flag to stop the transfer
-	std::atomic<bool>			m_paused{false};			// Flag if transfer is paused
-	mutable std::mutex			m_writelock;				// Writer lock (for seeking)
+	scalar_condition<bool>			m_started{false};			// Stream started condition
+	std::atomic<bool>				m_stop{false};				// Flag to stop the transfer
+	std::atomic<bool>				m_paused{false};			// Flag if transfer is paused
 
 	// STREAM INFORMATION
 	//
-	uint64_t					m_startpos = 0;				// Starting position
-	uint64_t					m_readpos = 0;				// Current read position
-	uint64_t					m_writepos = 0;				// Current write position
-	std::atomic<uint64_t>		m_length{0};				// Known end of the stream
+	bool							m_canseek = false;			// Flag if stream can be seeked
+	unsigned long long				m_startpos = 0;				// Starting position
+	unsigned long long				m_readpos = 0;				// Current read position
+	unsigned long long				m_writepos = 0;				// Current write position
+	std::atomic<unsigned long long>	m_length{0};				// Known length of the stream
+	std::atomic<bool>				m_realtime{false};			// Flag if stream is real-time
 
 	// RING BUFFER
 	//
-	size_t const				m_buffersize;				// Size of the ring buffer
-	std::unique_ptr<uint8_t[]>	m_buffer;					// Ring buffer stroage
-	std::atomic<size_t>			m_bufferhead{0};			// Head (write) buffer position
-	std::atomic<size_t>			m_buffertail{0};			// Tail (read) buffer position
-	std::condition_variable		m_bufferhasdata;			// Signals that data is available
+	size_t const					m_buffersize;				// Size of the ring buffer
+	std::unique_ptr<uint8_t[]>		m_buffer;					// Ring buffer stroage
+	std::atomic<size_t>				m_bufferhead{0};			// Head (write) buffer position
+	std::atomic<size_t>				m_buffertail{0};			// Tail (read) buffer position
 };
 
 //-----------------------------------------------------------------------------
 
 #pragma warning(pop)
 
-#endif	// __LIVESTREAM_H_
+#endif	// __DVRSTREAM_H_`
