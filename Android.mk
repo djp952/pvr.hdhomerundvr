@@ -96,8 +96,8 @@ LOCAL_SRC_FILES := \
 	depends/sqlite/sqlite3.c \
 	src/database.cpp \
 	src/dbextension.cpp \
+	src/dvrstream.cpp \
 	src/hdhr.cpp \
-	src/livestream.cpp \
 	src/pvr.cpp \
 	src/scheduler.cpp \
 	src/sqlite_exception.cpp

@@ -55,9 +55,6 @@
     <ClInclude Include="compat\uuid\uuid.h">
       <Filter>Header Files\compat\uuid</Filter>
     </ClInclude>
-    <ClInclude Include="livestream.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="scalar_condition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -118,6 +115,12 @@
     <ClInclude Include="compat\strings.h">
       <Filter>Header Files\compat</Filter>
     </ClInclude>
+    <ClInclude Include="dvrstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="align.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -140,9 +143,6 @@
     </ClCompile>
     <ClCompile Include="compat\uuid.cpp">
       <Filter>Source Files\compat</Filter>
-    </ClCompile>
-    <ClCompile Include="livestream.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scheduler.cpp">
       <Filter>Source Files</Filter>
@@ -191,6 +191,9 @@
     </ClCompile>
     <ClCompile Include="compat\strings.cpp">
       <Filter>Source Files\compat</Filter>
+    </ClCompile>
+    <ClCompile Include="dvrstream.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
