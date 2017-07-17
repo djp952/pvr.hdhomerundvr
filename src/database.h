@@ -460,6 +460,11 @@ int get_channel_count(sqlite3* instance);
 // Gets the number of available recordings in the database
 int get_recording_count(sqlite3* instance);
 
+// get_recording_stream_url
+//
+// Gets the playback URL for a recording
+std::string get_recording_stream_url(sqlite3* instance, char const* recordingid);
+
 // get_recordingrule_count
 //
 // Gets the number of available recording rules in the database

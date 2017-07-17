@@ -49,8 +49,8 @@
 #include <libXBMC_pvr.h>
 
 #include "database.h"
+#include "dvrstream.h"
 #include "hdhr.h"
-#include "livestream.h"
 #include "scalar_condition.h"
 #include "scheduler.h"
 #include "string_exception.h"
@@ -61,10 +61,10 @@
 // MACROS
 //---------------------------------------------------------------------------
 
-// LIVESTREAM_BUFFER_SIZE
+// DVRSTREAM_BUFFER_SIZE
 //
-// 4 megabytes is sufficient to store 2 seconds of content at 16Mb/s
-#define LIVESTREAM_BUFFER_SIZE	(4 MiB)
+// 8 megabytes is sufficient to store 4 seconds of content at 16Mb/s
+#define DVRSTREAM_BUFFER_SIZE	(8 MiB)
 
 // MENUHOOK_XXXXXX
 //
@@ -235,31 +235,15 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,		// bSupportsRecordingEdl
 };
 
-// g_capabilities_directtune (const)
-//
-// PVR implementation capability flags when 'direct tuning' is enabled
-static const PVR_ADDON_CAPABILITIES g_capabilities_directtune = {
-
-	true,		// bSupportsEPG
-	true,		// bSupportsTV
-	false,		// bSupportsRadio
-	true,		// bSupportsRecordings
-	false,		// bSupportsRecordingsUndelete
-	true,		// bSupportsTimers
-	true,		// bSupportsChannelGroups
-	false,		// bSupportsChannelScan
-	false,		// bSupportsChannelSettings
-	false,		// bHandlesInputStream
-	false,		// bHandlesDemuxing
-	false,		// bSupportsRecordingPlayCount
-	false,		// bSupportsLastPlayedPosition
-	false,		// bSupportsRecordingEdl
-};
-
 // g_connpool
 //
 // Global SQLite database connection pool instance
 static std::shared_ptr<connectionpool> g_connpool;
+
+// g_dvrstream
+//
+// DVR stream buffer instance
+static std::unique_ptr<dvrstream> g_dvrstream;
 
 // g_currentchannel
 //
@@ -270,11 +254,6 @@ static std::atomic<int> g_currentchannel{ -1 };
 //
 // Kodi GUI library callbacks
 static std::unique_ptr<CHelper_libKODI_guilib> g_gui;
-
-// g_livestream
-//
-// Global live stream buffer instance
-static livestream g_livestream(LIVESTREAM_BUFFER_SIZE);
 
 // g_pvr
 //
@@ -993,9 +972,9 @@ void ADDON_Announce(char const* flag, char const* sender, char const* message, v
 
 		try {
 
-			g_livestream.stop();				// Stop live stream if necessary
-			g_scheduler.stop();					// Stop the scheduler
-			g_scheduler.clear();				// Clear out any pending tasks
+			g_dvrstream.reset(nullptr);			// Destroy any active stream instance
+			g_scheduler.stop();					// Stop the task scheduler
+			g_scheduler.clear();				// Clear all tasks from the scheduler
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -1247,11 +1226,9 @@ void ADDON_Stop(void)
 	// Throw a message out to the Kodi log indicating that the add-on is being stopped
 	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopping");
 
-	g_livestream.stop();			// Stop the live stream
-	g_currentchannel.store(-1);		// Reset the current channel indicator
-
-	g_scheduler.stop();				// Stop the task scheduler
-	g_scheduler.clear();			// Clear all scheduled tasks
+	g_dvrstream.reset(nullptr);					// Destroy any active stream instance
+	g_scheduler.stop();							// Stop the task scheduler
+	g_scheduler.clear();						// Clear all tasks from the scheduler
 
 	// Throw a message out to the Kodi log indicating that the add-on has been stopped
 	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopped");
@@ -1271,10 +1248,9 @@ void ADDON_Destroy(void)
 	// Throw a message out to the Kodi log indicating that the add-on is being unloaded
 	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
 
-	// Stop any executing live stream data transfer as well as the task scheduler
-	g_livestream.stop();
-	g_scheduler.stop();
-	g_scheduler.clear();
+	g_dvrstream.reset(nullptr);					// Destroy any active stream instance
+	g_scheduler.stop();							// Stop the task scheduler
+	g_scheduler.clear();						// Clear all tasks from the scheduler
 	
 	// Reset the current channel indicator
 	g_currentchannel.store(-1);
@@ -1521,9 +1497,8 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		bool bvalue = *reinterpret_cast<bool const*>(value);
 		if(bvalue != g_settings.use_direct_tuning) {
 
-			// This setting is only read during ADDON_Create(); notify the user to restart Kodi
-			g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_INFO, g_addon->GetLocalizedString(30401));
-			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false", " -- restart required");
+			g_settings.use_direct_tuning = bvalue;
+			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -1628,10 +1603,7 @@ PVR_ERROR GetAddonCapabilities(PVR_ADDON_CAPABILITIES *capabilities)
 {
 	if(capabilities == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	// g_settings.use_direct_tuning does not require synchronization
-	if(g_settings.use_direct_tuning) *capabilities = g_capabilities_directtune;
-	else *capabilities = g_capabilities;
-	
+	*capabilities = g_capabilities;
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
@@ -2170,15 +2142,7 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 			if(item.channelname != nullptr) snprintf(channel.strChannelName, std::extent<decltype(channel.strChannelName)>::value, "%s", item.channelname);
 
 			// strInputFormat
-			//
-			// Only set if 'direct tuning' is disabled
-			if(!settings.use_direct_tuning) snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/mp2t");
-
-			// strStreamURL
-			//
-			// Only set if 'direct tuning' is enabled, this activates a hack in Kodi that will call GetLiveStreamURL
-			// to dynamically retrieve the URL for a live TV stream (may disappear in future Kodi releases)
-			if(settings.use_direct_tuning) snprintf(channel.strStreamURL, std::extent<decltype(channel.strStreamURL)>::value, "pvr://stream/%u", item.channelid.value);
+			snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/mp2t");
 
 			// strIconPath
 			if(item.iconurl != nullptr) snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
@@ -2343,10 +2307,6 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 			// iYear
 			recording.iYear = item.year;
-
-			// strStreamURL (required)
-			if(item.streamurl == nullptr) return;
-			snprintf(recording.strStreamURL, std::extent<decltype(recording.strStreamURL)>::value, "%s", item.streamurl);
 
 			// strDirectory
 			if(item.directory != nullptr) {
@@ -2958,19 +2918,13 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
 	char			channelstr[64];			// Channel number as a string
+	std::string		streamurl;				// Generated stream URL
 
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
-	// This function is not available when direct tuning is enabled
-	if(settings.use_direct_tuning) return false;
-
 	// If the user wants to pause discovery during live streaming, do so
 	if(settings.pause_discovery_while_streaming) g_scheduler.pause();
-
-	// Ensure that any active live stream is closed out and reset first
-	g_livestream.stop();
-	g_currentchannel.store(-1);
 
 	// The only interesting thing about PVR_CHANNEL is the channel id
 	union channelid channelid;
@@ -2985,13 +2939,29 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Generate the stream URL for the specified channel
-		std::string streamurl = get_stream_url(dbhandle, channelid);
+		// In direct-tuning mode a tuner must be selected from which to stream the content
+		if(settings.use_direct_tuning) {
+
+			// The available tuners for the channel are captured into a vector<>
+			std::vector<std::string> tuners;
+
+			// Create a collection of all the tuners that can possibly stream the requested channel
+			enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { tuners.emplace_back(item); });
+			if(tuners.size() == 0) throw string_exception("unable to find any possible tuners for channel ", channelstr);
+		
+			// Select an available tuner from the possibilities and generate the stream URL
+			std::string selected = select_tuner(tuners);
+			streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
+		}
+
+		// Otherwise generate the stream URL for the specified channel from the storage engine
+		else streamurl = get_stream_url(dbhandle, channelid);
+
 		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified channel");
 
 		// Start the new channel live stream
 		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-		g_livestream.start(streamurl.c_str());
+		g_dvrstream.reset(new dvrstream(DVRSTREAM_BUFFER_SIZE, streamurl.c_str()));
 
 		// Set the current channel number
 		g_currentchannel.store(channel.iUniqueId);
@@ -3014,11 +2984,10 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 void CloseLiveStream(void)
 {
-	// Always unpause the scheduler, it won't hurt to do this if it's not paused
+	// Ensure scheduler is running again, it may have been paused
 	g_scheduler.resume();
 
-	// Close out the live stream if it's active
-	try { g_livestream.stop(); g_currentchannel.store(-1); }
+	try { g_dvrstream.reset(nullptr); g_currentchannel.store(-1); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
 	catch(...) { return handle_generalexception(__func__); }
 }
@@ -3035,25 +3004,7 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	// This function is not available when direct tuning is enabled
-	if(g_settings.use_direct_tuning) return -1;
-
-	try { 
-
-		// Attempt to read up to the specified amount of data from the live stream buffer,
-		// waiting a ridiculously long time to avoid a zero-length read over poor connections
-		size_t read = g_livestream.read(buffer, size, 5000);
-
-		// Watch for reads that exceeds int::max in length, however unlikely that would be
-		if(read > static_cast<size_t>(std::numeric_limits<int>::max())) 
-			throw string_exception("livestream.read() returned more data than can be represented by data type int");
-
-		// Report a zero-length read in the log associated with the stream that failed
-		if(read == 0) log_error("zero-length read at position ", g_livestream.position());
-
-		return static_cast<int>(read);
-	}
-
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3070,19 +3021,7 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
-	// This function is not available when direct tuning is enabled
-	if(g_settings.use_direct_tuning) return -1;
-
-	try {
-
-		if(whence == SEEK_SET) { /* use position */ }
-		else if(whence == SEEK_CUR) position = g_livestream.position() + position;
-		else if(whence == SEEK_END) position = g_livestream.length() + position;
-
-		// Request the live stream seek and return the actual position it ends up at
-		return g_livestream.seek(position);
-	}
-
+	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3098,12 +3037,7 @@ long long SeekLiveStream(long long position, int whence)
 
 long long PositionLiveStream(void)
 {
-	// This function is not available when direct tuning is enabled
-	if(g_settings.use_direct_tuning) return -1;
-
-	// Return the current position within the live stream
-	try { return g_livestream.position(); }
-
+	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3119,12 +3053,7 @@ long long PositionLiveStream(void)
 
 long long LengthLiveStream(void)
 {
-	// This function is not available when direct tuning is enabled
-	if(g_settings.use_direct_tuning) return -1;
-
-	// Return the length of the current live stream
-	try { return g_livestream.length(); }
-
+	try { return (g_dvrstream) ? g_dvrstream->length() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3166,58 +3095,9 @@ PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS& /*status*/)
 //
 //	channel		- The channel to get the stream URL for
 
-char const* GetLiveStreamURL(PVR_CHANNEL const& channel)
+char const* GetLiveStreamURL(PVR_CHANNEL const& /*channel*/)
 {
-	static std::string		streamurl;			// The generated stream URL (static)
-	char					channelstr[64];		// Channel number as a string
-
-	streamurl.clear();			// streamurl is static and reused across invocations
-
-	// This function is only enabled if the addon was started with use_direct_tuning
-	if(!g_settings.use_direct_tuning) return "";
-
-	// The only interesting thing about PVR_CHANNEL is the channel id
-	union channelid channelid;
-	channelid.value = channel.iUniqueId;
-
-	// Generate a string version of the channel number for logging purposes
-	if(channelid.parts.subchannel == 0) snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d", channelid.parts.channel);
-	else snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
-
-	try {
-		
-		// The available tuners for the channel are captured into a vector<>
-		std::vector<std::string> tuners;
-
-		// Pull a database connection out from the connection pool
-		connectionpool::handle dbhandle(g_connpool);
-
-		// Create a collection of all the tuners that can possibly stream the requested channel
-		enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { tuners.emplace_back(item); });
-		if(tuners.size() == 0) throw string_exception("unable to find any possible tuners for channel ", channelstr);
-		
-		// Select an available tuner from all of the captured possibilities
-		std::string selected = select_tuner(tuners);
-		
-		// NOTE: There is an inherent race condition here; the tuner is intentionally not
-		// left locked by select_tuner() as the HTTP stream won't be able to use it, causing
-		// the attempt to tune the stream to fail.  I originally left the tuner locked until 
-		// right before returning to Kodi, but that wouldn't have solved anything and just 
-		// caused an additional (albeit minor) delay in getting the URL generated ...
-
-		// Generate the tuner-specific URL to send back to Kodi to tune the channel
-		streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
-		if(streamurl.length() == 0) throw string_exception("unable to generate streaming URL for channel ", channelstr);
-
-		// Set the current channel number
-		g_currentchannel.store(channel.iUniqueId);
-
-		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-		return streamurl.c_str();
-	}
-
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, ""); }
-	catch(...) { return handle_generalexception(__func__, ""); }
+	return "";
 }
 
 //---------------------------------------------------------------------------
@@ -3245,9 +3125,26 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 //
 //	recording	- The recording to open
 
-bool OpenRecordedStream(PVR_RECORDING const& /*recording*/)
+bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
-	return false;
+	try {
+
+		// Pull a database connection out from the connection pool
+		connectionpool::handle dbhandle(g_connpool);
+
+		// Generate the stream URL for the specified channel
+		std::string streamurl = get_recording_stream_url(dbhandle, recording.strRecordingId);
+		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified recording");
+
+		// Start the new recording stream
+		log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
+		g_dvrstream.reset(new dvrstream(DVRSTREAM_BUFFER_SIZE, streamurl.c_str()));
+
+		return true;
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	catch(...) { return handle_generalexception(__func__, false); }
 }
 
 //---------------------------------------------------------------------------
@@ -3261,6 +3158,12 @@ bool OpenRecordedStream(PVR_RECORDING const& /*recording*/)
 
 void CloseRecordedStream(void)
 {
+	// Ensure scheduler is running again, it may have been paused
+	g_scheduler.resume();
+
+	try { g_dvrstream.reset(nullptr); }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
+	catch(...) { return handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
@@ -3273,9 +3176,11 @@ void CloseRecordedStream(void)
 //	buffer		- The buffer to store the data in
 //	size		- The number of bytes to read into the buffer
 
-int ReadRecordedStream(unsigned char* /*buffer*/, unsigned int /*size*/)
+int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
-	return -1;
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3288,9 +3193,11 @@ int ReadRecordedStream(unsigned char* /*buffer*/, unsigned int /*size*/)
 //	position	- Delta within the stream to seek, relative to whence
 //	whence		- Starting position from which to apply the delta
 
-long long SeekRecordedStream(long long /*position*/, int /*whence*/)
+long long SeekRecordedStream(long long position, int whence)
 {
-	return -1;
+	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3304,7 +3211,9 @@ long long SeekRecordedStream(long long /*position*/, int /*whence*/)
 
 long long PositionRecordedStream(void)
 {
-	return -1;
+	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3318,7 +3227,9 @@ long long PositionRecordedStream(void)
 
 long long LengthRecordedStream(void)
 {
-	return -1;
+	try { return (g_dvrstream) ? g_dvrstream->length() : -1; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3413,8 +3324,9 @@ bool CanPauseStream(void)
 
 bool CanSeekStream(void)
 {
-	// Seek doesn't work against streams directly from the tuner device(s)
-	return (g_settings.use_direct_tuning == false);
+	try { return (g_dvrstream) ? g_dvrstream->canseek() : false; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	catch(...) { return handle_generalexception(__func__, false); }
 }
 
 //---------------------------------------------------------------------------
@@ -3528,6 +3440,7 @@ char const* GetBackendHostname(void)
 
 bool IsTimeshifting(void)
 {
+	// Detection of time-shifting is not currently supported
 	return false;
 }
 

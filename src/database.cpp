@@ -2164,6 +2164,51 @@ int get_recording_count(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// get_recording_stream_url
+//
+// Gets the playback URL for a recording
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	recordingid		- Recording identifier (command url)
+
+std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	std::string					streamurl;				// Generated stream URL
+	int							result;					// Result from SQLite function call
+
+	if((instance == nullptr) || (recordingid == nullptr)) return streamurl;
+
+	// Prepare a scalar result query to generate a stream URL for the specified recording
+	auto sql = "select json_extract(value, '$.PlayURL') as streamurl "
+		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') = ?1";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) streamurl.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return streamurl;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_recordingrule_count
 //
 // Gets the number of available recording rules in the database

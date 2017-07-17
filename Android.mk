@@ -95,13 +95,13 @@ LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/libhdhomerun/hdhomerun_video.c \
 	depends/sqlite/sqlite3.c \
-	src/condition_variable.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
+	src/dvrstream.cpp \
 	src/hdhr.cpp \
-	src/livestream.cpp \
 	src/pvr.cpp \
 	src/scheduler.cpp \
-	src/sqlite_exception.cpp
+	src/sqlite_exception.cpp \
+	src/wait_helpers.cpp
 	
 include $(BUILD_SHARED_LIBRARY)
