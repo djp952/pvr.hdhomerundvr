@@ -127,12 +127,7 @@
     <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/hdhr.o out/linux-x86_64/hdhomerun_channels.o out/linux-x86_64/hdhomerun_channelscan.o out/linux-x86_64/hdhomerun_control.o out/linux-x86_64/hdhomerun_debug.o out/linux-x86_64/hdhomerun_device.o out/linux-x86_64/hdhomerun_device_selector.o out/linux-x86_64/hdhomerun_discover.o out/linux-x86_64/hdhomerun_os_posix.o out/linux-x86_64/hdhomerun_pkt.o out/linux-x86_64/hdhomerun_sock_posix.o out/linux-x86_64/hdhomerun_video.o out/linux-x86_64/dvrstream.o out/linux-x86_64/pvr.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o depends/libcurl-nossl/linux-x86_64/lib/libcurl.a depends/libz/linux-x86_64/lib/libz.a depends/libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
-    <!-- linux-armel 
-    **
-    ** BROKEN : G++ 4.9 on armel doesn't support std::future, used by new dvrstream class
-    ** PUT BACK LEADING double-hyphen on the "version-script" argument when uncommenting
-    ** ZIPPER COMMAND below has also been commented out
-    **
+    <!-- linux-armel -->
     <MakeDir Directories="out\linux-armel" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armel/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armel/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
@@ -153,9 +148,8 @@
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-armel/pvr.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-armel/scheduler.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-armel/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) -shared -Wl,version-script=src/hdhomerundvr.map out/linux-armel/database.o out/linux-armel/dbextension.o out/linux-armel/hdhr.o out/linux-armel/hdhomerun_channels.o out/linux-armel/hdhomerun_channelscan.o out/linux-armel/hdhomerun_control.o out/linux-armel/hdhomerun_debug.o out/linux-armel/hdhomerun_device.o out/linux-armel/hdhomerun_device_selector.o out/linux-armel/hdhomerun_discover.o out/linux-armel/hdhomerun_os_posix.o out/linux-armel/hdhomerun_pkt.o out/linux-armel/hdhomerun_sock_posix.o out/linux-armel/hdhomerun_video.o out/linux-armel/dvrstream.o out/linux-armel/pvr.o out/linux-armel/scheduler.o out/linux-armel/sqlite3.o out/linux-armel/sqlite_exception.o depends/libcurl-nossl/linux-armel/lib/libcurl.a depends/libz/linux-armel/lib/libz.a depends/libuuid/linux-armel/lib/libuuid.a -ldl -lpthread -o out/linux-armel/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-armel/database.o out/linux-armel/dbextension.o out/linux-armel/hdhr.o out/linux-armel/hdhomerun_channels.o out/linux-armel/hdhomerun_channelscan.o out/linux-armel/hdhomerun_control.o out/linux-armel/hdhomerun_debug.o out/linux-armel/hdhomerun_device.o out/linux-armel/hdhomerun_device_selector.o out/linux-armel/hdhomerun_discover.o out/linux-armel/hdhomerun_os_posix.o out/linux-armel/hdhomerun_pkt.o out/linux-armel/hdhomerun_sock_posix.o out/linux-armel/hdhomerun_video.o out/linux-armel/dvrstream.o out/linux-armel/pvr.o out/linux-armel/scheduler.o out/linux-armel/sqlite3.o out/linux-armel/sqlite_exception.o depends/libcurl-nossl/linux-armel/lib/libcurl.a depends/libz/linux-armel/lib/libz.a depends/libuuid/linux-armel/lib/libuuid.a -ldl -lpthread -o out/linux-armel/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-armel/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-    -->
     
     <!-- linux-armhf -->
     <MakeDir Directories="out\linux-armhf" ContinueOnError="false"/>
@@ -257,7 +251,7 @@
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-windows-x64)&quot; manifest\windows-x64.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-i686)&quot; manifest\linux-i686.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-x86_64)&quot; manifest\linux-x86_64.manifest" ContinueOnError="false"/>
-    <!--<Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armel)&quot; manifest\linux-armel.manifest" ContinueOnError="false"/>-->
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armel)&quot; manifest\linux-armel.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armhf)&quot; manifest\linux-armhf.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-aarch64)&quot; manifest\linux-aarch64.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-raspbian-armhf)&quot; manifest\raspbian-armhf.manifest" ContinueOnError="false"/>

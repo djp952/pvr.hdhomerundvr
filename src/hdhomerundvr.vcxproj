@@ -111,7 +111,6 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -129,7 +128,6 @@
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
-    <PostBuildEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -153,7 +151,6 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -175,7 +172,6 @@
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
-    <PostBuildEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
