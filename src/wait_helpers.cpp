@@ -22,7 +22,6 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <future>
 #include <functional>
 #include <mutex>
 
@@ -44,22 +43,6 @@
 bool cv_wait_until_equals(std::condition_variable& cv, std::unique_lock<std::mutex>& lock, uint32_t timeoutms, std::function<bool(void)> predicate)
 {
 	return cv.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(timeoutms), predicate);
-}
-
-//---------------------------------------------------------------------------
-// future_wait_for (future<void>)
-//
-// Invokes future::wait_for() without _USE_32BIT_TIME_T defined to work
-// around a problem with the VC2013 implementation where time_t has to be 64-bit
-//
-// Arguments:
-//
-//	future			- std::future to wait for
-//	milliseconds	- Number of milliseconds to wait
-
-std::future_status future_wait_for(std::future<void>& future, uint32_t milliseconds)
-{
-	return future.wait_for(std::chrono::milliseconds(milliseconds));
 }
 
 //---------------------------------------------------------------------------

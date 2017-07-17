@@ -972,9 +972,9 @@ void ADDON_Announce(char const* flag, char const* sender, char const* message, v
 
 		try {
 
-			g_dvrstream.reset(nullptr);			// Destroy any active stream instance
-			g_scheduler.stop();					// Stop the task scheduler
-			g_scheduler.clear();				// Clear all tasks from the scheduler
+			g_dvrstream.reset();			// Destroy any active stream instance
+			g_scheduler.stop();				// Stop the task scheduler
+			g_scheduler.clear();			// Clear all tasks from the scheduler
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -1190,17 +1190,17 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 				}
 			
 				// Clean up the pvr callbacks instance on exception
-				catch(...) { g_pvr.reset(nullptr); throw; }
+				catch(...) { g_pvr.reset(); throw; }
 			}
 			
 			// Clean up the gui callbacks instance on exception
-			catch(...) { g_gui.reset(nullptr); throw; }
+			catch(...) { g_gui.reset(); throw; }
 		}
 
 		// Clean up the addon callbacks on exception; but log the error first -- once the callbacks
 		// are destroyed so is the ability to write to the Kodi log file
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); g_addon.reset(nullptr); throw; }
-		catch(...) { handle_generalexception(__func__); g_addon.reset(nullptr); throw; }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); g_addon.reset(); throw; }
+		catch(...) { handle_generalexception(__func__); g_addon.reset(); throw; }
 	}
 
 	// Anything that escapes above can't be logged at this point, just return ADDON_STATUS_PERMANENT_FAILURE
@@ -1226,7 +1226,7 @@ void ADDON_Stop(void)
 	// Throw a message out to the Kodi log indicating that the add-on is being stopped
 	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopping");
 
-	g_dvrstream.reset(nullptr);					// Destroy any active stream instance
+	g_dvrstream.reset();						// Destroy any active stream instance
 	g_scheduler.stop();							// Stop the task scheduler
 	g_scheduler.clear();						// Clear all tasks from the scheduler
 
@@ -1248,9 +1248,9 @@ void ADDON_Destroy(void)
 	// Throw a message out to the Kodi log indicating that the add-on is being unloaded
 	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
 
-	g_dvrstream.reset(nullptr);					// Destroy any active stream instance
-	g_scheduler.stop();							// Stop the task scheduler
-	g_scheduler.clear();						// Clear all tasks from the scheduler
+	g_dvrstream.reset();					// Destroy any active stream instance
+	g_scheduler.stop();						// Stop the task scheduler
+	g_scheduler.clear();					// Clear all tasks from the scheduler
 	
 	// Reset the current channel indicator
 	g_currentchannel.store(-1);
@@ -1262,12 +1262,12 @@ void ADDON_Destroy(void)
 	g_connpool.reset();
 
 	// Destroy the PVR and GUI callback instances
-	g_pvr.reset(nullptr);
-	g_gui.reset(nullptr);
+	g_pvr.reset();
+	g_gui.reset();
 
 	// Send a notice out to the Kodi log as late as possible and destroy the addon callbacks
 	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
-	g_addon.reset(nullptr);
+	g_addon.reset();
 
 	// Clean up libcurl
 	curl_global_cleanup();
@@ -2959,6 +2959,9 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified channel");
 
+		// Stop and destroy any existing stream instance before opening the new one
+		g_dvrstream.reset();
+
 		// Start the new channel live stream
 		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
 		g_dvrstream.reset(new dvrstream(DVRSTREAM_BUFFER_SIZE, streamurl.c_str()));
@@ -2987,7 +2990,16 @@ void CloseLiveStream(void)
 	// Ensure scheduler is running again, it may have been paused
 	g_scheduler.resume();
 
-	try { g_dvrstream.reset(nullptr); g_currentchannel.store(-1); }
+	try {
+		
+		// If the DVR stream is active, close it normally so exceptions are
+		// propagated before destroying it; destructor alone won't throw
+		if(g_dvrstream) g_dvrstream->close();
+		g_dvrstream.reset();
+
+		g_currentchannel.store(-1);					// No longer streaming a channel
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
 	catch(...) { return handle_generalexception(__func__); }
 }
@@ -3136,6 +3148,9 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		std::string streamurl = get_recording_stream_url(dbhandle, recording.strRecordingId);
 		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified recording");
 
+		// Stop and destroy any existing stream instance before opening the new one
+		g_dvrstream.reset();
+
 		// Start the new recording stream
 		log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
 		g_dvrstream.reset(new dvrstream(DVRSTREAM_BUFFER_SIZE, streamurl.c_str()));
@@ -3161,7 +3176,14 @@ void CloseRecordedStream(void)
 	// Ensure scheduler is running again, it may have been paused
 	g_scheduler.resume();
 
-	try { g_dvrstream.reset(nullptr); }
+	try {
+		
+		// If the DVR stream is active, close it normally so exceptions are
+		// propagated before destroying it; destructor alone won't throw
+		if(g_dvrstream) g_dvrstream->close();
+		g_dvrstream.reset();
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
 	catch(...) { return handle_generalexception(__func__); }
 }

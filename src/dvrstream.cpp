@@ -34,11 +34,6 @@
 
 #pragma warning(push, 4)
 
-// future_wait_for (wait_helpers.cpp)
-//
-// Helper function used to overcome problem with VC2013 and _USE_32BIT_TIME_T
-std::future_status future_wait_for(std::future<void>& future, uint32_t milliseconds);
-
 //---------------------------------------------------------------------------
 // dvrstream Constructor
 //
@@ -52,7 +47,7 @@ dvrstream::dvrstream(size_t buffersize, char const* url) : m_buffersize(align::u
 	if(url == nullptr) throw std::invalid_argument("url");
 
 	// Allocate the ring buffer using the 64KiB upward-aligned buffer size
-	m_buffer.reset(new uint8_t[m_buffersize]);
+	m_buffer = std::unique_ptr<uint8_t[]>(new uint8_t[m_buffersize]);
 	if(!m_buffer) throw std::bad_alloc();
 
 	// Initialize the CURL error string buffer to all nulls before starting up
@@ -79,11 +74,17 @@ dvrstream::dvrstream(size_t buffersize, char const* url) : m_buffersize(align::u
 		if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed");
 
 		// Create a new worker thread on which to perform the transfer operations and wait for it to start
-		m_worker = std::async(std::launch::async, &dvrstream::curl_transfer_func, this, 0ULL);
+		m_worker = std::thread(&dvrstream::curl_transfer_func, this, 0ULL);
 		m_started.wait_until_equals(true);
 
 		// If the transfer thread failed to initiate the data transfer throw an exception
-		if(m_curlresult != CURLE_OK) throw string_exception(__func__, ": failed to open url ", url, ": ", m_curlerr);
+		if(m_curlresult != CURLE_OK) {
+		
+			m_stop.store(true);				// Signal worker to stop (shouldn't be running)
+			m_worker.join();				// Wait for the worker thread to stop
+
+			throw string_exception(__func__, ": failed to open url ", url, ": ", m_curlerr);
+		}
 	}
 
 	// Clean up the CURL easy interface object on exception
@@ -129,8 +130,10 @@ bool dvrstream::canseek(void) const
 
 void dvrstream::close(void)
 {
-	m_stop.store(true);				// Signal worker thread to stop
-	m_worker.wait();				// Wait for it to actually stop
+	if(!m_worker.joinable()) return;	// Thread is not running
+
+	m_stop.store(true);					// Signal worker thread to stop
+	m_worker.join();					// Wait for it to actually stop
 }
 
 //---------------------------------------------------------------------------
@@ -242,6 +245,10 @@ void dvrstream::curl_transfer_func(unsigned long long position)
 	// If curl_easy_perform fails, m_started will never be signaled by the
 	// write callback; signal it now to release any waiting threads
 	m_started = true;
+
+	// The read() function needs to know when the data transfer has stopped
+	// in order to stop spinning waiting for data to be written
+	m_stopped = true;
 }
 
 //---------------------------------------------------------------------------
@@ -376,7 +383,7 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 
 		// Test the stream worker thread for termination, if it has terminated perform one
 		// additional test of the head position to prevent a race condition
-		if(future_wait_for(m_worker, 1) == std::future_status::ready) {
+		if(m_stopped.wait_until_equals(true, 1)) {
 
 			head = m_bufferhead.load();			// Reload the head position
 			if(tail == head) return 0;			// Test it one more time
@@ -436,9 +443,12 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 	// The lock argument is necessary to ensure the caller owns it before proceeding
 	if(!lock.owns_lock()) throw string_exception(__func__, ": caller does not own the unique_lock<>");
 
-	// Stop the existing data transfer operation
-	m_stop.store(true);
-	m_worker.wait();
+	// Stop the existing data transfer operation if necessary
+	if(m_worker.joinable()) {
+
+		m_stop.store(true);				// Signal the thread to stop the transfer
+		m_worker.join();				// Wait for the thread to stop
+	}
 
 	// Reinitialize the result code CURL error buffer
 	m_curlresult = CURLE_OK;
@@ -446,6 +456,7 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 
 	// Reinitialize the stream control flags
 	m_started = false;
+	m_stopped = false;
 	m_paused.store(false);
 	m_stop.store(false);
 
@@ -458,12 +469,17 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 	m_buffertail.store(0);
 
 	// Create a new worker thread on which to perform the transfer operations and wait for it to start
-	m_worker = std::async(std::launch::async, &dvrstream::curl_transfer_func, this, position);
+	m_worker = std::thread(&dvrstream::curl_transfer_func, this, position);
 	m_started.wait_until_equals(true);
 
 	// If the transfer thread failed to initiate the data transfer throw an exception
-	if(m_curlresult != CURLE_OK) 
+	if(m_curlresult != CURLE_OK) {
+
+		m_stop.store(true);				// Signal worker to stop (shouldn't be running)
+		m_worker.join();				// Wait for the worker thread to stop
+
 		throw string_exception(__func__, ": failed to restart transfer at position ", position, ": ", m_curlerr);
+	}
 
 	// Return the new starting position of the stream, which is not necessarily
 	// going to be at the desired seek position

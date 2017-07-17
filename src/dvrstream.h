@@ -28,7 +28,6 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -130,7 +129,7 @@ private:
 
 	// DATA TRANSFER
 	//
-	std::future<void>				m_worker;					// Data transfer thread
+	std::thread						m_worker;					// Data transfer thread
 	CURL*							m_curl = nullptr;			// CURL transfer object
 	CURLcode						m_curlresult = CURLE_OK;	// CURL transfer result
 	char							m_curlerr[CURL_ERROR_SIZE];	// CURL error message
@@ -138,6 +137,7 @@ private:
 	// STREAM CONTROL
 	//
 	scalar_condition<bool>			m_started{false};			// Stream started condition
+	scalar_condition<bool>			m_stopped{false};			// Stream stopped condition
 	std::atomic<bool>				m_stop{false};				// Flag to stop the transfer
 	std::atomic<bool>				m_paused{false};			// Flag if transfer is paused
 
