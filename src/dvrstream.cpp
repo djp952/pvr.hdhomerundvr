@@ -213,7 +213,6 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 	dvrstream* instance = reinterpret_cast<dvrstream*>(context);
 
 	// Accept-Ranges: bytes
-	//
 	if((cb >= ACCEPT_RANGES_HEADER_LEN) && (strncmp(ACCEPT_RANGES_HEADER, data, ACCEPT_RANGES_HEADER_LEN) == 0)) {
 
 		instance->m_canseek = true;				// Only care if header is present
@@ -222,7 +221,6 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 	// Content-Range: bytes xxxxxx-yyyyyy/zzzzzz
 	// Content-Range: bytes xxxxxx-yyyyyy/*
 	// Content-Range: bytes */zzzzzz
-	//
 	else if((cb >= CONTENT_RANGE_HEADER_LEN) && (strncmp(CONTENT_RANGE_HEADER, data, CONTENT_RANGE_HEADER_LEN) == 0)) {
 
 		unsigned long long start = 0;					// Parsed range start
@@ -400,8 +398,7 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 		uint8_t* packet = buffer + (index * MPEGTS_PACKET_LENGTH);
 		uint8_t* current = packet;
 
-		// READ TRANSPORT STREAM HEADER
-		//
+		// Read relevant values from the transport stream header
 		uint32_t ts_header = read_be32(current);
 		uint8_t sync = (ts_header & 0xFF000000) >> 24;
 		bool pusi = (ts_header & 0x00400000) == 0x00400000;
@@ -409,18 +406,15 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
 		bool payload = (ts_header & 0x00000010) == 0x00000010;
 
-		// CHECK SYNC BYTE
-		//
+		// Check the sync byte, should always be 0x47
 		assert(sync == 0x47);
 		if(sync != 0x47) continue;
 
-		// SKIP TO PLAYLOAD
-		//
-		current += sizeof(uint32_t);
+		// Skip over the header and any adaptation bytes
+		current += 4U;
 		if(adaptation) current += read_be8(current);
 
-		// PAT
-		//
+		// >> PAT
 		if((pid == 0x0000) && (payload)) {
 
 			// Align the payload using the pointer provided when pusi is set
@@ -437,20 +431,18 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 				uint16_t pmt_program = read_be16(current);
 				if(pmt_program != 0) m_pmtpids.insert(read_be16(current + 2U) & 0x1FFF);
 
-				current += sizeof(uint32_t);		// Move to the next section
+				current += 4U;				// Move to the next section
 			}
 		}
 
-		// PMT
-		//
+		// >> PMT
 		if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
 
 			// Get the length of the entire payload to be sure we don't exceed it
 			size_t payloadlen = MPEGTS_PACKET_LENGTH - (current - packet);
 
-			// Get the address of the current payload pointer and align to it
-			uint8_t* pointer = current;
-			current += (*pointer + 1U);
+			uint8_t* pointer = current;			// Get address of current pointer
+			current += (*pointer + 1U);			// Align offset with the pointer
 
 			// FILTER: Skip over 0xC0 (SCTE Program Information Message) entries followed immediately
 			// by 0x02 (Program Map Table) entries by adjusting the payload pointer and overwriting 0xC0
@@ -465,7 +457,8 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 				// pointer to align to the 0x02 entry and overwrite the 0xC0 entry with filler
 				if(read_be8(current + 3U + length) == 0x02) {
 
-					*pointer = 3U + static_cast<uint8_t>(length & 0xFF);
+					// Take into account any existing pointer value when adjusting it
+					*pointer += (3U + static_cast<uint8_t>(length & 0xFF));
 					memset(current, 0xFF, 3U + length);
 				}
 			}
