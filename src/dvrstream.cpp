@@ -390,20 +390,19 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 
 void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t* buffer, size_t count)
 {
-	uint8_t*			packet = buffer;				// Pointer to the current packet
-
 	// The lock argument is necessary to ensure the caller owns it before proceeding
 	if(!lock.owns_lock()) throw string_exception(__func__, ": caller does not own the unique_lock<>");
 
 	// Iterate over all of the packets provided in the buffer
 	for(size_t index = 0; index < count; index++) {
 
-		// Set up the pointer to the start of the packet
-		packet = buffer + (index * MPEGTS_PACKET_LENGTH);
+		// Set up the pointer to the start of the packet and a working pointer
+		uint8_t* packet = buffer + (index * MPEGTS_PACKET_LENGTH);
+		uint8_t* current = packet;
 
 		// READ TRANSPORT STREAM HEADER
 		//
-		uint32_t ts_header = read_be32(packet);
+		uint32_t ts_header = read_be32(current);
 		uint8_t sync = (ts_header & 0xFF000000) >> 24;
 		bool pusi = (ts_header & 0x00400000) == 0x00400000;
 		uint16_t pid = static_cast<uint16_t>((ts_header & 0x001FFF00) >> 8);
@@ -417,28 +416,28 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 
 		// SKIP TO PLAYLOAD
 		//
-		packet += sizeof(uint32_t);
-		if(adaptation) packet += read_be8(packet);
+		current += sizeof(uint32_t);
+		if(adaptation) current += read_be8(current);
 
 		// PAT
 		//
 		if((pid == 0x0000) && (payload)) {
 
 			// Align the payload using the pointer provided when pusi is set
-			if(pusi) packet += read_be8(packet) + 1;
+			if(pusi) current += read_be8(current) + 1U;
 
 			// Get the first and last section indices and skip to the section data
-			uint8_t firstsection = read_be8(packet + 6);
-			uint8_t lastsection = read_be8(packet + 7);
-			packet += 8;
+			uint8_t firstsection = read_be8(current + 6U);
+			uint8_t lastsection = read_be8(current + 7U);
+			current += 8U;
 
 			// Iterate over all the sections and add the PMT program ids to the set<>
 			for(uint8_t section = firstsection; section <= lastsection; section++) {
 
-				uint16_t pmt_program = read_be16(packet);
-				if(pmt_program != 0) m_pmtpids.insert(read_be16(packet + 2) & 0x1FFF);
+				uint16_t pmt_program = read_be16(current);
+				if(pmt_program != 0) m_pmtpids.insert(read_be16(current + 2U) & 0x1FFF);
 
-				packet += sizeof(uint32_t);		// Move to the next section
+				current += sizeof(uint32_t);		// Move to the next section
 			}
 		}
 
@@ -446,27 +445,28 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 		//
 		if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
 
+			// Get the length of the entire payload to be sure we don't exceed it
+			size_t payloadlen = MPEGTS_PACKET_LENGTH - (current - packet);
+
 			// Get the address of the current payload pointer and align to it
-			uint8_t* pointer = packet;
-			packet += (*pointer + 1);
+			uint8_t* pointer = current;
+			current += (*pointer + 1U);
 
 			// FILTER: Skip over 0xC0 (SCTE Program Information Message) entries followed immediately
 			// by 0x02 (Program Map Table) entries by adjusting the payload pointer and overwriting 0xC0
-			if(read_be8(packet) == 0xC0) {
+			if(read_be8(current) == 0xC0) {
 
-				// Acquire the length of the 0xC0 entry
-				uint16_t length = read_be16(packet + 1) & 0x3FF;
-
-				//
-				// TODO: The length cannot specify a position outside of this packet
-				//
+				// Acquire the length of the 0xC0 entry, if it exceeds the length of the payload give
+				// up -- the + 4 bytes is for the pointer (1), the table id (1) and the length (2)
+				uint16_t length = read_be16(current + 1) & 0x3FF;
+				if((length + 4U) > payloadlen) break;
 
 				// If the 0xC0 entry is immediately followed by a 0x02 entry, adjust the payload
 				// pointer to align to the 0x02 entry and overwrite the 0xC0 entry with filler
-				if(read_be8(packet + 3 + length) == 0x02) {
+				if(read_be8(current + 3U + length) == 0x02) {
 
-					*pointer = 3 + static_cast<uint8_t>(length & 0xFF);
-					memset(packet, 0xFF, 3 + length);
+					*pointer = 3U + static_cast<uint8_t>(length & 0xFF);
+					memset(current, 0xFF, 3U + length);
 				}
 			}
 		}
