@@ -2942,7 +2942,8 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+	// todo: make the wait timeout configurable
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size, 2500)) : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }

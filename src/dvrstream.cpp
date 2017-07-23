@@ -34,6 +34,58 @@
 #pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
+// read_be8
+//
+// Reads a big-endian 8 bit value from memory
+//
+// Arguments:
+//
+//	p		- Pointer to the data to be read
+
+inline uint8_t read_be8(uint8_t const* ptr)
+{
+	assert(ptr != nullptr);
+	
+	return *ptr;
+}
+
+//---------------------------------------------------------------------------
+// read_be16
+//
+// Reads a big-endian 16 bit value from memory
+//
+// Arguments:
+//
+//	p		- Pointer to the data to be read
+
+inline uint16_t read_be16(uint8_t const* ptr)
+{
+	assert(ptr != nullptr);
+
+	uint16_t val = read_be8(ptr) << 8;
+	val |= read_be8(ptr + 1);
+	return val;
+}
+
+//---------------------------------------------------------------------------
+// read_be32
+//
+// Reads a big-endian 32 bit value from memory
+//
+// Arguments:
+//
+//	ptr		- Pointer to the data to be read
+
+inline uint32_t read_be32(uint8_t const* ptr)
+{
+	assert(ptr != nullptr);
+
+	uint32_t val = read_be16(ptr) << 16;
+	val |= read_be16(ptr + 2);
+	return val;
+}
+
+//---------------------------------------------------------------------------
 // dvrstream Constructor
 //
 // Arguments:
@@ -245,9 +297,10 @@ void dvrstream::curl_transfer_func(unsigned long long position)
 	// write callback; signal it now to release any waiting threads
 	m_started = true;
 
-	// The read() function needs to know when the data transfer has stopped
-	// in order to stop spinning waiting for data to be written
-	m_stopped = true;
+	// When the thread has completed, set the stopped flag and signal the condvar
+	// to release any in-progress read() that is waiting for data
+	m_stopped.store(true);
+	m_cv.notify_all();
 }
 
 //---------------------------------------------------------------------------
@@ -304,6 +357,7 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 
 	assert(byteswritten == (size * count));		// Verify all bytes were written
 	instance->m_bufferhead.store(head);			// Modify atomic<> head position
+	instance->m_cv.notify_all();				// Data has been written
 
 	// Increment the number of bytes seen as part of this transfer
 	instance->m_writepos += byteswritten;
@@ -321,6 +375,103 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 	instance->m_started = true;
 
 	return byteswritten;
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::filter_packets (private)
+//
+// Applies an mpeg-ts packet filter against the provided packets
+//
+// Arguments:
+//
+//	lock		- Reference to unique_lock<> that must be owned
+//	buffer		- Pointer to the mpeg-ts packets to filter
+//	count		- Number of mpeg-ts packets provided in the buffer
+
+void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t* buffer, size_t count)
+{
+	uint8_t*			packet = buffer;				// Pointer to the current packet
+
+	// The lock argument is necessary to ensure the caller owns it before proceeding
+	if(!lock.owns_lock()) throw string_exception(__func__, ": caller does not own the unique_lock<>");
+
+	// Iterate over all of the packets provided in the buffer
+	for(size_t index = 0; index < count; index++) {
+
+		// Set up the pointer to the start of the packet
+		packet = buffer + (index * MPEGTS_PACKET_LENGTH);
+
+		// READ TRANSPORT STREAM HEADER
+		//
+		uint32_t ts_header = read_be32(packet);
+		uint8_t sync = (ts_header & 0xFF000000) >> 24;
+		bool pusi = (ts_header & 0x00400000) == 0x00400000;
+		uint16_t pid = static_cast<uint16_t>((ts_header & 0x001FFF00) >> 8);
+		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
+		bool payload = (ts_header & 0x00000010) == 0x00000010;
+
+		// CHECK SYNC BYTE
+		//
+		assert(sync == 0x47);
+		if(sync != 0x47) continue;
+
+		// SKIP TO PLAYLOAD
+		//
+		packet += sizeof(uint32_t);
+		if(adaptation) packet += read_be8(packet);
+
+		// PAT
+		//
+		if((pid == 0x0000) && (payload)) {
+
+			// Align the payload using the pointer provided when pusi is set
+			if(pusi) packet += read_be8(packet) + 1;
+
+			// Get the first and last section indices and skip to the section data
+			uint8_t firstsection = read_be8(packet + 6);
+			uint8_t lastsection = read_be8(packet + 7);
+			packet += 8;
+
+			// Iterate over all the sections and add the PMT program ids to the set<>
+			for(uint8_t section = firstsection; section <= lastsection; section++) {
+
+				uint16_t pmt_program = read_be16(packet);
+				if(pmt_program != 0) m_pmtpids.insert(read_be16(packet + 2) & 0x1FFF);
+
+				packet += sizeof(uint32_t);		// Move to the next section
+			}
+		}
+
+		// PMT
+		//
+		if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
+
+			// Get the address of the current payload pointer and align to it
+			uint8_t* pointer = packet;
+			packet += (*pointer + 1);
+
+			// FILTER: Skip over 0xC0 (SCTE Program Information Message) entries followed immediately
+			// by 0x02 (Program Map Table) entries by adjusting the payload pointer and overwriting 0xC0
+			if(read_be8(packet) == 0xC0) {
+
+				// Acquire the length of the 0xC0 entry
+				uint16_t length = read_be16(packet + 1) & 0x3FF;
+
+				//
+				// TODO: The length cannot specify a position outside of this packet
+				//
+
+				// If the 0xC0 entry is immediately followed by a 0x02 entry, adjust the payload
+				// pointer to align to the 0x02 entry and overwrite the 0xC0 entry with filler
+				if(read_be8(packet + length) == 0x02) {
+
+					*pointer = 3 + static_cast<uint8_t>(length & 0xFF);
+					memset(packet, 0xFF, 3 + length);
+				}
+			}
+		}
+
+	}	// for(index ...
 }
 
 //---------------------------------------------------------------------------
@@ -364,35 +515,68 @@ unsigned long long dvrstream::position(void) const
 
 size_t dvrstream::read(uint8_t* buffer, size_t count)
 {
+	return read(buffer, count, DEFAULT_READ_TIMEOUT_MS);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::read
+//
+// Reads data from the live stream
+//
+// Arguments:
+//
+//	buffer		- Buffer to receive the live stream data
+//	count		- Size of the destination buffer in bytes
+//	timeoutms	- Maximum number of milliseconds to wait before failing
+
+size_t dvrstream::read(uint8_t* buffer, size_t count, unsigned int timeoutms)
+{
 	size_t				bytesread = 0;			// Total bytes actually read
 	size_t				head = 0;				// Current head position
 	size_t				tail = 0;				// Current tail position
+	size_t				available = 0;			// Available bytes to read
+	bool				stopped = false;		// Flag if data transfer has stopped
+
+	std::unique_lock<std::mutex> lock(m_lock);
 
 	if(buffer == nullptr) throw std::invalid_argument("buffer");
 	if(count > m_buffersize) throw std::invalid_argument("count");
 	if(count == 0) return 0;
 
-	std::unique_lock<std::mutex> lock(m_lock);
+	// Wait up to the timeout for there to be at least one single full mpeg-ts packet available in 
+	// the buffer, if there is not the condvar will be triggered on a write or a thread stop.
+	if(m_cv.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(timeoutms), [&]() -> bool { 
 
-	tail = m_buffertail.load();				// Copy the atomic<> tail position
-	head = m_bufferhead.load();				// Copy the atomic<> head position
+		tail = m_buffertail.load();				// Copy the atomic<> tail position
+		head = m_bufferhead.load();				// Copy the atomic<> head position
+		stopped = m_stopped.load();				// Copy the atomic<> stopped flag
 
-	// Spin until data becomes available in the ring buffer or the stream has stopped
-	while(tail == head) {
-
-		// Test the stream worker thread for termination, if it has terminated perform one
-		// additional test of the head position to prevent a race condition
-		if(m_stopped.wait_until_equals(true, 1)) {
-
-			head = m_bufferhead.load();			// Reload the head position
-			if(tail == head) return 0;			// Test it one more time
-		}
+		// Calculate the amount of space available in the buffer
+		available = (tail > head) ? (m_buffersize - tail) + head : head - tail;
 		
-		else head = m_bufferhead.load();		// Reload the head and test again
+		// The result from the predicate is true if enough data or stopped
+		return ((available >= MPEGTS_PACKET_LENGTH) || (stopped));
+	
+	}) == false) return 0;
+
+	// If the wait loop was broken by the worker thread stopping, make one more pass
+	// to ensure that no additional data was first written by the thread
+	if((available < MPEGTS_PACKET_LENGTH) && (stopped)) {
+
+		tail = m_buffertail.load();				// Copy the atomic<> tail position
+		head = m_bufferhead.load();				// Copy the atomic<> head position
+
+		// Calculate the amount of space available in the buffer
+		available = (tail > head) ? (m_buffersize - tail) + head : head - tail;
 	}
 
-	// Read until the buffer has been exhausted or the desired count has been reached
-	while((tail != head) && (count)) {
+	// Take the smaller of what the caller wants and the available data, and then
+	// align that down to an mpeg-ts packet boundary; if it aligns to zero we're done
+	count = align::down(std::min(available, count), MPEGTS_PACKET_LENGTH);
+	if(count == 0) return 0;
+
+	// Copy the calculated amount of data into the destination buffer
+	while(count) {
 
 		// If the tail is behind the head linearly, take the data between them otherwise
 		// take the data between the end of the buffer and the tail
@@ -406,6 +590,9 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 		// If the tail has reached the end of the buffer, reset it back to zero
 		if(tail >= m_buffersize) tail = 0;
 	}
+
+	// Apply the mpeg-ts packet filter to all packets read from the ring buffer
+	filter_packets(lock, buffer, (bytesread / MPEGTS_PACKET_LENGTH));
 
 	m_buffertail.store(tail);				// Modify atomic<> tail position
 	m_readpos += bytesread;					// Update the reader position
@@ -455,7 +642,7 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 
 	// Reinitialize the stream control flags
 	m_started = false;
-	m_stopped = false;
+	m_stopped.store(false);
 	m_paused.store(false);
 	m_stop.store(false);
 
@@ -511,6 +698,9 @@ unsigned long long dvrstream::seek(long long position, int whence)
 	else if(whence == SEEK_END) newposition = std::min(static_cast<unsigned long long>(std::max(length + position, 0ULL)), length - 1);
 	else throw std::invalid_argument("whence");
 
+	// The new position must be aligned at an mpeg-ts packet boundary
+	newposition = align::down(newposition, MPEGTS_PACKET_LENGTH);
+
 	// If the calculated position matches the current position there is nothing to do
 	if(newposition == m_readpos) return m_readpos;
 
@@ -540,7 +730,7 @@ unsigned long long dvrstream::seek(long long position, int whence)
 		return newposition;								// Successful ring buffer seek
 	}
 
-	// Ring buffer seek was unsuccessful, release the writer lock
+	// Ring buffer seek was unsuccessful, release the lock
 	writelock.unlock();
 
 	// Attempt to restart the stream at the calculated position
