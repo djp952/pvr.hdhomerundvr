@@ -30,6 +30,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <thread>
 #include "scalar_condition.h"
 
@@ -77,6 +78,7 @@ public:
 	//
 	// Reads any available data from the stream
 	size_t read(uint8_t* buffer, size_t count);
+	size_t read(uint8_t* buffer, size_t count, unsigned int timeoutms);
 
 	// realtime
 	//
@@ -92,6 +94,16 @@ private:
 
 	dvrstream(dvrstream const&)=delete;
 	dvrstream& operator=(dvrstream const&)=delete;
+
+	// DEFAULT_READ_TIMEOUT_MS
+	//
+	// Default amount of time for a read operation to succeed
+	static const unsigned int DEFAULT_READ_TIMEOUT_MS = 2500;
+
+	// MPEGTS_PACKET_LENGTH
+	//
+	// Length of a single mpeg-ts data packet
+	static const size_t MPEGTS_PACKET_LENGTH = 188;
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -116,6 +128,11 @@ private:
 	// libcurl callback to write received data into the buffer
 	static size_t curl_write(void const* data, size_t size, size_t count, void* context);
 
+	// filter_packets
+	//
+	// Implements the transport stream packet filter
+	void filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t* buffer, size_t count);
+
 	// restart
 	//
 	// Restarts the stream at the specified position
@@ -124,8 +141,9 @@ private:
 	//-----------------------------------------------------------------------
 	// Member Variables
 
-	mutable std::mutex				m_lock;						// Consumer synchronization
-	mutable std::mutex				m_writelock;				// Producer synchronization
+	mutable std::mutex				m_lock;						// Synchronization object
+	std::condition_variable			m_cv;						// Transfer event condvar
+	std::mutex						m_writelock;				// Seek/write sync object
 
 	// DATA TRANSFER
 	//
@@ -137,9 +155,9 @@ private:
 	// STREAM CONTROL
 	//
 	scalar_condition<bool>			m_started{false};			// Stream started condition
-	scalar_condition<bool>			m_stopped{false};			// Stream stopped condition
 	std::atomic<bool>				m_stop{false};				// Flag to stop the transfer
 	std::atomic<bool>				m_paused{false};			// Flag if transfer is paused
+	std::atomic<bool>				m_stopped{false};			// Data transfer stopped flag
 
 	// STREAM INFORMATION
 	//
@@ -156,6 +174,10 @@ private:
 	std::unique_ptr<uint8_t[]>		m_buffer;					// Ring buffer stroage
 	std::atomic<size_t>				m_bufferhead{0};			// Head (write) buffer position
 	std::atomic<size_t>				m_buffertail{0};			// Tail (read) buffer position
+
+	// PACKET FILTER
+	//
+	std::set<uint16_t>				m_pmtpids;					// Set of PMT program ids
 };
 
 //-----------------------------------------------------------------------------
