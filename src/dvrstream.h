@@ -78,7 +78,8 @@ public:
 	//
 	// Reads any available data from the stream
 	size_t read(uint8_t* buffer, size_t count);
-	size_t read(uint8_t* buffer, size_t count, unsigned int timeoutms);
+	size_t read(uint8_t* buffer, size_t count, size_t mincount);
+	size_t read(uint8_t* buffer, size_t count, size_t mincount, unsigned int timeoutms);
 
 	// realtime
 	//
@@ -95,15 +96,20 @@ private:
 	dvrstream(dvrstream const&)=delete;
 	dvrstream& operator=(dvrstream const&)=delete;
 
-	// DEFAULT_READ_TIMEOUT_MS
-	//
-	// Default amount of time for a read operation to succeed
-	static const unsigned int DEFAULT_READ_TIMEOUT_MS = 2500;
-
 	// MPEGTS_PACKET_LENGTH
 	//
 	// Length of a single mpeg-ts data packet
 	static const size_t MPEGTS_PACKET_LENGTH = 188;
+
+	// DEFAULT_READ_MIN
+	//
+	// Default minimum amount of data to return from a read request
+	static const size_t DEFAULT_READ_MINCOUNT = MPEGTS_PACKET_LENGTH;
+
+	// DEFAULT_READ_TIMEOUT_MS
+	//
+	// Default amount of time for a read operation to succeed
+	static const unsigned int DEFAULT_READ_TIMEOUT_MS = 2500;
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions

@@ -463,7 +463,7 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 
 				// If the 0xC0 entry is immediately followed by a 0x02 entry, adjust the payload
 				// pointer to align to the 0x02 entry and overwrite the 0xC0 entry with filler
-				if(read_be8(packet + length) == 0x02) {
+				if(read_be8(packet + 3 + length) == 0x02) {
 
 					*pointer = 3 + static_cast<uint8_t>(length & 0xFF);
 					memset(packet, 0xFF, 3 + length);
@@ -515,7 +515,7 @@ unsigned long long dvrstream::position(void) const
 
 size_t dvrstream::read(uint8_t* buffer, size_t count)
 {
-	return read(buffer, count, DEFAULT_READ_TIMEOUT_MS);
+	return read(buffer, count, DEFAULT_READ_MINCOUNT, DEFAULT_READ_TIMEOUT_MS);
 }
 
 //---------------------------------------------------------------------------
@@ -527,15 +527,36 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 //
 //	buffer		- Buffer to receive the live stream data
 //	count		- Size of the destination buffer in bytes
+//	mincount	- Minimum number of bytes to return from the read
+
+size_t dvrstream::read(uint8_t* buffer, size_t count, size_t mincount)
+{
+	return read(buffer, count, mincount, DEFAULT_READ_TIMEOUT_MS);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::read
+//
+// Reads data from the live stream
+//
+// Arguments:
+//
+//	buffer		- Buffer to receive the live stream data
+//	count		- Size of the destination buffer in bytes
+//	mincount	- Minimum number of bytes to return from the read
 //	timeoutms	- Maximum number of milliseconds to wait before failing
 
-size_t dvrstream::read(uint8_t* buffer, size_t count, unsigned int timeoutms)
+size_t dvrstream::read(uint8_t* buffer, size_t count, size_t mincount, unsigned int timeoutms)
 {
 	size_t				bytesread = 0;			// Total bytes actually read
 	size_t				head = 0;				// Current head position
 	size_t				tail = 0;				// Current tail position
 	size_t				available = 0;			// Available bytes to read
 	bool				stopped = false;		// Flag if data transfer has stopped
+
+	// Align the minimum count down to the nearest complete mpeg-ts packet, setting
+	// an absolute minimum of one full packet
+	mincount = std::max(align::down(mincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH);
 
 	std::unique_lock<std::mutex> lock(m_lock);
 
@@ -555,13 +576,13 @@ size_t dvrstream::read(uint8_t* buffer, size_t count, unsigned int timeoutms)
 		available = (tail > head) ? (m_buffersize - tail) + head : head - tail;
 		
 		// The result from the predicate is true if enough data or stopped
-		return ((available >= MPEGTS_PACKET_LENGTH) || (stopped));
+		return ((available >= mincount) || (stopped));
 	
 	}) == false) return 0;
 
 	// If the wait loop was broken by the worker thread stopping, make one more pass
 	// to ensure that no additional data was first written by the thread
-	if((available < MPEGTS_PACKET_LENGTH) && (stopped)) {
+	if((available < mincount) && (stopped)) {
 
 		tail = m_buffertail.load();				// Copy the atomic<> tail position
 		head = m_bufferhead.load();				// Copy the atomic<> head position
