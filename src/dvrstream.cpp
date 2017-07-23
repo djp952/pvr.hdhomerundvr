@@ -543,9 +543,8 @@ size_t dvrstream::read(uint8_t* buffer, size_t count, unsigned int timeoutms)
 	if(count > m_buffersize) throw std::invalid_argument("count");
 	if(count == 0) return 0;
 
-	// Wait up to 5 seconds for there to be at least one single full mpeg-ts packet available in 
-	// the buffer, if there is not the condvar will be triggered on a write or a thread stop.  If
-	// the timeout value 
+	// Wait up to the timeout for there to be at least one single full mpeg-ts packet available in 
+	// the buffer, if there is not the condvar will be triggered on a write or a thread stop.
 	if(m_cv.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(timeoutms), [&]() -> bool { 
 
 		tail = m_buffertail.load();				// Copy the atomic<> tail position
