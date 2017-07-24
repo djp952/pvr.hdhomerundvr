@@ -86,6 +86,26 @@ inline uint32_t read_be32(uint8_t const* ptr)
 	return val;
 }
 
+// dvrstream::MPEGTS_PACKET_LENGTH (static)
+//
+// Length of a single mpeg-ts data packet
+size_t const dvrstream::MPEGTS_PACKET_LENGTH = 188;
+
+// DEFAULT_READ_MIN (static)
+//
+// Default minimum amount of data to return from a read request
+size_t const dvrstream::DEFAULT_READ_MINCOUNT = (1 KiB);
+
+// DEFAULT_READ_TIMEOUT_MS (static)
+//
+// Default amount of time for a read operation to succeed
+unsigned int const dvrstream::DEFAULT_READ_TIMEOUT_MS = 2500;
+
+// DEFAULT_RINGBUFFER_SIZE (static)
+//
+// Default ring buffer size, in bytes
+size_t const dvrstream::DEFAULT_RINGBUFFER_SIZE = (4 MiB);
+	
 //---------------------------------------------------------------------------
 // dvrstream Constructor (private)
 //
