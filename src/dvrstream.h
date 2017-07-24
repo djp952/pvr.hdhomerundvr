@@ -101,22 +101,22 @@ private:
 	// MPEGTS_PACKET_LENGTH
 	//
 	// Length of a single mpeg-ts data packet
-	static const size_t MPEGTS_PACKET_LENGTH = 188;
+	static size_t const MPEGTS_PACKET_LENGTH;
 
 	// DEFAULT_READ_MIN
 	//
 	// Default minimum amount of data to return from a read request
-	static const size_t DEFAULT_READ_MINCOUNT = (1 KiB);
+	static size_t const DEFAULT_READ_MINCOUNT;
 
 	// DEFAULT_READ_TIMEOUT_MS
 	//
 	// Default amount of time for a read operation to succeed
-	static const unsigned int DEFAULT_READ_TIMEOUT_MS = 2500;
+	static unsigned int const DEFAULT_READ_TIMEOUT_MS;
 
 	// DEFAULT_RINGBUFFER_SIZE
 	//
 	// Default ring buffer size, in bytes
-	static const size_t DEFAULT_RINGBUFFER_SIZE = (4 MiB);
+	static size_t const DEFAULT_RINGBUFFER_SIZE;
 
 	// Instance Constructor
 	//
