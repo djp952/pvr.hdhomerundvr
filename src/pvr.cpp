@@ -494,7 +494,7 @@ static int delete_expired_enum_to_seconds(int nvalue)
 	};
 
 	return -1;						// Never = default
-};
+}
 
 // discover_devices_task
 //
@@ -897,7 +897,7 @@ static int interval_enum_to_seconds(int nvalue)
 	};
 
 	return 600;						// 10 minutes = default
-};
+}
 	
 // log_debug
 //
@@ -978,7 +978,7 @@ static int mincount_enum_to_bytes(int nvalue)
 	};
 
 	return (1 KiB);					// 1 Kilobyte = default
-};
+}
 
 // ringbuffersize_enum_to_bytes
 //
@@ -995,7 +995,7 @@ static int ringbuffersize_enum_to_bytes(int nvalue)
 	};
 
 	return (4 MiB);					// 4 Megabytes = default
-};
+}
 
 //---------------------------------------------------------------------------
 // KODI ADDON ENTRY POINTS
