@@ -1,7 +1,11 @@
-v1.2.0 (2017.07.xx)
+v1.2.0 (2017.07.23)
   - Update libhdhomerun library to version 2017.06.12
-  - Use internal HTTP stream implementation for Recorded TV streams as well as tuner-direct Live TV streams
-  - Detect and remove SCTE Program Information Message data when combined with the Program Map Table (PMT) data in the same packet
+  - Remove custom addon callback implementations in favor of the standard ones provided in Kodi source code
+  - Update MPEG-TS stream implementation to support Recorded TV as well as tuner-direct Live TV streams
+  - Detect and remove MPEG-TS SCTE PIM (0xC0) table when inserted before the PMT (0x02) table in the same PSI packet
+  - Add "DVR stream read operation timeout (milliseconds)" advanced option
+  - Add "DVR stream read operation minimum size" advanced option
+  - Add "DVR stream ring buffer size" advanced option
 
 v1.1.1 (2017.07.07)
   - Allow for 30-second and 1-minute local network discovery intervals (devices, lineups, recordings)
