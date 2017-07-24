@@ -43,10 +43,6 @@ class dvrstream
 {
 public:
 
-	// Instance Constructor
-	//
-	dvrstream(size_t buffersize, char const* url);
-
 	// Destructor
 	//
 	~dvrstream();
@@ -64,6 +60,14 @@ public:
 	// Closes the stream
 	void close(void);
 
+	// create (static)
+	//
+	// Factory method, creates a new dvrstream instance
+	static std::unique_ptr<dvrstream> create(char const* url);
+	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize);
+	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount);
+	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
+
 	// length
 	//
 	// Gets the known length of the stream
@@ -76,9 +80,8 @@ public:
 
 	// read
 	//
-	// Reads any available data from the stream
+	// Reads available data from the stream
 	size_t read(uint8_t* buffer, size_t count);
-	size_t read(uint8_t* buffer, size_t count, unsigned int timeoutms);
 
 	// realtime
 	//
@@ -95,15 +98,29 @@ private:
 	dvrstream(dvrstream const&)=delete;
 	dvrstream& operator=(dvrstream const&)=delete;
 
+	// MPEGTS_PACKET_LENGTH
+	//
+	// Length of a single mpeg-ts data packet
+	static const size_t MPEGTS_PACKET_LENGTH = 188;
+
+	// DEFAULT_READ_MIN
+	//
+	// Default minimum amount of data to return from a read request
+	static const size_t DEFAULT_READ_MINCOUNT = (1 KiB);
+
 	// DEFAULT_READ_TIMEOUT_MS
 	//
 	// Default amount of time for a read operation to succeed
 	static const unsigned int DEFAULT_READ_TIMEOUT_MS = 2500;
 
-	// MPEGTS_PACKET_LENGTH
+	// DEFAULT_RINGBUFFER_SIZE
 	//
-	// Length of a single mpeg-ts data packet
-	static const size_t MPEGTS_PACKET_LENGTH = 188;
+	// Default ring buffer size, in bytes
+	static const size_t DEFAULT_RINGBUFFER_SIZE = (4 MiB);
+
+	// Instance Constructor
+	//
+	dvrstream(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -161,6 +178,8 @@ private:
 
 	// STREAM INFORMATION
 	//
+	size_t const					m_readmincount;				// Minimum read byte count
+	unsigned int const				m_readtimeout;				// Read timeout in milliseconds
 	bool							m_canseek = false;			// Flag if stream can be seeked
 	unsigned long long				m_startpos = 0;				// Starting position
 	unsigned long long				m_readpos = 0;				// Current read position

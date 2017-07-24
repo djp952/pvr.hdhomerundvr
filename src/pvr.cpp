@@ -203,6 +203,21 @@ struct addon_settings {
 	//
 	// Indicates the number of seconds to pause before initiating the startup discovery task
 	int startup_discovery_task_delay;
+
+	// stream_read_minimum_byte_count
+	//
+	// Indicates the minimum number of bytes to return from a stream read
+	int stream_read_minimum_byte_count;
+
+	// stream_read_timeout
+	//
+	// Indicates the stream read timeout value (milliseconds)
+	int stream_read_timeout;
+
+	// stream_ring_buffer_size
+	//
+	// Indicates the size of the stream ring buffer to allocate
+	int stream_ring_buffer_size;
 };
 
 //---------------------------------------------------------------------------
@@ -283,6 +298,9 @@ static addon_settings g_settings = {
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
+	(1 KiB),				// stream_read_minimum_byte_count
+	2500,					// stream_read_timeout
+	(4 MiB),				// stream_ring_buffer_size
 };
 
 // g_settings_lock
@@ -472,7 +490,7 @@ static int delete_expired_enum_to_seconds(int nvalue)
 	};
 
 	return -1;						// Never = default
-};
+}
 
 // discover_devices_task
 //
@@ -875,7 +893,7 @@ static int interval_enum_to_seconds(int nvalue)
 	};
 
 	return 600;						// 10 minutes = default
-};
+}
 	
 // log_debug
 //
@@ -938,6 +956,41 @@ template<typename... _args>
 static void log_notice(_args&&... args)
 {
 	log_message(ADDON::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
+}
+
+// mincount_enum_to_bytes
+//
+// Converts the minimum read count enumeration values into a number of bytes
+static int mincount_enum_to_bytes(int nvalue)
+{	
+	switch(nvalue) {
+
+		case 0: return 0;			// None
+		case 1: return (1 KiB);		// 1 Kilobyte
+		case 2: return (2 KiB);		// 2 Kilobytes
+		case 3: return (4 KiB);		// 4 Kilobytes
+		case 4: return (8 KiB);		// 8 Kilobytes
+		case 5: return (16 KiB);	// 16 Kilobytes
+	};
+
+	return (1 KiB);					// 1 Kilobyte = default
+}
+
+// ringbuffersize_enum_to_bytes
+//
+// Converts the ring buffer size enumeration values into a number of bytes
+static int ringbuffersize_enum_to_bytes(int nvalue)
+{	
+	switch(nvalue) {
+
+		case 0: return (1 MiB);		// 1 Megabyte
+		case 1: return (2 MiB);		// 2 Megabytes
+		case 2: return (4 MiB);		// 4 Megabytes
+		case 3: return (8 MiB);		// 8 Megabytes
+		case 4: return (16 MiB);	// 16 Megabytes
+	};
+
+	return (4 MiB);					// 4 Megabytes = default
 }
 
 //---------------------------------------------------------------------------
@@ -1076,6 +1129,9 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
+			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
+			if(g_addon->GetSetting("stream_read_timeout", &nvalue)) g_settings.stream_read_timeout = nvalue;
+			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -1511,6 +1567,42 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.startup_discovery_task_delay = nvalue;
 			log_notice(__func__, ": setting startup_discovery_task_delay changed to ", nvalue, " seconds");
+		}
+	}
+
+	// stream_read_minimum_byte_count
+	//
+	else if(strcmp(name, "stream_read_minimum_byte_count") == 0) {
+
+		int nvalue = mincount_enum_to_bytes(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.stream_read_minimum_byte_count) {
+
+			g_settings.stream_read_minimum_byte_count = nvalue;
+			log_notice(__func__, ": setting stream_read_minimum_byte_count changed to ", nvalue, " bytes");
+		}
+	}
+
+	// stream_read_timeout
+	//
+	else if(strcmp(name, "stream_read_timeout") == 0) {
+
+		int nvalue = *reinterpret_cast<int const*>(value);
+		if(nvalue != g_settings.stream_read_timeout) {
+
+			g_settings.stream_read_timeout = nvalue;
+			log_notice(__func__, ": setting stream_read_timeout changed to ", nvalue, " milliseconds");
+		}
+	}
+
+	// stream_ring_buffer_size
+	//
+	else if(strcmp(name, "stream_ring_buffer_size") == 0) {
+
+		int nvalue = ringbuffersize_enum_to_bytes(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.stream_ring_buffer_size) {
+
+			g_settings.stream_ring_buffer_size = nvalue;
+			log_notice(__func__, ": setting stream_ring_buffer_size changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -2962,9 +3054,9 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// Stop and destroy any existing stream instance before opening the new one
 		g_dvrstream.reset();
 
-		// Start the new channel live stream
+		// Start the new channel stream using the tuning parameters currently specified by the settings
 		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-		g_dvrstream.reset(new dvrstream(DVRSTREAM_BUFFER_SIZE, streamurl.c_str()));
+		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
 
 		// Set the current channel number
 		g_currentchannel.store(channel.iUniqueId);
@@ -3016,8 +3108,7 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	// todo: make the wait timeout configurable
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size, 2500)) : -1; }
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3140,6 +3231,9 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 
 bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -3152,9 +3246,9 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		// Stop and destroy any existing stream instance before opening the new one
 		g_dvrstream.reset();
 
-		// Start the new recording stream
+		// Start the new recording stream using the tuning parameters currently specified by the settings
 		log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
-		g_dvrstream.reset(new dvrstream(DVRSTREAM_BUFFER_SIZE, streamurl.c_str()));
+		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
 
 		return true;
 	}

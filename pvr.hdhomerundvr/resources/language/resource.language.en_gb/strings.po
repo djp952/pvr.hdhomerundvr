@@ -80,6 +80,18 @@ msgctxt "#30113"
 msgid "Startup discovery task delay (seconds)"
 msgstr ""
 
+msgctxt "#30114"
+msgid "DVR stream read operation minimum size"
+msgstr ""
+
+msgctxt "#30115"
+msgid "DVR stream ring buffer size"
+msgstr ""
+
+msgctxt "#30116"
+msgid "DVR stream read operation timeout (milliseconds)"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -146,6 +158,50 @@ msgstr ""
 
 msgctxt "#30217"
 msgid "1 Minute"
+msgstr ""
+
+msgctxt "#30218"
+msgid "None"
+msgstr ""
+
+msgctxt "#30219"
+msgid "1 KiB"
+msgstr ""
+
+msgctxt "#30220"
+msgid "2 KiB"
+msgstr ""
+
+msgctxt "#30221"
+msgid "4 KiB"
+msgstr ""
+
+msgctxt "#30222"
+msgid "8 KiB"
+msgstr ""
+
+msgctxt "#30223"
+msgid "16 KiB"
+msgstr ""
+
+msgctxt "#30224"
+msgid "1 MiB"
+msgstr ""
+
+msgctxt "#30225"
+msgid "2 MiB"
+msgstr ""
+
+msgctxt "#30226"
+msgid "4 MiB"
+msgstr ""
+
+msgctxt "#30227"
+msgid "8 MiB"
+msgstr ""
+
+msgctxt "#30228"
+msgid "16 MiB"
 msgstr ""
 
 msgctxt "#30301"
