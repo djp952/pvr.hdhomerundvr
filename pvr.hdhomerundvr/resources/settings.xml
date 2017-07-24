@@ -21,6 +21,9 @@
   <category label="30002">
     <setting id="use_direct_tuning" label="30111" type="bool" default="false"/>
     <setting id="startup_discovery_task_delay" label="30113" type="slider" default="3" range="1,1,10" option="int"/>
+    <setting id="stream_read_timeout" label="30116" type="slider" default="2500" range="500,500,5000" option="int"/>
+    <setting id="stream_read_minimum_byte_count" label="30114" type="enum" lvalues="30218|30219|30220|30221|30222|30223" default="1"/>
+    <setting id="stream_ring_buffer_size" label="30115" type="enum" lvalues="30224|30225|30226|30227|30228" default="2"/>
   </category>
 
 </settings>

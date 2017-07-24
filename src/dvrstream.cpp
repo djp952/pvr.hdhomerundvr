@@ -86,15 +86,23 @@ inline uint32_t read_be32(uint8_t const* ptr)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream Constructor
+// dvrstream Constructor (private)
 //
 // Arguments:
 //
-//	buffersize	- Size in bytes of the stream ring buffer
-//	url			- URL of the file stream to be opened
+//	url				- URL of the stream to be opened
+//	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
+//	readtimeout		- Read operation timeout, in millseconds
 
-dvrstream::dvrstream(size_t buffersize, char const* url) : m_buffersize(align::up(buffersize, 65536))
+dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout) :
+	m_readmincount(std::max(align::down(readmincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
+	m_readtimeout(std::max(1U, readtimeout)), m_buffersize(align::up(buffersize, 65536))
 {
+	// m_readmincount is aligned downward to a mpeg-ts packet boundary with a minimum of one packet
+	// m_readtimeout has a minimum value of one millisecond
+	// m_buffersize is aligned upward to a 64KiB boundary
+
 	if(url == nullptr) throw std::invalid_argument("url");
 
 	// Allocate the ring buffer using the 64KiB upward-aligned buffer size
@@ -185,6 +193,68 @@ void dvrstream::close(void)
 
 	m_stop.store(true);					// Signal worker thread to stop
 	m_worker.join();					// Wait for it to actually stop
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::create (static)
+//
+// Factory method, creates a new dvrstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+
+std::unique_ptr<dvrstream> dvrstream::create(char const* url)
+{
+	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_READ_MINCOUNT, DEFAULT_READ_TIMEOUT_MS);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::create (static)
+//
+// Factory method, creates a new dvrstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+//	buffersize		- Ring buffer size, in bytes
+
+std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize)
+{
+	return create(url, buffersize, DEFAULT_READ_MINCOUNT, DEFAULT_READ_TIMEOUT_MS);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::create (static)
+//
+// Factory method, creates a new dvrstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+//	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
+
+std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize, size_t readmincount)
+{
+	return create(url, buffersize, readmincount, DEFAULT_READ_TIMEOUT_MS);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::create (static)
+//
+// Factory method, creates a new dvrstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+//	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
+//	readtimeout		- Read operation timeout, in millseconds
+
+std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout)
+{
+	return std::unique_ptr<dvrstream>(new dvrstream(url, buffersize, readmincount, readtimeout));
 }
 
 //---------------------------------------------------------------------------
@@ -508,48 +578,18 @@ unsigned long long dvrstream::position(void) const
 
 size_t dvrstream::read(uint8_t* buffer, size_t count)
 {
-	return read(buffer, count, DEFAULT_READ_MINCOUNT, DEFAULT_READ_TIMEOUT_MS);
-}
-
-//---------------------------------------------------------------------------
-// dvrstream::read
-//
-// Reads data from the live stream
-//
-// Arguments:
-//
-//	buffer		- Buffer to receive the live stream data
-//	count		- Size of the destination buffer in bytes
-//	mincount	- Minimum number of bytes to return from the read
-
-size_t dvrstream::read(uint8_t* buffer, size_t count, size_t mincount)
-{
-	return read(buffer, count, mincount, DEFAULT_READ_TIMEOUT_MS);
-}
-
-//---------------------------------------------------------------------------
-// dvrstream::read
-//
-// Reads data from the live stream
-//
-// Arguments:
-//
-//	buffer		- Buffer to receive the live stream data
-//	count		- Size of the destination buffer in bytes
-//	mincount	- Minimum number of bytes to return from the read
-//	timeoutms	- Maximum number of milliseconds to wait before failing
-
-size_t dvrstream::read(uint8_t* buffer, size_t count, size_t mincount, unsigned int timeoutms)
-{
 	size_t				bytesread = 0;			// Total bytes actually read
 	size_t				head = 0;				// Current head position
 	size_t				tail = 0;				// Current tail position
 	size_t				available = 0;			// Available bytes to read
 	bool				stopped = false;		// Flag if data transfer has stopped
 
-	// Align the minimum count down to the nearest complete mpeg-ts packet, setting
-	// an absolute minimum of one full packet
-	mincount = std::max(align::down(mincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH);
+	// Verify that the minimum read count has been aligned properly during construction
+	assert(m_readmincount == align::down(m_readmincount, MPEGTS_PACKET_LENGTH));
+	assert(m_readmincount >= MPEGTS_PACKET_LENGTH);
+
+	// Verify that the read timeout is at least one millisecond
+	assert(m_readtimeout >= 1U);
 
 	std::unique_lock<std::mutex> lock(m_lock);
 
@@ -559,7 +599,7 @@ size_t dvrstream::read(uint8_t* buffer, size_t count, size_t mincount, unsigned 
 
 	// Wait up to the timeout for there to be at least one single full mpeg-ts packet available in 
 	// the buffer, if there is not the condvar will be triggered on a write or a thread stop.
-	if(m_cv.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(timeoutms), [&]() -> bool { 
+	if(m_cv.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(m_readtimeout), [&]() -> bool { 
 
 		tail = m_buffertail.load();				// Copy the atomic<> tail position
 		head = m_bufferhead.load();				// Copy the atomic<> head position
@@ -569,13 +609,13 @@ size_t dvrstream::read(uint8_t* buffer, size_t count, size_t mincount, unsigned 
 		available = (tail > head) ? (m_buffersize - tail) + head : head - tail;
 		
 		// The result from the predicate is true if enough data or stopped
-		return ((available >= mincount) || (stopped));
+		return ((available >= m_readmincount) || (stopped));
 	
 	}) == false) return 0;
 
 	// If the wait loop was broken by the worker thread stopping, make one more pass
 	// to ensure that no additional data was first written by the thread
-	if((available < mincount) && (stopped)) {
+	if((available < m_readmincount) && (stopped)) {
 
 		tail = m_buffertail.load();				// Copy the atomic<> tail position
 		head = m_bufferhead.load();				// Copy the atomic<> head position

@@ -111,10 +111,8 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent>
-      <Command>copy "$(TargetDir)$(TargetName).dll" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y
-copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -133,10 +131,8 @@ copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent>
-      <Command>copy "$(TargetDir)$(TargetName).dll" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y
-copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -159,10 +155,8 @@ copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent>
-      <Command>copy "$(TargetDir)$(TargetName).dll" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y
-copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -185,10 +179,8 @@ copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent>
-      <Command>copy "$(TargetDir)$(TargetName).dll" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y
-copy "$(TargetDir)$(TargetName).pdb" "D:\kodi-sxs\Leia\portable_data\addons\pvr.hdhomerundvr" /y</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h" />
