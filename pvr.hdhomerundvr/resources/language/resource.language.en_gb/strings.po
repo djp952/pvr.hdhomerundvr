@@ -236,6 +236,18 @@ msgctxt "#30308"
 msgid "Reset discovery database"
 msgstr ""
 
+msgctxt "#30309"
+msgid "Disable channel"
+msgstr ""
+
+msgctxt "#30310"
+msgid "Add to Favorite Channels"
+msgstr ""
+
+msgctxt "#30311"
+msgid "Remove from Favorite Channels"
+msgstr ""
+
 msgctxt "#30401"
 msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""

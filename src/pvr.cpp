@@ -60,11 +60,6 @@
 // MACROS
 //---------------------------------------------------------------------------
 
-// DVRSTREAM_BUFFER_SIZE
-//
-// 8 megabytes is sufficient to store 4 seconds of content at 16Mb/s
-#define DVRSTREAM_BUFFER_SIZE	(8 MiB)
-
 // MENUHOOK_XXXXXX
 //
 // Menu hook identifiers
@@ -76,6 +71,9 @@
 #define MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY		6
 #define MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY	7
 #define MENUHOOK_SETTING_RESETDATABASE					8
+#define MENUHOOK_CHANNEL_DISABLE						9
+#define MENUHOOK_CHANNEL_ADDFAVORITE					10
+#define MENUHOOK_CHANNEL_REMOVEFAVORITE					11
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -1156,6 +1154,30 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					menuhook.category = PVR_MENUHOOK_SETTING;
 					g_pvr->AddMenuHook(&menuhook);
 
+					// MENUHOOK_CHANNEL_DISABLE
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_CHANNEL_DISABLE;
+					menuhook.iLocalizedStringId = 30309;
+					menuhook.category = PVR_MENUHOOK_CHANNEL;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_CHANNEL_ADDFAVORITE
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_CHANNEL_ADDFAVORITE;
+					menuhook.iLocalizedStringId = 30310;
+					menuhook.category = PVR_MENUHOOK_CHANNEL;
+					g_pvr->AddMenuHook(&menuhook);
+
+					// MENUHOOK_CHANNEL_REMOVEFAVORITE
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_CHANNEL_REMOVEFAVORITE;
+					menuhook.iLocalizedStringId = 30311;
+					menuhook.category = PVR_MENUHOOK_CHANNEL;
+					g_pvr->AddMenuHook(&menuhook);
+
 					// Create the global database connection pool instance, the file name is based on the versionb
 					std::string databasefile = "file:///" + std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
 					g_connpool = std::make_shared<connectionpool>(databasefile.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
@@ -1746,6 +1768,75 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 		
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_CHANNEL_DISABLE
+	//
+	else if((menuhook.iHookId == MENUHOOK_CHANNEL_DISABLE) && (item.cat == PVR_MENUHOOK_CAT::PVR_MENUHOOK_CHANNEL)) {
+
+		try { 
+			
+			union channelid channelid;
+			channelid.value = item.data.channel.iUniqueId;
+
+			// Set the channel visibility to disabled (red x) and kick off a lineup discovery task
+			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::disabled);
+		
+			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " disabled; scheduling lineup discovery task");
+			g_scheduler.remove(discover_lineups_task);
+			g_scheduler.add(now, discover_lineups_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_CHANNEL_ADDFAVORITE
+	//
+	else if((menuhook.iHookId == MENUHOOK_CHANNEL_ADDFAVORITE) && (item.cat == PVR_MENUHOOK_CAT::PVR_MENUHOOK_CHANNEL)) {
+
+		try { 
+			
+			union channelid channelid;
+			channelid.value = item.data.channel.iUniqueId;
+
+			// Set the channel visibility to favorite (yellow star) and kick off a lineup discovery task
+			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::favorite);
+		
+			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " added as favorite; scheduling lineup discovery task");
+			g_scheduler.remove(discover_lineups_task);
+			g_scheduler.add(now, discover_lineups_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_CHANNEL_REMOVEFAVORITE
+	//
+	else if((menuhook.iHookId == MENUHOOK_CHANNEL_REMOVEFAVORITE) && (item.cat == PVR_MENUHOOK_CAT::PVR_MENUHOOK_CHANNEL)) {
+
+		try { 
+			
+			union channelid channelid;
+			channelid.value = item.data.channel.iUniqueId;
+
+			// Set the channel visibility to favorite (gray star) and kick off a lineup discovery task
+			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::enabled);
+		
+			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " removed from favorites; scheduling lineup discovery task");
+			g_scheduler.remove(discover_lineups_task);
+			g_scheduler.add(now, discover_lineups_task);
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
