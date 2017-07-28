@@ -41,7 +41,7 @@
 //
 // Arguments:
 //
-//	p		- Pointer to the data to be read
+//	ptr		- Pointer to the data to be read
 
 inline uint8_t read_be8(uint8_t const* ptr)
 {
@@ -57,7 +57,7 @@ inline uint8_t read_be8(uint8_t const* ptr)
 //
 // Arguments:
 //
-//	p		- Pointer to the data to be read
+//	ptr		- Pointer to the data to be read
 
 inline uint16_t read_be16(uint8_t const* ptr)
 {
@@ -612,11 +612,11 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 	// Verify that the read timeout is at least one millisecond
 	assert(m_readtimeout >= 1U);
 
-	std::unique_lock<std::mutex> lock(m_lock);
-
 	if(buffer == nullptr) throw std::invalid_argument("buffer");
 	if(count > m_buffersize) throw std::invalid_argument("count");
 	if(count == 0) return 0;
+
+	std::unique_lock<std::mutex> lock(m_lock);
 
 	// Wait up to the timeout for there to be at least one single full mpeg-ts packet available in 
 	// the buffer, if there is not the condvar will be triggered on a write or a thread stop.
