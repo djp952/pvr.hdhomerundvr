@@ -1,5 +1,6 @@
 v1.2.1 (2017.08.xx)
   - Add "Disable Channel", "Add to Favorite Channels" and "Remove from Favorite Channels" Client Actions to channel context menus
+  - Adapt to new backend discovery URLs (api.hdhomerun.com)
 
 v1.2.0 (2017.07.23)
   - Update libhdhomerun library to version 2017.06.12
