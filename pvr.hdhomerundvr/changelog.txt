@@ -1,4 +1,4 @@
-v1.2.1 (2017.08.xx)
+v1.2.1 (2017.08.02)
   - Add "Disable Channel", "Add to Favorite Channels" and "Remove from Favorite Channels" Client Actions to channel context menus
   - Adapt to new backend discovery URLs (api.hdhomerun.com)
   - Fall back to using a direct tuner stream for Live TV if a storage engine has not been discovered on the network
