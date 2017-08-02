@@ -272,13 +272,13 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 			"value as data "
 			"from "
 			"json_each((with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
-			"select http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
+			"select nullif(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
 			"case when ?2 is null then '' else '&RecentOnly=' || ?2 end || "
 			"case when ?3 is null then '' else '&ChannelOnly=' || decode_channel_id(?3) end || "
 			"case when ?4 is null then '' else '&AfterOriginalAirdateOnly=' || strftime('%s', date(?4, 'unixepoch')) end || "
 			"case when ?5 is null then '' else '&DateTimeOnly=' || ?5 end || "
 			"case when ?6 is null then '' else '&StartPadding=' || ?6 end || "
-			"case when ?7 is null then '' else '&EndPadding=' || ?7 end) as data "
+			"case when ?7 is null then '' else '&EndPadding=' || ?7 end), 'null') as data "
 			"from deviceauth))";
 
 		// Prepare the query
@@ -1206,6 +1206,46 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) callback(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+	
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// enumerate_device_names
+//
+// Enumerates the available device names
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	callback	- Callback function
+
+void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback callback)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (callback == nullptr)) return;
+
+	// name
+	auto sql = "select coalesce(json_extract(data, '$.FriendlyName'), 'unknown') || ' ' || deviceid as name from device";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Execute the query and iterate over all returned rows
+		while(sqlite3_step(statement) == SQLITE_ROW) {
+
+			struct device_name device_name;
+			device_name.name = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			
+			callback(device_name);
+		}
 	
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}

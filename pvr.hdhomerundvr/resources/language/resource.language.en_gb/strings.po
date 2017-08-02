@@ -248,6 +248,10 @@ msgctxt "#30311"
 msgid "Remove from Favorite Channels"
 msgstr ""
 
+msgctxt "#30312"
+msgid "List discovered devices"
+msgstr ""
+
 msgctxt "#30401"
 msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""
