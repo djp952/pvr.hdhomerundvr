@@ -3119,20 +3119,6 @@ long long LengthLiveStream(void)
 }
 
 //---------------------------------------------------------------------------
-// SwitchChannel
-//
-// Switch to another channel. Only to be called when a live stream has already been opened
-//
-// Arguments:
-//
-//	channel		- The channel to switch to
-
-bool SwitchChannel(PVR_CHANNEL const& channel)
-{
-	return OpenLiveStream(channel);
-}
-
-//---------------------------------------------------------------------------
 // SignalStatus
 //
 // Get the signal status of the stream that's currently open
