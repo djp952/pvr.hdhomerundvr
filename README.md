@@ -72,7 +72,6 @@ git submodule update --init
 msbuild msbuild.proj
 
 > out\zuki.pvr.hdhomerundvr-windows-win32-krypton-x.x.x.x.zip (windows-Win32)
-> out\zuki.pvr.hdhomerundvr-windows-x64-krypton-x.x.x.x.zip (windows-x64)
 > out\zuki.pvr.hdhomerundvr-linux-i686-krypton-x.x.x.x.zip (linux-i686)
 > out\zuki.pvr.hdhomerundvr-linux-x86_64-krypton-x.x.x.x.zip (linux-x86_64)
 > out\zuki.pvr.hdhomerundvr-linux-armel-krypton-x.x.x.x.zip (linux-armel)
