@@ -75,6 +75,7 @@
 #define MENUHOOK_CHANNEL_DISABLE						9
 #define MENUHOOK_CHANNEL_ADDFAVORITE					10
 #define MENUHOOK_CHANNEL_REMOVEFAVORITE					11
+#define MENUHOOK_SETTING_SHOWDEVICENAMES				12
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -1159,6 +1160,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					menuhook.category = PVR_MENUHOOK_RECORDING;
 					g_pvr->AddMenuHook(&menuhook);
 
+					// MENUHOOK_SETTING_SHOWDEVICENAMES
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_SHOWDEVICENAMES;
+					menuhook.iLocalizedStringId = 30312;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
 					// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
 					//
 					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
@@ -1842,6 +1851,28 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 		g_pvr->TriggerRecordingUpdate();
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_SETTING_SHOWDEVICENAMES
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_SHOWDEVICENAMES) {
+
+		try {
+
+			// Enumerate all of the device names in the database and build out the text string
+			std::string names;
+			enumerate_device_names(connectionpool::handle(g_connpool), [&](struct device_name const& device_name) -> void { 
+
+				names.append(std::string(device_name.name) + "\r\n");
+			});
+
+			g_gui->Dialog_TextViewer("Discovered Devices", names.c_str());
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+		
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
@@ -3122,8 +3153,18 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// In direct-tuning mode a tuner must be selected from which to stream the content
-		if(settings.use_direct_tuning) {
+		// If direct tuning is disabled, first attempt to generate the stream URL for the specified 
+		// channel from the storage engine; if that fails we can fall back to using a tuner directly
+		if(settings.use_direct_tuning == false) {
+			
+			streamurl = get_stream_url(dbhandle, channelid);
+			if(streamurl.length() == 0) log_notice(__func__, ": unable to generate storage engine stream URL for channel ", 
+				channelstr, " - falling back to a tuner-direct stream");
+		}
+
+		// In direct-tuning mode or upon a failure to generate the stream URL for the storage engine
+		// a tuner device must be instead be selected to stream the content
+		if((settings.use_direct_tuning == true) || (streamurl.length() == 0)) {
 
 			// The available tuners for the channel are captured into a vector<>
 			std::vector<std::string> tuners;
@@ -3137,10 +3178,8 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
 		}
 
-		// Otherwise generate the stream URL for the specified channel from the storage engine
-		else streamurl = get_stream_url(dbhandle, channelid);
-
-		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified channel");
+		// If none of the above methods yielded a valid URL, we're done here
+		if(streamurl.length() == 0) throw string_exception("unable to generate a valid stream URL for channel ", channelstr);
 
 		// Stop and destroy any existing stream instance before opening the new one
 		g_dvrstream.reset();
