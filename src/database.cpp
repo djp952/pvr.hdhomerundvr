@@ -1396,6 +1396,10 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 
 	if((instance == nullptr) || (callback == nullptr)) return;
 
+	// Prevent asking for anything older than 4 hours in the past (14400 = (60 * 60 * 4) = 4 hours)
+	time_t now = time(nullptr);
+	starttime = std::max(starttime, now - 14400);
+
 	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | originalairdate | seriesnumber | episodenumber | episodename
 	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 		"select json_extract(entry.value, '$.SeriesID') as seriesid, "
@@ -1418,7 +1422,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 
 	try {
 
-		do {
+		while(starttime < endtime) {
 
 			// Bind the query parameters
 			result = sqlite3_bind_int(statement, 1, channelid.value);
@@ -1428,10 +1432,15 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 			// Execute the SQL statement
 			result = sqlite3_step(statement);
 
-			// If no rows were returned from the query, there is no more available guide data
-			// from the backend, break the loop even though endtime may not have been reached
-			if(result == SQLITE_DONE) break;
+			// If no rows were returned from the query and the start time is still in the past,
+			// fast-forward it to the current time and try again.  Otherwise stop - no more data
+			if(result == SQLITE_DONE) {
+				
+				if(starttime < now) starttime = now;
+				else break;
+			}
 
+			// Process each row returned from the query (if any)
 			while(result == SQLITE_ROW) {
 
 				struct guideentry item;
@@ -1459,8 +1468,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 			// Reset the prepared statement so that it can be executed again
 			result = sqlite3_reset(statement);
 			if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		} while(starttime < endtime);
+		};
 	
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}

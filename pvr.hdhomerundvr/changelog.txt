@@ -1,3 +1,6 @@
+v1.2.2 (2017.08.02)
+  - Fix EPG update being aborted prematurely when requesting guide data from the past
+
 v1.2.1 (2017.08.02)
   - Add "Disable Channel", "Add to Favorite Channels" and "Remove from Favorite Channels" Client Actions to channel context menus
   - Adapt to new backend discovery URLs (api.hdhomerun.com)
