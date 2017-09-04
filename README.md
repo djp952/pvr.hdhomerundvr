@@ -96,7 +96,6 @@ msbuild msbuild.proj /t:PackageApk /p:Keystore={path_to_keystore};KeystorePasswo
 
 > out\kodi-x.x-zuki.pvr.hdhomerundvr-arm-x.x.x.x.apk (android-arm)
 > out\kodi-x.x-zuki.pvr.hdhomerundvr-aarch64-x.x.x.x.apk (android-aarch64)
-> out\kodi-x.x-zuki.pvr.hdhomerundvr-x86-x.x.x.x.apk (android-x86)
 ```
    
 **LIBHDHOMERUN LICENSE INFORMATION**   

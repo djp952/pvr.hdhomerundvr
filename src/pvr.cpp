@@ -1916,12 +1916,12 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			// iUniqueBroadcastId (required)
 			epgtag.iUniqueBroadcastId = static_cast<unsigned int>(item.starttime);
 
+			// iUniqueChannelId (required)
+			epgtag.iUniqueChannelId = item.channelid;
+
 			// strTitle (required)
 			if(item.title == nullptr) return;
 			epgtag.strTitle = item.title;
-
-			// iChannelNumber (required)
-			epgtag.iChannelNumber = item.channelid;
 
 			// startTime (required)
 			epgtag.startTime = item.starttime;
@@ -1968,6 +1968,55 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//---------------------------------------------------------------------------
+// IsEPGTagRecordable
+//
+// Check if the given EPG tag can be recorded
+//
+// Arguments:
+//
+//	tag			- EPG tag to be checked
+//	recordable	- Flag indicating if the EPG tag can be recorded
+
+PVR_ERROR IsEPGTagRecordable(EPG_TAG const* /*tag*/, bool* /*recordable*/)
+{
+	// todo - this can likely be implemented
+	return PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
+// IsEPGTagPlayable
+//
+// Check if the given EPG tag can be played
+//
+// Arguments:
+//
+//	tag			- EPG tag to be checked
+//	playable	- Flag indicating if the EPG tag can be played
+
+PVR_ERROR IsEPGTagPlayable(EPG_TAG const* /*tag*/, bool* /*playable*/)
+{
+	// todo - this can likely be implemented
+	return PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
+// GetEPGTagStreamProperties
+//
+// Get the stream properties for an epg tag from the backend
+//
+// Arguments:
+//
+//	tag			- EPG tag for which to retrieve the properties
+//	props		- Array in which to set the stream properties
+//	numprops	- Number of properties returned by this function
+
+PVR_ERROR GetEPGTagStreamProperties(EPG_TAG const* /*tag*/, PVR_NAMED_VALUE* /*props*/, unsigned int* /*numprops*/)
+{
+	// todo - this can likely be implemented
+	return PVR_ERROR_NOT_IMPLEMENTED;
 }
 
 //---------------------------------------------------------------------------
@@ -3147,6 +3196,38 @@ PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
 }
 
 //---------------------------------------------------------------------------
+// GetChannelStreamProperties
+//
+// Gets the properties for channel streams when the input stream is not handled
+//
+// Arguments:
+//
+//	channel		- Channel to get the stream properties for
+//	props		- Array of properties to be set for the stream
+//	numprops	- Number of properties returned by this function
+
+PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_VALUE* /*props*/, unsigned int* /*numprops*/)
+{
+	return PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
+// GetRecordingStreamProperties
+//
+// Gets the properties for recording streams when the input stream is not handled
+//
+// Arguments:
+//
+//	recording	- Recording to get the stream properties for
+//	props		- Array of properties to be set for the stream
+//	numprops	- Number of properties returned by this function
+
+PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_NAMED_VALUE* /*props*/, unsigned int* /*numprops*/)
+{
+	return PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
 // GetLiveStreamURL
 //
 // Get the stream URL for a channel from the backend
@@ -3356,20 +3437,6 @@ void DemuxFlush(void)
 DemuxPacket* DemuxRead(void)
 {
 	return nullptr;
-}
-
-//---------------------------------------------------------------------------
-// GetChannelSwitchDelay
-//
-// Gets delay to use when using switching channels for add-ons not providing an input stream
-//
-// Arguments:
-//
-//	NONE
-
-unsigned int GetChannelSwitchDelay(void)
-{
-	return 0;
 }
 
 //---------------------------------------------------------------------------
@@ -3625,6 +3692,16 @@ void OnPowerSavingActivated()
 
 void OnPowerSavingDeactivated()
 {
+}
+
+//---------------------------------------------------------------------------
+// GetStreamTimes
+//
+// Temporary function to be removed in later PVR API version
+
+PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* /*times*/)
+{
+	return PVR_ERROR_NOT_IMPLEMENTED;
 }
 
 //---------------------------------------------------------------------------
