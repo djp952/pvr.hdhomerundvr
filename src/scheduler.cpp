@@ -158,6 +158,7 @@ void scheduler::start(void)
 	std::unique_lock<std::mutex> lock(m_worker_lock);
 
 	if(m_worker.joinable()) return;		// Already running
+	m_stop = false;						// Reset the stop signal
 
 	// Define a scalar_condition for the worker to signal when it's running
 	scalar_condition<bool> started{false};
@@ -191,8 +192,6 @@ void scheduler::start(void)
 				catch(...) { if(m_handler) m_handler(string_exception("unhandled exception during task execution")); }
 			}
 		}
-
-		m_stop = false;					// Reset the stop flag
 	});
 
 	// Wait for the worker thread to start or die trying
