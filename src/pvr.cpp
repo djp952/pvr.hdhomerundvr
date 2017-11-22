@@ -1040,7 +1040,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		if(!g_addon->RegisterMe(handle)) throw string_exception("Failed to register addon handle (CHelper_libXBMC_addon::RegisterMe)");
 
 		// Throw a banner out to the Kodi log indicating that the add-on is being loaded
-		log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
+		log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
 
 		try { 
 
@@ -1236,7 +1236,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	catch(...) { return ADDON_STATUS::ADDON_STATUS_PERMANENT_FAILURE; }
 
 	// Throw a simple banner out to the Kodi log indicating that the add-on has been loaded
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loaded");
+	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loaded");
 
 	return ADDON_STATUS::ADDON_STATUS_OK;
 }
@@ -1253,14 +1253,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 void ADDON_Stop(void)
 {
 	// Throw a message out to the Kodi log indicating that the add-on is being stopped
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopping");
+	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopping");
 
 	g_dvrstream.reset();						// Destroy any active stream instance
 	g_scheduler.stop();							// Stop the task scheduler
 	g_scheduler.clear();						// Clear all tasks from the scheduler
 
 	// Throw a message out to the Kodi log indicating that the add-on has been stopped
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopped");
+	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopped");
 }
 
 //---------------------------------------------------------------------------
@@ -1275,7 +1275,7 @@ void ADDON_Stop(void)
 void ADDON_Destroy(void)
 {
 	// Throw a message out to the Kodi log indicating that the add-on is being unloaded
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
+	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
 
 	g_dvrstream.reset();					// Destroy any active stream instance
 	g_scheduler.stop();						// Stop the task scheduler
@@ -1292,7 +1292,7 @@ void ADDON_Destroy(void)
 	g_gui.reset();
 
 	// Send a notice out to the Kodi log as late as possible and destroy the addon callbacks
-	log_notice(VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
+	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
 	g_addon.reset();
 
 	// Clean up libcurl
