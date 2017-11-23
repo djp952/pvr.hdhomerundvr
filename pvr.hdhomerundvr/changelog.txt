@@ -1,3 +1,12 @@
+v1.2.4 (2017.11.xx)
+  - Fix bug preventing background discovery task scheduler from stopping properly
+  - Remove forced MPEG-TS packet boundary alignment during stream seek and read operations
+
+v1.2.3 (2017.11.15)
+  - Update SQLite database engine to v3.21.0
+  - Update cURL library to version 7.56.1
+  - Update libhdhomerun library to version 2017.08.16
+
 v1.2.2 (2017.08.02)
   - Fix EPG update being aborted prematurely when requesting guide data from the past
 

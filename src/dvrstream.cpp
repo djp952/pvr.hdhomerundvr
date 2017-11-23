@@ -496,9 +496,10 @@ void dvrstream::filter_packets(std::unique_lock<std::mutex> const& lock, uint8_t
 		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
 		bool payload = (ts_header & 0x00000010) == 0x00000010;
 
-		// Check the sync byte, should always be 0x47
+		// Check the sync byte, should always be 0x47.  If the packets aren't
+		// in sync, abort the operation -- they will all be out of sync
 		assert(sync == 0x47);
-		if(sync != 0x47) continue;
+		if(sync != 0x47) return;
 
 		// Skip over the header and any adaptation bytes
 		current += 4U;
@@ -644,10 +645,14 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 		available = (tail > head) ? (m_buffersize - tail) + head : head - tail;
 	}
 
-	// Take the smaller of what the caller wants and the available data, and then
-	// align that down to an mpeg-ts packet boundary; if it aligns to zero we're done
-	count = align::down(std::min(available, count), MPEGTS_PACKET_LENGTH);
-	if(count == 0) return 0;
+	// Reads are no longer aligned to return full MPEG-TS packets, determine the offset
+	// from the current read position to the first full packet of data
+	size_t packetoffset = static_cast<size_t>(align::up(m_readpos, MPEGTS_PACKET_LENGTH) - m_readpos);
+
+	// Starting with the lesser of the amount of data that is available to read and the
+	// originally requested count, adjust the end so that it aligns to a full MPEG-TS packet
+	count = std::min(available, count);
+	if(count >= (packetoffset + MPEGTS_PACKET_LENGTH)) count = packetoffset + align::down(count - packetoffset, MPEGTS_PACKET_LENGTH);
 
 	// Copy the calculated amount of data into the destination buffer
 	while(count) {
@@ -665,11 +670,12 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 		if(tail >= m_buffersize) tail = 0;
 	}
 
-	// Apply the mpeg-ts packet filter to all packets read from the ring buffer
-	filter_packets(lock, buffer, (bytesread / MPEGTS_PACKET_LENGTH));
-
 	m_buffertail.store(tail);				// Modify atomic<> tail position
 	m_readpos += bytesread;					// Update the reader position
+
+	// Apply the mpeg-ts packet filter against all complete packets that were read
+	if(bytesread >= (packetoffset + MPEGTS_PACKET_LENGTH)) 
+		filter_packets(lock, buffer + packetoffset, (bytesread / MPEGTS_PACKET_LENGTH));
 
 	return bytesread;
 }
@@ -771,9 +777,6 @@ unsigned long long dvrstream::seek(long long position, int whence)
 	else if(whence == SEEK_CUR) newposition = std::min(static_cast<unsigned long long>(std::max(m_readpos + position, 0ULL)), length - 1);
 	else if(whence == SEEK_END) newposition = std::min(static_cast<unsigned long long>(std::max(length + position, 0ULL)), length - 1);
 	else throw std::invalid_argument("whence");
-
-	// The new position must be aligned at an mpeg-ts packet boundary
-	newposition = align::down(newposition, MPEGTS_PACKET_LENGTH);
 
 	// If the calculated position matches the current position there is nothing to do
 	if(newposition == m_readpos) return m_readpos;
