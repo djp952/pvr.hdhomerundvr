@@ -279,12 +279,10 @@
       <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
       <PackageFile-android-aarch64>out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-aarch64>
       <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
-      <KodiApk-android-arm>kodi-18.0-Leia-armeabi-v7a</KodiApk-android-arm>
-      <KodiApk-android-aarch64>kodi-18.0-Leia-arm64-v8a</KodiApk-android-aarch64>
-      <KodiApk-android-x86>kodi-18.0-Leia-x86</KodiApk-android-x86>
+      <KodiApk-android-arm>kodi-20171122-28a8348-master-armeabi-v7a</KodiApk-android-arm>
+      <KodiApk-android-aarch64>kodi-20171122-28a8348-master-arm64-v8a</KodiApk-android-aarch64>
       <ZukiApk-android-arm>kodi-18.0-zuki.pvr.hdhomerundvr-arm-$(PackageVersion)</ZukiApk-android-arm>
       <ZukiApk-android-aarch64>kodi-18.0-zuki.pvr.hdhomerundvr-aarch64-$(PackageVersion)</ZukiApk-android-aarch64>
-      <ZukiApk-android-x86>kodi-18.0-zuki.pvr.hdhomerundvr-x86-$(PackageVersion)</ZukiApk-android-x86>
     </PropertyGroup>
 
     <!-- android-arm -->
@@ -306,16 +304,6 @@
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-aarch64)-framework out\$(KodiApk-android-aarch64)" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-aarch64)\dist\$(KodiApk-android-aarch64).apk out\$(KodiApk-android-aarch64)\dist\$(KodiApk-android-aarch64)-aligned.apk" ContinueOnError="false"/>
     <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-aarch64).apk out\$(KodiApk-android-aarch64)\dist\$(KodiApk-android-aarch64)-aligned.apk" ContinueOnError="false"/>
-
-    <!-- android-x86 -->
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-x86)-framework -s depends\kodi-apks\$(KodiApk-android-x86).apk -o out\$(KodiApk-android-x86)" ContinueOnError="false"/>
-    <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
-    <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
-    <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-x86) -DestinationPath out\$(KodiApk-android-x86)\assets\addons\" ContinueOnError="false"/>
-    <Copy SourceFiles="out\x86\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk-android-x86)\lib\x86\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-x86)-framework out\$(KodiApk-android-x86)" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86).apk out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86)-aligned.apk" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-x86).apk out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86)-aligned.apk" ContinueOnError="false"/>
 
   </Target>
 
