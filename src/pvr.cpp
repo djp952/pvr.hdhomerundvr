@@ -3255,7 +3255,30 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
-	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
+	long long		requested = 0;			// Calculated requested position
+
+	if(!g_dvrstream) return -1;				// No active dvrstream instance
+
+	try {
+
+		// Calculate the expected seek position to compare with the result
+		if(whence == SEEK_SET) requested = position;
+		else if(whence == SEEK_CUR) requested = g_dvrstream->position() + position;
+		else if(whence == SEEK_END) requested = g_dvrstream->length() + position;
+		else throw std::invalid_argument("whence");
+
+		// Perform the stream seek operation; throw exception on overflow
+		unsigned long long result = g_dvrstream->seek(position, whence);
+		if(result > static_cast<unsigned long long>(std::numeric_limits<long long>::max())) 
+			throw string_exception("seek result exceeds std::numeric_limits<long long>::max()");
+
+		// Compare the result with the expected position and issue a notice in the logs
+		if(static_cast<long long>(result) != requested) 
+			log_notice(__func__, ": seek request was not satisfied (requested=", requested, ", result=", result, ")");
+
+		return static_cast<long long>(result);
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3442,7 +3465,30 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 long long SeekRecordedStream(long long position, int whence)
 {
-	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
+	long long		requested = 0;			// Calculated requested position
+
+	if(!g_dvrstream) return -1;				// No active dvrstream instance
+
+	try {
+
+		// Calculate the expected seek position to compare with the result
+		if(whence == SEEK_SET) requested = position;
+		else if(whence == SEEK_CUR) requested = g_dvrstream->position() + position;
+		else if(whence == SEEK_END) requested = g_dvrstream->length() + position;
+		else throw std::invalid_argument("whence");
+
+		// Perform the stream seek operation; throw exception on overflow
+		unsigned long long result = g_dvrstream->seek(position, whence);
+		if(result > static_cast<unsigned long long>(std::numeric_limits<long long>::max())) 
+			throw string_exception("seek result exceeds std::numeric_limits<long long>::max()");
+
+		// Compare the result with the expected position and issue a notice in the logs
+		if(static_cast<long long>(result) != requested) 
+			log_notice(__func__, ": seek request was not satisfied (requested=", requested, ", result=", result, ")");
+
+		return static_cast<long long>(result);
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
