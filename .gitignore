@@ -252,6 +252,7 @@ paket-files/
 *.sln.iml
 
 # Temporary Directories
+apk/
 tmp/
 out/
 
