@@ -29,6 +29,20 @@
     <KeystorePassword></KeystorePassword> <!-- must be set on command line with /p:KeystorePassword=xxx -->
   </PropertyGroup>
 
+  <!-- DownloadFile: Downloads a file using System.Net.WebClient -->
+  <UsingTask TaskName="DownloadFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <Uri ParameterType="System.String" Required="true"/>
+      <Output ParameterType="System.String" Required="true"/>
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core"/>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[new System.Net.WebClient().DownloadFile(Uri, Output);]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
   <!-- ReplaceInFile: Replaces text in a file based on a regular expression -->
   <UsingTask TaskName="ReplaceInFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -282,8 +296,15 @@
       <ZukiApk-android-x86>kodi-16.1-zuki.pvr.hdhomerundvr-x86-$(PackageVersion)</ZukiApk-android-x86>
     </PropertyGroup>
 
+    <!-- Download the required Kodi APKs -->
+    <MakeDir Directories="apk" ContinueOnError="false"/>
+    <Message Condition="!Exists('apk\$(KodiApk-android-arm).apk')" Importance="high" Text="Downloading $(KodiApk-android-arm).apk ..."/>
+    <DownloadFile Condition="!Exists('apk\$(KodiApk-android-arm).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm/old/$(KodiApk-android-arm).apk" Output="apk\$(KodiApk-android-arm).apk"/>
+    <Message Condition="!Exists('apk\$(KodiApk-android-x86).apk')" Importance="high" Text="Downloading $(KodiApk-android-x86).apk ..."/>
+    <DownloadFile Condition="!Exists('apk\$(KodiApk-android-x86).apk')" Uri="http://mirrors.kodi.tv/releases/android/x86/old/$(KodiApk-android-x86).apk" Output="apk\$(KodiApk-android-x86).apk"/>
+
     <!-- android-arm -->
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-arm)-framework -s depends\kodi-apks\$(KodiApk-android-arm).apk -o out\$(KodiApk-android-arm)" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-arm)-framework -s apk\$(KodiApk-android-arm).apk -o out\$(KodiApk-android-arm)" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk-android-arm)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
     <ReplaceInFile filename="out\$(KodiApk-android-arm)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
     <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-arm) -DestinationPath out\$(KodiApk-android-arm)\assets\addons\" ContinueOnError="false"/>
@@ -293,7 +314,7 @@
     <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-arm).apk out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm)-aligned.apk" ContinueOnError="false"/>
 
     <!-- android-x86 -->
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-x86)-framework -s depends\kodi-apks\$(KodiApk-android-x86).apk -o out\$(KodiApk-android-x86)" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-x86)-framework -s apk\$(KodiApk-android-x86).apk -o out\$(KodiApk-android-x86)" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
     <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
     <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-x86) -DestinationPath out\$(KodiApk-android-x86)\assets\addons\" ContinueOnError="false"/>
