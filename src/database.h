@@ -101,6 +101,7 @@ struct guideentry {
 	int					year;
 	char const*			iconurl;
 	int					genretype;
+	char const*			genres;
 	time_t				originalairdate;
 	int					seriesnumber;
 	int					episodenumber;
