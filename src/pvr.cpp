@@ -3306,20 +3306,6 @@ PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_N
 }
 
 //---------------------------------------------------------------------------
-// GetLiveStreamURL
-//
-// Get the stream URL for a channel from the backend
-//
-// Arguments:
-//
-//	channel		- The channel to get the stream URL for
-
-char const* GetLiveStreamURL(PVR_CHANNEL const& /*channel*/)
-{
-	return "";
-}
-
-//---------------------------------------------------------------------------
 // GetStreamProperties
 //
 // Get the stream properties of the stream that's currently being read
