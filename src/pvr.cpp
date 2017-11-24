@@ -152,6 +152,11 @@ struct addon_settings {
 	// Flag to include the episode number in recording titles
 	bool use_episode_number_as_title;
 
+	// use_backend_genre_strings
+	//
+	// Flag to use the backend provided genre strings instead of mapping them
+	bool use_backend_genre_strings;
+
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -301,6 +306,7 @@ static addon_settings g_settings = {
 	false,					// pause_discovery_while_streaming
 	false,					// prepend_channel_numbers
 	false,					// use_episode_number_as_title
+	false,					// use_backend_genre_strings
 	86400,					// delete_datetime_rules_after			default = 1 day
 	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
@@ -1081,6 +1087,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
+			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
@@ -1377,6 +1384,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.use_episode_number_as_title = bvalue;
 			log_notice(__func__, ": setting use_episode_number_as_title changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
+		}
+	}
+
+	// use_backend_genre_strings
+	//
+	else if(strcmp(name, "use_backend_genre_strings") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_backend_genre_strings) {
+
+			g_settings.use_backend_genre_strings = bvalue;
+			log_notice(__func__, ": setting use_backend_genre_strings changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -1931,6 +1950,9 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 	try {
 
+		// Create a copy of the current addon settings structure
+		struct addon_settings settings = copy_settings();
+
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
@@ -1966,7 +1988,10 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			if(item.iconurl != nullptr) epgtag.strIconPath = item.iconurl;
 
 			// iGenreType
-			epgtag.iGenreType = item.genretype;
+			epgtag.iGenreType = (settings.use_backend_genre_strings) ? EPG_GENRE_USE_STRING : item.genretype;
+
+			// strGenreDescription
+			if(settings.use_backend_genre_strings) epgtag.strGenreDescription = item.genres;
 
 			// firstAired
 			epgtag.firstAired = item.originalairdate;
@@ -1985,6 +2010,9 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
+
+			// strSeriesLink
+			epgtag.strSeriesLink = item.seriesid;
 
 			// Transfer the EPG_TAG structure over to Kodi
 			g_pvr->TransferEpgEntry(handle, &epgtag);

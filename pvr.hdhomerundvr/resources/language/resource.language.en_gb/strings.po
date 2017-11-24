@@ -92,6 +92,10 @@ msgctxt "#30116"
 msgid "DVR stream read operation timeout (milliseconds)"
 msgstr ""
 
+msgctxt "#30117"
+msgid "Use backend genre string(s) in Electronic Program Guide (EPG)"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

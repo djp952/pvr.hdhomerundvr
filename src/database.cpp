@@ -1400,7 +1400,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 	time_t now = time(nullptr);
 	starttime = std::max(starttime, now - 14400);
 
-	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | originalairdate | seriesnumber | episodenumber | episodename
+	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename
 	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
 		"select json_extract(entry.value, '$.SeriesID') as seriesid, "
 		"json_extract(entry.value, '$.Title') as title, "
@@ -1410,6 +1410,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		"cast(strftime('%Y', coalesce(json_extract(entry.value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
 		"json_extract(entry.value, '$.ImageURL') as iconurl, "
 		"coalesce((select genretype from genremap where filter like json_extract(entry.value, '$.Filter[0]')), 0) as genretype, "
+		"(select group_concat(value) from json_each(json_extract(entry.value, '$.Filter'))) as genres, "
 		"json_extract(entry.value, '$.OriginalAirdate') as originalairdate, "
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
@@ -1453,10 +1454,11 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 				item.year = sqlite3_column_int(statement, 5);
 				item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
 				item.genretype = sqlite3_column_int(statement, 7);
-				item.originalairdate = sqlite3_column_int(statement, 8);
-				item.seriesnumber = sqlite3_column_int(statement, 9);
-				item.episodenumber = sqlite3_column_int(statement, 10);
-				item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
+				item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
+				item.originalairdate = sqlite3_column_int(statement, 9);
+				item.seriesnumber = sqlite3_column_int(statement, 10);
+				item.episodenumber = sqlite3_column_int(statement, 11);
+				item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
 
 				// Move the starttime to the last seen endtime to continue the backend queries
 				if(item.endtime > starttime) starttime = item.endtime;
