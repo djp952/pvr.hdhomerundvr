@@ -1,6 +1,7 @@
-v1.2.4 (2017.11.xx)
+v1.2.4 (2017.11.24)
   - Fix bug preventing background discovery task scheduler from stopping properly
   - Remove forced MPEG-TS packet boundary alignment during stream seek and read operations
+  - Add workaround to handle multiple calls into ADDON_Create/ADDON_Destroy during installation
 
 v1.2.3 (2017.11.15)
   - Update SQLite database engine to v3.21.0
