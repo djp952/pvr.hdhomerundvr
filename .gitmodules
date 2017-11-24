@@ -16,9 +16,6 @@
 [submodule "libcurl-nossl"]
 	path = depends/libcurl-nossl
 	url = https://github.com/djp952/prebuilt-libcurl-nossl.git
-[submodule "kodi-apks"]
-	path = depends/kodi-apks
-	url = https://github.com/djp952/prebuilt-kodi-apks.git
 [submodule "apktool"]
 	path = depends/apktool
 	url = https://github.com/djp952/prebuilt-apktool.git
