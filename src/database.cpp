@@ -1066,40 +1066,27 @@ void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 //
 // Arguments:
 //
-//	instance	- Database instance
-//	callback	- Callback function
-
-void enumerate_channels(sqlite3* instance, enumerate_channels_callback callback)
-{
-	return enumerate_channels(instance, false, callback);
-}
-
-//---------------------------------------------------------------------------
-// enumerate_channels
-//
-// Enumerates the available channels
-//
-// Arguments:
-//
 //	instance		- Database instance
-//	prependnumbers	- Flag to append the channel numbers	
+//	prependnumbers	- Flag to append the channel numbers
+//	showdrm			- Flag to show DRM channels
 //	callback		- Callback function
 
-void enumerate_channels(sqlite3* instance, bool prependnumbers, enumerate_channels_callback callback)
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, enumerate_channels_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// channelid | channelname | iconurl
+	// channelid | channelname | iconurl | drm
 	auto sql = "select "
 		"distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid, "
 		"case when ?1 then json_extract(entry.value, '$.GuideNumber') || ' ' else '' end || "
 		"case when guide.channelid is null then json_extract(entry.value, '$.GuideName') else guide.channelname end as channelname, "
-		"guide.iconurl as iconurl "
+		"guide.iconurl as iconurl, "
+		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm "
 		"from lineup, json_each(lineup.data) as entry left outer join guide on encode_channel_id(json_extract(entry.value, '$.GuideNumber')) = guide.channelid "
-		"where json_extract(entry.value, '$.DRM') is null "
+		"where nullif(json_extract(entry.value, '$.DRM'), ?2) is null "
 		"order by channelid";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -1109,6 +1096,7 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, enumerate_channe
 
 		// Bind the query parameters
 		result = sqlite3_bind_int(statement, 1, (prependnumbers) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (showdrm) ? 1 : 0);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
@@ -1118,6 +1106,7 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, enumerate_channe
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
+			item.drm = (sqlite3_column_int(statement, 3) != 0);
 
 			callback(item);						// Invoke caller-supplied callback
 		}
@@ -1136,9 +1125,10 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, enumerate_channe
 // Arguments:
 //
 //	instance	- Database instance
+//	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callback)
+void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1147,12 +1137,16 @@ void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callb
 
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.DRM') is null";
+		"from lineup, json_each(lineup.data) as entry where nullif(json_extract(entry.value, '$.DRM'), ?1) is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
@@ -1302,9 +1296,10 @@ void enumerate_episode_channelids(sqlite3* instance, enumerate_channelids_callba
 // Arguments:
 //
 //	instance	- Database instance
+//	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_favorite_channelids(sqlite3* instance, enumerate_channelids_callback callback)
+void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1314,12 +1309,16 @@ void enumerate_favorite_channelids(sqlite3* instance, enumerate_channelids_callb
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
 		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.Favorite') = 1 "
-		"and json_extract(entry.value, '$.DRM') is null";
+		"and nullif(json_extract(entry.value, '$.DRM'), ?1) is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
@@ -1486,9 +1485,10 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 // Arguments:
 //
 //	instance	- Database instance
+//	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_hd_channelids(sqlite3* instance, enumerate_channelids_callback callback)
+void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1498,12 +1498,16 @@ void enumerate_hd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
 		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') = 1 "
-		"and json_extract(entry.value, '$.DRM') is null";
+		"and nullif(json_extract(entry.value, '$.DRM'), ?1) is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
@@ -1678,9 +1682,10 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 // Arguments:
 //
 //	instance	- Database instance
+//	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback callback)
+void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1690,12 +1695,16 @@ void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback ca
 	// channelid
 	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
 		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.HD') is null "
-		"and json_extract(entry.value, '$.DRM') is null";
+		"and nullif(json_extract(entry.value, '$.DRM'), ?1) is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
@@ -2085,8 +2094,9 @@ long long get_available_storage_space(sqlite3* instance)
 // Arguments:
 //
 //	instance	- SQLite database instance
+//	showdrm		- Flag to show DRM channels
 
-int get_channel_count(sqlite3* instance)
+int get_channel_count(sqlite3* instance, bool showdrm)
 {
 	sqlite3_stmt*				statement;				// Database query statement
 	int							channels = 0;			// Number of channels found
@@ -2096,13 +2106,16 @@ int get_channel_count(sqlite3* instance)
 
 	// Prepare a query to get the number of distinct channels in the lineup
 	auto sql = "select count(distinct(json_extract(value, '$.GuideNumber'))) "
-		"from lineup, json_each(lineup.data) "
-		"where json_extract(value, '$.DRM') is null";
+		"from lineup, json_each(lineup.data) where nullif(json_extract(value, '$.DRM'), ?1) is null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try { 
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the scalar query
 		result = sqlite3_step(statement);
