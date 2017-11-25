@@ -96,6 +96,10 @@ msgctxt "#30117"
 msgid "Use backend genre string(s) in Electronic Program Guide (EPG)"
 msgstr ""
 
+msgctxt "#30118"
+msgid "Show DRM protected channels in channel lineups"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

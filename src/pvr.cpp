@@ -157,6 +157,11 @@ struct addon_settings {
 	// Flag to use the backend provided genre strings instead of mapping them
 	bool use_backend_genre_strings;
 
+	// show_drm_protected_channels
+	//
+	// Flag indicating that DRM channels should be shown to the user
+	bool show_drm_protected_channels;
+
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -292,6 +297,7 @@ static addon_settings g_settings = {
 	false,					// prepend_channel_numbers
 	false,					// use_episode_number_as_title
 	false,					// use_backend_genre_strings
+	false,					// show_drm_protected_channels
 	86400,					// delete_datetime_rules_after			default = 1 day
 	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
@@ -1063,6 +1069,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
+			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
@@ -1414,6 +1421,20 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.use_backend_genre_strings = bvalue;
 			log_notice(__func__, ": setting use_backend_genre_strings changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// show_drm_protected_channels
+	//
+	else if(strcmp(name, "show_drm_protected_channels") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.show_drm_protected_channels) {
+
+			g_settings.show_drm_protected_channels = bvalue;
+			log_notice(__func__, ": setting show_drm_protected_channels changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			g_pvr->TriggerChannelUpdate();
+			g_pvr->TriggerChannelGroupsUpdate();
 		}
 	}
 
@@ -2178,7 +2199,7 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 
 	// Determine which group enumerator to use for the operation, there are only
 	// three to choose from: "Favorite Channels", "HD Channels" and "SD Channels"
-	std::function<void(sqlite3*, enumerate_channelids_callback)> enumerator = nullptr;
+	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.strGroupName, "Favorite Channels") == 0) enumerator = enumerate_favorite_channelids;
 	else if(strcmp(group.strGroupName, "HD Channels") == 0) enumerator = enumerate_hd_channelids;
 	else if(strcmp(group.strGroupName, "SD Channels") == 0) enumerator = enumerate_sd_channelids;
@@ -2192,11 +2213,14 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 
 	try {
 
+		// Create a copy of the current addon settings structure
+		struct addon_settings settings = copy_settings();
+
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the channels in the specified group
-		enumerator(dbhandle, [&](union channelid const& item) -> void {
+		enumerator(dbhandle, settings.show_drm_protected_channels, [&](union channelid const& item) -> void {
 
 			PVR_CHANNEL_GROUP_MEMBER member;						// PVR_CHANNEL_GROUP_MEMORY to send
 			memset(&member, 0, sizeof(PVR_CHANNEL_GROUP_MEMBER));	// Initialize the structure
@@ -2248,7 +2272,7 @@ PVR_ERROR OpenDialogChannelScan(void)
 
 int GetChannelsAmount(void)
 {
-	try { return get_channel_count(connectionpool::handle(g_connpool)); }
+	try { return get_channel_count(connectionpool::handle(g_connpool), copy_settings().show_drm_protected_channels); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -2285,7 +2309,7 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the channels in the database
-		enumerate_channels(dbhandle, settings.prepend_channel_numbers, [&](struct channel const& item) -> void {
+		enumerate_channels(dbhandle, settings.prepend_channel_numbers, settings.show_drm_protected_channels, [&](struct channel const& item) -> void {
 
 			PVR_CHANNEL channel;								// PVR_CHANNEL to be transferred to Kodi
 			memset(&channel, 0, sizeof(PVR_CHANNEL));			// Initialize the structure
@@ -2307,6 +2331,11 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 
 			// strInputFormat
 			snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/mp2t");
+
+			// iEncryptionSystem
+			//
+			// This is used to flag a channel as DRM to prevent it from being streamed
+			channel.iEncryptionSystem = (item.drm) ? std::numeric_limits<unsigned int>::max() : 0;
 
 			// strIconPath
 			if(item.iconurl != nullptr) snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
@@ -3089,6 +3118,14 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
 	char			channelstr[64];			// Channel number as a string
 	std::string		streamurl;				// Generated stream URL
+
+	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
+	if(channel.iEncryptionSystem != 0) {
+	
+		std::string text = "Channel " + std::string(channel.strChannelName) + " is marked as encrypted and cannot be played";
+		g_gui->Dialog_OK_ShowAndGetInput("DRM Protected Content", text.c_str());
+		return false;
+	}
 
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();

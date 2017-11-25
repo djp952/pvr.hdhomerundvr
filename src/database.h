@@ -67,6 +67,7 @@ struct channel {
 	char const*			channelname;
 	char const*			inputformat;
 	char const*			iconurl;
+	bool				drm;
 };
 
 // channel_visibility
@@ -380,13 +381,12 @@ void discover_recordings(sqlite3* instance, bool& changed);
 // enumerate_channels
 //
 // Enumerates the available channels
-void enumerate_channels(sqlite3* instance, enumerate_channels_callback callback);
-void enumerate_channels(sqlite3* instance, bool prependnumbers, enumerate_channels_callback callback);
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, enumerate_channels_callback callback);
 
 // enumerate_channelids
 //
 // Enumerates the available channelids
-void enumerate_channelids(sqlite3* instance, enumerate_channelids_callback callback);
+void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
 
 // enumerate_channeltuners
 //
@@ -411,7 +411,7 @@ void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate
 // enumerate_favorite_channelids
 //
 // Enumerates channels marked as 'Favorite' in the lineups
-void enumerate_favorite_channelids(sqlite3* instance, enumerate_channelids_callback callback);
+void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
 
 // enumerate_guideentries
 //
@@ -421,7 +421,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 // enumerate_hd_channelids
 //
 // Enumerates channels marked as 'HD' in the lineups
-void enumerate_hd_channelids(sqlite3* instance, enumerate_channelids_callback callback);
+void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
 
 // enumerate_recordings
 //
@@ -437,7 +437,7 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 // enumerate_sd_channelids
 //
 // Enumerates channels not marked as 'HD' in the lineups
-void enumerate_sd_channelids(sqlite3* instance, enumerate_channelids_callback callback);
+void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
 
 // enumerate_series
 //
@@ -472,7 +472,7 @@ long long get_available_storage_space(sqlite3* instance);
 // get_channel_count
 //
 // Gets the number of available channels in the database
-int get_channel_count(sqlite3* instance);
+int get_channel_count(sqlite3* instance, bool showdrm);
 
 // get_recording_count
 //
