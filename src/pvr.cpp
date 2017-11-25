@@ -398,8 +398,11 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 		timer_type::epgseriesrule,
 
 		// iAttributes
+		//
+		// todo: PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE can be set here, but seems to have bugs right now, after Kodi
+		// is stopped and restarted, the cached EPG data prevents adding a new timer if this is set
 		PVR_TIMER_TYPE_IS_REPEATING | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_RECORD_ONLY_NEW_EPISODES | 
-			PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE,
+			PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE | PVR_TIMER_TYPE_SUPPORTS_ANY_CHANNEL,
 
 		// strDescription
 		"Record Series",
@@ -426,6 +429,9 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 		timer_type::epgdatetimeonlyrule,
 
 		// iAttributes
+		//
+		// todo: PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE can be set here, but seems to have bugs right now, after Kodi
+		// is stopped and restarted, the cached EPG data prevents adding a new timer if this is set
 		PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE,
 
 		// strDescription
@@ -2037,7 +2043,6 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 PVR_ERROR IsEPGTagRecordable(EPG_TAG const* /*tag*/, bool* /*recordable*/)
 {
-	// todo - this can likely be implemented
 	return PVR_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2053,7 +2058,6 @@ PVR_ERROR IsEPGTagRecordable(EPG_TAG const* /*tag*/, bool* /*recordable*/)
 
 PVR_ERROR IsEPGTagPlayable(EPG_TAG const* /*tag*/, bool* /*playable*/)
 {
-	// todo - this can likely be implemented
 	return PVR_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2070,7 +2074,6 @@ PVR_ERROR IsEPGTagPlayable(EPG_TAG const* /*tag*/, bool* /*playable*/)
 
 PVR_ERROR GetEPGTagStreamProperties(EPG_TAG const* /*tag*/, PVR_NAMED_VALUE* /*props*/, unsigned int* /*numprops*/)
 {
-	// todo - this can likely be implemented
 	return PVR_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2756,6 +2759,9 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			// iMarginEnd
 			timer.iMarginEnd = (item.endpadding / 60);
 
+			// strSeriesLink
+			snprintf(timer.strSeriesLink, std::extent<decltype(timer.strSeriesLink)>::value, "%s", item.seriesid);
+
 			// Copy the PVR_TIMER structure into the local vector<>
 			timers.push_back(timer);
 		});
@@ -2842,6 +2848,9 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// todo: can use strSeriesLink here for EPG timers instead of searching, once that works properly in Kodi.
+		// Right now the strSeriesLink information seems to disappear after Kodi is stopped and restarted
 
 		// seriesrule / epgseriesrule --> recordingrule_type::series
 		//
