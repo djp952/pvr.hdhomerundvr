@@ -436,7 +436,7 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 		"deviceid, "
 		"(select case when fullkey is null then recording.data else json_remove(recording.data, fullkey) end) as data "
 		"from httprequest, recording, "
-		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') = ?1 limit 1)";
+		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1557,7 +1557,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// recordingid | title | episodename | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration
+	// recordingid | title | episodename | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
 	auto sql = "select "
 		"json_extract(value, '$.CmdURL') as recordingid, "
 		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber'), json_extract(value, '$.Title')) else json_extract(value, '$.Title') end as title, "
@@ -1572,6 +1572,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 		"json_extract(value, '$.ImageURL') as thumbnailpath, "
 		"coalesce(json_extract(value, '$.RecordStartTime'), 0) as recordingtime, "
 		"coalesce(json_extract(value, '$.RecordEndTime'), 0) - coalesce(json_extract(value, '$.RecordStartTime'), 0) as duration, "
+		"coalesce(json_extract(value, '$.Resume'), 0) as lastposition, "
 		"encode_channel_id(json_extract(value, '$.ChannelNumber')) as channelid "
 		"from recording, json_each(recording.data)";
 
@@ -1601,7 +1602,8 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
 			item.recordingtime = sqlite3_column_int(statement, 11);
 			item.duration = sqlite3_column_int(statement, 12);
-			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 13));
+			item.lastposition = sqlite3_column_int(statement, 13);
+			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 14));
 
 			callback(item);						// Invoke caller-supplied callback
 		}
@@ -2227,6 +2229,51 @@ int get_recording_count(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// get_recording_lastposition
+//
+// Gets the last played position for a specific recording
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	recordingid		- Recording identifier (command url)
+
+int get_recording_lastposition(sqlite3* instance, char const* recordingid)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	int							lastposition = 0;		// Last played position
+	int							result;					// Result from SQLite function call
+
+	if(instance == nullptr) return 0;
+
+	// Prepare a scalar result query to get the last played position of the recording from the storage engine
+	auto sql = "with httprequest(response) as (select http_request(json_extract(device.data, '$.StorageURL')) from device where device.type = 'storage') "
+		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry "
+		"where json_extract(entry.value, '$.CmdURL') like ?1 limit 1";
+	
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try { 
+		
+		// Bind the query parameters
+		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// If the query returned a result, use that value otherwise leave at zero
+		if(result == SQLITE_ROW) lastposition = sqlite3_column_int(statement, 0);
+
+		sqlite3_finalize(statement);
+		return lastposition;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_recording_stream_url
 //
 // Gets the playback URL for a recording
@@ -2246,7 +2293,7 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 
 	// Prepare a scalar result query to generate a stream URL for the specified recording
 	auto sql = "select json_extract(value, '$.PlayURL') as streamurl "
-		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') = ?1";
+		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2254,7 +2301,7 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 	try {
 
 		// Bind the query parameters
-		sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
+		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 		
 		// Execute the scalar query
@@ -2911,6 +2958,53 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// set_recording_lastposition
+//
+// Sets the last played position for a specific recording
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	recordingid		- Recording identifier (command url)
+//	lastposition	- Last position to be stored
+
+void set_recording_lastposition(sqlite3* instance, char const* recordingid, int lastposition)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (recordingid == nullptr)) return;
+
+	// Prepare a query that will update the specified recording on the storage device and the local database
+	auto sql = "with httprequest(response) as (select http_request(?1 || '&cmd=set&Resume=' || ?2)) "
+		"replace into recording select "
+		"deviceid, "
+		"(select case when fullkey is null then recording.data else json_set(recording.data, fullkey || '.Resume', ?2) end) as data "
+		"from httprequest, recording, "
+		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameter(s)
+		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, lastposition);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the query; there shouldn't be any result set returned from it
+		result = sqlite3_step(statement);
+		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+		if(result != SQLITE_DONE) throw sqlite_exception(result);
+
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
 
 	catch(...) { sqlite3_finalize(statement); throw; }
