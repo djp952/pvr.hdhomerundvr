@@ -255,7 +255,7 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	true,		// bHandlesInputStream
 	false,		// bHandlesDemuxing
 	false,		// bSupportsRecordingPlayCount
-	false,		// bSupportsLastPlayedPosition
+	true,		// bSupportsLastPlayedPosition
 	false,		// bSupportsRecordingEdl
 };
 
@@ -2605,6 +2605,10 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// iDuration
 			recording.iDuration = item.duration;
 
+			// iLastPlayedPosition
+			//
+			recording.iLastPlayedPosition = item.lastposition;
+
 			// Copy the PVR_RECORDING structure into the local vector<>
 			recordings.push_back(recording);
 		});
@@ -2704,11 +2708,18 @@ PVR_ERROR SetRecordingPlayCount(PVR_RECORDING const& /*recording*/, int /*playco
 // Arguments:
 //
 //	recording			- The recording
-//	lastplayedposition	- The last watched position in seconds
+//	lastposition		- The last watched position in seconds
 
-PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& /*recording*/, int /*lastplayedposition*/)
+PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int lastposition)
 {
-	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	try {
+		
+		set_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId, lastposition);
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 }
 
 //---------------------------------------------------------------------------
@@ -2720,9 +2731,11 @@ PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& /*recording*/, int
 //
 //	recording	- The recording
 
-int GetRecordingLastPlayedPosition(PVR_RECORDING const& /*recording*/)
+int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 {
-	return -1;
+	try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------

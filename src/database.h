@@ -127,6 +127,7 @@ struct recording {
 	char const*			thumbnailpath;
 	time_t				recordingtime;
 	int					duration;
+	int					lastposition;
 	union channelid		channelid;
 };
 
@@ -479,6 +480,11 @@ int get_channel_count(sqlite3* instance, bool showdrm);
 // Gets the number of available recordings in the database
 int get_recording_count(sqlite3* instance);
 
+// get_recording_lastposition
+//
+// Gets the last played position for a specific recording
+int get_recording_lastposition(sqlite3* instance, char const* recordingid);
+
 // get_recording_stream_url
 //
 // Gets the playback URL for a recording
@@ -519,6 +525,11 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize);
 //
 // Sets the visibility of a channel on all known tuner devices
 void set_channel_visibility(sqlite3* instance, union channelid channelid, enum channel_visibility visibility);
+
+// set_recording_lastposition
+//
+// Sets the last played position for a specific recording
+void set_recording_lastposition(sqlite3* instance, char const* recordingid, int lastposition);
 
 // try_execute_non_query
 //
