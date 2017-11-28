@@ -1,6 +1,7 @@
-v1.2.5 (2017.12.xx)
+v1.2.5 (2017.11.28)
   - Add "Use backend genre string(s) in Electronic Program Guide (EPG)" setting
   - Add "Show DRM protected channels in channel lineups" setting
+  - Add synchronization of recording resume position with the storage engine 
 
 v1.2.4 (2017.11.24)
   - Fix bug preventing background discovery task scheduler from stopping properly
