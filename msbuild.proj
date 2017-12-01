@@ -293,8 +293,8 @@
       <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
       <PackageFile-android-aarch64>out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-aarch64>
       <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
-      <KodiApk-android-arm>kodi-20171127-3a9b827-master-armeabi-v7a</KodiApk-android-arm>
-      <KodiApk-android-aarch64>kodi-20171127-3a9b827-master-arm64-v8a</KodiApk-android-aarch64>
+      <KodiApk-android-arm>kodi-20171201-12f6ad5-master-armeabi-v7a</KodiApk-android-arm>
+      <KodiApk-android-aarch64>kodi-20171201-12f6ad5-master-arm64-v8a</KodiApk-android-aarch64>
       <ZukiApk-android-arm>kodi-18.0-zuki.pvr.hdhomerundvr-arm-$(PackageVersion)</ZukiApk-android-arm>
       <ZukiApk-android-aarch64>kodi-18.0-zuki.pvr.hdhomerundvr-aarch64-$(PackageVersion)</ZukiApk-android-aarch64>
     </PropertyGroup>
