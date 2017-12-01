@@ -98,11 +98,6 @@ private:
 	dvrstream(dvrstream const&)=delete;
 	dvrstream& operator=(dvrstream const&)=delete;
 
-	// MPEGTS_PACKET_LENGTH
-	//
-	// Length of a single mpeg-ts data packet
-	static size_t const MPEGTS_PACKET_LENGTH;
-
 	// DEFAULT_READ_MIN
 	//
 	// Default minimum amount of data to return from a read request
@@ -117,6 +112,11 @@ private:
 	//
 	// Default ring buffer size, in bytes
 	static size_t const DEFAULT_RINGBUFFER_SIZE;
+
+	// MPEGTS_PACKET_LENGTH
+	//
+	// Length of a single mpeg-ts data packet
+	static size_t const MPEGTS_PACKET_LENGTH;
 
 	// Instance Constructor
 	//
