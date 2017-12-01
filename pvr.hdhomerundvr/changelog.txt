@@ -1,3 +1,7 @@
+v1.2.6 (2017.11.30)
+  - Fix forward seeking problems with Live TV streams
+  - Fix playback problems with in-progress Recorded TV streams
+
 v1.2.5 (2017.11.28)
   - Add "Use backend genre string(s) in Electronic Program Guide (EPG)" setting
   - Add "Show DRM protected channels in channel lineups" setting

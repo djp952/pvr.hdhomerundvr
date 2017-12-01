@@ -85,25 +85,25 @@ inline uint32_t read_be32(uint8_t const* ptr)
 	return val;
 }
 
-// dvrstream::MPEGTS_PACKET_LENGTH (static)
-//
-// Length of a single mpeg-ts data packet
-size_t const dvrstream::MPEGTS_PACKET_LENGTH = 188;
-
-// DEFAULT_READ_MIN (static)
+// dvrstream::DEFAULT_READ_MIN (static)
 //
 // Default minimum amount of data to return from a read request
 size_t const dvrstream::DEFAULT_READ_MINCOUNT = (1 KiB);
 
-// DEFAULT_READ_TIMEOUT_MS (static)
+// dvrstream::DEFAULT_READ_TIMEOUT_MS (static)
 //
 // Default amount of time for a read operation to succeed
 unsigned int const dvrstream::DEFAULT_READ_TIMEOUT_MS = 2500;
 
-// DEFAULT_RINGBUFFER_SIZE (static)
+// dvrstream::DEFAULT_RINGBUFFER_SIZE (static)
 //
 // Default ring buffer size, in bytes
 size_t const dvrstream::DEFAULT_RINGBUFFER_SIZE = (4 MiB);
+
+// dvrstream::MPEGTS_PACKET_LENGTH (static)
+//
+// Length of a single mpeg-ts data packet
+size_t const dvrstream::MPEGTS_PACKET_LENGTH = 188;
 	
 //---------------------------------------------------------------------------
 // dvrstream Constructor (private)
@@ -313,9 +313,9 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 	// Content-Range: bytes */zzzzzz
 	else if((cb >= CONTENT_RANGE_HEADER_LEN) && (strncmp(CONTENT_RANGE_HEADER, data, CONTENT_RANGE_HEADER_LEN) == 0)) {
 
-		unsigned long long start = 0;					// Parsed range start
-		unsigned long long end = UINT64_MAX;			// Parsed range end
-		unsigned long long length = 0;					// Parsed overall length
+		unsigned long long start = 0;											// Parsed range start
+		unsigned long long end = std::numeric_limits<long long>::max() - 1;		// Parsed range end
+		unsigned long long length = std::numeric_limits<long long>::max();		// Parsed overall length
 
 		// Copy the header data into a local buffer to ensure null termination of the string
 		std::unique_ptr<char[]> buffer(new char[cb + 1]);
@@ -326,9 +326,12 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 		int result = sscanf(data, "Content-Range: bytes %llu-%llu/%llu", &start, &end, &length);
 		if(result == 0) sscanf(data, "Content-Range: bytes */%llu", &length);
 
-		// Set the initial stream positions and length if larger than the known length
+		// Set the initial stream position and overall length
 		instance->m_startpos = instance->m_readpos = instance->m_writepos = start;
-		if(length > instance->m_length.load()) instance->m_length.store(length);
+		instance->m_length.store(length);
+
+		// If the length was not parsed or equals the max value, this is a realtime stream
+		instance->m_realtime.store(length == static_cast<unsigned long long>(std::numeric_limits<long long>::max()));
 	}
 
 	return cb;
@@ -449,14 +452,6 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 
 	// Increment the number of bytes seen as part of this transfer
 	instance->m_writepos += byteswritten;
-
-	// Check if the new write position exceeds the known length of the stream, which
-	// indicates that the stream is realtime (once set this flag does not get cleared)
-	if(instance->m_writepos > instance->m_length.load()) {
-		
-		instance->m_length.store(instance->m_writepos);
-		instance->m_realtime.store(true);
-	}
 
 	// Release any thread waiting for the transfer to start *after* some data is
 	// available to be read from the buffer to avoid initial reader starvation
@@ -726,7 +721,9 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 	m_paused.store(false);
 	m_stop.store(false);
 
-	// Reinitialize the stream information (m_length and m_realtime stay set as-is)
+	// Reinitialize the stream information
+	m_length.store(0);
+	m_realtime.store(false);
 	m_startpos = m_readpos = m_writepos = 0;
 	m_canseek = false;
 
@@ -771,7 +768,7 @@ unsigned long long dvrstream::seek(long long position, int whence)
 	// If the stream cannot be seeked, just return the current position
 	if(!m_canseek) return m_readpos;
 
-	// Calculate the new position of the stream, which cannot be negative or exceed the known length
+	// Calculate the new position of the stream, which cannot be negative or exceed the overall length
 	unsigned long long length = m_length.load();
 	if(whence == SEEK_SET) newposition = std::min(static_cast<unsigned long long>(std::max(position, 0LL)), length - 1);
 	else if(whence == SEEK_CUR) newposition = std::min(static_cast<unsigned long long>(std::max(m_readpos + position, 0ULL)), length - 1);
