@@ -23,7 +23,7 @@
 #include "stdafx.h"
 #include "sqlite_exception.h"
 
-#pragma warning(push, 4)				// Enable maximum compiler warnings
+#pragma warning(push, 4)
 
 //-----------------------------------------------------------------------------
 // sqlite_exception Constructor

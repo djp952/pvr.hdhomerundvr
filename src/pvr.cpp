@@ -54,7 +54,7 @@
 #include "scheduler.h"
 #include "string_exception.h"
 
-#pragma warning(push, 4)				// Enable maximum compiler warnings
+#pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
 // MACROS
