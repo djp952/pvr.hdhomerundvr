@@ -3283,7 +3283,10 @@ long long SeekLiveStream(long long position, int whence)
 
 long long PositionLiveStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
+	if(!g_dvrstream) return -1;
+
+	// Don't report a position for real-time streams, it causes problems
+	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->position()); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3299,9 +3302,12 @@ long long PositionLiveStream(void)
 
 long long LengthLiveStream(void)
 {
-	// Don't implement this function; all live streams are realtime and
-	// reporting any length here messes things up when seeking
-	return -1;
+	if(!g_dvrstream) return -1;
+
+	// Don't report a length for real-time streams, it causes problems
+	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->length()); }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3481,7 +3487,10 @@ long long SeekRecordedStream(long long position, int whence)
 
 long long PositionRecordedStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
+	if(!g_dvrstream) return -1;
+
+	// Don't report a position for real-time streams, it causes problems
+	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->position()); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3499,8 +3508,7 @@ long long LengthRecordedStream(void)
 {
 	if(!g_dvrstream) return -1;
 
-	// Recorded stream can actually be realtime if the recording is played while
-	// it's still in progress; do not report a length back to Kodi in this case
+	// Don't report a length for real-time streams, it causes problems
 	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->length()); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
@@ -3719,7 +3727,6 @@ char const* GetBackendHostname(void)
 
 bool IsTimeshifting(void)
 {
-	// Detection of time-shifting is not currently supported
 	return false;
 }
 
