@@ -109,7 +109,7 @@ msgid "Enable Edit Decision List (EDL) support for Recorded TV"
 msgstr ""
 
 msgctxt "#30120"
-msgid "Edit Decision List (EDL) file location"
+msgid "EDL file path"
 msgstr ""
 
 msgctxt "#30121"

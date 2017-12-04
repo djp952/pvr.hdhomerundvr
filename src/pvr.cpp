@@ -2825,18 +2825,17 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 					// frame rate of the recording would be required to process the {#frame|#frame|[int]} format
 					if(sscanf(&line[0], "%f %f %i", &start, &end, &type) >= 2) {
 
-						// The line was parsed successfully, log the original start/end/type values
-						log_notice(__func__, ": valid edit decision list entry (start=", start, "ms, end=", end, "ms, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
-
 						// Apply any user-specified adjustments to the start and end times accordingly
 						start += (static_cast<float>(settings.recording_edl_start_padding) / 1000.0F);
 						end -= (static_cast<float>(settings.recording_edl_end_padding) / 1000.0F);
 						
-						start = std::max(start, 0.0F);				// Ensure start time is positive after adjustments
-						end = std::max(end, 0.0F);					// Ensure end time is positive after adjustments
+						// Ensure the start and end times are positive and do not overlap
+						start = std::min(std::max(start, 0.0F), std::max(end, 0.0F));
+						end = std::max(std::max(end, 0.0F), std::max(start, 0.0F));
 
-						// Convert the information into a PVR_EDL_ENTRY and insert it into the std::vector<>
-						entries.emplace_back(PVR_EDL_ENTRY{static_cast<int64_t>(start * 1000.0F), static_cast<int64_t>(end * 1000.0F), static_cast<PVR_EDL_TYPE>(type)});
+						// Log the adjusted values for the entry and add a PVR_EDL_ENTRY to the vector<>
+						log_notice(__func__, ": adding edit decision list entry (start=", start, "ms, end=", end, "ms, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
+						entries.emplace_back(PVR_EDL_ENTRY{ static_cast<int64_t>(start * 1000.0F), static_cast<int64_t>(end * 1000.0F), static_cast<PVR_EDL_TYPE>(type)});
 					}
 
 					else log_error(__func__, ": invalid edit decision list entry detected at line #", linenumber);
