@@ -20,6 +20,13 @@
     <setting id="discover_episodes_interval" label="30106" type="enum" lvalues="30201|30202|30203|30204|30205|30206|30207|30208" default="6"/>
   </category>
 
+  <category label="30003">
+    <setting id="enable_recording_edl" label="30119" type="bool" default="false"/>
+    <setting id="recording_edl_folder" enable="eq(-1,true)" label="30120" type="folder" source="auto" option="writeable"/>
+    <setting id="recording_edl_start_padding" enable="eq(-2,true)" label="30121" type="slider" default="0" range="0,500,10000" option="int"/>
+    <setting id="recording_edl_end_padding" enable="eq(-3,true)" label="30122" type="slider" default="0" range="0,500,10000" option="int"/>
+  </category>
+
   <category label="30002">
     <setting id="use_direct_tuning" label="30111" type="bool" default="false"/>
     <setting id="startup_discovery_task_delay" label="30113" type="slider" default="3" range="1,1,10" option="int"/>

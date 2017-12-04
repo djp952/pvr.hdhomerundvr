@@ -480,6 +480,11 @@ int get_channel_count(sqlite3* instance, bool showdrm);
 // Gets the number of available recordings in the database
 int get_recording_count(sqlite3* instance);
 
+// get_recording_filename
+//
+// Generates the filename for a recording
+std::string get_recording_filename(sqlite3* instance, char const* recordingid);
+
 // get_recording_lastposition
 //
 // Gets the last played position for a specific recording
