@@ -36,6 +36,7 @@ SQLITE_EXTENSION_INIT1
 
 // FUNCTION PROTOTYPES
 //
+void clean_filename(sqlite3_context* context, int argc, sqlite3_value** argv);
 void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
 void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
 void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv);
@@ -68,9 +69,19 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	// libcurl should be initialized prior to anything using it
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
+	// clean_filename
+	//
+	int result = sqlite3_create_function_v2(db, "clean_filename", 1, SQLITE_UTF8, nullptr, clean_filename, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) {
+	
+		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
+		snprintf(*errmsg, 512, "Unable to register scalar function clean_filename");
+		return result;
+	}
+
 	// decode_channel_id
 	//
-	int result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));

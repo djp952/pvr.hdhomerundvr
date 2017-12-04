@@ -24,6 +24,7 @@
 #include "database.h"
 
 #include <algorithm>
+#include <cctype>
 #include <exception>
 #include <stdint.h>
 #include <string.h>
@@ -57,6 +58,7 @@
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
 
+void clean_filename(sqlite3_context* context, int argc, sqlite3_value** argv);
 void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
 void discover_devices_broadcast(sqlite3* instance);
 void discover_devices_http(sqlite3* instance);
@@ -345,6 +347,44 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
 	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");
+}
+
+//---------------------------------------------------------------------------
+// clean_filename
+//
+// SQLite scalar function to clean invalid chars from a file name
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void clean_filename(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Null or zero-length input string results in a zero-length output string
+	const char* str = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((str == nullptr) || (*str == 0)) return sqlite3_result_text(context, "", -1, SQLITE_STATIC);
+
+	// isinvalid_char
+	//
+	// Returns -1 if the specified character is invalid for a filename on Windows or Unix
+	auto isinvalid_char = [](char const& ch) -> bool { 
+
+		// Exclude characters with a value between 0 and 31 (inclusive) as well as various
+		// specific additional characters: [",<,>,|,:,*,?,\,/]
+		return (((static_cast<int>(ch) >= 0) && (static_cast<int>(ch) <= 31)) ||
+			(ch == '"') || (ch == '<') || (ch == '>') || (ch == '|') || (ch == ':') ||
+			(ch == '*') || (ch == '?') || (ch == '\\') || (ch == '/'));
+	};
+
+	std::string output(str);
+	output.erase(std::remove_if(output.begin(), output.end(), isinvalid_char), output.end());
+
+	// Return the generated string as a transient value (needs to be copied)
+	return sqlite3_result_text(context, output.c_str(), -1, SQLITE_TRANSIENT);
 }
 
 //---------------------------------------------------------------------------
@@ -2229,6 +2269,57 @@ int get_recording_count(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// get_recording_filename
+//
+// Generates the filename for a recording
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	recordingid		- Recording identifier (command url)
+
+std::string get_recording_filename(sqlite3* instance, char const* recordingid)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	std::string					filename;				// Generated file name
+	int							result;					// Result from SQLite function call
+
+	if((instance == nullptr) || (recordingid == nullptr)) return filename;
+
+	// Prepare a scalar result query to generate the file name of the recording MPG file
+	//
+	// FORMAT: {DisplayGroupTitle}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
+	auto sql = "select rtrim(clean_filename(json_extract(value, '$.DisplayGroupTitle')), ' .') || '/' || "
+		"clean_filename(json_extract(value, '$.Title')) || ' ' || "
+		"coalesce(json_extract(value, '$.EpisodeNumber') || ' ', '') || "
+		"coalesce(strftime('%Y%m%d', datetime(json_extract(value, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
+		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(value, '$.StartTime'), 'unixepoch')) || ']' as filename "
+		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?1 limit 1";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) filename.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return filename;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_recording_lastposition
 //
 // Gets the last played position for a specific recording
@@ -2789,6 +2880,11 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 		// switch the database to write-ahead logging
 		//
 		execute_non_query(instance, "pragma journal_mode=wal");
+
+		// scalar function: clean_filename
+		//
+		result = sqlite3_create_function_v2(instance, "clean_filename", 1, SQLITE_UTF8, nullptr, clean_filename, nullptr, nullptr, nullptr);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: decode_channel_id
 		//

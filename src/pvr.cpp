@@ -226,6 +226,26 @@ struct addon_settings {
 	//
 	// Indicates the size of the stream ring buffer to allocate
 	int stream_ring_buffer_size;
+
+	// enable_recording_edl
+	//
+	// Enables support recorded TV edit decision lists
+	bool enable_recording_edl;
+
+	// recording_edl_folder
+	//
+	// Folder containing the recorded TV edit decision list files
+	std::string recording_edl_folder;
+
+	// recording_edl_start_padding
+	//
+	// Indicates the number of milliseconds to add to an EDL start value
+	int recording_edl_start_padding;
+
+	// recording_edl_end_padding
+	//
+	// Indicates the number of milliseconds to subtract to an EDL end value
+	int recording_edl_end_padding;
 };
 
 //---------------------------------------------------------------------------
@@ -255,7 +275,7 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,		// bHandlesDemuxing
 	false,		// bSupportsRecordingPlayCount
 	true,		// bSupportsLastPlayedPosition
-	false,		// bSupportsRecordingEdl
+	true,		// bSupportsRecordingEdl
 };
 
 // g_connpool
@@ -311,6 +331,10 @@ static addon_settings g_settings = {
 	(1 KiB),				// stream_read_minimum_byte_count
 	2500,					// stream_read_timeout
 	(4 MiB),				// stream_ring_buffer_size
+	false,					// enable_recording_edl
+	"",						// recording_edl_folder
+	0,						// recording_edl_start_padding
+	0,						// recording_edl_end_padding
 };
 
 // g_settings_lock
@@ -986,6 +1010,22 @@ static int mincount_enum_to_bytes(int nvalue)
 	return (1 KiB);					// 1 Kilobyte = default
 }
 
+// edltype_to_string
+//
+// Converts a PVR_EDL_TYPE enumeration value into a string
+static char const* const edltype_to_string(PVR_EDL_TYPE const& type)
+{
+	switch(type) {
+
+		case PVR_EDL_TYPE::PVR_EDL_TYPE_CUT: return "CUT";
+		case PVR_EDL_TYPE::PVR_EDL_TYPE_MUTE: return "MUTE";
+		case PVR_EDL_TYPE::PVR_EDL_TYPE_SCENE: return "SCENE";
+		case PVR_EDL_TYPE::PVR_EDL_TYPE_COMBREAK: return "COMBREAK";
+	}
+
+	return "<UNKNOWN>";
+}
+
 // ringbuffersize_enum_to_bytes
 //
 // Converts the ring buffer size enumeration values into a number of bytes
@@ -1019,10 +1059,11 @@ static int ringbuffersize_enum_to_bytes(int nvalue)
 
 ADDON_STATUS ADDON_Create(void* handle, void* props)
 {
-	PVR_MENUHOOK			menuhook;			// For registering menu hooks
-	bool					bvalue = false;		// Setting value
-	int						nvalue = 0;			// Setting value
-	scalar_condition<bool>	cancel{false};		// Dummy cancellation flag for tasks
+	PVR_MENUHOOK			menuhook;						// For registering menu hooks
+	bool					bvalue = false;					// Setting value
+	int						nvalue = 0;						// Setting value
+	char					strvalue[1024] = { '\0' };		// Setting value 
+	scalar_condition<bool>	cancel{false};					// Dummy cancellation flag for tasks
 
 	if((handle == nullptr) || (props == nullptr)) return ADDON_STATUS::ADDON_STATUS_PERMANENT_FAILURE;
 
@@ -1087,6 +1128,10 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("stream_read_timeout", &nvalue)) g_settings.stream_read_timeout = nvalue;
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
+			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
+			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
+			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
+			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -1613,6 +1658,53 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.stream_ring_buffer_size = nvalue;
 			log_notice(__func__, ": setting stream_ring_buffer_size changed to ", nvalue, " bytes");
+		}
+	}
+
+	// enable_recording_edl
+	//
+	else if(strcmp(name, "enable_recording_edl") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.enable_recording_edl) {
+
+			g_settings.enable_recording_edl = bvalue;
+			log_notice(__func__, ": setting enable_recording_edl changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// recording_edl_folder
+	//
+	else if(strcmp(name, "recording_edl_folder") == 0) {
+
+		if(strcmp(g_settings.recording_edl_folder.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.recording_edl_folder.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting recording_edl_folder changed to ", g_settings.recording_edl_folder.c_str());
+		}
+	}
+
+	// recording_edl_start_padding
+	//
+	else if(strcmp(name, "recording_edl_start_padding") == 0) {
+
+		int nvalue = *reinterpret_cast<int const*>(value);
+		if(nvalue != g_settings.recording_edl_start_padding) {
+
+			g_settings.recording_edl_start_padding = nvalue;
+			log_notice(__func__, ": setting recording_edl_start_padding changed to ", nvalue, " milliseconds");
+		}
+	}
+
+	// recording_edl_end_padding
+	//
+	else if(strcmp(name, "recording_edl_end_padding") == 0) {
+
+		int nvalue = *reinterpret_cast<int const*>(value);
+		if(nvalue != g_settings.recording_edl_end_padding) {
+
+			g_settings.recording_edl_end_padding = nvalue;
+			log_notice(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
 		}
 	}
 
@@ -2680,14 +2772,93 @@ int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 //	edl			- The function has to write the EDL list into this array
 //	count		- in: The maximum size of the EDL, out: the actual size of the EDL
 
-PVR_ERROR GetRecordingEdl(PVR_RECORDING const& /*recording*/, PVR_EDL_ENTRY edl[], int* count)
+PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], int* count)
 {
+	std::vector<PVR_EDL_ENTRY>		entries;			// vector<> of PVR_EDL_ENTRYs
+
 	if(count == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 	if((*count) && (edl == nullptr)) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	*count = 0;
+	memset(edl, 0, sizeof(PVR_EDL_ENTRY) * (*count));		// Initialize [out] array
 
-	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	try {
+
+		// Create a copy of the current addon settings structure and check if EDL is enabled
+		struct addon_settings settings = copy_settings();
+		if(!settings.enable_recording_edl) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+
+		// Verify that the specified directory for the EDL files exists
+		if(!g_addon->DirectoryExists(settings.recording_edl_folder.c_str()))
+			throw string_exception(std::string("specified edit decision list file directory '") + settings.recording_edl_folder + "' cannot be accessed");
+
+		// Pull a database connection out from the connection pool
+		connectionpool::handle dbhandle(g_connpool);
+
+		// Generate the base file name for the recording by combining the folder with the recording metadata
+		std::string basename = get_recording_filename(dbhandle, recording.strRecordingId);
+		if(basename.length() == 0) throw string_exception("unable to determine the base file name of the specified recording");
+
+		// Generate the full name of the .EDL file and if it exists, attempt to process it
+		std::string filename = settings.recording_edl_folder.append(basename).append(".edl");
+		if(g_addon->FileExists(filename.c_str(), false)) {
+
+			// 2 KiB should be more than sufficient to hold a single line from the .edl file
+			std::unique_ptr<char[]> line(new char[2 KiB]);
+
+			// Attempt to open the input edit decision list file
+			void* handle = g_addon->OpenFile(filename.c_str(), 0);
+			if(handle != nullptr) {
+
+				size_t linenumber = 0;
+				log_notice(__func__, ": processing edit decision list file: ", filename.c_str());
+
+				// Process each line of the file individually
+				while(g_addon->ReadFileString(handle, &line[0], 2 KiB)) {
+
+					++linenumber;									// Increment the line number
+
+					float			start	= 0.0F;					// Starting point, in milliseconds
+					float			end		= 0.0F;					// Ending point, in milliseconds
+					int				type	= PVR_EDL_TYPE_CUT;		// Type of edit to be made
+
+					// The only currently supported format for EDL is the {float|float|[int]} format, as the
+					// frame rate of the recording would be required to process the {#frame|#frame|[int]} format
+					if(sscanf(&line[0], "%f %f %i", &start, &end, &type) >= 2) {
+
+						// The line was parsed successfully, log the original start/end/type values
+						log_notice(__func__, ": valid edit decision list entry (start=", start, "ms, end=", end, "ms, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
+
+						// Apply any user-specified adjustments to the start and end times accordingly
+						start += (static_cast<float>(settings.recording_edl_start_padding) / 1000.0F);
+						end -= (static_cast<float>(settings.recording_edl_end_padding) / 1000.0F);
+						
+						start = std::max(start, 0.0F);				// Ensure start time is positive after adjustments
+						end = std::max(end, 0.0F);					// Ensure end time is positive after adjustments
+
+						// Convert the information into a PVR_EDL_ENTRY and insert it into the std::vector<>
+						entries.emplace_back(PVR_EDL_ENTRY{static_cast<int64_t>(start * 1000.0F), static_cast<int64_t>(end * 1000.0F), static_cast<PVR_EDL_TYPE>(type)});
+					}
+
+					else log_error(__func__, ": invalid edit decision list entry detected at line #", linenumber);
+				}
+				
+				g_addon->CloseFile(handle);
+			}
+
+			else log_error(__func__, ": unable to open edit decision list file: ", filename.c_str());
+		}
+
+		// Copy the parsed entries, if any, from the vector<> into the output array
+		*count = static_cast<int>(std::min(entries.size(), static_cast<size_t>(*count)));
+		memcpy(edl, entries.data(), (*count * sizeof(PVR_EDL_ENTRY)));
+
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+	
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------
