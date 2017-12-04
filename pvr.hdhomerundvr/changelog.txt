@@ -1,5 +1,6 @@
 v1.2.7 (2017.12.xx)
   - Improve handling of in-progress Recorded TV streams that have switched from a live to a recorded state
+  - Add support for processing Recorded TV Edit Decision Lists (EDL)
 
 v1.2.6 (2017.11.30)
   - Fix forward seeking problems with Live TV streams
