@@ -203,6 +203,11 @@ struct addon_settings {
 	// Interval at which the recording rule discovery will occur (seconds)
 	int discover_recordingrules_interval;
 
+	// discover_recordings_after_playback
+	//
+	// Flag to re-discover recordings immediately after playback has stopped
+	bool discover_recordings_after_playback;
+
 	// use_direct_tuning
 	//
 	// Flag indicating that Live TV will be handled directly from the tuner(s)
@@ -327,6 +332,7 @@ static addon_settings g_settings = {
 	600,					// discover_lineups_interval			default = 10 minutes
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
+	false,					// discover_recordings_after_playback
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
 	(1 KiB),				// stream_read_minimum_byte_count
@@ -1179,6 +1185,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("discover_recordings_interval", &nvalue)) g_settings.discover_recordings_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_recordingrules_interval", &nvalue)) g_settings.discover_recordingrules_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_episodes_interval", &nvalue)) g_settings.discover_episodes_interval = interval_enum_to_seconds(nvalue);
+			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
@@ -1587,18 +1594,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// discover_lineups_interval
+	// discover_episodes_interval
 	//
-	else if(strcmp(name, "discover_lineups_interval") == 0) {
+	else if(strcmp(name, "discover_episodes_interval") == 0) {
 
 		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
-		if(nvalue != g_settings.discover_lineups_interval) {
+		if(nvalue != g_settings.discover_episodes_interval) {
 
-			// Reschedule the discover_lineups_task to execute at the specified interval from now
-			g_settings.discover_lineups_interval = nvalue;
-			g_scheduler.remove(discover_lineups_task);
-			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_lineups_task);
-			log_notice(__func__, ": setting discover_lineups_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			// Reschedule the discover_episodes_task to execute at the specified interval from now
+			g_settings.discover_episodes_interval = nvalue;
+			g_scheduler.remove(discover_episodes_task);
+			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_episodes_task);
+			log_notice(__func__, ": setting discover_episodes_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1614,6 +1621,21 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_scheduler.remove(discover_guide_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_guide_task);
 			log_notice(__func__, ": setting discover_guide_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+		}
+	}
+
+	// discover_lineups_interval
+	//
+	else if(strcmp(name, "discover_lineups_interval") == 0) {
+
+		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.discover_lineups_interval) {
+
+			// Reschedule the discover_lineups_task to execute at the specified interval from now
+			g_settings.discover_lineups_interval = nvalue;
+			g_scheduler.remove(discover_lineups_task);
+			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_lineups_task);
+			log_notice(__func__, ": setting discover_lineups_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
 	}
 
@@ -1647,18 +1669,15 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// discover_episodes_interval
+	// discover_recordings_after_playback
 	//
-	else if(strcmp(name, "discover_episodes_interval") == 0) {
+	else if(strcmp(name, "discover_recordings_after_playback") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
-		if(nvalue != g_settings.discover_episodes_interval) {
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.discover_recordings_after_playback) {
 
-			// Reschedule the discover_episodes_task to execute at the specified interval from now
-			g_settings.discover_episodes_interval = nvalue;
-			g_scheduler.remove(discover_episodes_task);
-			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_episodes_task);
-			log_notice(__func__, ": setting discover_episodes_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+			g_settings.use_broadcast_device_discovery = bvalue;
+			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -3454,11 +3473,22 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 void CloseLiveStream(void)
 {
-	// Ensure scheduler is running again, it may have been paused
-	g_scheduler.resume();
-
 	try {
 		
+		// Create a copy of the current addon settings structure
+		struct addon_settings settings = copy_settings();
+
+		// If the setting to refresh the recordings immediately after playback, reschedule it
+		if(settings.discover_recordings_after_playback) {
+
+			log_notice(__func__, ": triggering periodic recording discovery");
+			g_scheduler.remove(discover_recordings_task);
+			g_scheduler.add(std::chrono::system_clock::now(), discover_recordings_task);
+		}
+			
+		// Ensure scheduler is running, may have been paused during playback
+		g_scheduler.resume();
+
 		// If the DVR stream is active, close it normally so exceptions are
 		// propagated before destroying it; destructor alone won't throw
 		if(g_dvrstream) g_dvrstream->close();
@@ -3660,11 +3690,22 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 void CloseRecordedStream(void)
 {
-	// Ensure scheduler is running again, it may have been paused
-	g_scheduler.resume();
-
 	try {
-		
+
+		// Create a copy of the current addon settings structure
+		struct addon_settings settings = copy_settings();
+
+		// If the setting to refresh the recordings immediately after playback, reschedule it
+		if(settings.discover_recordings_after_playback) {
+
+			log_notice(__func__, ": triggering periodic recording discovery");
+			g_scheduler.remove(discover_recordings_task);
+			g_scheduler.add(std::chrono::system_clock::now(), discover_recordings_task);
+		}
+			
+		// Ensure scheduler is running, may have been paused during playback
+		g_scheduler.resume();
+
 		// If the DVR stream is active, close it normally so exceptions are
 		// propagated before destroying it; destructor alone won't throw
 		if(g_dvrstream) g_dvrstream->close();

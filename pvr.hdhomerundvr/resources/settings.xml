@@ -18,6 +18,7 @@
     <setting id="discover_recordings_interval" label="30104" type="enum" lvalues="30201|30202|30203|30204|30205|30206|30207|30208|30216|30217" default="1"/>
     <setting id="discover_recordingrules_interval" label="30105" type="enum" lvalues="30201|30202|30203|30204|30205|30206|30207|30208" default="6"/>
     <setting id="discover_episodes_interval" label="30106" type="enum" lvalues="30201|30202|30203|30204|30205|30206|30207|30208" default="6"/>
+    <setting id="discover_recordings_after_playback" label="30123" type="bool" default="false"/>
   </category>
 
   <category label="30003">
