@@ -100,6 +100,11 @@ unsigned int const dvrstream::DEFAULT_READ_TIMEOUT_MS = 2500;
 // Default ring buffer size, in bytes
 size_t const dvrstream::DEFAULT_RINGBUFFER_SIZE = (4 MiB);
 
+// dvrstream::MAX_STREAM_LENGTH (static)
+//
+// Maximum allowable stream length as an unsigned long long
+unsigned long long const dvrstream::MAX_STREAM_LENGTH = static_cast<unsigned long long>(std::numeric_limits<long long>::max());
+
 // dvrstream::MPEGTS_PACKET_LENGTH (static)
 //
 // Length of a single mpeg-ts data packet
@@ -141,7 +146,6 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount, un
 		// Set the general options for the easy interface curl object
 		CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_URL, url);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
-		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_FAILONERROR, 1L);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, &dvrstream::curl_responseheaders);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, this);
 		if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &dvrstream::curl_write);
@@ -157,7 +161,7 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount, un
 		m_started.wait_until_equals(true);
 
 		// If the transfer thread failed to initiate the data transfer throw an exception
-		if(m_curlresult != CURLE_OK) {
+		if((m_curlresult != CURLE_OK) && (m_curlresult != CURLE_ABORTED_BY_CALLBACK)) {
 		
 			m_stop.store(true);				// Signal worker to stop (shouldn't be running)
 			m_worker.join();				// Wait for the worker thread to stop
@@ -308,30 +312,32 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 		instance->m_canseek = true;				// Only care if header is present
 	}
 
-	// Content-Range: bytes xxxxxx-yyyyyy/zzzzzz
-	// Content-Range: bytes xxxxxx-yyyyyy/*
-	// Content-Range: bytes */zzzzzz
+	// Content-Range: bytes <range-start>-<range-end>/<size>
+	// Content-Range: bytes <range-start>-<range-end>/*
+	// Content-Range: bytes */<size>
 	else if((cb >= CONTENT_RANGE_HEADER_LEN) && (strncmp(CONTENT_RANGE_HEADER, data, CONTENT_RANGE_HEADER_LEN) == 0)) {
 
-		unsigned long long start = 0;											// Parsed range start
-		unsigned long long end = std::numeric_limits<long long>::max() - 1;		// Parsed range end
-		unsigned long long length = std::numeric_limits<long long>::max();		// Parsed overall length
+		unsigned long long start = 0;							// <range-start>
+		unsigned long long end = MAX_STREAM_LENGTH - 1;			// <range-end>
+		unsigned long long length = MAX_STREAM_LENGTH;			// <size>
 
 		// Copy the header data into a local buffer to ensure null termination of the string
 		std::unique_ptr<char[]> buffer(new char[cb + 1]);
 		memcpy(&buffer[0], data, cb);
 		buffer[cb] = 0;
 
-		// Attempt to parse a complete Content-Range: header and fall back on just the length
+		// Attempt to parse a complete Content-Range: header to retrieve all the values, otherwise
+		// fall back on just attempting to get the size.  The latter condition occurs on a seek
+		// beyond the size of a fixed-length stream, so set the start value to match the size
 		int result = sscanf(data, "Content-Range: bytes %llu-%llu/%llu", &start, &end, &length);
-		if(result == 0) sscanf(data, "Content-Range: bytes */%llu", &length);
+		if((result == 0) && (sscanf(data, "Content-Range: bytes */%llu", &length)) == 1) start = length;
 
-		// Set the initial stream position and overall length
+		// Reset the stream read/write positions and overall length
 		instance->m_startpos = instance->m_readpos = instance->m_writepos = start;
 		instance->m_length.store(length);
 
 		// If the length was not parsed or equals the max value, this is a realtime stream
-		instance->m_realtime.store(length == static_cast<unsigned long long>(std::numeric_limits<long long>::max()));
+		instance->m_realtime.store(length == MAX_STREAM_LENGTH);
 	}
 
 	return cb;
@@ -378,7 +384,7 @@ void dvrstream::curl_transfer_func(unsigned long long position)
 	// Format the Range: header value to apply to the transfer object, do not use CURLOPT_RESUME_FROM_LARGE 
 	// as it will not insert the request header when the position is zero
 	char byterange[32];
-	snprintf(byterange, std::extent<decltype(byterange)>::value, "%llu-", static_cast<unsigned long long>(position));
+	snprintf(byterange, std::extent<decltype(byterange)>::value, "%llu-", position);
 
 	// Attempt to execute the current transfer operation
 	m_curlresult = curl_easy_setopt(m_curl, CURLOPT_RANGE, byterange);
@@ -613,8 +619,8 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 
 	std::unique_lock<std::mutex> lock(m_lock);
 
-	// Wait up to the timeout for there to be at least one single full mpeg-ts packet available in 
-	// the buffer, if there is not the condvar will be triggered on a write or a thread stop.
+	// Wait up to the timeout for there to be the minimim amount of available data in the
+	// buffer, if there is not the condvar will be triggered on the next write or a thread stop.
 	if(m_cv.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(m_readtimeout), [&]() -> bool { 
 
 		tail = m_buffertail.load();				// Copy the atomic<> tail position
@@ -736,7 +742,7 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 	m_started.wait_until_equals(true);
 
 	// If the transfer thread failed to initiate the data transfer throw an exception
-	if(m_curlresult != CURLE_OK) {
+	if((m_curlresult != CURLE_OK) && (m_curlresult != CURLE_ABORTED_BY_CALLBACK)) {
 
 		m_stop.store(true);				// Signal worker to stop (shouldn't be running)
 		m_worker.join();				// Wait for the worker thread to stop
@@ -744,9 +750,7 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex> const& lock, 
 		throw string_exception(__func__, ": failed to restart transfer at position ", position, ": ", m_curlerr);
 	}
 
-	// Return the new starting position of the stream, which is not necessarily
-	// going to be at the desired seek position
-	return m_readpos;
+	return m_readpos;					// Return new starting position of the stream
 }
 
 //---------------------------------------------------------------------------
@@ -768,11 +772,10 @@ unsigned long long dvrstream::seek(long long position, int whence)
 	// If the stream cannot be seeked, just return the current position
 	if(!m_canseek) return m_readpos;
 
-	// Calculate the new position of the stream, which cannot be negative or exceed the overall length
-	unsigned long long length = m_length.load();
-	if(whence == SEEK_SET) newposition = std::min(static_cast<unsigned long long>(std::max(position, 0LL)), length - 1);
-	else if(whence == SEEK_CUR) newposition = std::min(static_cast<unsigned long long>(std::max(m_readpos + position, 0ULL)), length - 1);
-	else if(whence == SEEK_END) newposition = std::min(static_cast<unsigned long long>(std::max(length + position, 0ULL)), length - 1);
+	// Calculate the new position of the stream, which cannot be negative or exceed MAX_STREAM_LENGTH
+	if(whence == SEEK_SET) newposition = std::min(static_cast<unsigned long long>(std::max(position, 0LL)), MAX_STREAM_LENGTH);
+	else if(whence == SEEK_CUR) newposition = std::min(static_cast<unsigned long long>(std::max(m_readpos + position, 0ULL)), MAX_STREAM_LENGTH);
+	else if(whence == SEEK_END) newposition = std::min(static_cast<unsigned long long>(std::max(m_length.load() + position, 0ULL)), MAX_STREAM_LENGTH);
 	else throw std::invalid_argument("whence");
 
 	// If the calculated position matches the current position there is nothing to do

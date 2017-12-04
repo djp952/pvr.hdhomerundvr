@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-#pragma warning(push, 4)				// Enable maximum compiler warnings
+#pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
 // DATA TYPES

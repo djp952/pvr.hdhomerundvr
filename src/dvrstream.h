@@ -113,6 +113,11 @@ private:
 	// Default ring buffer size, in bytes
 	static size_t const DEFAULT_RINGBUFFER_SIZE;
 
+	// MAX_STREAM_LENGTH
+	//
+	// Maximum allowable stream length
+	static unsigned long long const MAX_STREAM_LENGTH;
+
 	// MPEGTS_PACKET_LENGTH
 	//
 	// Length of a single mpeg-ts data packet
@@ -184,7 +189,7 @@ private:
 	unsigned long long				m_startpos = 0;				// Starting position
 	unsigned long long				m_readpos = 0;				// Current read position
 	unsigned long long				m_writepos = 0;				// Current write position
-	std::atomic<unsigned long long>	m_length{0};				// Known length of the stream
+	std::atomic<unsigned long long>	m_length{0};				// Length of the stream
 	std::atomic<bool>				m_realtime{false};			// Flag if stream is real-time
 
 	// RING BUFFER
