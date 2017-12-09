@@ -111,8 +111,6 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -130,8 +128,6 @@
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -155,8 +151,6 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -179,8 +173,6 @@
     </Link>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PostBuildEvent />
-    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h" />
@@ -199,9 +191,7 @@
     <ClInclude Include="..\depends\sqlite\sqlite3ext.h" />
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="align.h" />
-    <ClInclude Include="compat\dlfcn.h" />
     <ClInclude Include="compat\strings.h" />
-    <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="dvrstream.h" />
@@ -289,8 +279,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="compat\dlfcn.cpp" />
-    <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="database.cpp" />
