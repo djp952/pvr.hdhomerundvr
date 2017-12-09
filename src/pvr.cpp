@@ -29,7 +29,6 @@
 #include <list>
 #include <memory>
 #include <mutex>
-#include <pthread.h>
 #include <string>
 #include <strings.h>
 #include <sstream>

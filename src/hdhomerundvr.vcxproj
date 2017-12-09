@@ -113,7 +113,6 @@
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="align.h" />
     <ClInclude Include="compat\dlfcn.h" />
-    <ClInclude Include="compat\pthread.h" />
     <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="database.h" />
@@ -178,7 +177,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="compat\dlfcn.cpp" />
-    <ClCompile Include="compat\pthread.cpp" />
     <ClCompile Include="compat\snprintf.cpp" />
     <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />

@@ -52,4 +52,4 @@ int strncasecmp(char const* s1, char const* s2, size_t n);
 
 #pragma warning(pop)
 
-#endif	// __DLFCN_H_
+#endif	// __STRINGS_H_
