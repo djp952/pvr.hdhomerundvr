@@ -49,9 +49,6 @@
     <ClInclude Include="database.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="compat\dlfcn.h">
-      <Filter>Header Files\compat</Filter>
-    </ClInclude>
     <ClInclude Include="compat\uuid\uuid.h">
       <Filter>Header Files\compat\uuid</Filter>
     </ClInclude>
@@ -69,9 +66,6 @@
     </ClInclude>
     <ClInclude Include="..\tmp\version\version.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="compat\pthread.h">
-      <Filter>Header Files\compat</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h">
       <Filter>External Libraries\libhdhomerun</Filter>
@@ -121,6 +115,9 @@
     <ClInclude Include="align.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="compat\dlfcn.h">
+      <Filter>Header Files\compat</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -138,9 +135,6 @@
     <ClCompile Include="pvr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="compat\dlfcn.cpp">
-      <Filter>Source Files\compat</Filter>
-    </ClCompile>
     <ClCompile Include="compat\uuid.cpp">
       <Filter>Source Files\compat</Filter>
     </ClCompile>
@@ -149,9 +143,6 @@
     </ClCompile>
     <ClCompile Include="sqlite_exception.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compat\pthread.cpp">
-      <Filter>Source Files\compat</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
       <Filter>External Libraries\libhdhomerun</Filter>
@@ -194,6 +185,9 @@
     </ClCompile>
     <ClCompile Include="dvrstream.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\dlfcn.cpp">
+      <Filter>Source Files\compat</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
