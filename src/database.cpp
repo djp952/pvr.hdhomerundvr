@@ -302,7 +302,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 			// Execute the query - no result set is expected
 			result = sqlite3_step(statement);
 			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result);
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			sqlite3_finalize(statement);			// Finalize the SQLite statement
 		}
@@ -331,7 +331,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 			// Execute the query - no result set is expected
 			result = sqlite3_step(statement);
 			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result);
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			sqlite3_finalize(statement);			// Finalize the SQLite statement
 		}
@@ -491,7 +491,7 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 		// Execute the query; there shouldn't be any result set returned from it
 		result = sqlite3_step(statement);
 		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-		if(result != SQLITE_DONE) throw sqlite_exception(result);
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
@@ -538,7 +538,7 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 			// Execute the query; there shouldn't be any result set returned from it
 			result = sqlite3_step(statement);
 			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result);
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			sqlite3_finalize(statement);			// Finalize the SQLite statement
 		}
@@ -667,7 +667,8 @@ void discover_devices_broadcast(sqlite3* instance)
 
 			// This is a non-query, it's not expected to return any rows
 			result = sqlite3_step(statement);
-			if(result != SQLITE_DONE) throw string_exception("non-query failed or returned an unexpected result set");
+			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			// Reset the prepared statement so that it can be executed again
 			result = sqlite3_reset(statement);
@@ -1471,6 +1472,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 
 			// Execute the SQL statement
 			result = sqlite3_step(statement);
+			if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			// If no rows were returned from the query and the start time is still in the past,
 			// fast-forward it to the current time and try again.  Otherwise stop - no more data
@@ -2762,7 +2764,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 			// Execute the query - no result set is expected
 			result = sqlite3_step(statement);
 			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result);
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			sqlite3_finalize(statement);			// Finalize the SQLite statement
 		}
@@ -2792,7 +2794,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 			// Execute the query - no result set is expected
 			result = sqlite3_step(statement);
 			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result);
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			sqlite3_finalize(statement);			// Finalize the SQLite statement
 		}
@@ -3098,7 +3100,7 @@ void set_recording_lastposition(sqlite3* instance, char const* recordingid, int 
 		// Execute the query; there shouldn't be any result set returned from it
 		result = sqlite3_step(statement);
 		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-		if(result != SQLITE_DONE) throw sqlite_exception(result);
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
