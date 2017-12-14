@@ -715,8 +715,8 @@ unsigned long long dvrstream::restart(std::unique_lock<std::mutex>& lock, unsign
 
 		m_stop.store(true);				// Signal the thread to stop the transfer
 
-		// PERFORMANCE OPTIMIZATION: it's somewhat faster to wait for the worker thread to signal
-		// m_stopped and then just let the thread die naturally than it is to join it
+		// It's somewhat faster to wait for the worker thread to signal m_stopped and then
+		// just let the thread die naturally than it is to join it here; saves a few milliseconds
 		m_cv.wait(lock, [&]() -> bool { return m_stopped.load(); });
 		m_worker.detach();
 	}
