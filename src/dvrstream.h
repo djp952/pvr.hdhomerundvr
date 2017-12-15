@@ -158,7 +158,7 @@ private:
 	// restart
 	//
 	// Restarts the stream at the specified position
-	unsigned long long restart(std::unique_lock<std::mutex> const& lock, unsigned long long position);
+	unsigned long long restart(std::unique_lock<std::mutex>& lock, unsigned long long position);
 
 	//-----------------------------------------------------------------------
 	// Member Variables
