@@ -283,7 +283,7 @@
 	
     <!-- This task requires a lot of hard-coded paths and versions; keep everything that is subject to change as Properties -->
     <PropertyGroup>
-      <ApkToolJar>apktool_2.2.2.jar</ApkToolJar>
+      <ApkToolJar>apktool_2.2.4.jar</ApkToolJar>
       <ZipAlignExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\zipalign</ZipAlignExe>
       <ApkSignerExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\apksigner</ApkSignerExe>
       <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
