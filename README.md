@@ -11,10 +11,10 @@ Copyright (C)2017 Michael G. Brehm
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2017 Silicondust USA Inc     
    
 **BUILD ENVIRONMENT**  
-* Windows 10 x64 15063   
+* Windows 10 x64 16299 "Fall Creator's Update"   
 * Visual Studio 2013   
-* Visual Studio 2017 (with VC++ 2015.3 v140 toolset and Windows 8.1 SDK)   
-* Bash on Ubuntu on Windows 16.04.1 LTS   
+* Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop)   
+* Bash on Ubuntu on Windows 16.04.2 LTS   
 * Android NDK r12b for Windows 64-bit   
 * Raspberry Pi development tools
 * Optional: Android SDK tools r25.2.3 for Windows   
