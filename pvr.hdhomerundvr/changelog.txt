@@ -1,3 +1,7 @@
+v1.2.8 (2017.12.xx)
+  - Update zlib library to version 1.2.11
+  - Update cURL library to version 7.57.0
+
 v1.2.7 (2017.12.05)
   - Improve handling of in-progress Recorded TV streams that have switched from a live to a recorded state
   - Add support for processing Recorded TV Edit Decision Lists (EDL)
@@ -18,7 +22,7 @@ v1.2.4 (2017.11.24)
   - Add workaround to handle multiple calls into ADDON_Create/ADDON_Destroy during installation
 
 v1.2.3 (2017.11.15)
-  - Update SQLite database engine to v3.21.0
+  - Update SQLite database engine to version 3.21.0
   - Update cURL library to version 7.56.1
   - Update libhdhomerun library to version 2017.08.16
 
