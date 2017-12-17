@@ -213,6 +213,9 @@
     <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-aarch64/database.o out/linux-aarch64/dbextension.o out/linux-aarch64/hdhr.o out/linux-aarch64/hdhomerun_channels.o out/linux-aarch64/hdhomerun_channelscan.o out/linux-aarch64/hdhomerun_control.o out/linux-aarch64/hdhomerun_debug.o out/linux-aarch64/hdhomerun_device.o out/linux-aarch64/hdhomerun_device_selector.o out/linux-aarch64/hdhomerun_discover.o out/linux-aarch64/hdhomerun_os_posix.o out/linux-aarch64/hdhomerun_pkt.o out/linux-aarch64/hdhomerun_sock_posix.o out/linux-aarch64/hdhomerun_video.o out/linux-aarch64/dvrstream.o out/linux-aarch64/pvr.o out/linux-aarch64/scheduler.o out/linux-aarch64/sqlite3.o out/linux-aarch64/sqlite_exception.o depends/libcurl-nossl/linux-aarch64/lib/libcurl.a depends/libz/linux-aarch64/lib/libz.a depends/libuuid/linux-aarch64/lib/libuuid.a -ldl -lpthread -o out/linux-aarch64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-aarch64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
 
+    <!-- osx-x86_64 -->
+    <!-- TODO -->
+
     <!-- raspbian-armhf -->
     <MakeDir Directories="out\raspbian-armhf" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/raspbian-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
@@ -255,6 +258,7 @@
       <PackageFile-linux-armel>out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-armel>
       <PackageFile-linux-armhf>out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-armhf>
       <PackageFile-linux-aarch64>out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-aarch64>
+      <PackageFile-osx-x86_64>out\zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-osx-x86_64>
       <PackageFile-raspbian-armhf>out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-raspbian-armhf>
       <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
       <PackageFile-android-aarch64>out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-aarch64>
@@ -268,6 +272,7 @@
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armel)&quot; manifest\linux-armel.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armhf)&quot; manifest\linux-armhf.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-aarch64)&quot; manifest\linux-aarch64.manifest" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-osx-x86_64)&quot; manifest\osx-x86_64.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-raspbian-armhf)&quot; manifest\raspbian-armhf.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-arm)&quot; manifest\android-arm.manifest" ContinueOnError="false"/>
     <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-aarch64)&quot; manifest\android-aarch64.manifest" ContinueOnError="false"/>
