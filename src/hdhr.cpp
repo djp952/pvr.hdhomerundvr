@@ -58,7 +58,7 @@ void enumerate_devices(enumerate_devices_callback callback)
 		if(devices[index].is_legacy) continue;
 
 		// Only devices with a base URL string are supported
-		if((devices[index].base_url == nullptr) || (*devices[index].base_url == '\0')) continue;
+		if(strlen(devices[index].base_url) == 0) continue;
 
 		// Convert the hdhomerun_discover_device_t structure into a discover_device for the caller
 		struct discover_device device;
