@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdhomerundvr", "src\hdhomerundvr.vcxproj", "{5B5A17F1-4312-4A64-A796-2818CE0906B4}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -50,6 +50,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03
 		manifest\linux-armhf.manifest = manifest\linux-armhf.manifest
 		manifest\linux-i686.manifest = manifest\linux-i686.manifest
 		manifest\linux-x86_64.manifest = manifest\linux-x86_64.manifest
+		manifest\osx-x86_64.manifest = manifest\osx-x86_64.manifest
 		manifest\raspbian-armhf.manifest = manifest\raspbian-armhf.manifest
 		manifest\windows-win32.manifest = manifest\windows-win32.manifest
 	EndProjectSection
@@ -82,5 +83,8 @@ Global
 		{AB93AD67-82B8-4012-9299-C301D583CAE2} = {AE3C3D3D-5525-4E65-9944-3CFF8718778F}
 		{A32210DB-B4C6-410C-8B9D-5B4BE3CA5A2E} = {AB93AD67-82B8-4012-9299-C301D583CAE2}
 		{03E257C2-B115-4D59-AB37-DB0AD52F5366} = {BC723F63-F0D7-4CC4-8789-D6A7DD8AA6E1}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CDFD4BDC-0976-4BCA-B61E-33B151C24682}
 	EndGlobalSection
 EndGlobal
