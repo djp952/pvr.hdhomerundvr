@@ -49,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03
 		manifest\linux-armhf.manifest = manifest\linux-armhf.manifest
 		manifest\linux-i686.manifest = manifest\linux-i686.manifest
 		manifest\linux-x86_64.manifest = manifest\linux-x86_64.manifest
+		manifest\osx-x86_64.manifest = manifest\osx-x86_64.manifest
 		manifest\raspbian-armhf.manifest = manifest\raspbian-armhf.manifest
 		manifest\windows-win32.manifest = manifest\windows-win32.manifest
 	EndProjectSection

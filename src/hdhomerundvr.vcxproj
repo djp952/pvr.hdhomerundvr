@@ -208,13 +208,13 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
 "$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
 "$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
+"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-osx.xml" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;$(SolutionDir)tmp\addon-osx.xml;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
 "$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
 "$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;%(Outputs)</Outputs>
+"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-osx.xml" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;$(SolutionDir)tmp\addon-osx.xml;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating addon.xml files</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
     </CustomBuild>
