@@ -3455,18 +3455,7 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
-	if(!g_dvrstream) return -1;				// No active dvrstream instance
-
-	try {
-
-		// Perform the stream seek operation; throw exception on overflow
-		unsigned long long result = g_dvrstream->seek(position, whence);
-		if(result > static_cast<unsigned long long>(std::numeric_limits<long long>::max())) 
-			throw string_exception("seek result exceeds std::numeric_limits<long long>::max()");
-
-		return static_cast<long long>(result);
-	}
-
+	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3482,10 +3471,7 @@ long long SeekLiveStream(long long position, int whence)
 
 long long PositionLiveStream(void)
 {
-	if(!g_dvrstream) return -1;
-
-	// Don't report a position for real-time streams, it causes problems
-	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->position()); }
+	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3501,10 +3487,7 @@ long long PositionLiveStream(void)
 
 long long LengthLiveStream(void)
 {
-	if(!g_dvrstream) return -1;
-
-	// Don't report a length for real-time streams, it causes problems
-	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->length()); }
+	try { return (g_dvrstream) ? g_dvrstream->length() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3670,18 +3653,7 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 long long SeekRecordedStream(long long position, int whence)
 {
-	if(!g_dvrstream) return -1;				// No active dvrstream instance
-
-	try {
-
-		// Perform the stream seek operation; throw exception on overflow
-		unsigned long long result = g_dvrstream->seek(position, whence);
-		if(result > static_cast<unsigned long long>(std::numeric_limits<long long>::max())) 
-			throw string_exception("seek result exceeds std::numeric_limits<long long>::max()");
-
-		return static_cast<long long>(result);
-	}
-
+	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3697,10 +3669,7 @@ long long SeekRecordedStream(long long position, int whence)
 
 long long PositionRecordedStream(void)
 {
-	if(!g_dvrstream) return -1;
-
-	// Don't report a position for real-time streams, it causes problems
-	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->position()); }
+	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3716,10 +3685,7 @@ long long PositionRecordedStream(void)
 
 long long LengthRecordedStream(void)
 {
-	if(!g_dvrstream) return -1;
-
-	// Don't report a length for real-time streams, it causes problems
-	try { return (g_dvrstream->realtime() ? -1 : g_dvrstream->length()); }
+	try { return (g_dvrstream) ? g_dvrstream->length() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3816,7 +3782,7 @@ bool CanPauseStream(void)
 
 bool CanSeekStream(void)
 {
-	// NOTE: There is a defect in Kodi 17.0-17.3 that prevents pause from working
+	// NOTE: There is a defect in Kodi 17 that prevents pause from working
 	// when seek has been disabled; always return true here even if the current
 	// stream doesn't support seek operations
 	return true;
