@@ -70,13 +70,13 @@ public:
 
 	// length
 	//
-	// Gets the known length of the stream
-	unsigned long long length(void) const;
+	// Gets the length of the stream
+	long long length(void) const;
 
 	// position
 	//
 	// Gets the current position of the stream
-	unsigned long long position(void) const;
+	long long position(void) const;
 
 	// read
 	//
@@ -85,13 +85,13 @@ public:
 
 	// realtime
 	//
-	// Flag if the stream is real-time
+	// Gets a flag indicating if the stream is real-time
 	bool realtime(void) const;
 
 	// seek
 	//
 	// Sets the stream pointer to a specific position
-	unsigned long long seek(long long position, int whence);
+	long long seek(long long position, int whence);
 
 private:
 
@@ -115,8 +115,8 @@ private:
 
 	// MAX_STREAM_LENGTH
 	//
-	// Maximum allowable stream length
-	static unsigned long long const MAX_STREAM_LENGTH;
+	// Maximum allowable stream length; indicates a real-time stream
+	static long long const MAX_STREAM_LENGTH;
 
 	// MPEGTS_PACKET_LENGTH
 	//
@@ -143,7 +143,7 @@ private:
 	// curl_transfer_func
 	//
 	// Worker thread procedure for the CURL data transfer
-	void curl_transfer_func(unsigned long long position);
+	void curl_transfer_func(long long position);
 
 	// curl_write (static)
 	//
@@ -158,7 +158,7 @@ private:
 	// restart
 	//
 	// Restarts the stream at the specified position
-	unsigned long long restart(std::unique_lock<std::mutex>& lock, unsigned long long position);
+	long long restart(std::unique_lock<std::mutex>& lock, long long position);
 
 	//-----------------------------------------------------------------------
 	// Member Variables
@@ -186,11 +186,10 @@ private:
 	size_t const					m_readmincount;				// Minimum read byte count
 	unsigned int const				m_readtimeout;				// Read timeout in milliseconds
 	bool							m_canseek = false;			// Flag if stream can be seeked
-	unsigned long long				m_startpos = 0;				// Starting position
-	unsigned long long				m_readpos = 0;				// Current read position
-	unsigned long long				m_writepos = 0;				// Current write position
-	std::atomic<unsigned long long>	m_length{0};				// Length of the stream
-	std::atomic<bool>				m_realtime{false};			// Flag if stream is real-time
+	long long						m_startpos = 0;				// Starting position
+	long long						m_readpos = 0;				// Current read position
+	long long						m_writepos = 0;				// Current write position
+	long long						m_length = 0;				// Length of the stream
 
 	// RING BUFFER
 	//
