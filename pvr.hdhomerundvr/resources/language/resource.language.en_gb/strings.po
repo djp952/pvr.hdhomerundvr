@@ -124,6 +124,10 @@ msgctxt "#30123"
 msgid "Trigger recording discovery immediately after playback"
 msgstr ""
 
+msgctxt "#30124"
+msgid "Enable verbose logging of discovery data"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
