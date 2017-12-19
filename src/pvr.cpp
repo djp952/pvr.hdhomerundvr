@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <functional>
 #include <list>
 #include <memory>
@@ -151,6 +152,11 @@ struct addon_settings {
 	// Flag to include the episode number in recording titles
 	bool use_episode_number_as_title;
 
+	// discover_recordings_after_playback
+	//
+	// Flag to re-discover recordings immediately after playback has stopped
+	bool discover_recordings_after_playback;
+
 	// use_backend_genre_strings
 	//
 	// Flag to use the backend provided genre strings instead of mapping them
@@ -201,11 +207,6 @@ struct addon_settings {
 	// Interval at which the recording rule discovery will occur (seconds)
 	int discover_recordingrules_interval;
 
-	// discover_recordings_after_playback
-	//
-	// Flag to re-discover recordings immediately after playback has stopped
-	bool discover_recordings_after_playback;
-
 	// use_direct_tuning
 	//
 	// Flag indicating that Live TV will be handled directly from the tuner(s)
@@ -250,6 +251,11 @@ struct addon_settings {
 	//
 	// Indicates the number of milliseconds to subtract to an EDL end value
 	int recording_edl_end_padding;
+
+	// verbose_discovery_logging
+	//
+	// Flag indicating that verbose discovery information should be logged
+	bool verbose_discovery_logging;
 };
 
 //---------------------------------------------------------------------------
@@ -335,6 +341,7 @@ static addon_settings g_settings = {
 	false,					// pause_discovery_while_streaming
 	false,					// prepend_channel_numbers
 	false,					// use_episode_number_as_title
+	false,					// discover_recordings_after_playback
 	false,					// use_backend_genre_strings
 	false,					// show_drm_protected_channels
 	86400,					// delete_datetime_rules_after			default = 1 day
@@ -345,7 +352,6 @@ static addon_settings g_settings = {
 	600,					// discover_lineups_interval			default = 10 minutes
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
-	false,					// discover_recordings_after_playback
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
 	(1 KiB),				// stream_read_minimum_byte_count
@@ -355,6 +361,7 @@ static addon_settings g_settings = {
 	"",						// recording_edl_folder
 	0,						// recording_edl_start_padding
 	0,						// recording_edl_end_padding
+	false,					// verbose_discovery_logging
 };
 
 // g_settings_lock
@@ -1145,6 +1152,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
+			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
@@ -1157,7 +1165,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("discover_recordings_interval", &nvalue)) g_settings.discover_recordings_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_recordingrules_interval", &nvalue)) g_settings.discover_recordingrules_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_episodes_interval", &nvalue)) g_settings.discover_episodes_interval = interval_enum_to_seconds(nvalue);
-			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
@@ -1169,6 +1176,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
 			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
+			if(g_addon->GetSetting("verbose_discovery_logging", &bvalue)) g_settings.verbose_discovery_logging = bvalue;
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -1451,6 +1459,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
+	// discover_recordings_after_playback
+	//
+	else if(strcmp(name, "discover_recordings_after_playback") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.discover_recordings_after_playback) {
+
+			g_settings.discover_recordings_after_playback = bvalue;
+			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
 	// use_backend_genre_strings
 	//
 	else if(strcmp(name, "use_backend_genre_strings") == 0) {
@@ -1595,18 +1615,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// discover_recordings_after_playback
-	//
-	else if(strcmp(name, "discover_recordings_after_playback") == 0) {
-
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.discover_recordings_after_playback) {
-
-			g_settings.use_broadcast_device_discovery = bvalue;
-			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
-		}
-	}
-
 	// use_direct_tuning
 	//
 	else if(strcmp(name, "use_direct_tuning") == 0) {
@@ -1711,6 +1719,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.recording_edl_end_padding = nvalue;
 			log_notice(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
+		}
+	}
+
+	// verbose_discovery_logging
+	//
+	else if(strcmp(name, "verbose_discovery_logging") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.verbose_discovery_logging) {
+
+			g_settings.verbose_discovery_logging = bvalue;
+			log_notice(__func__, ": setting verbose_discovery_logging changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2093,6 +2113,19 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
+		// Log the request if verbose_disovery_logging has been enabled
+		if(settings.verbose_discovery_logging) {
+
+			char strstart[24] = {'\0'};				// Buffer for converted time_t
+			char strend[24] = {'\0'};				// Buffer for converted time_t
+
+			// Convert both time_t values into "YYYY-MM-DDTHH:MM:SSZ"
+			strftime(strstart, std::extent<decltype(strstart)>::value, "%FT%TZ", gmtime(&start));
+			strftime(strend, std::extent<decltype(strend)>::value, "%FT%TZ", gmtime(&end));
+
+			log_notice(__func__, ": Guide data requested for channel ", channel.strChannelName, ": start=", strstart, " end=", strend);
+		}
+
 		// Enumerate all of the guide entries in the database for this channel and time frame
 		enumerate_guideentries(dbhandle, channelid, start, end, [&](struct guideentry const& item) -> void {
 
@@ -2153,6 +2186,20 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 			// Transfer the EPG_TAG structure over to Kodi
 			g_pvr->TransferEpgEntry(handle, &epgtag);
+			
+			// Log the EPG_TAG information if verbose_discovery_logging is enabled
+			if(settings.verbose_discovery_logging) {
+
+				char strstart[24] = {'\0'};				// Buffer for converted time_t
+				char strend[24] = {'\0'};				// Buffer for converted time_t
+
+				// Convert both time_t values into "YYYY-MM-DDTHH:MM:SSZ"
+				strftime(strstart, std::extent<decltype(strstart)>::value, "%FT%TZ", gmtime(&item.starttime));
+				strftime(strend, std::extent<decltype(strend)>::value, "%FT%TZ", gmtime(&item.endtime));
+
+				// Don't log the __func__ here, it will pick up the lambda name 
+				log_notice("Transferred EPG_TAG: channel=", channel.strChannelName, " title=", item.title, " start=", strstart, " end=", strend);
+			}
 		});
 	}
 	
