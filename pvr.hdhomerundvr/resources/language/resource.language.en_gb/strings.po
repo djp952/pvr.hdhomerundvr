@@ -128,6 +128,10 @@ msgctxt "#30124"
 msgid "Enable verbose logging of discovery data"
 msgstr ""
 
+msgctxt "#30125"
+msgid "Disable reporting of real-time MPEG-TS streams"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
