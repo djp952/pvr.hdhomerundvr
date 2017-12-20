@@ -256,6 +256,11 @@ struct addon_settings {
 	//
 	// Flag indicating that verbose discovery information should be logged
 	bool verbose_discovery_logging;
+
+	// disable_realtime_indicator
+	//
+	// Flag indicating that the IsRealTimeStream function should always return false
+	bool disable_realtime_indicator;
 };
 
 //---------------------------------------------------------------------------
@@ -362,6 +367,7 @@ static addon_settings g_settings = {
 	0,						// recording_edl_start_padding
 	0,						// recording_edl_end_padding
 	false,					// verbose_discovery_logging
+	false,					// disable_realtime_indicator
 };
 
 // g_settings_lock
@@ -1177,6 +1183,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
 			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
 			if(g_addon->GetSetting("verbose_discovery_logging", &bvalue)) g_settings.verbose_discovery_logging = bvalue;
+			if(g_addon->GetSetting("disable_realtime_indicator", &bvalue)) g_settings.disable_realtime_indicator = bvalue;
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -1731,6 +1738,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.verbose_discovery_logging = bvalue;
 			log_notice(__func__, ": setting verbose_discovery_logging changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// disable_realtime_indicator
+	//
+	else if(strcmp(name, "disable_realtime_indicator") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.disable_realtime_indicator) {
+
+			g_settings.disable_realtime_indicator = bvalue;
+			log_notice(__func__, ": setting disable_realtime_indicator changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -3951,6 +3970,10 @@ bool IsTimeshifting(void)
 
 bool IsRealTimeStream(void)
 {
+	// The realtime indicator can be shut down completely via an option
+	struct addon_settings settings = copy_settings();
+	if(settings.disable_realtime_indicator) return false;
+
 	try { return (g_dvrstream) ? g_dvrstream->realtime() : false; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
 	catch(...) { return handle_generalexception(__func__, false); }
