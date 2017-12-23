@@ -20,13 +20,19 @@
  SOFTWARE.
 -->
 
-<Project DefaultTargets="Package" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="all" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
   <PropertyGroup>
+    <AddonVersion></AddonVersion>           <!-- Set by AddonVersion Target -->
+    <ApkSignerExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\apksigner</ApkSignerExe>     
+    <ApkToolJar>depends\apktool\apktool_2.2.4.jar</ApkToolJar>
+    <BashExe>$(WINDIR)\Sysnative\bash.exe</BashExe>
     <Configuration>Release</Configuration>
+    <Keystore></Keystore>                   <!-- Must be set on the command line -->
+    <KeystorePassword></KeystorePassword>   <!-- Must be set on the command line -->
     <KodiBaseline>jarvis</KodiBaseline>
-    <Keystore></Keystore> <!-- must be set on command line with /p:Keystore=xxx -->
-    <KeystorePassword></KeystorePassword> <!-- must be set on command line with /p:KeystorePassword=xxx -->
+    <ZipAlignExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\zipalign</ZipAlignExe>
+    <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
   <!-- DownloadFile: Downloads a file using System.Net.WebClient -->
@@ -58,276 +64,379 @@
     </Task>
   </UsingTask>
 
-  <Target Name="Clean">
-    <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Clean" ContinueOnError="false"/>
-    <RemoveDir Directories="tmp;out"/>
+  <!-- Generates tmp\version\version.txt file and populates AddonVersion property -->
+  <Target Name="AddonVersion">
+    
+    <MSBuild Projects="src/version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+    <CreateProperty Value="$([System.IO.File]::ReadAllText(tmp\version\version.txt))">
+      <Output TaskParameter="Value" PropertyName="AddonVersion" />
+    </CreateProperty>
+    
+  </Target>
+
+  <!-- Generates tmp\addon-*.xml files -->
+  <Target Name="AddonXml" DependsOnTargets="AddonVersion">
+    
+    <MSBuild Projects="src/addonxml.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+    
   </Target>
   
-  <Target Name="Version" DependsOnTargets="Clean">
-    <MSBuild Projects="src/version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+  <!-- BUILD: WINDOWS-WIN32 -->
+  <Target Name="windows-win32" DependsOnTargets="AddonVersion;AddonXml">
+
+    <MakeDir Directories="out\windows-win32" ContinueOnError="false"/>
+    <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip manifest\windows-win32.manifest" ContinueOnError="false"/>
+
   </Target>
 
-  <Target Name="Build" DependsOnTargets="Version">
+  <!-- BUILD: LINUX-I686 -->
+  <Target Name="linux-i686" DependsOnTargets="AddonVersion;AddonXml">
 
     <PropertyGroup>
-      <BashExe>$(WINDIR)\Sysnative\bash.exe</BashExe>
-      <CPPFLAGS-linux-i686>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-i686/include/curl -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS-linux-i686>
-      <CPPFLAGS-linux-x86_64>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-x86_64/include/curl -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS-linux-x86_64>
-      <CPPFLAGS-linux-armel>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-armel/include/curl -Idepends/libuuid/linux-armel/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-armel>
-      <CPPFLAGS-linux-armhf>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-armhf/include/curl -Idepends/libuuid/linux-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-armhf>
-      <CPPFLAGS-linux-aarch64>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-aarch64/include/curl -Idepends/libuuid/linux-aarch64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-linux-aarch64>
-      <CPPFLAGS-raspbian-armhf>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/raspbian-armhf/include/curl -Idepends/libuuid/raspbian-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS-raspbian-armhf>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-i686/include/curl -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS>
+      <CFLAGS>-fPIC -m32</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++11 -m32</CXXFLAGS>
+    </PropertyGroup>
+
+    <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-i686/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-i686/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-i686/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-i686/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-i686/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-i686/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-i686/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-i686/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-i686/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-i686/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-i686/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-i686/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/linux-i686/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-i686/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-i686/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-i686/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-i686/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-i686/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-i686/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -shared -Wl,--version-script=exportlist/exportlist.linux out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/hdhr.o out/linux-i686/hdhomerun_channels.o out/linux-i686/hdhomerun_channelscan.o out/linux-i686/hdhomerun_control.o out/linux-i686/hdhomerun_debug.o out/linux-i686/hdhomerun_device.o out/linux-i686/hdhomerun_device_selector.o out/linux-i686/hdhomerun_discover.o out/linux-i686/hdhomerun_os_posix.o out/linux-i686/hdhomerun_pkt.o out/linux-i686/hdhomerun_sock_posix.o out/linux-i686/hdhomerun_video.o out/linux-i686/dvrstream.o out/linux-i686/pvr.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o out/linux-i686/wait_helpers.o depends/libcurl-nossl/linux-i686/lib/libcurl.a depends/libz/linux-i686/lib/libz.a depends/libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) -m32 -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-i686/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-i686.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: LINUX-X86_64 -->
+  <Target Name="linux-x86_64" DependsOnTargets="AddonVersion;AddonXml">
+
+    <PropertyGroup>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-x86_64/include/curl -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-fPIC</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++11</CXXFLAGS>
-      <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
     </PropertyGroup>
+
+    <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-x86_64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-x86_64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-x86_64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-x86_64/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-x86_64/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-x86_64/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-x86_64/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-x86_64/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-x86_64/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-x86_64/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-x86_64/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/linux-x86_64/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-x86_64/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-x86_64/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-x86_64/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-x86_64/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-x86_64/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-x86_64/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -shared -Wl,--version-script=exportlist/exportlist.linux out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/hdhr.o out/linux-x86_64/hdhomerun_channels.o out/linux-x86_64/hdhomerun_channelscan.o out/linux-x86_64/hdhomerun_control.o out/linux-x86_64/hdhomerun_debug.o out/linux-x86_64/hdhomerun_device.o out/linux-x86_64/hdhomerun_device_selector.o out/linux-x86_64/hdhomerun_discover.o out/linux-x86_64/hdhomerun_os_posix.o out/linux-x86_64/hdhomerun_pkt.o out/linux-x86_64/hdhomerun_sock_posix.o out/linux-x86_64/hdhomerun_video.o out/linux-x86_64/dvrstream.o out/linux-x86_64/pvr.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o out/linux-x86_64/wait_helpers.o depends/libcurl-nossl/linux-x86_64/lib/libcurl.a depends/libz/linux-x86_64/lib/libz.a depends/libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-x86_64.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: LINUX-ARMEL -->
+  <Target Name="linux-armel" DependsOnTargets="AddonVersion;AddonXml">
+
+    <PropertyGroup>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-armel/include/curl -Idepends/libuuid/linux-armel/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CFLAGS>-fPIC</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++11</CXXFLAGS>
+    </PropertyGroup>
+
+    <MakeDir Directories="out\linux-armel" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armel/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armel/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-armel/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-armel/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-armel/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-armel/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-armel/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-armel/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-armel/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-armel/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-armel/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-armel/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/linux-armel/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-armel/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-armel/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-armel/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-armel/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-armel/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-armel/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-armel/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -shared -Wl,--version-script=exportlist/exportlist.linux out/linux-armel/database.o out/linux-armel/dbextension.o out/linux-armel/hdhr.o out/linux-armel/hdhomerun_channels.o out/linux-armel/hdhomerun_channelscan.o out/linux-armel/hdhomerun_control.o out/linux-armel/hdhomerun_debug.o out/linux-armel/hdhomerun_device.o out/linux-armel/hdhomerun_device_selector.o out/linux-armel/hdhomerun_discover.o out/linux-armel/hdhomerun_os_posix.o out/linux-armel/hdhomerun_pkt.o out/linux-armel/hdhomerun_sock_posix.o out/linux-armel/hdhomerun_video.o out/linux-armel/dvrstream.o out/linux-armel/pvr.o out/linux-armel/scheduler.o out/linux-armel/sqlite3.o out/linux-armel/sqlite_exception.o out/linux-armel/wait_helpers.o depends/libcurl-nossl/linux-armel/lib/libcurl.a depends/libz/linux-armel/lib/libz.a depends/libuuid/linux-armel/lib/libuuid.a -ldl -lpthread -o out/linux-armel/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-armel/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armel.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: LINUX-ARMHF -->
+  <Target Name="linux-armhf" DependsOnTargets="AddonVersion;AddonXml">
+
+    <PropertyGroup>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-armhf/include/curl -Idepends/libuuid/linux-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CFLAGS>-fPIC</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++11</CXXFLAGS>
+    </PropertyGroup>
+
+    <MakeDir Directories="out\linux-armhf" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armhf/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-armhf/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-armhf/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-armhf/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-armhf/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-armhf/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-armhf/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-armhf/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-armhf/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-armhf/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-armhf/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/linux-armhf/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-armhf/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-armhf/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-armhf/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-armhf/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-armhf/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-armhf/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-armhf/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -shared -Wl,--version-script=exportlist/exportlist.linux out/linux-armhf/database.o out/linux-armhf/dbextension.o out/linux-armhf/hdhr.o out/linux-armhf/hdhomerun_channels.o out/linux-armhf/hdhomerun_channelscan.o out/linux-armhf/hdhomerun_control.o out/linux-armhf/hdhomerun_debug.o out/linux-armhf/hdhomerun_device.o out/linux-armhf/hdhomerun_device_selector.o out/linux-armhf/hdhomerun_discover.o out/linux-armhf/hdhomerun_os_posix.o out/linux-armhf/hdhomerun_pkt.o out/linux-armhf/hdhomerun_sock_posix.o out/linux-armhf/hdhomerun_video.o out/linux-armhf/dvrstream.o out/linux-armhf/pvr.o out/linux-armhf/scheduler.o out/linux-armhf/sqlite3.o out/linux-armhf/sqlite_exception.o out/linux-armhf/wait_helpers.o depends/libcurl-nossl/linux-armhf/lib/libcurl.a depends/libz/linux-armhf/lib/libz.a depends/libuuid/linux-armhf/lib/libuuid.a -ldl -lpthread -o out/linux-armhf/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-armhf/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armhf.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: LINUX-AARCH64 -->
+  <Target Name="linux-aarch64" DependsOnTargets="AddonVersion;AddonXml">
+
+    <PropertyGroup>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/linux-aarch64/include/curl -Idepends/libuuid/linux-aarch64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CFLAGS>-fPIC</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++11</CXXFLAGS>
+    </PropertyGroup>
+
+    <MakeDir Directories="out\linux-aarch64" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-aarch64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-aarch64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-aarch64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-aarch64/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-aarch64/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-aarch64/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-aarch64/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-aarch64/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-aarch64/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-aarch64/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-aarch64/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-aarch64/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/linux-aarch64/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-aarch64/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-aarch64/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-aarch64/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-aarch64/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-aarch64/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-aarch64/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-aarch64/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS) $(CXXFLAGS) -shared -Wl,--version-script=exportlist/exportlist.linux out/linux-aarch64/database.o out/linux-aarch64/dbextension.o out/linux-aarch64/hdhr.o out/linux-aarch64/hdhomerun_channels.o out/linux-aarch64/hdhomerun_channelscan.o out/linux-aarch64/hdhomerun_control.o out/linux-aarch64/hdhomerun_debug.o out/linux-aarch64/hdhomerun_device.o out/linux-aarch64/hdhomerun_device_selector.o out/linux-aarch64/hdhomerun_discover.o out/linux-aarch64/hdhomerun_os_posix.o out/linux-aarch64/hdhomerun_pkt.o out/linux-aarch64/hdhomerun_sock_posix.o out/linux-aarch64/hdhomerun_video.o out/linux-aarch64/dvrstream.o out/linux-aarch64/pvr.o out/linux-aarch64/scheduler.o out/linux-aarch64/sqlite3.o out/linux-aarch64/sqlite_exception.o out/linux-aarch64/wait_helpers.o depends/libcurl-nossl/linux-aarch64/lib/libcurl.a depends/libz/linux-aarch64/lib/libz.a depends/libuuid/linux-aarch64/lib/libuuid.a -ldl -lpthread -o out/linux-aarch64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-aarch64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-aarch64.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: RASPBIAN-ARMHF -->
+  <Target Name="raspbian-armhf" DependsOnTargets="AddonVersion;AddonXml">
+
+    <PropertyGroup>
+      <ENV>PATH=~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin</ENV>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/raspbian-armhf/include/curl -Idepends/libuuid/raspbian-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CFLAGS>-fPIC</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++11</CXXFLAGS>
+    </PropertyGroup>
+
+    <MakeDir Directories="out\raspbian-armhf" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/raspbian-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/raspbian-armhf/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/raspbian-armhf/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/raspbian-armhf/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/raspbian-armhf/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/raspbian-armhf/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/raspbian-armhf/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/raspbian-armhf/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/raspbian-armhf/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/raspbian-armhf/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/raspbian-armhf/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/raspbian-armhf/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/raspbian-armhf/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/raspbian-armhf/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/raspbian-armhf/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/raspbian-armhf/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/raspbian-armhf/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/raspbian-armhf/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/raspbian-armhf/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/raspbian-armhf/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-g++ $(CPPFLAGS) $(CXXFLAGS) -shared -Wl,--version-script=exportlist/exportlist.raspbian out/raspbian-armhf/database.o out/raspbian-armhf/dbextension.o out/raspbian-armhf/hdhr.o out/raspbian-armhf/hdhomerun_channels.o out/raspbian-armhf/hdhomerun_channelscan.o out/raspbian-armhf/hdhomerun_control.o out/raspbian-armhf/hdhomerun_debug.o out/raspbian-armhf/hdhomerun_device.o out/raspbian-armhf/hdhomerun_device_selector.o out/raspbian-armhf/hdhomerun_discover.o out/raspbian-armhf/hdhomerun_os_posix.o out/raspbian-armhf/hdhomerun_pkt.o out/raspbian-armhf/hdhomerun_sock_posix.o out/raspbian-armhf/hdhomerun_video.o out/raspbian-armhf/dvrstream.o out/raspbian-armhf/pvr.o out/raspbian-armhf/scheduler.o out/raspbian-armhf/sqlite3.o out/raspbian-armhf/sqlite_exception.o out/raspbian-armhf/wait_helpers.o depends/libcurl-nossl/raspbian-armhf/lib/libcurl.a depends/libz/raspbian-armhf/lib/libz.a depends/libuuid/raspbian-armhf/lib/libuuid.a -ldl -lpthread -o out/raspbian-armhf/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/raspbian-armhf/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\raspbian-armhf.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: OSX-X86_64 -->
+  <Target Name="osx-x86_64" DependsOnTargets="AddonVersion;AddonXml">
+    
+    <PropertyGroup>
+      <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH=~/x86_64-apple-darwin15/bin</ENV>
+      <CPPFLAGS>-mmacosx-version-min=10.7 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc/addons/include -Idepends/xbmc/addons/library.xbmc.addon -Idepends/xbmc/addons/library.kodi.guilib -Idepends/xbmc/addons/library.xbmc.pvr -Idepends/libcurl-nossl/osx-x86_64/include/curl -Idepends/libuuid/osx-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CFLAGS>-fPIC -stdlib=libc++</CFLAGS>
+      <CXXFLAGS>-fPIC -std=c++11 -stdlib=libc++</CXXFLAGS>
+    </PropertyGroup>
+
+    <MakeDir Directories="out\osx-x86_64" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/osx-x86_64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/osx-x86_64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/osx-x86_64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/osx-x86_64/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/osx-x86_64/hdhomerun_device.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/osx-x86_64/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/osx-x86_64/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/osx-x86_64/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/osx-x86_64/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/osx-x86_64/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/osx-x86_64/hdhomerun_video.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/osx-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/database.cpp -o out/osx-x86_64/database.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/dbextension.cpp -o out/osx-x86_64/dbextension.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/dvrstream.cpp -o out/osx-x86_64/dvrstream.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/hdhr.cpp -o out/osx-x86_64/hdhr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/pvr.cpp -o out/osx-x86_64/pvr.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/scheduler.cpp -o out/osx-x86_64/scheduler.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/osx-x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/osx-x86_64/wait_helpers.o&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-g++ $(CPPFLAGS) $(CXXFLAGS) -dynamiclib -exported_symbols_list exportlist/exportlist.osx out/osx-x86_64/database.o out/osx-x86_64/dbextension.o out/osx-x86_64/hdhr.o out/osx-x86_64/hdhomerun_channels.o out/osx-x86_64/hdhomerun_channelscan.o out/osx-x86_64/hdhomerun_control.o out/osx-x86_64/hdhomerun_debug.o out/osx-x86_64/hdhomerun_device.o out/osx-x86_64/hdhomerun_device_selector.o out/osx-x86_64/hdhomerun_discover.o out/osx-x86_64/hdhomerun_os_posix.o out/osx-x86_64/hdhomerun_pkt.o out/osx-x86_64/hdhomerun_sock_posix.o out/osx-x86_64/hdhomerun_video.o out/osx-x86_64/dvrstream.o out/osx-x86_64/pvr.o out/osx-x86_64/scheduler.o out/osx-x86_64/sqlite3.o out/osx-x86_64/sqlite_exception.o out/osx-x86_64/wait_helpers.o depends/libcurl-nossl/osx-x86_64/lib/libcurl.a depends/libz/osx-x86_64/lib/libz.a depends/libuuid/osx-x86_64/lib/libuuid.a -ldl -lpthread -lldap -o out/osx-x86_64/zuki.pvr.hdhomerundvr.dylib&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/osx-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\osx-x86_64.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: ANDROID-ARM -->
+  <Target Name="android-arm" DependsOnTargets="AddonVersion;AddonXml">
 
     <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
-
-    <!-- windows-Win32 -->
-    <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
-
-    <!-- linux-i686 -->
-    <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-i686/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-i686/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-i686/hdhomerun_control.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-i686/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-i686/hdhomerun_device.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-i686/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-i686/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-i686/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-i686/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-i686/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-i686/hdhomerun_video.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) $(CFLAGS) -m32 -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-i686/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/database.cpp -o out/linux-i686/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/dbextension.cpp -o out/linux-i686/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/dvrstream.cpp -o out/linux-i686/dvrstream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/hdhr.cpp -o out/linux-i686/hdhr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/pvr.cpp -o out/linux-i686/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/scheduler.cpp -o out/linux-i686/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/sqlite_exception.cpp -o out/linux-i686/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) $(CXXFLAGS) -m32 -c src/wait_helpers.cpp -o out/linux-i686/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-i686) -m32 -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-i686/database.o out/linux-i686/dbextension.o out/linux-i686/hdhr.o out/linux-i686/hdhomerun_channels.o out/linux-i686/hdhomerun_channelscan.o out/linux-i686/hdhomerun_control.o out/linux-i686/hdhomerun_debug.o out/linux-i686/hdhomerun_device.o out/linux-i686/hdhomerun_device_selector.o out/linux-i686/hdhomerun_discover.o out/linux-i686/hdhomerun_os_posix.o out/linux-i686/hdhomerun_pkt.o out/linux-i686/hdhomerun_sock_posix.o out/linux-i686/hdhomerun_video.o out/linux-i686/dvrstream.o out/linux-i686/pvr.o out/linux-i686/scheduler.o out/linux-i686/sqlite3.o out/linux-i686/sqlite_exception.o out/linux-i686/wait_helpers.o depends/libcurl-nossl/linux-i686/lib/libcurl.a depends/libz/linux-i686/lib/libz.a depends/libuuid/linux-i686/lib/libuuid.a -ldl -lpthread -o out/linux-i686/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-i686) -m32 -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-i686/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-
-    <!-- linux-x86_64 -->
-    <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-x86_64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-x86_64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-x86_64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-x86_64/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-x86_64/hdhomerun_device.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-x86_64/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-x86_64/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-x86_64/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-x86_64/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-x86_64/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-x86_64/hdhomerun_video.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-x86_64/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/database.cpp -o out/linux-x86_64/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-x86_64/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-x86_64/dvrstream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-x86_64/hdhr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-x86_64/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-x86_64/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-x86_64/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-x86_64/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;g++-4.9 $(CPPFLAGS-linux-x86_64) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-x86_64/database.o out/linux-x86_64/dbextension.o out/linux-x86_64/hdhr.o out/linux-x86_64/hdhomerun_channels.o out/linux-x86_64/hdhomerun_channelscan.o out/linux-x86_64/hdhomerun_control.o out/linux-x86_64/hdhomerun_debug.o out/linux-x86_64/hdhomerun_device.o out/linux-x86_64/hdhomerun_device_selector.o out/linux-x86_64/hdhomerun_discover.o out/linux-x86_64/hdhomerun_os_posix.o out/linux-x86_64/hdhomerun_pkt.o out/linux-x86_64/hdhomerun_sock_posix.o out/linux-x86_64/hdhomerun_video.o out/linux-x86_64/dvrstream.o out/linux-x86_64/pvr.o out/linux-x86_64/scheduler.o out/linux-x86_64/sqlite3.o out/linux-x86_64/sqlite_exception.o out/linux-x86_64/wait_helpers.o depends/libcurl-nossl/linux-x86_64/lib/libcurl.a depends/libz/linux-x86_64/lib/libz.a depends/libuuid/linux-x86_64/lib/libuuid.a -ldl -lpthread -o out/linux-x86_64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS-linux-x86_64) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-x86_64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-
-    <!-- linux-armel -->
-    <MakeDir Directories="out\linux-armel" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armel/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armel/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-armel/hdhomerun_control.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-armel/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-armel/hdhomerun_device.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-armel/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-armel/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-armel/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-armel/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-armel/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-armel/hdhomerun_video.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-armel/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/database.cpp -o out/linux-armel/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-armel/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-armel/dvrstream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-armel/hdhr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-armel/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-armel/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-armel/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-armel/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-g++-4.9 $(CPPFLAGS-linux-armel) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-armel/database.o out/linux-armel/dbextension.o out/linux-armel/hdhr.o out/linux-armel/hdhomerun_channels.o out/linux-armel/hdhomerun_channelscan.o out/linux-armel/hdhomerun_control.o out/linux-armel/hdhomerun_debug.o out/linux-armel/hdhomerun_device.o out/linux-armel/hdhomerun_device_selector.o out/linux-armel/hdhomerun_discover.o out/linux-armel/hdhomerun_os_posix.o out/linux-armel/hdhomerun_pkt.o out/linux-armel/hdhomerun_sock_posix.o out/linux-armel/hdhomerun_video.o out/linux-armel/dvrstream.o out/linux-armel/pvr.o out/linux-armel/scheduler.o out/linux-armel/sqlite3.o out/linux-armel/sqlite_exception.o out/linux-armel/wait_helpers.o depends/libcurl-nossl/linux-armel/lib/libcurl.a depends/libz/linux-armel/lib/libz.a depends/libuuid/linux-armel/lib/libuuid.a -ldl -lpthread -o out/linux-armel/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS-linux-armel) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-armel/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-    
-    <!-- linux-armhf -->
-    <MakeDir Directories="out\linux-armhf" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armhf/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-armhf/hdhomerun_control.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-armhf/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-armhf/hdhomerun_device.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-armhf/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-armhf/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-armhf/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-armhf/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-armhf/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-armhf/hdhomerun_video.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-armhf/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/database.cpp -o out/linux-armhf/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-armhf/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-armhf/dvrstream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-armhf/hdhr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-armhf/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-armhf/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-armhf/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-armhf/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-g++-4.9 $(CPPFLAGS-linux-armhf) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-armhf/database.o out/linux-armhf/dbextension.o out/linux-armhf/hdhr.o out/linux-armhf/hdhomerun_channels.o out/linux-armhf/hdhomerun_channelscan.o out/linux-armhf/hdhomerun_control.o out/linux-armhf/hdhomerun_debug.o out/linux-armhf/hdhomerun_device.o out/linux-armhf/hdhomerun_device_selector.o out/linux-armhf/hdhomerun_discover.o out/linux-armhf/hdhomerun_os_posix.o out/linux-armhf/hdhomerun_pkt.o out/linux-armhf/hdhomerun_sock_posix.o out/linux-armhf/hdhomerun_video.o out/linux-armhf/dvrstream.o out/linux-armhf/pvr.o out/linux-armhf/scheduler.o out/linux-armhf/sqlite3.o out/linux-armhf/sqlite_exception.o out/linux-armhf/wait_helpers.o depends/libcurl-nossl/linux-armhf/lib/libcurl.a depends/libz/linux-armhf/lib/libz.a depends/libuuid/linux-armhf/lib/libuuid.a -ldl -lpthread -o out/linux-armhf/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS-linux-armhf) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-armhf/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-
-    <!-- linux-aarch64 -->
-    <MakeDir Directories="out\linux-aarch64" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-aarch64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-aarch64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-aarch64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/linux-aarch64/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/linux-aarch64/hdhomerun_device.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/linux-aarch64/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/linux-aarch64/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/linux-aarch64/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/linux-aarch64/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/linux-aarch64/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/linux-aarch64/hdhomerun_video.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/linux-aarch64/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/database.cpp -o out/linux-aarch64/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/dbextension.cpp -o out/linux-aarch64/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/dvrstream.cpp -o out/linux-aarch64/dvrstream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/hdhr.cpp -o out/linux-aarch64/hdhr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/pvr.cpp -o out/linux-aarch64/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/scheduler.cpp -o out/linux-aarch64/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/linux-aarch64/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/linux-aarch64/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-g++-4.9 $(CPPFLAGS-linux-aarch64) -shared -Wl,--version-script=src/hdhomerundvr.map out/linux-aarch64/database.o out/linux-aarch64/dbextension.o out/linux-aarch64/hdhr.o out/linux-aarch64/hdhomerun_channels.o out/linux-aarch64/hdhomerun_channelscan.o out/linux-aarch64/hdhomerun_control.o out/linux-aarch64/hdhomerun_debug.o out/linux-aarch64/hdhomerun_device.o out/linux-aarch64/hdhomerun_device_selector.o out/linux-aarch64/hdhomerun_discover.o out/linux-aarch64/hdhomerun_os_posix.o out/linux-aarch64/hdhomerun_pkt.o out/linux-aarch64/hdhomerun_sock_posix.o out/linux-aarch64/hdhomerun_video.o out/linux-aarch64/dvrstream.o out/linux-aarch64/pvr.o out/linux-aarch64/scheduler.o out/linux-aarch64/sqlite3.o out/linux-aarch64/sqlite_exception.o out/linux-aarch64/wait_helpers.o depends/libcurl-nossl/linux-aarch64/lib/libcurl.a depends/libz/linux-aarch64/lib/libz.a depends/libuuid/linux-aarch64/lib/libuuid.a -ldl -lpthread -o out/linux-aarch64/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS-linux-aarch64) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/linux-aarch64/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-
-    <!-- osx-x86_64 -->
-    <!-- TODO -->
-
-    <!-- raspbian-armhf -->
-    <MakeDir Directories="out\raspbian-armhf" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/raspbian-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/raspbian-armhf/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/raspbian-armhf/hdhomerun_control.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_debug.c -o out/raspbian-armhf/hdhomerun_debug.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device.c -o out/raspbian-armhf/hdhomerun_device.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_device_selector.c -o out/raspbian-armhf/hdhomerun_device_selector.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_discover.c -o out/raspbian-armhf/hdhomerun_discover.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_os_posix.c -o out/raspbian-armhf/hdhomerun_os_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_pkt.c -o out/raspbian-armhf/hdhomerun_pkt.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_sock_posix.c -o out/raspbian-armhf/hdhomerun_sock_posix.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_video.c -o out/raspbian-armhf/hdhomerun_video.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) $(CFLAGS) -DSQLITE_THREADSAFE=2 -DSQLITE_ENABLE_JSON1=1 -DSQLITE_TEMP_STORE=3 -c depends/sqlite/sqlite3.c -o out/raspbian-armhf/sqlite3.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/raspbian-armhf/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/database.cpp -o out/raspbian-armhf/database.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/dbextension.cpp -o out/raspbian-armhf/dbextension.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/dvrstream.cpp -o out/raspbian-armhf/dvrstream.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/hdhr.cpp -o out/raspbian-armhf/hdhr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/pvr.cpp -o out/raspbian-armhf/pvr.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/scheduler.cpp -o out/raspbian-armhf/scheduler.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/sqlite_exception.cpp -o out/raspbian-armhf/sqlite_exception.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) $(CXXFLAGS) -c src/wait_helpers.cpp -o out/raspbian-armhf/wait_helpers.o&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ $(CPPFLAGS-raspbian-armhf) -shared -Wl,--version-script=src/hdhomerundvr.map out/raspbian-armhf/database.o out/raspbian-armhf/dbextension.o out/raspbian-armhf/hdhr.o out/raspbian-armhf/hdhomerun_channels.o out/raspbian-armhf/hdhomerun_channelscan.o out/raspbian-armhf/hdhomerun_control.o out/raspbian-armhf/hdhomerun_debug.o out/raspbian-armhf/hdhomerun_device.o out/raspbian-armhf/hdhomerun_device_selector.o out/raspbian-armhf/hdhomerun_discover.o out/raspbian-armhf/hdhomerun_os_posix.o out/raspbian-armhf/hdhomerun_pkt.o out/raspbian-armhf/hdhomerun_sock_posix.o out/raspbian-armhf/hdhomerun_video.o out/raspbian-armhf/dvrstream.o out/raspbian-armhf/pvr.o out/raspbian-armhf/scheduler.o out/raspbian-armhf/sqlite3.o out/raspbian-armhf/sqlite_exception.o out/raspbian-armhf/wait_helpers.o depends/libcurl-nossl/raspbian-armhf/lib/libcurl.a depends/libz/raspbian-armhf/lib/libz.a depends/libuuid/raspbian-armhf/lib/libuuid.a -ldl -lpthread -o out/raspbian-armhf/zuki.pvr.hdhomerundvr.so&quot;" ContinueOnError="false"/>
-    <Exec Command="$(BashExe) -c &quot;~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc $(CPPFLAGS-raspbian-armhf) -DSQLITE_ENABLE_JSON1=1 depends/sqlite/sqlite3.c depends/sqlite/shell.c -o out/raspbian-armhf/sqlite3 -ldl -lpthread&quot;" ContinueOnError="false"/>
-
-    <!-- android-arm -->
-    <!-- android-x86 -->    
-    <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out NDK_LIBS_OUT=out" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; APP_ABI=armeabi-v7a NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out\android-arm NDK_LIBS_OUT=out\android-arm" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip manifest\android-arm.manifest" ContinueOnError="false"/>
 
   </Target>
 
-  <Target Name="Package" DependsOnTargets="Build">
-    <PropertyGroup>
-      <ZipperExe>&quot;depends\build\zuki.build.tools.zipper.exe&quot;</ZipperExe>
-      <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
-      <PackageFile-windows-win32>out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-windows-win32>
-      <PackageFile-linux-i686>out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-i686>
-      <PackageFile-linux-x86_64>out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-x86_64>
-      <PackageFile-linux-armel>out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-armel>
-      <PackageFile-linux-armhf>out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-armhf>
-      <PackageFile-linux-aarch64>out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-linux-aarch64>
-      <PackageFile-osx-x86_64>out\zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-osx-x86_64>
-      <PackageFile-raspbian-armhf>out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-raspbian-armhf>
-      <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
-      <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
-    </PropertyGroup>
+  <!-- BUILD: ANDROID-X86 -->
+  <Target Name="android-x86" DependsOnTargets="AddonVersion;AddonXml">
 
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-windows-win32)&quot; manifest\windows-win32.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-i686)&quot; manifest\linux-i686.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-x86_64)&quot; manifest\linux-x86_64.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armel)&quot; manifest\linux-armel.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-armhf)&quot; manifest\linux-armhf.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-linux-aarch64)&quot; manifest\linux-aarch64.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-osx-x86_64)&quot; manifest\osx-x86_64.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-raspbian-armhf)&quot; manifest\raspbian-armhf.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-arm)&quot; manifest\android-arm.manifest" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipperExe)&quot; create &quot;$(PackageFile-android-x86)&quot; manifest\android-x86.manifest" ContinueOnError="false"/>
+    <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
+
+    <MakeDir Directories="out" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; APP_ABI=x86 NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out\android-x86 NDK_LIBS_OUT=out\android-x86" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip manifest\android-x86.manifest" ContinueOnError="false"/>
+
   </Target>
 
-  <Target Name="PackageApk" DependsOnTargets="Package">
+  <!-- BUILD: ANDROIDAPK-ARM -->
+  <Target Name="androidapk-arm" DependsOnTargets="AddonVersion;android-arm">
 
     <Error Condition="'$(ANDROID_SDK_ROOT)' == ''" Text="Environment variable ANDROID_SDK_ROOT has not been set"/>
     <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
     <Error Condition="'$(Keystore)' == ''" Text="Variable Keystore has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
     <Error Condition="'$(KeystorePassword)' == ''" Text="Variable KeystorePassword has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
 
-    <!-- This task requires a lot of hard-coded paths and versions; keep everything that is subject to change as Properties -->
     <PropertyGroup>
-      <ApkToolJar>apktool_2.2.4.jar</ApkToolJar>
-      <ZipAlignExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\zipalign</ZipAlignExe>
-      <ApkSignerExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\apksigner</ApkSignerExe>
-      <PackageVersion>$([System.IO.File]::ReadAllText(tmp\version\version.txt))</PackageVersion>
-      <BuildNumber>$([System.Version]::Parse($(PackageVersion)).Revision)</BuildNumber>
+      <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1610$(BuildNumber)</ApkVersionCode>
-      <ApkVersionName>16.1-zuki.pvr.hdhomerundvr-$(PackageVersion)</ApkVersionName>
-      <PackageFile-android-arm>out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-arm>
-      <PackageFile-android-x86>out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(PackageVersion).zip</PackageFile-android-x86>
-      <KodiApk-android-arm>kodi-16.1-Jarvis-armeabi-v7a</KodiApk-android-arm>
-      <KodiApk-android-x86>kodi-16.1-Jarvis-x86</KodiApk-android-x86>
-      <ZukiApk-android-arm>kodi-16.1-zuki.pvr.hdhomerundvr-arm-$(PackageVersion)</ZukiApk-android-arm>
-      <ZukiApk-android-x86>kodi-16.1-zuki.pvr.hdhomerundvr-x86-$(PackageVersion)</ZukiApk-android-x86>
+      <ApkVersionName>16.1-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
+      <KodiApk>kodi-16.1-Jarvis-armeabi-v7a</KodiApk>
+      <ZukiApk>kodi-16.1-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
-    <!-- Download the required Kodi APKs -->
-    <MakeDir Directories="apk" ContinueOnError="false"/>
-    <Message Condition="!Exists('apk\$(KodiApk-android-arm).apk')" Importance="high" Text="Downloading $(KodiApk-android-arm).apk ..."/>
-    <DownloadFile Condition="!Exists('apk\$(KodiApk-android-arm).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm/old/$(KodiApk-android-arm).apk" Output="apk\$(KodiApk-android-arm).apk"/>
-    <Message Condition="!Exists('apk\$(KodiApk-android-x86).apk')" Importance="high" Text="Downloading $(KodiApk-android-x86).apk ..."/>
-    <DownloadFile Condition="!Exists('apk\$(KodiApk-android-x86).apk')" Uri="http://mirrors.kodi.tv/releases/android/x86/old/$(KodiApk-android-x86).apk" Output="apk\$(KodiApk-android-x86).apk"/>
+    <MakeDir Directories="tmp" ContinueOnError="false"/>
+    <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
+    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm/old/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
 
-    <!-- android-arm -->
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-arm)-framework -s apk\$(KodiApk-android-arm).apk -o out\$(KodiApk-android-arm)" ContinueOnError="false"/>
-    <ReplaceInFile filename="out\$(KodiApk-android-arm)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
-    <ReplaceInFile filename="out\$(KodiApk-android-arm)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
-    <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-arm) -DestinationPath out\$(KodiApk-android-arm)\assets\addons\" ContinueOnError="false"/>
-    <Copy SourceFiles="out\armeabi-v7a\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk-android-arm)\lib\armeabi-v7a\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-arm)-framework out\$(KodiApk-android-arm)" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm).apk out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm)-aligned.apk" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-arm).apk out\$(KodiApk-android-arm)\dist\$(KodiApk-android-arm)-aligned.apk" ContinueOnError="false"/>
-
-    <!-- android-x86 -->
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) d -p out\$(KodiApk-android-x86)-framework -s apk\$(KodiApk-android-x86).apk -o out\$(KodiApk-android-x86)" ContinueOnError="false"/>
-    <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
-    <ReplaceInFile filename="out\$(KodiApk-android-x86)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
-    <Exec Command="PowerShell Expand-Archive -Path $(PackageFile-android-x86) -DestinationPath out\$(KodiApk-android-x86)\assets\addons\" ContinueOnError="false"/>
-    <Copy SourceFiles="out\x86\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk-android-x86)\lib\x86\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en depends\apktool\$(ApkToolJar) b -p out\$(KodiApk-android-x86)-framework out\$(KodiApk-android-x86)" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86).apk out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86)-aligned.apk" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk-android-x86).apk out\$(KodiApk-android-x86)\dist\$(KodiApk-android-x86)-aligned.apk" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk)" ContinueOnError="false"/>
+    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
+    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
+    <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
+    <Copy SourceFiles="out\android-arm\armeabi-v7a\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk)\lib\armeabi-v7a\libhdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) b -p out\$(KodiApk)-framework out\$(KodiApk)" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk)\dist\$(KodiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
 
   </Target>
+
+  <!-- BUILD: ANDROIDAPK-X86 -->
+  <Target Name="androidapk-x86" DependsOnTargets="AddonVersion;android-x86">
+
+    <Error Condition="'$(ANDROID_SDK_ROOT)' == ''" Text="Environment variable ANDROID_SDK_ROOT has not been set"/>
+    <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
+    <Error Condition="'$(Keystore)' == ''" Text="Variable Keystore has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
+    <Error Condition="'$(KeystorePassword)' == ''" Text="Variable KeystorePassword has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
+
+    <PropertyGroup>
+      <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
+      <ApkVersionCode>1610$(BuildNumber)</ApkVersionCode>
+      <ApkVersionName>16.1-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
+      <KodiApk>kodi-16.1-Jarvis-x86</KodiApk>
+      <ZukiApk>kodi-16.1-zuki.pvr.hdhomerundvr-x86-$(AddonVersion)</ZukiApk>
+    </PropertyGroup>
+
+    <MakeDir Directories="tmp" ContinueOnError="false"/>
+    <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
+    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/x86/old/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
+
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk)" ContinueOnError="false"/>
+    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
+    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
+    <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
+    <Copy SourceFiles="out\android-x86\x86\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk)\lib\x86\libhdhomerundvr.so" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) b -p out\$(KodiApk)-framework out\$(KodiApk)" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk)\dist\$(KodiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: PLATFORMS -->
+  <Target Name="windows" DependsOnTargets="windows-win32"/>
+  <Target Name="linux" DependsOnTargets="linux-i686;linux-x86_64;linux-armel;linux-armhf;linux-aarch64"/>
+  <Target Name="raspbian" DependsOnTargets="raspbian-armhf"/>
+  <Target Name="osx" DependsOnTargets="osx-x86_64"/>
+  <Target Name="android" DependsOnTargets="android-arm;android-x86"/>
+  <Target Name="androidapk" DependsOnTargets="androidapk-arm;androidapk-x86"/>
+  
+  <!-- BUILD: ALL -->
+  <Target Name="all" DependsOnTargets="windows;linux;raspbian;osx;android;androidapk"/>
 
 </Project>

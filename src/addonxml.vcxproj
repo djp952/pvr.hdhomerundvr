@@ -10,9 +10,34 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="addon.xml.tt">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-android.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-linux.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-osx.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-windows.xml" "%(FullPath)"
+</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-android.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-linux.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-osx.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-windows.xml" "%(FullPath)"
+</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating addon.xml files</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\addon-android.xml;$(ProjectDir)..\tmp\addon-linux.xml;$(ProjectDir)..\tmp\addon-osx.xml;$(ProjectDir)..\tmp\addon-windows.xml;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\tmp\addon-android.xml;$(ProjectDir)..\tmp\addon-linux.xml;$(ProjectDir)..\tmp\addon-osx.xml;$(ProjectDir)..\tmp\addon-windows.xml;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\tmp\addon-android.xml" />
+    <Xml Include="..\tmp\addon-linux.xml" />
+    <Xml Include="..\tmp\addon-osx.xml" />
+    <Xml Include="..\tmp\addon-windows.xml" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}</ProjectGuid>
-    <RootNamespace>zuki.pvr.hdhomerundvr.version</RootNamespace>
+    <ProjectGuid>{C6440A4E-843A-4A54-867B-0A3D2B9C1F8F}</ProjectGuid>
+    <RootNamespace>zuki.pvr.hdhomerundvr.addonxml</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -71,26 +96,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CustomBuild Include="version.ini">
-      <FileType>Text</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProjectDir)..\depends\build\zuki.build.tools.mkversion.exe" "$(ProjectDir)..\tmp\version" "-ini:%(FullPath)" -format:h,rc,txt</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\version\version.h;$(ProjectDir)..\tmp\version\version.rc;$(ProjectDir)..\tmp\version\version.txt;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProjectDir)..\depends\build\zuki.build.tools.mkversion.exe" "$(ProjectDir)..\tmp\version" "-ini:%(FullPath)" -format:h,rc,txt</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\tmp\version\version.h;$(ProjectDir)..\tmp\version\version.rc;$(ProjectDir)..\tmp\version\version.txt;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating version files</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating version files</Message>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\tmp\version\version.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\tmp\version\version.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\tmp\version\version.txt" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

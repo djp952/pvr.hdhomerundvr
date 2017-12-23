@@ -20,7 +20,6 @@
 # SOFTWARE.
 #-----------------------------------------------------------------------------
 
-APP_ABI := armeabi-v7a x86
 APP_BUILD_SCRIPT := Android.mk
 APP_PIE := true
 APP_PLATFORM := android-21

@@ -11,23 +11,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="version.ini">
+    <CustomBuild Include="addon.xml.tt">
       <Filter>Source Files</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\tmp\version\version.h">
+    <Xml Include="..\tmp\addon-android.xml">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\tmp\version\version.rc">
+    </Xml>
+    <Xml Include="..\tmp\addon-linux.xml">
       <Filter>Generated Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\tmp\version\version.txt">
+    </Xml>
+    <Xml Include="..\tmp\addon-osx.xml">
       <Filter>Generated Files</Filter>
-    </Text>
+    </Xml>
+    <Xml Include="..\tmp\addon-windows.xml">
+      <Filter>Generated Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>
