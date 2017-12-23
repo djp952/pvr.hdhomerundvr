@@ -3,7 +3,7 @@
   <file path="pvr.hdhomerundvr\.nomedia" source="pvr.hdhomerundvr\.nomedia" normalize="unix"/>
   <file path="pvr.hdhomerundvr\addon.xml" source="tmp\addon-android.xml" normalize="unix"/>
   <file path="pvr.hdhomerundvr\LICENSE.txt" source="LICENSE" normalize="unix"/>
-  <file path="pvr.hdhomerundvr\libhdhomerundvr.so" source="out\x86\libhdhomerundvr.so"/>
+  <file path="pvr.hdhomerundvr\libhdhomerundvr.so" source="out\android-x86\x86\libhdhomerundvr.so"/>
   <file path="pvr.hdhomerundvr\resources\icon.png" source="pvr.hdhomerundvr\resources\icon.png"/>
   <file path="pvr.hdhomerundvr\resources\settings.xml" source="pvr.hdhomerundvr\resources\settings.xml" normalize="unix"/>
   <file path="pvr.hdhomerundvr\resources\language\resource.language.en_gb\strings.po" source="pvr.hdhomerundvr\resources\language\resource.language.en_gb\strings.po" normalize="unix"/>
