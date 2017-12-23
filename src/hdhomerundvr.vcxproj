@@ -106,7 +106,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)exportlist\exportlist.windows</ModuleDefinitionFile>
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
@@ -124,7 +124,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)exportlist\exportlist.windows</ModuleDefinitionFile>
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
@@ -146,7 +146,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)exportlist\exportlist.windows</ModuleDefinitionFile>
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
@@ -168,7 +168,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)exportlist\exportlist.windows</ModuleDefinitionFile>
       <AdditionalDependencies>iphlpapi.lib;ws2_32.lib;$(SolutionDir)depends\libcurl-nossl\windows-$(Platform)-$(PlatformToolset)\lib\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent />
@@ -306,43 +306,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="addon.xml.tt">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-osx.xml" "%(FullPath)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-osx.xml" "%(FullPath)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;$(SolutionDir)tmp\addon-osx.xml;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;$(SolutionDir)tmp\addon-osx.xml;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-osx.xml" "%(FullPath)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-windows.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-linux.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(SolutionDir)pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-android.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(SolutionDir)\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(SolutionDir)tmp\version\version.txt" -out "$(SolutionDir)tmp\addon-osx.xml" "%(FullPath)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;$(SolutionDir)tmp\addon-osx.xml;%(Outputs)</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)tmp\addon-windows.xml;$(SolutionDir)tmp\addon-linux.xml;$(SolutionDir)tmp\addon-android.xml;$(SolutionDir)tmp\addon-osx.xml;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating addon.xml files</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating addon.xml files</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating addon.xml files</Message>
-    </CustomBuild>
-    <None Include="hdhomerundvr.def" />
-    <None Include="hdhomerundvr.map" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="..\tmp\addon-android.xml" />
-    <Xml Include="..\tmp\addon-linux.xml" />
-    <Xml Include="..\tmp\addon-windows.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,6 +5,7 @@ v1.2.8 (2017.12.xx)
   - Add "Disable reporting of real-time MPEG-TS streams" advanced setting
   - Fix logging of HTTP request errors that occurred during multi-step database queries
   - Fix bug causing "Trigger recording discovery immediately after playback" to be applied to "Use network broadcast for device discovery" until restart
+  - (OSX) Initial release for Apple OSX x86_64
 
 v1.2.7 (2017.12.05)
   - Improve handling of in-progress Recorded TV streams that have switched from a live to a recorded state

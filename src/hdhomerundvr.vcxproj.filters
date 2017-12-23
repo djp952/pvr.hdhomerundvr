@@ -28,10 +28,6 @@
     <Filter Include="Header Files\compat\uuid">
       <UniqueIdentifier>{434554ef-071f-4214-a443-ade85ba7d18e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Generated Files">
-      <UniqueIdentifier>{81164fcc-a1a1-481b-a904-95f9e7758c47}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
-    </Filter>
     <Filter Include="External Libraries\libhdhomerun">
       <UniqueIdentifier>{885c13cb-38dd-4c5c-97ed-9c6269c92dc3}</UniqueIdentifier>
     </Filter>
@@ -185,32 +181,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="hdhomerundvr.def">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="hdhomerundvr.map">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="addon.xml.tt">
-      <Filter>Source Files</Filter>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <Xml Include="..\tmp\addon-android.xml">
-      <Filter>Generated Files</Filter>
-    </Xml>
-    <Xml Include="..\tmp\addon-linux.xml">
-      <Filter>Generated Files</Filter>
-    </Xml>
-    <Xml Include="..\tmp\addon-windows.xml">
-      <Filter>Generated Files</Filter>
-    </Xml>
   </ItemGroup>
 </Project>
