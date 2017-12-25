@@ -20,7 +20,7 @@
  SOFTWARE.
 -->
 
-<Project DefaultTargets="all" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="windows" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
   <PropertyGroup>
     <AddonVersion></AddonVersion>           <!-- Set by AddonVersion Target -->
@@ -305,7 +305,7 @@
   <Target Name="osx-x86_64" DependsOnTargets="AddonVersion;AddonXml">
     
     <PropertyGroup>
-      <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH=~/x86_64-apple-darwin15/bin</ENV>
+      <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH=~/osxcross/target/bin</ENV>
       <CPPFLAGS>-mmacosx-version-min=10.7 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/libcurl-nossl/osx-x86_64/include/curl -Idepends/libuuid/osx-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-fPIC -stdlib=libc++</CFLAGS>
       <CXXFLAGS>-fPIC -std=c++11 -stdlib=libc++</CXXFLAGS>
