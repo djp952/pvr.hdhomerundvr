@@ -10,93 +10,152 @@ Copyright (C)2017 Michael G. Brehm
 [__ZLIB__](http://www.zlib.net/) - Copyright (C)1995-2017 Jean-loup Gailly and Mark Adler   
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2017 Silicondust USA Inc     
    
-**BUILD ENVIRONMENT**  
-* Windows 10 x64 16299 "Fall Creator's Update"   
+## BUILD ENVIRONMENT
+**REQUIRED COMPONENTS**   
+* Windows 10 x64 1709 (16299) "Fall Creator's Update"   
 * Visual Studio 2013   
 * Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop)   
 * Bash on Ubuntu on Windows 16.04.2 LTS   
+
+**OPTIONAL COMPONENTS**   
 * Android NDK r12b for Windows 64-bit   
-* Raspberry Pi development tools
-* Optional: Android SDK tools r25.2.3 for Windows   
-* Optional: Oracle Java SE Runtime Environment 8   
+* Android SDK tools r25.2.3 for Windows   
+* Oracle Java SE Runtime Environment 8   
+* Raspberry Pi Cross-Compiler   
+* OSXCROSS Cross-Compiler (with Mac OSX 10.11 SDK)   
    
-**CONFIGURE BASH ON UBUNTU ON WINDOWS**   
-Open "Bash on Ubuntu on Windows"   
+**REQUIRED: CONFIGURE BASH ON UBUNTU ON WINDOWS**   
+* Open "Bash on Ubuntu on Windows"   
 ```
 sudo dpkg --add-architecture i386
 sudo apt-get update
 sudo apt-get install gcc-4.9 g++-4.9 libc6-dev:i386 libstdc++-4.9-dev:i386 lib32gcc-4.9-dev 
 sudo apt-get install gcc-4.9-arm-linux-gnueabihf g++-4.9-arm-linux-gnueabihf gcc-4.9-arm-linux-gnueabi g++-4.9-arm-linux-gnueabi gcc-4.9-aarch64-linux-gnu g++-4.9-aarch64-linux-gnu
-git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 ```
    
-**CONFIGURE ANDROID NDK**   
+**OPTIONAL: CONFIGURE ANDROID NDK**   
+*Necessary to build Android Targets*   
+   
 Download the Android NDK r12b for Windows 64-bit:    
 [https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip](https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip)   
 
 * Extract the contents of the .zip file somewhere   
 * Set a System Environment Variable named ANDROID_NDK_ROOT that points to the extracted android-ndk-r12b folder
    
-**CONFIGURE ANDROID SDK TOOLS (OPTIONAL)**   
-_Android SDK tools are only required for Android APK generation; see "BUILD AND GENERATE MODIFIED KODI ANDROID APKS" below_  
+**OPTIONAL: CONFIGURE ANDROID SDK**   
+*Necessary to build Android APK Targets*   
    
 Download the Android SDK tools r25.2.3 for Windows:   
 [https://dl.google.com/android/repository/tools_r25.2.3-windows.zip](https://dl.google.com/android/repository/tools_r25.2.3-windows.zip)   
    
 * Extract the contents of the .zip file somewhere   
 * Set a System Environment Variable named ANDROID_SDK_ROOT that points to the location the .zip was extracted   
-* Install the build-tools-25.0.2 package:   
+* Open "Developer Command Prompt for VS2017"     
 ```
 cd /d %ANDROID_SDK_ROOT%\tools
 android update sdk --all -u -t build-tools-25.0.2
 ```
-   
-**CONFIGURE ORACLE JAVA SE RUNTIME ENVIRONMENT (OPTIONAL)**   
-_Oracle Java SE Runtime Environment is only required for Android APK generation; see "BUILD AND GENERATE MODIFIED KODI ANDROID APKS" below_   
+      
+**OPTIONAL: CONFIGURE ORACLE JAVA SE RUNTIME ENVIRONMENT AND CREATE PUBLIC-KEY CERTIFICATE**   
+*Necessary to build Android APK Targets*   
    
 Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:   
 [Java SE Runtime Environment 8 - Downloads](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)   
 
 * Extract the contents of the jre-8xxx-windows-x64.tar.gz file somewhere   
 * Set a System Environment Variable named JAVA_HOME that points to the location the tar.gz was extracted   
-* Test Java:   
+* Generate a custom public-key certificate that can be used to sign the generated Android APK file. Follow the instructions provided by Google at the Android Developer [Sign Your App](https://developer.android.com/studio/publish/app-signing.html) page.   
+   
+**OPTIONAL: CONFIGURE RASPBERRY PI CROSS-COMPILER**   
+*Necessary to build Raspbian Targets*   
+   
+* Open "Bash on Ubuntu on Windows"   
 ```
-%JAVA_HOME%\bin\java -version
+git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 ```
    
-**BUILD AND GENERATE KODI ADDON PACKAGES**   
-Open "Developer Command Prompt for VS2017"   
+**OPTIONAL: CONFIGURE OSXCROSS CROSS-COMPILER**   
+*Necessary to build OS X Targets*   
+
+* Generate the MAC OSX 10.11 SDK Package for OSXCROSS by following the instructions provided at [PACKAGING THE SDK](https://github.com/tpoechtrager/osxcross#packaging-the-sdk).  The suggested version of Xcode to use when generating the SDK package is Xcode 7.3.1 (May 3, 2016).
+* Open "Bash on Ubuntu on Windows"   
+```
+sudo apt-get install clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
+git clone https://github.com/tpoechtrager/osxcross --depth=1
+cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
+UNATTENDED=1 osxcross/build.sh
+GCC_VERSION=4.9.3 osxcross/build_gcc.sh
+```
+   
+## BUILD KODI ADDON PACKAGES
+**INITIALIZE SOURCE TREE AND DEPENDENCIES**
+* Open "Developer Command Prompt for VS2017"   
 ```
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Jarvis
 cd pvr.hdhomerundvr
 git submodule update --init
-msbuild msbuild.proj
-
-> out\zuki.pvr.hdhomerundvr-windows-win32-jarvis-x.x.x.x.zip (windows-Win32)
-> out\zuki.pvr.hdhomerundvr-linux-i686-jarvis-x.x.x.x.zip (linux-i686)
-> out\zuki.pvr.hdhomerundvr-linux-x86_64-jarvis-x.x.x.x.zip (linux-x86_64)
-> out\zuki.pvr.hdhomerundvr-linux-armel-jarvis-x.x.x.x.zip (linux-armel)
-> out\zuki.pvr.hdhomerundvr-linux-armhf-jarvis-x.x.x.x.zip (linux-armhf)
-> out\zuki.pvr.hdhomerundvr-linux-aarch64-jarvis-x.x.x.x.zip (linux-aarch64)
-> out\zuki.pvr.hdhomerundvr-android-arm-jarvis-x.x.x.x.zip (android-arm)
-> out\zuki.pvr.hdhomerundvr-android-x86-jarvis-x.x.x.x.zip (android-x86)
-> out\zuki.pvr.hdhomerundvr-raspbian-armhf-jarvis-x.x.x.x.zip (raspbian-armhf)
 ```
    
-**BUILD AND GENERATE MODIFIED KODI ANDROID APKS**   
-Building the modified Kodi Android APKs requires a Java keystore to be specified on the build command line in order to sign the resultant APK files.  For more information about APK signing and how to generate the keystore, please see [Sign Your App](https://developer.android.com/studio/publish/app-signing.html).   
-   
-Open "Developer Command Prompt for VS2017"   
+**BUILD ADDON TARGET PACKAGE(S)**   
+* Open "Developer Command Prompt for VS2017"   
 ```
-git clone https://github.com/djp952/pvr.hdhomerundvr -b Jarvis
 cd pvr.hdhomerundvr
-git submodule update --init
-msbuild msbuild.proj /t:PackageApk /p:Keystore={path_to_keystore};KeystorePassword={keystore_password}
-
-> out\kodi-x.x-zuki.pvr.hdhomerundvr-arm-x.x.x.x.apk (android-arm)
-> out\kodi-x.x-zuki.pvr.hdhomerundvr-x86-x.x.x.x.apk (android-x86)
+msbuild msbuild.proj [/t:target[;target...]] [/p:parameter=value[;parameter=value...]
 ```
    
-**LIBHDHOMERUN LICENSE INFORMATION**   
+**SUPPORTED TARGET PLATFORMS**   
+The MSBUILD script can be used to target one or more platforms by specifying the /t:target parameter.  Targets that produce Android APK packages also require specifying the path to the generated Keystore file (see above) and the keystore password.  The tables below list the available target platforms and the required command line argument(s) to pass to MSBUILD.   In the absence of the /t:target parameter, the default target selection is **windows**.
+   
+Examples:   
+   
+> Build just the osx-x86\_64 platform:   
+> ```
+>msbuild /t:osx-x86_64
+> ```
+   
+> Build all Linux platforms:   
+> ```
+> msbuild /t:linux
+> ```
+   
+> Build all Android APK platforms:   
+> ```
+> msbuild /t:androidapk /p:Keystore={keystore};KeystorePassword={keystore-password}
+> ```
+   
+*INDIVIDUAL TARGETS*    
+   
+| Target | Platform | MSBUILD Parameters |
+| :-- | :-- | :-- |
+| android-arm | Android ARM | /t:android-arm |
+| android-x86 | Android X86 | /t:android-x86 |
+| androidapk-arm | Android ARM APK | /t:androidapk-arm /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| androidapk-x86 | Android X86 APK | /t:androidapk-x86 /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| linux-aarch64 | Linux ARM64 | /t:linux-aarch64 |
+| linux-armel | Linux ARM | /t:linux-armel |
+| linux-armhf | Linux ARM (hard float) | /t:linux-armhf |
+| linux-i686 | Linux X86 | /t:linux-i686 |
+| linux-x86\_64 | Linux X64 | /t:linux-x86\_64 |
+| osx-x86\_64 | Mac OS X X64 | /t:osx-x86\_64 |
+| raspbian-armhf | Raspbian ARM (hard float) | /t:raspbian-armhf |
+| windows-win32 | Windows X86 | /t:windows-win32 |
+   
+*COMBINATION TARGETS*   
+   
+| Target | Platform(s) | MSBUILD Parameters |
+| :-- | :-- | :-- |
+| all | All platforms | /t:all /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| android | All Android platforms | /t:android |
+| androidapk | All Android APK platforms | /t:androidapk /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| linux | All Linux platforms | /t:linux |
+| osx | All Mac OS X platforms | /t:osx |
+| windows (default) | All Windows platforms | /t:windows |
+   
+## ADDITIONAL LICENSE INFORMATION
+   
+**LIBHDHOMERUN**   
 [https://www.gnu.org/licenses/gpl-faq.html#LGPLStaticVsDynamic](https://www.gnu.org/licenses/gpl-faq.html#LGPLStaticVsDynamic)   
 This library statically links with code licensed under the GNU Lesser Public License, v2.1 [(LGPL 2.1)](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html).  As per the terms of that license, the maintainer (djp952) must provide the library in an object (or source) format and allow the user to modify and relink against a different version(s) of the LGPL 2.1 libraries.  To use a different or custom version of libhdhomerun the user may alter the contents of the depends/libhdhomerun source directory prior to building this library.   
+   
+**XCODE AND APPLE SDKS AGREEMENT**   
+The instructions provided above indirectly reference the use of intellectual material that is the property of Apple, Inc.  This intellectual material is not FOSS (Free and Open Source Software) and by using it you agree to be bound by the terms and conditions set forth by Apple, Inc. in the [Xcode and Apple SDKs Agreement](https://www.apple.com/legal/sla/docs/xcode.pdf).
