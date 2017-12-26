@@ -386,7 +386,7 @@
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
     <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm/old/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
 
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk)" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
     <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
@@ -417,7 +417,7 @@
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
     <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/x86/old/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
 
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk)" ContinueOnError="false"/>
+    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
     <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
