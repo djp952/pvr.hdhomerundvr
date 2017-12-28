@@ -4,6 +4,7 @@ v1.2.8 (2017.12.xx)
   - Add "Enable verbose discovery data logging" advanced setting
   - Fix logging of HTTP request errors that occurred during multi-step database queries
   - Fix bug causing "Trigger recording discovery immediately after playback" to be applied to "Use network broadcast for device discovery" until restart
+  - Fix bug causing stale Timers to appear in Kodi if a series with a valid recording rule has no episode information on the backend
   - (OSX) Initial release for Apple OSX x86_64
 
 v1.2.7 (2017.12.05)
