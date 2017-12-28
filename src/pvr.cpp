@@ -1010,6 +1010,76 @@ static void log_notice(_args&&... args)
 	log_message(ADDON::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
 }
 
+// log_transfer_epgtag
+//
+// Logs a transfer of an EPG_TAG structure
+static void log_transfer_epgtag(EPG_TAG const& tag)
+{
+	char channel[16]= {'\0'};				// Buffer for converted channelid
+	char strstart[24] = {'\0'};				// Buffer for converted time_t
+	char strend[24] = {'\0'};				// Buffer for converted time_t
+
+	union channelid channelid;
+	channelid.value = static_cast<int>(tag.iChannelNumber);
+
+	// Convert the channel id back into component parts
+	snprintf(channel, std::extent<decltype(channel)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
+
+	// Convert both time_t values into "YYYY-MM-DDTHH:MM:SSZ"
+	strftime(strstart, std::extent<decltype(strstart)>::value, "%FT%TZ", gmtime(&tag.startTime));
+	strftime(strend, std::extent<decltype(strend)>::value, "%FT%TZ", gmtime(&tag.endTime));
+
+	// Don't log the __func__ here, it will pick up the lambda name 
+	log_notice("Transferred EPG_TAG: channel=", channel, " title=", tag.strTitle, " start=", strstart, " end=", strend);
+}
+
+// log_transfer_timer
+//
+// Logs a transfer of a PVR_TIMER structure
+static void log_transfer_timer(PVR_TIMER const& timer)
+{
+	char type[24]= {'\0'};					// Buffer for the timer type string
+	char state[24]= {'\0'};					// Buffer for the timer state string
+	char channel[16]= {'\0'};				// Buffer for converted channelid
+	char starttime[24] = {'\0'};			// Buffer for converted time_t
+	char endtime[24] = {'\0'};				// Buffer for converted time_t
+
+	union channelid channelid;
+	channelid.value = static_cast<int>(timer.iClientChannelUid);
+
+	// Convert the timer type into a readable string
+	switch(timer.iTimerType) {
+
+		case timer_type::datetimeonlyrule:		snprintf(type, std::extent<decltype(type)>::value, "datetimeonlyrule"); break;
+		case timer_type::datetimeonlytimer:		snprintf(type, std::extent<decltype(type)>::value, "datetimeonlytimer"); break;
+		case timer_type::epgdatetimeonlyrule:	snprintf(type, std::extent<decltype(type)>::value, "epgdatetimeonlyrule"); break;
+		case timer_type::epgseriesrule:			snprintf(type, std::extent<decltype(type)>::value, "epgseriesrule"); break;
+		case timer_type::seriesrule:			snprintf(type, std::extent<decltype(type)>::value, "seriesrule"); break;
+		case timer_type::seriestimer:			snprintf(type, std::extent<decltype(type)>::value, "seriestimer"); break;
+		default:								snprintf(type, std::extent<decltype(type)>::value, "unknown"); break;
+	}
+
+	// Convert the timer state into a readable string; only values supported by this PVR are converted
+	switch(timer.state) {
+
+		case PVR_TIMER_STATE::PVR_TIMER_STATE_SCHEDULED: snprintf(state, std::extent<decltype(state)>::value, "scheduled"); break;
+		case PVR_TIMER_STATE::PVR_TIMER_STATE_RECORDING: snprintf(state, std::extent<decltype(state)>::value, "recording"); break;
+		case PVR_TIMER_STATE::PVR_TIMER_STATE_COMPLETED: snprintf(state, std::extent<decltype(state)>::value, "completed"); break;
+		default: snprintf(state, std::extent<decltype(state)>::value, "unknown"); break;
+	}
+
+	// Convert the channel id back into component parts or use 'any' if set to PVR_TIMER_ANY_CHANNEL
+	if(timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) snprintf(channel, std::extent<decltype(channel)>::value, "any");
+	else snprintf(channel, std::extent<decltype(channel)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
+
+	// Convert both time_t values into "YYYY-MM-DDTHH:MM:SSZ"
+	strftime(starttime, std::extent<decltype(starttime)>::value, "%FT%TZ", gmtime(&timer.startTime));
+	strftime(endtime, std::extent<decltype(endtime)>::value, "%FT%TZ", gmtime(&timer.endTime));
+
+	// Don't log the __func__ here for consistency with the other verbose_disovery_logging(s) that can't
+	log_notice("Transferred PVR_TIMER: type=", type, " state=", state, " channel=", channel, " starttime = ", starttime, " endtime=", endtime);
+}
+
 // mincount_enum_to_bytes
 //
 // Converts the minimum read count enumeration values into a number of bytes
@@ -2281,22 +2351,9 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
 
-			// Transfer the EPG_TAG structure over to Kodi
+			// Transfer the EPG_TAG structure over over to Kodi and log if enabled
 			g_pvr->TransferEpgEntry(handle, &epgtag);
-			
-			// Log the EPG_TAG information if verbose_discovery_logging is enabled
-			if(settings.verbose_discovery_logging) {
-
-				char strstart[24] = {'\0'};				// Buffer for converted time_t
-				char strend[24] = {'\0'};				// Buffer for converted time_t
-
-				// Convert both time_t values into "YYYY-MM-DDTHH:MM:SSZ"
-				strftime(strstart, std::extent<decltype(strstart)>::value, "%FT%TZ", gmtime(&item.starttime));
-				strftime(strend, std::extent<decltype(strend)>::value, "%FT%TZ", gmtime(&item.endtime));
-
-				// Don't log the __func__ here, it will pick up the lambda name 
-				log_notice("Transferred EPG_TAG: channel=", channel.strChannelName, " title=", item.title, " start=", strstart, " end=", strend);
-			}
+			if(settings.verbose_discovery_logging) log_transfer_epgtag(epgtag);
 		});
 	}
 	
@@ -3013,10 +3070,16 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 	// connection isn't open any longer than necessary
 	std::vector<PVR_TIMER> timers;
 
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
 	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// Log the request if verbose_disovery_logging has been enabled
+		if(settings.verbose_discovery_logging) log_notice(__func__, ": Timer data requested");
 
 		// Enumerate all of the recording rules in the database
 		enumerate_recordingrules(dbhandle, [&](struct recordingrule const& item) -> void {
@@ -3028,7 +3091,7 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			timer.iClientIndex = item.recordingruleid;
 
 			// iClientChannelUid
-			timer.iClientChannelUid = (item.channelid.value) ? static_cast<int>(item.channelid.value) : PVR_TIMER_ANY_CHANNEL;
+			timer.iClientChannelUid = static_cast<int>(item.channelid.value);
 
 			// startTime
 			timer.startTime = (item.type == recordingrule_type::datetimeonly) ? item.datetimeonly : now;
@@ -3051,9 +3114,6 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 
 			// strEpgSearchString
 			snprintf(timer.strEpgSearchString, std::extent<decltype(timer.strEpgSearchString)>::value, "%s", item.title);
-
-			// strSummary
-			if(item.synopsis != nullptr) snprintf(timer.strSummary, std::extent<decltype(timer.strSummary)>::value, "%s", item.synopsis);
 
 			// firstDay
 			// TODO: This is a hack for datetimeonly rules so that they can show the date.  See comments above.
@@ -3110,9 +3170,6 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			if(item.title == nullptr) return;
 			snprintf(timer.strTitle, std::extent<decltype(timer.strTitle)>::value, "%s", item.title);
 
-			// strSummary
-			if(item.synopsis != nullptr) snprintf(timer.strSummary, std::extent<decltype(timer.strSummary)>::value, "%s", item.synopsis);
-
 			// iEpgUid
 			timer.iEpgUid = static_cast<unsigned int>(item.starttime);
 
@@ -3124,8 +3181,16 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
-	// Transfer all of the PVR_TIMER structures over to Kodi
-	try { for(auto const& it : timers) g_pvr->TransferTimerEntry(handle, &it); }
+	try { 
+
+		for(auto const& it : timers) {
+
+			// Transfer the generated PVR_TIMER structure over to Kodi and log if enabled
+			g_pvr->TransferTimerEntry(handle, &it);
+			if(settings.verbose_discovery_logging) log_transfer_timer(it);
+		}
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 

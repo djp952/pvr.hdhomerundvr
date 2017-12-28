@@ -759,6 +759,9 @@ void discover_episodes(sqlite3* instance, bool& changed)
 			// Delete any entries in the main episode table that are no longer present in the data
 			if(execute_non_query(instance, "delete from episode where seriesid not in (select seriesid from discover_episode)") > 0) changed = true;
 
+			// Delete any entries in the main episode table that returned 'null' from the backend query
+			if(execute_non_query(instance, "delete from episode where seriesid in (select seriesid from discover_episode where data like 'null')") > 0) changed = true;
+
 			// Insert/replace entries in the main episode table that are new or different; watch for discovered rows with
 			// data set to 'null' - this happens when there is no episode information available for the series
 			if(execute_non_query(instance, "replace into episode select discover_episode.* from discover_episode left outer join episode using(seriesid) "
