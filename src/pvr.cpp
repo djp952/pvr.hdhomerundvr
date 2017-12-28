@@ -1010,14 +1010,47 @@ static void log_notice(_args&&... args)
 	log_message(ADDON::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
 }
 
+// log_transfer_channel
+//
+// Logs a transfer of a PVR_CHANNEL structure
+static void log_transfer_channel(PVR_CHANNEL const& channel)
+{
+	log_notice("Transferred PVR_CHANNEL: channel=", channel.iChannelNumber, ".", channel.iSubChannelNumber, " channelname=", channel.strChannelName, 
+		" encrypted=", (channel.iEncryptionSystem) ? "true" : "false");
+}
+
+// log_transfer_channelgroup
+//
+// Logs a transfer of a PVR_CHANNEL_GROUP structure
+static void log_transfer_channelgroup(PVR_CHANNEL_GROUP const& group)
+{
+	log_notice("Transferred PVR_CHANNEL_GROUP: groupname=", group.strGroupName);
+}
+
+// log_transfer_channelgroupmember
+//
+// Logs a transfer of a PVR_CHANNEL_GROUP_MEMBER structure
+static void log_transfer_channelgroupmember(PVR_CHANNEL_GROUP_MEMBER const& member)
+{
+	char channel[16]= {'\0'};				// Buffer for converted channelid
+
+	union channelid channelid;
+	channelid.value = static_cast<int>(member.iChannelUniqueId);
+
+	// Convert the channel id back into component parts
+	snprintf(channel, std::extent<decltype(channel)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
+
+	log_notice("Transferred PVR_CHANNEL_GROUP_MEMBER: channel=", channel, " groupname=", member.strGroupName);
+}
+
 // log_transfer_epgtag
 //
 // Logs a transfer of an EPG_TAG structure
 static void log_transfer_epgtag(EPG_TAG const& tag)
 {
 	char channel[16]= {'\0'};				// Buffer for converted channelid
-	char strstart[24] = {'\0'};				// Buffer for converted time_t
-	char strend[24] = {'\0'};				// Buffer for converted time_t
+	char starttime[24] = {'\0'};				// Buffer for converted time_t
+	char endtime[24] = {'\0'};				// Buffer for converted time_t
 
 	union channelid channelid;
 	channelid.value = static_cast<int>(tag.iChannelNumber);
@@ -1026,11 +1059,24 @@ static void log_transfer_epgtag(EPG_TAG const& tag)
 	snprintf(channel, std::extent<decltype(channel)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
 
 	// Convert both time_t values into "YYYY-MM-DDTHH:MM:SSZ"
-	strftime(strstart, std::extent<decltype(strstart)>::value, "%FT%TZ", gmtime(&tag.startTime));
-	strftime(strend, std::extent<decltype(strend)>::value, "%FT%TZ", gmtime(&tag.endTime));
+	strftime(starttime, std::extent<decltype(starttime)>::value, "%FT%TZ", gmtime(&tag.startTime));
+	strftime(endtime, std::extent<decltype(endtime)>::value, "%FT%TZ", gmtime(&tag.endTime));
 
-	// Don't log the __func__ here, it will pick up the lambda name 
-	log_notice("Transferred EPG_TAG: channel=", channel, " title=", tag.strTitle, " start=", strstart, " end=", strend);
+	log_notice("Transferred EPG_TAG: channel=", channel, " title=", tag.strTitle, " starttime=", starttime, " endtime=", endtime);
+}
+
+// log_transfer_recording
+//
+// Logs a transfer of a PVR_RECORDING structure
+static void log_transfer_recording(PVR_RECORDING const& recording)
+{
+	char recordingtime[24] = {'\0'};			// Buffer for converted time_t
+
+	// Convert the time_t value into "YYYY-MM-DDTHH:MM:SSZ"
+	strftime(recordingtime, std::extent<decltype(recordingtime)>::value, "%FT%TZ", gmtime(&recording.recordingTime));
+
+	log_notice("Transferred PVR_RECORDING: directory=", recording.strDirectory, " title=", recording.strTitle, " episodename=", recording.strEpisodeName, 
+		" series=", recording.iSeriesNumber, " episode=", recording.iEpisodeNumber, " recordingtime=", recordingtime);
 }
 
 // log_transfer_timer
@@ -1076,8 +1122,7 @@ static void log_transfer_timer(PVR_TIMER const& timer)
 	strftime(starttime, std::extent<decltype(starttime)>::value, "%FT%TZ", gmtime(&timer.startTime));
 	strftime(endtime, std::extent<decltype(endtime)>::value, "%FT%TZ", gmtime(&timer.endTime));
 
-	// Don't log the __func__ here for consistency with the other verbose_disovery_logging(s) that can't
-	log_notice("Transferred PVR_TIMER: type=", type, " state=", state, " channel=", channel, " starttime = ", starttime, " endtime=", endtime);
+	log_notice("Transferred PVR_TIMER: type=", type, " state=", state, " channel=", channel, " starttime= ", starttime, " endtime=", endtime);
 }
 
 // mincount_enum_to_bytes
@@ -2396,20 +2441,29 @@ PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool radio)
 	// The PVR doesn't support radio channel groups
 	if(radio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
+	// Log the request if verbose_disovery_logging has been enabled
+	if(settings.verbose_discovery_logging) log_notice(__func__, ": Channel group data requested");
+
 	PVR_CHANNEL_GROUP group;
 	memset(&group, 0, sizeof(PVR_CHANNEL_GROUP));
 
 	// Favorite Channels
 	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Favorite Channels");
 	g_pvr->TransferChannelGroup(handle, &group);
+	if(settings.verbose_discovery_logging) log_transfer_channelgroup(group);
 
 	// HD Channels
 	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "HD Channels");
 	g_pvr->TransferChannelGroup(handle, &group);
+	if(settings.verbose_discovery_logging) log_transfer_channelgroup(group);
 
 	// SD Channels
 	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "SD Channels");
 	g_pvr->TransferChannelGroup(handle, &group);
+	if(settings.verbose_discovery_logging) log_transfer_channelgroup(group);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -2444,13 +2498,16 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	// connection isn't open any longer than necessary
 	std::vector<PVR_CHANNEL_GROUP_MEMBER> members;
 
-	try {
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
 
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// Log the request if verbose_disovery_logging has been enabled
+		if(settings.verbose_discovery_logging) log_notice(__func__, ": Channel group member data requested");
 
 		// Enumerate all of the channels in the specified group
 		enumerator(dbhandle, settings.show_drm_protected_channels, [&](union channelid const& item) -> void {
@@ -2472,8 +2529,16 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
-	// Transfer all of the PVR_CHANNEL_GROUP_MEMBER structures over to Kodi
-	try { for(auto const& it : members) g_pvr->TransferChannelGroupMember(handle, &it); }
+	try {
+
+		for(auto const& it : members) {
+
+			// Transfer the generated PVR_CHANNEL_GROUP_MEMBER structure over to Kodi and log if enabled
+			g_pvr->TransferChannelGroupMember(handle, &it);
+			if(settings.verbose_discovery_logging) log_transfer_channelgroupmember(it);
+		}
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -2533,13 +2598,16 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 	// connection isn't open any longer than necessary
 	std::vector<PVR_CHANNEL> channels;
 
-	try {
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
 
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// Log the request if verbose_disovery_logging has been enabled
+		if(settings.verbose_discovery_logging) log_notice(__func__, ": Channel data requested");
 
 		// Enumerate all of the channels in the database
 		enumerate_channels(dbhandle, settings.prepend_channel_numbers, settings.show_drm_protected_channels, [&](struct channel const& item) -> void {
@@ -2581,8 +2649,16 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
-	// Transfer all of the PVR_CHANNEL structures over to Kodi
-	try { for(auto const& it : channels) g_pvr->TransferChannelEntry(handle, &it); }
+	try {
+
+		for(auto const& it : channels) {
+
+			// Transfer the generated PVR_CHANNEL structure over to Kodi and log if enabled
+			g_pvr->TransferChannelEntry(handle, &it);
+			if(settings.verbose_discovery_logging) log_transfer_channel(it);
+		}
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
@@ -2700,13 +2776,16 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 	// connection isn't open any longer than necessary
 	std::vector<PVR_RECORDING> recordings;
 
-	try {
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
 
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// Log the request if verbose_disovery_logging has been enabled
+		if(settings.verbose_discovery_logging) log_notice(__func__, ": Recording data requested");
 
 		// Enumerate all of the recordings in the database
 		enumerate_recordings(dbhandle, settings.use_episode_number_as_title, [&](struct recording const& item) -> void {
@@ -2781,8 +2860,16 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
-	// Transfer all of the PVR_RECORDING structures over to Kodi
-	try { for(auto const& it : recordings) g_pvr->TransferRecordingEntry(handle, &it); }
+	try { 
+
+		for(auto const& it : recordings) {
+
+			// Transfer the generated PVR_RECORDING structure over to Kodi and log if enabled
+			g_pvr->TransferRecordingEntry(handle, &it);
+			if(settings.verbose_discovery_logging) log_transfer_recording(it);
+		}
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
