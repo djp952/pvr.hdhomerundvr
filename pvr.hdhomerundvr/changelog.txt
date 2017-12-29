@@ -1,6 +1,7 @@
-v1.2.8 (2017.12.28)
+v1.2.8 (2017.12.29)
   - Update zlib library to version 1.2.11
   - Update cURL library to version 7.57.0
+  - Add "Prepend season/episode number to episode name in EPG" setting
   - Add "Enable verbose data transfer logs" advanced setting
   - Add "Disable reporting of real-time MPEG-TS streams" advanced setting
   - Fix logging of HTTP request errors that occurred during multi-step database queries

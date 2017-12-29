@@ -157,6 +157,11 @@ struct addon_settings {
 	// Flag to re-discover recordings immediately after playback has stopped
 	bool discover_recordings_after_playback;
 
+	// prepend_episode_numbers_in_epg
+	//
+	// Flag to prepend the episode number to the episode name in the EPG
+	bool prepend_episode_numbers_in_epg;
+
 	// use_backend_genre_strings
 	//
 	// Flag to use the backend provided genre strings instead of mapping them
@@ -332,6 +337,7 @@ static addon_settings g_settings = {
 	false,					// prepend_channel_numbers
 	false,					// use_episode_number_as_title
 	false,					// discover_recordings_after_playback
+	false,					// prepend_episode_numbers_in_epg
 	false,					// use_backend_genre_strings
 	false,					// show_drm_protected_channels
 	86400,					// delete_datetime_rules_after			default = 1 day
@@ -1243,6 +1249,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
 			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
+			if(g_addon->GetSetting("prepend_episode_numbers_in_epg", &bvalue)) g_settings.prepend_episode_numbers_in_epg = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
@@ -1602,6 +1609,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.discover_recordings_after_playback = bvalue;
 			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// prepend_episode_numbers_in_epg
+	//
+	else if(strcmp(name, "prepend_episode_numbers_in_epg") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.prepend_episode_numbers_in_epg) {
+
+			g_settings.prepend_episode_numbers_in_epg = bvalue;
+			log_notice(__func__, ": setting prepend_episode_numbers_in_epg changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2342,7 +2361,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 		}
 
 		// Enumerate all of the guide entries in the database for this channel and time frame
-		enumerate_guideentries(dbhandle, channelid, start, end, [&](struct guideentry const& item) -> void {
+		enumerate_guideentries(dbhandle, channelid, start, end, settings.prepend_episode_numbers_in_epg, [&](struct guideentry const& item) -> void {
 
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
