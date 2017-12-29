@@ -125,7 +125,7 @@ msgid "Trigger recording discovery immediately after playback"
 msgstr ""
 
 msgctxt "#30124"
-msgid "Enable verbose logging of discovery data"
+msgid "Enable verbose data transfer logs"
 msgstr ""
 
 msgctxt "#30201"

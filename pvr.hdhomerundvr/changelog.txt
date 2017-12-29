@@ -1,7 +1,7 @@
-v1.2.8 (2017.12.xx)
+v1.2.8 (2017.12.28)
   - Update zlib library to version 1.2.11
   - Update cURL library to version 7.57.0
-  - Add "Enable verbose discovery data logging" advanced setting
+  - Add "Enable verbose data transfer logs" advanced setting
   - Fix logging of HTTP request errors that occurred during multi-step database queries
   - Fix bug causing "Trigger recording discovery immediately after playback" to be applied to "Use network broadcast for device discovery" until restart
   - Fix bug causing stale Timers to appear in Kodi if a series with a valid recording rule has no episode information on the backend
