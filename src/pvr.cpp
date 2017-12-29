@@ -2508,6 +2508,12 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 			// iChannelUniqueId (required)
 			member.iChannelUniqueId = item.value;
 
+			// iChannelNumber
+			member.iChannelNumber = static_cast<int>(item.parts.channel);
+
+			// iSubChannelNumber
+			member.iSubChannelNumber = static_cast<int>(item.parts.subchannel);
+
 			// Copy the PVR_CHANNEL_GROUP_MEMBER into the local vector<>
 			members.push_back(std::move(member));
 		});
@@ -2676,20 +2682,6 @@ PVR_ERROR DeleteChannel(PVR_CHANNEL const& /*channel*/)
 //	channel		- The channel to rename, containing the new channel name
 
 PVR_ERROR RenameChannel(PVR_CHANNEL const& /*channel*/)
-{
-	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
-}
-
-//---------------------------------------------------------------------------
-// MoveChannel
-//
-// Move a channel to another channel number on the backend
-//
-// Arguments:
-//
-//	channel		- The channel to move, containing the new channel number
-
-PVR_ERROR MoveChannel(PVR_CHANNEL const& /*channel*/)
 {
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 }
@@ -3686,22 +3678,6 @@ long long SeekLiveStream(long long position, int whence)
 }
 
 //---------------------------------------------------------------------------
-// PositionLiveStream
-//
-// Gets the position in the stream that's currently being read
-//
-// Arguments:
-//
-//	NONE
-
-long long PositionLiveStream(void)
-{
-	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
-	catch(...) { return handle_generalexception(__func__, -1); }
-}
-
-//---------------------------------------------------------------------------
 // LengthLiveStream
 //
 // The total length of the stream that's currently being read
@@ -3902,22 +3878,6 @@ long long SeekRecordedStream(long long position, int whence)
 }
 
 //---------------------------------------------------------------------------
-// PositionRecordedStream
-//
-// Gets the position in the stream that's currently being read
-//
-// Arguments:
-//
-//	NONE
-
-long long PositionRecordedStream(void)
-{
-	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
-	catch(...) { return handle_generalexception(__func__, -1); }
-}
-
-//---------------------------------------------------------------------------
 // LengthRecordedStream
 //
 // Gets the total length of the stream that's currently being read
@@ -4058,48 +4018,6 @@ bool SeekTime(double /*time*/, bool /*backwards*/, double* startpts)
 
 void SetSpeed(int /*speed*/)
 {
-}
-
-//---------------------------------------------------------------------------
-// GetPlayingTime
-//
-// Get actual playing time from addon. With timeshift enabled this is different to live
-//
-// Arguments:
-//
-//	NONE
-
-time_t GetPlayingTime(void)
-{
-	return 0;
-}
-
-//---------------------------------------------------------------------------
-// GetBufferTimeStart
-//
-// Get time of oldest packet in timeshift buffer (UTC)
-//
-// Arguments:
-//
-//	NONE
-
-time_t GetBufferTimeStart(void)
-{
-	return 0;
-}
-
-//---------------------------------------------------------------------------
-// GetBufferTimeEnd
-//
-// Get time of latest packet in timeshift buffer (UTC)
-//
-// Arguments:
-//
-//	NONE
-
-time_t GetBufferTimeEnd(void)
-{
-	return 0;
 }
 
 //---------------------------------------------------------------------------
