@@ -132,6 +132,10 @@ msgctxt "#30125"
 msgid "Disable reporting of real-time MPEG-TS streams"
 msgstr ""
 
+msgctxt "#30126"
+msgid "Prepend season/episode number to episode name in EPG"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
