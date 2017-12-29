@@ -1430,9 +1430,10 @@ void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate
 //	channelid	- Channel to be enumerated
 //	starttime	- Starting time to be queried
 //	endtime		- Ending time to be queried
+//	prependnumber	- Flag to prepend the episode number to the episode name
 //	callback	- Callback function
 
-void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_guideentries_callback callback)
+void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, bool prependnumber, enumerate_guideentries_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1457,9 +1458,9 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		"json_extract(entry.value, '$.OriginalAirdate') as originalairdate, "
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
-		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
+		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber') || ' - ', '') else '' end || json_extract(entry.value, '$.EpisodeTitle') as episodename "
 		"from deviceauth, "
-		"json_each(json_extract(nullif(http_request('http://api.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) || '&Start=' || ?2), 'null'), '$[0].Guide')) as entry";
+		"json_each(json_extract(nullif(http_request('http://api.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?2) || '&Start=' || ?3), 'null'), '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1469,8 +1470,9 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		while(starttime < endtime) {
 
 			// Bind the query parameters
-			result = sqlite3_bind_int(statement, 1, channelid.value);
-			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(starttime));
+			result = sqlite3_bind_int(statement, 1, (prependnumber) ? 1 : 0);
+			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, channelid.value);
+			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(starttime));
 			if(result != SQLITE_OK) throw sqlite_exception(result);
 
 			// Execute the SQL statement

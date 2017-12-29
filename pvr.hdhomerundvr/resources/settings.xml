@@ -8,6 +8,7 @@
     <setting id="use_episode_number_as_title" label="30112" type="bool" default="false"/>
     <setting id="discover_recordings_after_playback" label="30123" type="bool" default="false"/>
     <setting id="use_backend_genre_strings" label="30117" type="bool" default="false"/>
+    <setting id="prepend_episode_numbers_in_epg" label="30126" type="bool" default="false"/>
     <setting id="show_drm_protected_channels" label="30118" type="bool" default="false"/>
     <setting id="delete_datetime_rules_after" label="30108" type="enum" lvalues="30213|30209|30210|30211|30212" default="3"/>
   </category>
@@ -35,6 +36,7 @@
     <setting id="stream_read_minimum_byte_count" label="30114" type="enum" lvalues="30218|30219|30220|30221|30222|30223" default="1"/>
     <setting id="stream_ring_buffer_size" label="30115" type="enum" lvalues="30224|30225|30226|30227|30228" default="2"/>
     <setting id="verbose_transfer_logging" label="30124" type="bool" default="false"/>
+    <!-- Non-functional in Jarvis: <setting id="disable_realtime_indicator" label="30125" type="bool" default="false"/> -->
   </category>
 
 </settings>
