@@ -53,7 +53,7 @@ LOCAL_C_INCLUDES += \
 	depends/xbmc/addons/library.xbmc.addon \
 	depends/xbmc/addons/library.kodi.guilib \
 	depends/xbmc/addons/library.xbmc.pvr \
-	depends/libcurl-nossl/android-$(TARGET_ARCH_ABI)/include/curl \
+	depends/libcurl-nossl/android-$(TARGET_ARCH_ABI)/include \
 	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
 	depends/libz/android-$(TARGET_ARCH_ABI)/include \
 	depends/libhdhomerun \

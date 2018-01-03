@@ -31,7 +31,7 @@
 // libcurl
 //
 #define CURL_STATICLIB
-#include <curl.h>
+#include <curl/curl.h>
 
 // sqlite extension
 //

@@ -22,3 +22,6 @@
 [submodule "xbmc"]
 	path = depends/xbmc
 	url = https://github.com/xbmc/xbmc.git
+[submodule "curl"]
+	path = depends/curl
+	url = https://github.com/curl/curl.git
