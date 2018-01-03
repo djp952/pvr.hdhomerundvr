@@ -79,7 +79,7 @@ git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 * Generate the MAC OSX 10.11 SDK Package for OSXCROSS by following the instructions provided at [PACKAGING THE SDK](https://github.com/tpoechtrager/osxcross#packaging-the-sdk).  The suggested version of Xcode to use when generating the SDK package is Xcode 7.3.1 (May 3, 2016).
 * Open "Bash on Ubuntu on Windows"   
 ```
-sudo apt-get install clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
+sudo apt-get install make clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
 git clone https://github.com/tpoechtrager/osxcross --depth=1
 cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh
