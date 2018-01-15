@@ -2502,7 +2502,7 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 
 	// Prepare a scalar result query to generate a stream URL for the specified channel
 	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
-		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=' || hex(randomblob(16)) from device where type = 'storage' limit 1";
+		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=0x' || hex(randomblob(4)) from device where type = 'storage' limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
