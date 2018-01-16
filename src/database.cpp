@@ -1454,7 +1454,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		"cast(strftime('%Y', coalesce(json_extract(entry.value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
 		"json_extract(entry.value, '$.ImageURL') as iconurl, "
 		"coalesce((select genretype from genremap where filter like json_extract(entry.value, '$.Filter[0]')), 0) as genretype, "
-		"json_extract(entry.value, '$.Filter[0]') as genres, "
+		"(select group_concat(value) from json_each(json_extract(entry.value, '$.Filter'))) as genres, "
 		"json_extract(entry.value, '$.OriginalAirdate') as originalairdate, "
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
@@ -2502,7 +2502,7 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 
 	// Prepare a scalar result query to generate a stream URL for the specified channel
 	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
-		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=' || hex(randomblob(16)) from device where type = 'storage' limit 1";
+		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=0x' || hex(randomblob(4)) from device where type = 'storage' limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));

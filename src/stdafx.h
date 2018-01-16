@@ -68,7 +68,7 @@
 // libcurl Declarations
 
 #define CURL_STATICLIB				// Using libcurl in a static library
-#include <curl.h>					// Include CURL declarations
+#include <curl/curl.h>				// Include CURL declarations
 
 //---------------------------------------------------------------------------
 
