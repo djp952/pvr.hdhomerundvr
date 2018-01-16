@@ -24,7 +24,7 @@
 #define __UUID_H_
 #pragma once
 
-#ifndef _WINDOWS
+#if !defined(_WINDOWS) && !defined(WINAPI_FAMILY)
 #error this uuid.h is intended for use on Windows only
 #endif
 

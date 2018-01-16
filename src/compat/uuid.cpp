@@ -27,7 +27,7 @@
 
 // Link with RPC Runtime
 //
-#pragma comment(lib, "rpcrt4.lib")
+//todo #pragma comment(lib, "rpcrt4.lib")
 
 //---------------------------------------------------------------------------
 // uuid_generate
@@ -40,8 +40,8 @@
 
 void uuid_generate(uuid_t& out)
 {
-	memset(&out, 0, sizeof(uuid_t));
-	UuidCreate(&out);
+	HRESULT result = CoCreateGuid(&out);
+	if(FAILED(result)) { /* TODO - throw? */ }
 }
 
 //---------------------------------------------------------------------------
@@ -57,17 +57,13 @@ void uuid_generate(uuid_t& out)
 
 void uuid_unparse(uuid_t const& u, char* out)
 {
-	RPC_CSTR	uuidstr = nullptr;			// String representation
+	if(out == nullptr) return;
 
-	if(out == nullptr) return;				// Bad output pointer
-	*out = '\0';							// Set to null string
-
-	// Use the Windows RPC runtime to convert the UUID into a string
-	if(UuidToStringA(&u, &uuidstr) == RPC_S_OK) {
-		
-		strcpy(out, reinterpret_cast<char const*>(uuidstr));
-		RpcStringFreeA(&uuidstr);
-	}
+	// todo: test this
+	sprintf(out, "%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX",
+      u.Data1, u.Data2, u.Data3, 
+      u.Data4[0], u.Data4[1], u.Data4[2], u.Data4[3],
+      u.Data4[4], u.Data4[5], u.Data4[6], u.Data4[7]);
 }
 
 //-----------------------------------------------------------------------------

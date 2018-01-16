@@ -25,49 +25,64 @@
 #pragma once
 
 //---------------------------------------------------------------------------
-// Win32 Declarations
+// Windows
+//---------------------------------------------------------------------------
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+#include <winapifamily.h>
+
+// Windows Desktop
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
 #define WINVER			_WIN32_WINNT_WIN8
 #define	_WIN32_WINNT	_WIN32_WINNT_WIN8
 #define	_WIN32_IE		_WIN32_IE_IE80
+#define NOMINMAX
 
-#define NOMINMAX					// Disable min()/max() macros
+#include <Windows.h>
+#define TARGET_WINDOWS
 
-#include <windows.h>				// Include main Windows declarations
+// Windows App
+#elif WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 
-#endif // _WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 
-#include <assert.h>					// Include standard assertion declarations
-#include <stdint.h>					// Include standard integer declarations
+#include <Windows.h>
+#include <objbase.h>
+#define TARGET_WINDOWS_STORE
+
+#endif
+
+#endif	// defined(_WINDOWS) || defined(WINAPI_FAMILY)
+
+#include <assert.h>
+#include <stdint.h>
 
 // KiB / MiB / GiB
 //
-#define KiB		*(1 << 10)		// KiB multiplier
-#define MiB		*(1 << 20)		// MiB multiplier
-#define GiB		*(1 << 30)		// GiB multiplier
+#define KiB		*(1 << 10)
+#define MiB		*(1 << 20)
+#define GiB		*(1 << 30)
 
 //---------------------------------------------------------------------------
-// Kodi Addon Declarations
-
-#ifdef _WINDOWS
-#define TARGET_WINDOWS
-#endif // _WINDOWS
-
+// SQLite
 //---------------------------------------------------------------------------
-// SQLite Declarations
 
-#define SQLITE_THREADSAFE 2			// SQLITE_CONFIG_MULTITHREAD
-#define SQLITE_ENABLE_JSON1	1		// Enable the JSON1 extensions
-#define SQLITE_TEMP_STORE 3			// Enable in-memory temp storage
+#ifdef TARGET_WINDOWS_STORE
+#define SQLITE_OS_WINRT 1
+#endif
 
-#include <sqlite3.h>				// Include SQLite declarations
+#define SQLITE_THREADSAFE 2
+#define SQLITE_ENABLE_JSON1	1
+#define SQLITE_TEMP_STORE 3
+#include <sqlite3.h>
 
 //--------------------------------------------------------------------------
-// libcurl Declarations
+// libcurl
+//---------------------------------------------------------------------------
 
-#define CURL_STATICLIB				// Using libcurl in a static library
+#define CURL_STATICLIB
 #include <curl/curl.h>				// Include CURL declarations
 
 //---------------------------------------------------------------------------

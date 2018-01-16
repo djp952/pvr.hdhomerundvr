@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<zip>
+  <file path="pvr.hdhomerundvr\addon.xml" source="tmp\addon-uwp.xml" normalize="windows"/>
+  <file path="pvr.hdhomerundvr\LICENSE.txt" source="LICENSE" normalize="windows"/>
+  <file path="pvr.hdhomerundvr\zuki.pvr.hdhomerundvr.dll" source="out\uwp-x64\Release\zuki.pvr.hdhomerundvr.dll"/>
+  <file path="pvr.hdhomerundvr\resources\icon.png" source="pvr.hdhomerundvr\resources\icon.png"/>
+  <file path="pvr.hdhomerundvr\resources\settings.xml" source="pvr.hdhomerundvr\resources\settings.xml" normalize="windows"/>
+  <file path="pvr.hdhomerundvr\resources\language\resource.language.en_gb\strings.po" source="pvr.hdhomerundvr\resources\language\resource.language.en_gb\strings.po" normalize="windows"/>
+</zip>

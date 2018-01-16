@@ -67,7 +67,7 @@
   <!-- Generates tmp\version\version.txt file and populates AddonVersion property -->
   <Target Name="AddonVersion">
     
-    <MSBuild Projects="src/version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+    <MSBuild Projects="src\version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
     <CreateProperty Value="$([System.IO.File]::ReadAllText(tmp\version\version.txt))">
       <Output TaskParameter="Value" PropertyName="AddonVersion" />
     </CreateProperty>
@@ -77,7 +77,7 @@
   <!-- Generates tmp\addon-*.xml files -->
   <Target Name="AddonXml" DependsOnTargets="AddonVersion">
     
-    <MSBuild Projects="src/addonxml.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+    <MSBuild Projects="src\addonxml.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
     
   </Target>
   
@@ -85,7 +85,8 @@
   <Target Name="windows-win32" DependsOnTargets="AddonVersion;AddonXml">
 
     <MakeDir Directories="out\windows-win32" ContinueOnError="false"/>
-    <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
+    <MSBuild Projects="src\windows.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
+    <MSBuild Projects="src\sqlite3.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip manifest\windows-win32.manifest" ContinueOnError="false"/>
 
   </Target>
@@ -94,8 +95,36 @@
   <Target Name="windows-x64" DependsOnTargets="AddonVersion;AddonXml">
 
     <MakeDir Directories="out\windows-x64" ContinueOnError="false"/>
-    <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=x64" Targets="Build" ContinueOnError="false"/>
+    <MSBuild Projects="src\windows.vcxproj" Properties="Configuration=$(Configuration);Platform=x64" Targets="Build" ContinueOnError="false"/>
+    <MSBuild Projects="src\sqlite3.vcxproj" Properties="Configuration=$(Configuration);Platform=x64" Targets="Build" ContinueOnError="false"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(AddonVersion).zip manifest\windows-x64.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: UWP-WIN32 -->
+  <Target Name="uwp-win32" DependsOnTargets="AddonVersion;AddonXml">
+
+    <MakeDir Directories="out\uwp-win32" ContinueOnError="false"/>
+    <MSBuild Projects="src\uwp.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-uwp-win32-$(KodiBaseline)-$(AddonVersion).zip manifest\uwp-win32.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: UWP-X64 -->
+  <Target Name="uwp-x64" DependsOnTargets="AddonVersion;AddonXml">
+
+    <MakeDir Directories="out\uwp-x64" ContinueOnError="false"/>
+    <MSBuild Projects="src\uwp.vcxproj" Properties="Configuration=$(Configuration);Platform=x64" Targets="Build" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-uwp-x64-$(KodiBaseline)-$(AddonVersion).zip manifest\uwp-x64.manifest" ContinueOnError="false"/>
+
+  </Target>
+
+  <!-- BUILD: UWP-ARM -->
+  <Target Name="uwp-arm" DependsOnTargets="AddonVersion;AddonXml">
+
+    <MakeDir Directories="out\uwp-arm" ContinueOnError="false"/>
+    <MSBuild Projects="src\uwp.vcxproj" Properties="Configuration=$(Configuration);Platform=ARM" Targets="Build" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-uwp-arm-$(KodiBaseline)-$(AddonVersion).zip manifest\uwp-arm.manifest" ContinueOnError="false"/>
 
   </Target>
 
@@ -443,6 +472,7 @@
 
   <!-- BUILD: PLATFORMS -->
   <Target Name="windows" DependsOnTargets="windows-win32;windows-x64"/>
+  <Target Name="uwp" DependsOnTargets="uwp-win32;uwp-x64;uwp-arm"/>
   <Target Name="linux" DependsOnTargets="linux-i686;linux-x86_64;linux-armel;linux-armhf;linux-aarch64"/>
   <Target Name="raspbian" DependsOnTargets="raspbian-armhf"/>
   <Target Name="osx" DependsOnTargets="osx-x86_64"/>
@@ -450,6 +480,6 @@
   <Target Name="androidapk" DependsOnTargets="androidapk-arm;androidapk-aarch64"/>
   
   <!-- BUILD: ALL -->
-  <Target Name="all" DependsOnTargets="windows;linux;raspbian;osx;android;androidapk"/>
+  <Target Name="all" DependsOnTargets="windows;uwp;linux;raspbian;osx;android;androidapk"/>
 
 </Project>

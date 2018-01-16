@@ -277,16 +277,6 @@ struct addon_settings {
 // Kodi add-on callbacks
 static std::unique_ptr<ADDON::CHelper_libXBMC_addon> g_addon;
 
-// g_addon_lock
-//
-// Synchronization object to serialize access to addon callbacks
-static std::mutex g_addon_lock;
-
-// g_addon_refs
-//
-// Reference count for calls to ADDON_Create/ADDON_Destroy
-static int g_addon_refs = 0;
-
 // g_capabilities (const)
 //
 // PVR implementation capability flags
@@ -1227,16 +1217,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 	if((handle == nullptr) || (props == nullptr)) return ADDON_STATUS::ADDON_STATUS_PERMANENT_FAILURE;
 
-	// Kodi 18 "Leia" allows ADDON_Create to be called multiple times from multiple threads
-	// when the addon is being installed; work around this with a mutex and a reference counter
-	std::unique_lock<std::mutex> lock(g_addon_lock);
-	if((++g_addon_refs) > 1) {
-
-		assert(g_addon);
-		log_notice(__func__, ": warning: bypassing addon initialization (refs = ", g_addon_refs, ")");
-		return ADDON_STATUS::ADDON_STATUS_OK;
-	}
-
 	// Copy anything relevant from the provided parameters
 	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
 	g_epgmaxtime = pvrprops->iEpgMaxDays;
@@ -1485,13 +1465,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 void ADDON_Destroy(void)
 {
-	// Kodi 18 "Leia" allows ADDON_Destroy to be called multiple times from multiple threads
-	// when the addon is being installed; work around this with a mutex and a reference counter
-	std::unique_lock<std::mutex> lock(g_addon_lock);
-	if((--g_addon_refs) > 0) return log_notice(__func__, ": warning: bypassing addon termination (refs = ", g_addon_refs, ")");
-
-	assert(g_addon_refs == 0);				// Verify this is only happening one time
-
 	// Throw a message out to the Kodi log indicating that the add-on is being unloaded
 	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
 
