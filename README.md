@@ -7,7 +7,6 @@ Copyright (C)2017 Michael G. Brehm
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
 [__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2017, Daniel Stenberg, daniel@haxx.se, and many contributors   
-[__ZLIB__](http://www.zlib.net/) - Copyright (C)1995-2017 Jean-loup Gailly and Mark Adler   
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2017 Silicondust USA Inc     
    
 ## BUILD ENVIRONMENT
