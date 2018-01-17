@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdhomerundvr", "src\hdhomerundvr.vcxproj", "{5B5A17F1-4312-4A64-A796-2818CE0906B4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "windows", "src\windows.vcxproj", "{5B5A17F1-4312-4A64-A796-2818CE0906B4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C6440A4E-843A-4A54-867B-0A3D2B9C1F8F} = {C6440A4E-843A-4A54-867B-0A3D2B9C1F8F}
 		{3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B} = {3F7B8BC6-FA0C-4E08-8F7E-D6CD97E7581B}

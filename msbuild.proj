@@ -67,7 +67,7 @@
   <!-- Generates tmp\version\version.txt file and populates AddonVersion property -->
   <Target Name="AddonVersion">
     
-    <MSBuild Projects="src/version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+    <MSBuild Projects="src\version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
     <CreateProperty Value="$([System.IO.File]::ReadAllText(tmp\version\version.txt))">
       <Output TaskParameter="Value" PropertyName="AddonVersion" />
     </CreateProperty>
@@ -77,7 +77,7 @@
   <!-- Generates tmp\addon-*.xml files -->
   <Target Name="AddonXml" DependsOnTargets="AddonVersion">
     
-    <MSBuild Projects="src/addonxml.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
+    <MSBuild Projects="src\addonxml.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
     
   </Target>
   
@@ -85,7 +85,8 @@
   <Target Name="windows-win32" DependsOnTargets="AddonVersion;AddonXml">
 
     <MakeDir Directories="out\windows-win32" ContinueOnError="false"/>
-    <MSBuild Projects="pvr.hdhomerundvr.sln" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
+    <MSBuild Projects="src\windows.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
+    <MSBuild Projects="src\sqlite3.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip manifest\windows-win32.manifest" ContinueOnError="false"/>
 
   </Target>
