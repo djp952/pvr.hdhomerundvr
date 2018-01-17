@@ -25,10 +25,6 @@
 
 #pragma warning(push, 4)
 
-// Link with RPC Runtime
-//
-//todo #pragma comment(lib, "rpcrt4.lib")
-
 //---------------------------------------------------------------------------
 // uuid_generate
 //
@@ -40,8 +36,8 @@
 
 void uuid_generate(uuid_t& out)
 {
-	HRESULT result = CoCreateGuid(&out);
-	if(FAILED(result)) { /* TODO - throw? */ }
+	memset(&out, 0, sizeof(uuid_t));
+	CoCreateGuid(&out);
 }
 
 //---------------------------------------------------------------------------
@@ -59,11 +55,10 @@ void uuid_unparse(uuid_t const& u, char* out)
 {
 	if(out == nullptr) return;
 
-	// todo: test this
-	sprintf(out, "%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX",
-      u.Data1, u.Data2, u.Data3, 
-      u.Data4[0], u.Data4[1], u.Data4[2], u.Data4[3],
-      u.Data4[4], u.Data4[5], u.Data4[6], u.Data4[7]);
+	// UuidToStringA is only available on WINAPI_PARTITION_DESKTOP, this code is also
+	// now used for the UWP/Store version of the library - just use sprintf()
+	sprintf(out, "%08lx-%04hx-%04hx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx", u.Data1, u.Data2, u.Data3, 
+		u.Data4[0], u.Data4[1], u.Data4[2], u.Data4[3], u.Data4[4], u.Data4[5], u.Data4[6], u.Data4[7]);
 }
 
 //-----------------------------------------------------------------------------
