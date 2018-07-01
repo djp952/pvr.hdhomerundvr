@@ -2683,7 +2683,6 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, useragent.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
