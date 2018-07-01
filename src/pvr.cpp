@@ -2031,7 +2031,7 @@ char const* GetBackendVersion(void)
 
 char const* GetConnectionString(void)
 {
-	return "my.hdhomerun.com";
+	return "api.hdhomerun.com";
 }
 
 //---------------------------------------------------------------------------
