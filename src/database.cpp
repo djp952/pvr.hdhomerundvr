@@ -29,12 +29,18 @@
 #include <stdint.h>
 #include <string.h>
 #include <uuid/uuid.h>
+#include <xbmc_pvr_types.h>
 
 #include "hdhr.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
 
 #pragma warning(push, 4)
+
+// pvr.cpp (via version.h)
+//
+extern char const VERSION_PRODUCTNAME_ANSI[];
+extern char const VERSION_VERSION3_ANSI[];
 
 // Check SQLITE_THREADSAFE
 //
@@ -2651,6 +2657,11 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	long				responsecode = 200;		// HTTP response code
 	sqlite_buffer		blob;					// Dynamically allocated blob buffer
 
+	// useragent
+	//
+	// Static string to use as the User-Agent for this HTTP request
+	static std::string useragent = "Kodi-PVR/" + std::string(XBMC_PVR_API_VERSION) + " " + VERSION_PRODUCTNAME_ANSI + "/" + VERSION_VERSION3_ANSI;
+
 	if((argc < 1) || (argc > 2) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
 
 	// A null or zero-length URL results in a NULL result
@@ -2670,6 +2681,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 	// Set the CURL options and execute the web request to get the JSON string data
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, useragent.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

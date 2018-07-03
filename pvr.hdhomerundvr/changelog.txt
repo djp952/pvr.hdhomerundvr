@@ -1,7 +1,8 @@
-v1.2.9 (2018.01.xx)
+v1.2.9 (2018.07.xx)
   - Correct format of SessionID passed to HDHomeRun RECORD engine for Live TV streams
   - (Windows) Build HTTP-only cURL from source instead of using prebuilt static library
   - (Linux/Android/OSX) Switch to HTTP-only prebuilt libcurl static library
+  - Add User-Agent string to all HTTP requests in order to identify the PVR client to the backend services
 
 v1.2.8 (2017.12.29)
   - Update zlib library to version 1.2.11
