@@ -3,6 +3,8 @@ v1.2.9 (2018.07.xx)
   - (Windows) Build HTTP-only cURL from source instead of using prebuilt static library
   - (Linux/Android/OSX) Switch to HTTP-only prebuilt libcurl static library
   - Add User-Agent string to all HTTP requests in order to identify the PVR client to the backend services
+  - Refresh device authorization code(s) immediately if attempt to access EPG data from backend services fails
+  - Temporarily disable all EPG data requests if multiple failures accessing the backend services are detected
 
 v1.2.8 (2017.12.29)
   - Update zlib library to version 1.2.11
