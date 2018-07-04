@@ -1,4 +1,4 @@
-v1.2.9 (2018.07.xx)
+v1.2.9 (2018.07.03)
   - Correct format of SessionID passed to HDHomeRun RECORD engine for Live TV streams
   - (Windows) Build HTTP-only cURL from source instead of using prebuilt static library
   - (Linux/Android/OSX) Switch to HTTP-only prebuilt libcurl static library

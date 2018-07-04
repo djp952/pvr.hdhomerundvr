@@ -283,6 +283,7 @@ static std::unique_ptr<ADDON::CHelper_libXBMC_addon> g_addon;
 static const PVR_ADDON_CAPABILITIES g_capabilities = {
 
 	true,			// bSupportsEPG
+	false,			// bSupportsEPGEdl
 	true,			// bSupportsTV
 	false,			// bSupportsRadio
 	true,			// bSupportsRecordings
@@ -2399,6 +2400,22 @@ PVR_ERROR IsEPGTagPlayable(EPG_TAG const* /*tag*/, bool* /*playable*/)
 }
 
 //---------------------------------------------------------------------------
+// GetEPGTagEdl
+//
+// Retrieve the edit decision list (EDL) of an EPG tag on the backend
+//
+// Arguments:
+//
+//	tag			- EPG tag
+//	edl			- The function has to write the EDL list into this array
+//	count		- The maximum size of the EDL, out: the actual size of the EDL
+
+PVR_ERROR GetEPGTagEdl(EPG_TAG const* /*tag*/, PVR_EDL_ENTRY /*edl*/[], int* /*count*/)
+{
+	return PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
 // GetEPGTagStreamProperties
 //
 // Get the stream properties for an epg tag from the backend
@@ -3784,6 +3801,22 @@ PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_N
 PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 {
 	if(properties == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
+
+	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+}
+
+//---------------------------------------------------------------------------
+// GetStreamReadChunkSize
+//
+// Obtain the chunk size to use when reading streams
+//
+// Arguments:
+//
+//	properties	- The properties of the currently playing stream
+
+PVR_ERROR GetStreamReadChunkSize(int* chunksize)
+{
+	if(chunksize == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 }
