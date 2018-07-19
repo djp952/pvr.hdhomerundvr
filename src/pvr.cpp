@@ -222,11 +222,6 @@ struct addon_settings {
 	// Indicates the number of seconds to pause before initiating the startup discovery task
 	int startup_discovery_task_delay;
 
-	// stream_read_minimum_byte_count
-	//
-	// Indicates the minimum number of bytes to return from a stream read
-	int stream_read_minimum_byte_count;
-
 	// stream_read_timeout
 	//
 	// Indicates the stream read timeout value (milliseconds)
@@ -355,9 +350,8 @@ static addon_settings g_settings = {
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
-	(1 KiB),				// stream_read_minimum_byte_count
 	2500,					// stream_read_timeout
-	(4 MiB),				// stream_ring_buffer_size
+	(1 MiB),				// stream_ring_buffer_size
 	false,					// enable_recording_edl
 	"",						// recording_edl_folder
 	0,						// recording_edl_start_padding
@@ -905,7 +899,7 @@ static void discover_startup_task(scalar_condition<bool> const& /*cancel*/)
 // Handler for thrown generic exceptions
 static void handle_generalexception(char const* function)
 {
-	log_error(function, " failed due to an unhandled exception");
+	log_error(function, " failed due to an exception");
 }
 
 // handle_generalexception
@@ -923,7 +917,7 @@ static _result handle_generalexception(char const* function, _result result)
 // Handler for thrown std::exceptions
 static void handle_stdexception(char const* function, std::exception const& ex)
 {
-	log_error(function, " failed due to an unhandled exception: ", ex.what());
+	log_error(function, " failed due to an exception: ", ex.what());
 }
 
 // handle_stdexception
@@ -1382,7 +1376,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
-			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("stream_read_timeout", &nvalue)) g_settings.stream_read_timeout = nvalue;
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
@@ -1905,18 +1898,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.startup_discovery_task_delay = nvalue;
 			log_notice(__func__, ": setting startup_discovery_task_delay changed to ", nvalue, " seconds");
-		}
-	}
-
-	// stream_read_minimum_byte_count
-	//
-	else if(strcmp(name, "stream_read_minimum_byte_count") == 0) {
-
-		int nvalue = mincount_enum_to_bytes(*reinterpret_cast<int const*>(value));
-		if(nvalue != g_settings.stream_read_minimum_byte_count) {
-
-			g_settings.stream_read_minimum_byte_count = nvalue;
-			log_notice(__func__, ": setting stream_read_minimum_byte_count changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -3663,7 +3644,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 		// Start the new channel stream using the tuning parameters currently specified by the settings
 		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_timeout);
 
 		return true;
 	}
@@ -3861,7 +3842,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 		// Start the new recording stream using the tuning parameters currently specified by the settings
 		log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
-		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_timeout);
 
 		return true;
 	}

@@ -84,10 +84,6 @@ msgctxt "#30113"
 msgid "Startup discovery task delay (seconds)"
 msgstr ""
 
-msgctxt "#30114"
-msgid "DVR stream read operation minimum size"
-msgstr ""
-
 msgctxt "#30115"
 msgid "DVR stream ring buffer size"
 msgstr ""
