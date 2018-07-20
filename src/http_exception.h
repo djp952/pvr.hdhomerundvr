@@ -41,7 +41,7 @@ public:
 
 	// Instance Constructor
 	//
-	http_exception(long responsecode) : m_responsecode(responsecode), string_exception("HTTP ", responsecode, ": ", HttpStatus::reasonPhrase(responsecode)) {}
+	http_exception(long responsecode) : string_exception("HTTP ", responsecode, ": ", HttpStatus::reasonPhrase(responsecode)), m_responsecode(responsecode) {}
 
 	//-------------------------------------------------------------------------
 	// Member Functions

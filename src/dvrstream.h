@@ -61,7 +61,8 @@ public:
 	// Factory method, creates a new dvrstream instance
 	static std::unique_ptr<dvrstream> create(char const* url);
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize);
-	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, unsigned int readtimeout);
+	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount);
+	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
 
 	// length
 	//
@@ -93,6 +94,11 @@ private:
 	dvrstream(dvrstream const&)=delete;
 	dvrstream& operator=(dvrstream const&)=delete;
 
+	// DEFAULT_READ_MIN
+	//
+	// Default minimum amount of data to return from a read request
+	static size_t const DEFAULT_READ_MINCOUNT;
+
 	// DEFAULT_READ_TIMEOUT_MS
 	//
 	// Default amount of time for a read operation to succeed
@@ -115,7 +121,7 @@ private:
 
 	// Instance Constructor
 	//
-	dvrstream(char const* url, size_t buffersize, unsigned int readtimeout);
+	dvrstream(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -152,6 +158,7 @@ private:
 	//
 	CURL*							m_curl = nullptr;			// CURL easy interface handle
 	CURLM*							m_curlm = nullptr;			// CURL multi interface handle
+	size_t const					m_readmincount;				// Minimum read byte count
 
 	// STREAM STATE
 	//

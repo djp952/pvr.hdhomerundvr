@@ -45,6 +45,7 @@ LOCAL_C_INCLUDES += \
 	depends/xbmc/xbmc \
 	depends/xbmc/xbmc/linux \
 	depends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi \
+	depends/http-status-codes-cpp \
 	depends/libcurl/android-$(TARGET_ARCH_ABI)/include \
 	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
 	depends/libhdhomerun \

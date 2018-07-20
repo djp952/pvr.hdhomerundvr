@@ -1,6 +1,5 @@
 v1.2.10 (2018.07.xx)
   - Simplify and improve overall performance of Live TV / Recorded TV stream implementation
-  - Remove "DVR stream read operation minimum size" advanced option
   - Reduce default Live TV / Recorded TV stream ring buffer size to 1MiB
 
 v1.2.9 (2018.07.01)

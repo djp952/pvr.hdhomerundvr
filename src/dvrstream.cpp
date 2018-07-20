@@ -33,6 +33,11 @@
 
 #pragma warning(push, 4)
 
+// dvrstream::DEFAULT_READ_MINCOUNT (static)
+//
+// Default minimum amount of data to return from a read request
+size_t const dvrstream::DEFAULT_READ_MINCOUNT = (1 KiB);
+
 // dvrstream::DEFAULT_READ_TIMEOUT_MS (static)
 //
 // Default amount of time for a read operation to succeed
@@ -112,9 +117,11 @@ inline uint32_t read_be32(uint8_t const* ptr)
 //
 //	url				- URL of the stream to be opened
 //	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
 //	readtimeout		- Read operation timeout, in millseconds
 
-dvrstream::dvrstream(char const* url, size_t buffersize, unsigned int readtimeout) :
+dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout) :
+	m_readmincount(std::max(align::down(readmincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
 	m_readtimeout(std::max(1U, readtimeout)), m_buffersize(align::up(buffersize, 65536))
 {
 	if(url == nullptr) throw std::invalid_argument("url");
@@ -221,7 +228,7 @@ void dvrstream::close(void)
 
 std::unique_ptr<dvrstream> dvrstream::create(char const* url)
 {
-	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_READ_TIMEOUT_MS);
+	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_READ_MINCOUNT, DEFAULT_READ_TIMEOUT_MS);
 }
 
 //---------------------------------------------------------------------------
@@ -236,7 +243,7 @@ std::unique_ptr<dvrstream> dvrstream::create(char const* url)
 
 std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize)
 {
-	return create(url, buffersize, DEFAULT_READ_TIMEOUT_MS);
+	return create(url, buffersize, DEFAULT_READ_MINCOUNT, DEFAULT_READ_TIMEOUT_MS);
 }
 
 //---------------------------------------------------------------------------
@@ -248,11 +255,28 @@ std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize)
 //
 //	url				- URL of the stream to be opened
 //	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
+
+std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize, size_t readmincount)
+{
+	return create(url, buffersize, readmincount, DEFAULT_READ_TIMEOUT_MS);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::create (static)
+//
+// Factory method, creates a new dvrstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+//	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
 //	readtimeout		- Read operation timeout, in millseconds
 
-std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize, unsigned int readtimeout)
+std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout)
 {
-	return std::unique_ptr<dvrstream>(new dvrstream(url, buffersize, readtimeout));
+	return std::unique_ptr<dvrstream>(new dvrstream(url, buffersize, readmincount, readtimeout));
 }
 
 //---------------------------------------------------------------------------
@@ -505,7 +529,10 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 {
 	size_t				bytesread = 0;			// Total bytes actually read
 	size_t				available = 0;			// Available bytes to read
-	bool				stopped = false;		// Flag if data transfer has stopped
+
+	// Verify that the minimum read count has been aligned properly during construction
+	assert(m_readmincount == align::down(m_readmincount, MPEGTS_PACKET_LENGTH));
+	assert(m_readmincount >= MPEGTS_PACKET_LENGTH);
 
 	// Verify that the read timeout is at least one millisecond
 	assert(m_readtimeout >= 1U);
@@ -513,11 +540,20 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 	if(count >= m_buffersize) throw std::invalid_argument("count");
 	if(count == 0) return 0;
 
-	stopped = !transfer_until([&]() -> bool {
+	// Transfer data into the ring buffer until the minimum amount of data is available, 
+	// the stream has completed, or an exception/error occurs
+	transfer_until([&]() -> bool {
 
 		available = (m_tail > m_head) ? (m_buffersize - m_tail) + m_head : m_head - m_tail;
-		return (available >= count);
+		return (available >= m_readmincount);
 	});
+
+	if(available < count) { 
+		int x = 123;
+	}
+	
+	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished
+	if(available == 0) return 0;
 
 	// Reads are no longer aligned to return full MPEG-TS packets, determine the offset
 	// from the current read position to the first full packet of data
