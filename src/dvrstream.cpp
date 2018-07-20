@@ -160,7 +160,7 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount, un
 			try {
 
 				// Attempt to begin the data transfer and wait for the HTTP headers to be processed
-				if(!transfer_until([&]() -> bool { return m_headers == true; })) { /* todo */ }
+				if(!transfer_until([&]() -> bool { return m_headers == true; })) throw string_exception(__func__, ": failed to receive HTTP response headers");
 			}
 
 			// Remove the easy handle from the multi interface on exception
@@ -636,7 +636,8 @@ long long dvrstream::restart(long long position)
 	if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_remove_handle() failed: ", curl_multi_strerror(curlmresult));
 
 	// Execute the data transfer until the HTTP headers have been received and processed
-	if(!transfer_until([&]() -> bool { return m_headers == true; })) throw string_exception(__func__, ": failed to receive HTTP response headers");
+	if(!transfer_until([&]() -> bool { return m_headers == true; })) 
+		throw string_exception(__func__, ": failed to receive HTTP response headers");
 
 	return m_readpos;					// Return new starting position of the stream
 }
@@ -743,11 +744,9 @@ bool dvrstream::transfer_until(std::function<bool(void)> predicate)
 
 		if(responsecode == 0) throw string_exception("no response from host");
 		else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
-
-		return false;				// Transfer has completed without exception
 	}
 
-	return true;					// Transfer is still active
+	return predicate();				// Evaluate the predicate as the result
 }
 
 //---------------------------------------------------------------------------

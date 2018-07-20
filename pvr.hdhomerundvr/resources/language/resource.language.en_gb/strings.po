@@ -33,7 +33,7 @@ msgid "EDL"
 msgstr ""
 
 msgctxt "#30100"
-msgid "Pause discovery while streaming Live TV channels"
+msgid "Pause discovery tasks while streaming"
 msgstr ""
 
 msgctxt "#30101"

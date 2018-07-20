@@ -3614,9 +3614,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
-	// If the user wants to pause discovery during live streaming, do so
-	if(settings.pause_discovery_while_streaming) g_scheduler.pause();
-
 	// The only interesting thing about PVR_CHANNEL is the channel id
 	union channelid channelid;
 	channelid.value = channel.iUniqueId;
@@ -3661,9 +3658,17 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// Stop and destroy any existing stream instance before opening the new one
 		g_dvrstream.reset();
 
-		// Start the new channel stream using the tuning parameters currently specified by the settings
-		log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+		// Pause the scheduler if the user wants that functionality disabled during streaming
+		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
+
+		try {
+
+			// Start the new channel stream using the tuning parameters currently specified by the settings
+			log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
+			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+		}
+
+		catch(...) { g_scheduler.resume(); throw; }
 
 		return true;
 	}
@@ -3859,9 +3864,17 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		// Stop and destroy any existing stream instance before opening the new one
 		g_dvrstream.reset();
 
-		// Start the new recording stream using the tuning parameters currently specified by the settings
-		log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
-		g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+		// Pause the scheduler if the user wants that functionality disabled during streaming
+		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
+
+		try {
+
+			// Start the new recording stream using the tuning parameters currently specified by the settings
+			log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
+			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+		}
+
+		catch(...) { g_scheduler.resume(); throw; }
 
 		return true;
 	}
