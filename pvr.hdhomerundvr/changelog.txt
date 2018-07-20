@@ -1,6 +1,8 @@
 v1.2.10 (2018.07.xx)
   - Simplify and improve overall performance of Live TV / Recorded TV stream implementation
   - Reduce default Live TV / Recorded TV stream ring buffer size to 1MiB
+  - Increase default "DVR stream read operation minimum size" advanced option to 4KiB
+  - Add 32KiB option for "DVR stream read operation minimum size" advanced option
 
 v1.2.9 (2018.07.01)
   - Correct format of SessionID passed to HDHomeRun RECORD engine for Live TV streams

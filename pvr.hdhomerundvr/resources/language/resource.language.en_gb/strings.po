@@ -248,6 +248,10 @@ msgctxt "#30228"
 msgid "16 MiB"
 msgstr ""
 
+msgctxt "#30229"
+msgid "32 KiB"
+msgstr ""
+
 msgctxt "#30301"
 msgid "Delete episode"
 msgstr ""

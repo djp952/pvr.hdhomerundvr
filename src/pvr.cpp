@@ -355,7 +355,7 @@ static addon_settings g_settings = {
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
-	(1 KiB),				// stream_read_minimum_byte_count
+	(4 KiB),				// stream_read_minimum_byte_count
 	2500,					// stream_read_timeout
 	(1 MiB),				// stream_ring_buffer_size
 	false,					// enable_recording_edl

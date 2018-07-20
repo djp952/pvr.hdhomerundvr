@@ -36,7 +36,7 @@
 // dvrstream::DEFAULT_READ_MINCOUNT (static)
 //
 // Default minimum amount of data to return from a read request
-size_t const dvrstream::DEFAULT_READ_MINCOUNT = (1 KiB);
+size_t const dvrstream::DEFAULT_READ_MINCOUNT = (4 KiB);
 
 // dvrstream::DEFAULT_READ_TIMEOUT_MS (static)
 //
@@ -548,10 +548,6 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 		return (available >= m_readmincount);
 	});
 
-	if(available < count) { 
-		int x = 123;
-	}
-	
 	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished
 	if(available == 0) return 0;
 
@@ -639,12 +635,6 @@ long long dvrstream::restart(long long position)
 	curlmresult = curl_multi_add_handle(m_curlm, m_curl);
 	if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_remove_handle() failed: ", curl_multi_strerror(curlmresult));
 
-	// TODO: determine if the following transfer_until requires a catch for http_exception in the event
-	// of an HTTP 416 (Range not satisfiable); at that point m_length should have been updated with the
-	// proper (new?) length of the stream, so the operation can be retried.  Restarting the stream from
-	// a new position should be the only time 416 would ever be seen, and I think only if a live stream
-	// that was being recorded completed?
-
 	// Execute the data transfer until the HTTP headers have been received and processed
 	if(!transfer_until([&]() -> bool { return m_headers == true; })) throw string_exception(__func__, ": failed to receive HTTP response headers");
 
@@ -704,8 +694,10 @@ long long dvrstream::seek(long long position, int whence)
 		return newposition;								// Successful ring buffer seek
 	}
 
-	// Attempt to restart the stream at the calculated position
-	return restart(newposition);
+	// Attempt to restart the stream at the calculated position; if HTTP 416: Range not satisfiable
+	// is thrown, make one more attempt using the highest possible byte offset that was reported
+	try { return restart(newposition); }
+	catch(http_exception& httpex) { if(httpex.responsecode() == 416L) return restart(m_length - 1); else throw; }
 }
 
 //---------------------------------------------------------------------------
