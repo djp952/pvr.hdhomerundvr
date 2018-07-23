@@ -2901,52 +2901,52 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 		// scalar function: clean_filename
 		//
-		result = sqlite3_create_function_v2(instance, "clean_filename", 1, SQLITE_UTF8, nullptr, clean_filename, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "clean_filename", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, clean_filename, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: decode_channel_id
 		//
-		result = sqlite3_create_function_v2(instance, "decode_channel_id", 1, SQLITE_UTF8, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "decode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: encode_channel_id
 		//
-		result = sqlite3_create_function_v2(instance, "encode_channel_id", 1, SQLITE_UTF8, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: fnv_hash
 		//
-		result = sqlite3_create_function_v2(instance, "fnv_hash", -1, SQLITE_UTF8, nullptr, fnv_hash, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "fnv_hash", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, fnv_hash, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		// scalar function: generate_uuid
+		// scalar function: generate_uuid (non-deterministic)
 		//
 		result = sqlite3_create_function_v2(instance, "generate_uuid", 0, SQLITE_UTF8, nullptr, generate_uuid, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: get_channel_number
 		//
-		result = sqlite3_create_function_v2(instance, "get_channel_number", 1, SQLITE_UTF8, nullptr, get_channel_number, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: get_episode_number
 		//
-		result = sqlite3_create_function_v2(instance, "get_episode_number", 1, SQLITE_UTF8, nullptr, get_episode_number, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: get_season_number
 		//
-		result = sqlite3_create_function_v2(instance, "get_season_number", 1, SQLITE_UTF8, nullptr, get_season_number, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "get_season_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_season_number, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: http_request
 		//
-		result = sqlite3_create_function_v2(instance, "http_request", -1, SQLITE_UTF8, nullptr, http_request, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "http_request", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, http_request, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: url_encode
 		//
-		result = sqlite3_create_function_v2(instance, "url_encode", 1, SQLITE_UTF8, nullptr, url_encode, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Only execute schema creation steps if the database is being initialized; the caller needs

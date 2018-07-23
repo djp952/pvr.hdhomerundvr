@@ -71,7 +71,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// clean_filename
 	//
-	int result = sqlite3_create_function_v2(db, "clean_filename", 1, SQLITE_UTF8, nullptr, clean_filename, nullptr, nullptr, nullptr);
+	int result = sqlite3_create_function_v2(db, "clean_filename", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, clean_filename, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -81,7 +81,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// decode_channel_id
 	//
-	result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -91,7 +91,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// encode_channel_id
 	//
-	result = sqlite3_create_function_v2(db, "encode_channel_id", 1, SQLITE_UTF8, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -101,7 +101,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// fnv_hash
 	//
-	result = sqlite3_create_function_v2(db, "fnv_hash", -1, SQLITE_UTF8, nullptr, fnv_hash, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "fnv_hash", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, fnv_hash, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -109,7 +109,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 		return result;
 	}
 
-	// generate_uuid
+	// generate_uuid (non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "generate_uuid", 0, SQLITE_UTF8, nullptr, generate_uuid, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
@@ -121,7 +121,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// get_channel_number
 	//
-	result = sqlite3_create_function_v2(db, "get_channel_number", 1, SQLITE_UTF8, nullptr, get_channel_number, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -131,7 +131,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// get_episode_number
 	//
-	result = sqlite3_create_function_v2(db, "get_episode_number", 1, SQLITE_UTF8, nullptr, get_episode_number, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -141,7 +141,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// get_season_number
 	//
-	result = sqlite3_create_function_v2(db, "get_season_number", 1, SQLITE_UTF8, nullptr, get_season_number, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "get_season_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_season_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -151,7 +151,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// http_request
 	//
-	result = sqlite3_create_function_v2(db, "http_request", -1, SQLITE_UTF8, nullptr, http_request, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "http_request", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, http_request, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
@@ -161,7 +161,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// url_encode
 	//
-	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8, nullptr, url_encode, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
