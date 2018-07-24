@@ -8,6 +8,7 @@ v1.2.10 (2018.07.xx)
   - Apply "Pause discovery tasks while streaming" during playback of Recorded TV streams
   - Fix bug causing discovery tasks to remain paused indefinitely if an error occurs starting a Live TV stream
   - Apply standard URL encoding to device authorization code(s) when querying the backend services
+  - Remove "Enable verbose data transfer logs" advanced option
 
 v1.2.9 (2018.07.01)
   - Correct format of SessionID passed to HDHomeRun RECORD engine for Live TV streams
