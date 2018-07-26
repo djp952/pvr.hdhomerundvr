@@ -675,20 +675,21 @@ long long dvrstream::seek(long long position, int whence)
 	// Calculate the minimum stream position currently represented in the ring buffer
 	long long minpos = ((m_writepos - m_startpos) > static_cast<long long>(m_buffersize)) ? m_writepos - m_buffersize : m_startpos;
 
-	// If the new position is already represented in the ring buffer, modify the head/tail pointers to 
-	// reference that position rather than restarting the stream ...
-	if((newposition >= minpos) && (newposition <= m_writepos)) {
+	// If the new position is already represented in the ring buffer, modify the tail pointer to
+	// reference that position for the next read operation rather than restarting the stream
+	if((newposition >= minpos) && (newposition < m_writepos)) {
 
 		// If the buffer hasn't wrapped around yet, the new tail position is relative to buffer[0]
 		if(minpos == m_startpos) m_tail = static_cast<size_t>(newposition - m_startpos);
 
 		else {
 
-			long long delta = newposition - minpos;			// Calculate the required delta
+			// The buffer has wrapped around at least once, the new tail position is relative to the
+			// current head position rather than the start of the buffer
+			m_tail = static_cast<size_t>(m_head + (newposition - minpos));
+			if(m_tail >= m_buffersize) m_tail -= m_buffersize;
 
-			// Set the new tail position; if the delta is larger than the remaining space in the
-			// buffer it is relative to buffer[0], otherwise it is relative to buffer[minpos]
-			m_tail = static_cast<size_t>((delta >= static_cast<long long>(m_buffersize - m_tail)) ? delta - (m_buffersize - m_tail) : m_tail + delta);
+			assert(m_tail <= m_buffersize);				// Verify tail position is valid
 		}
 
 		m_readpos = newposition;						// Set the new tail position

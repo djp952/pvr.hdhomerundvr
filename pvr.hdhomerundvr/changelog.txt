@@ -1,14 +1,15 @@
 v1.2.10 (2018.07.xx)
   - Update SQLite database engine to version 3.24.0
-  - Simplify and improve overall performance of Live TV / Recorded TV stream implementation
+  - Refactor Live TV / Recorded TV stream implementation to eliminate use of the worker thread
   - Reduce default Live TV / Recorded TV stream ring buffer size to 1MiB
   - Increase default "DVR stream read operation minimum size" advanced option to 4KiB
   - Add 32KiB option for "DVR stream read operation minimum size" advanced option
   - Rename "Pause discovery while streaming Live TV channels" setting to "Pause discovery tasks while streaming"
   - Apply "Pause discovery tasks while streaming" during playback of Recorded TV streams
-  - Fix bug causing discovery tasks to remain paused indefinitely if an error occurs starting a Live TV stream
   - Apply standard URL encoding to device authorization code(s) when querying the backend services
   - Remove "Enable verbose data transfer logs" advanced option
+  - Fix bug causing discovery tasks to remain paused indefinitely if an error occurs starting a Live TV stream
+  - Fix bug causing misalignment of MPEG-TS packets on forward seeks satisfied by data in the ring buffer
 
 v1.2.9 (2018.07.01)
   - Correct format of SessionID passed to HDHomeRun RECORD engine for Live TV streams
