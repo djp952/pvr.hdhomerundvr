@@ -3513,9 +3513,11 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
-	catch(...) { return handle_generalexception(__func__, -1); }
+	// NOTE: This disobeys the API and returns 0 instead of -1 on an error/exception.
+	// Returning -1 does not appear to be sufficient to stop Kodi from calling this again
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : 0; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
+	catch(...) { return handle_generalexception(__func__, 0); }
 }
 
 //---------------------------------------------------------------------------
@@ -3719,9 +3721,11 @@ void CloseRecordedStream(void)
 
 int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
-	catch(...) { return handle_generalexception(__func__, -1); }
+	// NOTE: This disobeys the API and returns 0 instead of -1 on an error/exception.
+	// Returning -1 does not appear to be sufficient to stop Kodi from calling this again
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : 0; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
+	catch(...) { return handle_generalexception(__func__, 0); }
 }
 
 //---------------------------------------------------------------------------
