@@ -31,6 +31,7 @@
 #include <uuid/uuid.h>
 #include <xbmc_pvr_types.h>
 
+#include "curlshare.h"
 #include "hdhr.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
@@ -170,6 +171,16 @@ private:
 	size_t					m_size = 0;					// Allocation length
 	size_t					m_position = 0;				// Current position
 };
+
+//---------------------------------------------------------------------------
+// GLOBAL VARIABLES
+//---------------------------------------------------------------------------
+
+// g_curlshare
+//
+// Global curlshare instance used with all easy interface handles generated
+// by the database layer via the http_request function
+static curlshare g_curlshare;
 
 //
 // CONNECTIONPOOL IMPLEMENTATION
@@ -2688,6 +2699,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<CURL_WRITEFUNCTION>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
 	curl_easy_cleanup(curl);

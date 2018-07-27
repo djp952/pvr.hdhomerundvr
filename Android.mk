@@ -86,6 +86,7 @@ LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/libhdhomerun/hdhomerun_video.c \
 	depends/sqlite/sqlite3.c \
+	src/curlshare.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
 	src/dvrstream.cpp \

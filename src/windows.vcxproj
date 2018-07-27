@@ -219,6 +219,7 @@
     <ClInclude Include="compat\dlfcn.h" />
     <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
+    <ClInclude Include="curlshare.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="dvrstream.h" />
     <ClInclude Include="hdhr.h" />
@@ -1307,6 +1308,7 @@
     <ClCompile Include="compat\dlfcn.cpp" />
     <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
+    <ClCompile Include="curlshare.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

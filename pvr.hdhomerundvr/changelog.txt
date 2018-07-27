@@ -11,6 +11,7 @@ v1.2.10 (2018.07.xx)
   - Fix bug causing discovery tasks to remain paused indefinitely if an error occurs starting a Live TV stream
   - Fix bug causing misalignment of MPEG-TS packets on forward seeks satisfied by data in the ring buffer
   - Apply workaround preventing an error in a stream read operation from stopping/stalling the stream in Kodi as expected
+  - Improve performance of backend service discoveries with a cURL shared DNS lookup and HTTP connection cache implementation
 
 v1.2.9 (2018.07.01)
   - Correct format of SessionID passed to HDHomeRun RECORD engine for Live TV streams
