@@ -75,6 +75,9 @@
     <Filter Include="External Libraries\curl\Header Files\vtls">
       <UniqueIdentifier>{e56da373-3dc0-454b-95af-4aad83a1debb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External Libraries\http-status-codes-cpp">
+      <UniqueIdentifier>{b18a11fc-4539-4f38-b016-85d9ae8c887f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -469,6 +472,15 @@
     </ClInclude>
     <ClInclude Include="..\depends\curl\lib\x509asn1.h">
       <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\http-status-codes-cpp\HttpStatusCodes_C++11.h">
+      <Filter>External Libraries\http-status-codes-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="http_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="curlshare.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -927,6 +939,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\x509asn1.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="curlshare.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

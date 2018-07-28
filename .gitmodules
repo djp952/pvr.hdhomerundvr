@@ -22,3 +22,6 @@
 [submodule "xbmc"]
 	path = depends/xbmc
 	url = https://github.com/xbmc/xbmc.git
+[submodule "http-status-codes-cpp"]
+	path = depends/http-status-codes-cpp
+	url = https://github.com/j-ulrich/http-status-codes-cpp

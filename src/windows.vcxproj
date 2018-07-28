@@ -62,7 +62,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -82,7 +82,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -199,6 +199,7 @@
     <ClInclude Include="..\depends\curl\lib\warnless.h" />
     <ClInclude Include="..\depends\curl\lib\wildcard.h" />
     <ClInclude Include="..\depends\curl\lib\x509asn1.h" />
+    <ClInclude Include="..\depends\http-status-codes-cpp\HttpStatusCodes_C++11.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channels.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channelscan.h" />
@@ -218,9 +219,11 @@
     <ClInclude Include="compat\dlfcn.h" />
     <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
+    <ClInclude Include="curlshare.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="dvrstream.h" />
     <ClInclude Include="hdhr.h" />
+    <ClInclude Include="http_exception.h" />
     <ClInclude Include="scalar_condition.h" />
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="sqlite_exception.h" />
@@ -1307,6 +1310,7 @@
     <ClCompile Include="compat\snprintf.cpp" />
     <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
+    <ClCompile Include="curlshare.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

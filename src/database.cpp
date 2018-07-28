@@ -31,6 +31,7 @@
 #include <uuid/uuid.h>
 #include <xbmc_pvr_types.h>
 
+#include "curlshare.h"
 #include "hdhr.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
@@ -171,6 +172,16 @@ private:
 	size_t					m_position = 0;				// Current position
 };
 
+//---------------------------------------------------------------------------
+// GLOBAL VARIABLES
+//---------------------------------------------------------------------------
+
+// g_curlshare
+//
+// Global curlshare instance used with all easy interface handles generated
+// by the database layer via the http_request function
+static curlshare g_curlshare;
+
 //
 // CONNECTIONPOOL IMPLEMENTATION
 //
@@ -279,7 +290,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 			"json_extract(value, '$.SeriesID') as seriesid, "
 			"value as data "
 			"from "
-			"json_each((with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+			"json_each((with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"select nullif(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
 			"case when ?2 is null then '' else '&RecentOnly=' || ?2 end || "
 			"case when ?3 is null then '' else '&ChannelOnly=' || decode_channel_id(?3) end || "
@@ -317,7 +328,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 
 		// Update the episode data to take the new recording rule(s) into account; watch out for the web
 		// services returning 'null' on the episode query -- this happens when there are no episodes
-		sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"replace into episode "
 			"select ?1 as seriesid, "
 			"http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || ?1) as data "
@@ -527,7 +538,7 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 	try {
 
 		// Delete the recording rule from the backend services and the local database
-		auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"delete from recordingrule where recordingruleid in "
 			"(select case when cast(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || "
 			"'&Cmd=delete&RecordingRuleID=' || ?1) as text) = 'null' then ?1 else null end from deviceauth)";
@@ -752,7 +763,7 @@ void discover_episodes(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the episode information for each series that has a recording rule
-		execute_non_query(instance, "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		execute_non_query(instance, "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"insert into discover_episode select entry.seriesid as seriesid, "
 			"http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || entry.seriesid) as data "
 			"from deviceauth, (select distinct json_extract(data, '$.SeriesID') as seriesid from recordingrule where seriesid is not null) as entry");
@@ -826,7 +837,7 @@ void discover_guide(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the electronic program guide from the network and insert it into a temporary table
-		execute_non_query(instance, "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		execute_non_query(instance, "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"insert into discover_guide select "
 			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
@@ -968,7 +979,7 @@ void discover_recordingrules(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the information for the available recording rules
-		execute_non_query(instance, "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		execute_non_query(instance, "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"insert into discover_recordingrule select "
 			"json_extract(value, '$.RecordingRuleID') as recordingruleid, "
 			"json_extract(value, '$.SeriesID') as seriesid, "
@@ -1451,7 +1462,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 	starttime = std::max(starttime, now - 14400);
 
 	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename
-	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"select json_extract(entry.value, '$.SeriesID') as seriesid, "
 		"json_extract(entry.value, '$.Title') as title, "
 		"json_extract(entry.value, '$.StartTime') as starttime, "
@@ -1795,7 +1806,7 @@ void enumerate_series(sqlite3* instance, char const* title, enumerate_series_cal
 	if((instance == nullptr) || (callback == nullptr)) return;
 
 	// title | seriesid
-	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"select "
 		"json_extract(value, '$.Title') as title, "
 		"json_extract(value, '$.SeriesID') as seriesid "
@@ -1945,7 +1956,7 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 
 	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the electronic program guide API to locate a seriesid based on a channel and timestamp
-	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"select json_extract(json_extract(nullif(http_request('http://api.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) || '&Start=' || ?2), 'null'), '$[0].Guide[0]'), '$.SeriesID') "
 		"from deviceauth";
 
@@ -1993,7 +2004,7 @@ std::string find_seriesid(sqlite3* instance, char const* title)
 
 	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the search API to locate a series id based on the series title
-	auto sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"select "
 		"json_extract(value, '$.SeriesID') as seriesid "
 		"from deviceauth, json_each(http_request('http://api.hdhomerun.com/api/search?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Search=' || url_encode(?1))) "
@@ -2688,6 +2699,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<CURL_WRITEFUNCTION>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
 	curl_easy_cleanup(curl);
@@ -2753,7 +2765,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 			"json_extract(value, '$.SeriesID') as seriesid, "
 			"value as data "
 			"from "
-			"json_each((with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+			"json_each((with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"select http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=change&RecordingRuleID=' || ?1 || "
 			"'&RecentOnly=' || case when ?2 is null then '' else ?2 end || "
 			"'&ChannelOnly=' || case when ?3 is null then '' else decode_channel_id(?3) end || "
@@ -2789,7 +2801,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 
 		// Update the episode data to take the modified recording rule(s) into account; watch out for the web
 		// services returning 'null' on the episode query -- this happens when there are no episodes
-		sql = "with deviceauth(code) as (select group_concat(json_extract(data, '$.DeviceAuth'), '') from device) "
+		sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 			"replace into episode "
 			"select recordingrule.seriesid, "
 			"http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || recordingrule.seriesid) as data "
@@ -2901,52 +2913,52 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 		// scalar function: clean_filename
 		//
-		result = sqlite3_create_function_v2(instance, "clean_filename", 1, SQLITE_UTF8, nullptr, clean_filename, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "clean_filename", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, clean_filename, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: decode_channel_id
 		//
-		result = sqlite3_create_function_v2(instance, "decode_channel_id", 1, SQLITE_UTF8, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "decode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: encode_channel_id
 		//
-		result = sqlite3_create_function_v2(instance, "encode_channel_id", 1, SQLITE_UTF8, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: fnv_hash
 		//
-		result = sqlite3_create_function_v2(instance, "fnv_hash", -1, SQLITE_UTF8, nullptr, fnv_hash, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "fnv_hash", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, fnv_hash, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		// scalar function: generate_uuid
+		// scalar function: generate_uuid (non-deterministic)
 		//
 		result = sqlite3_create_function_v2(instance, "generate_uuid", 0, SQLITE_UTF8, nullptr, generate_uuid, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: get_channel_number
 		//
-		result = sqlite3_create_function_v2(instance, "get_channel_number", 1, SQLITE_UTF8, nullptr, get_channel_number, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: get_episode_number
 		//
-		result = sqlite3_create_function_v2(instance, "get_episode_number", 1, SQLITE_UTF8, nullptr, get_episode_number, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: get_season_number
 		//
-		result = sqlite3_create_function_v2(instance, "get_season_number", 1, SQLITE_UTF8, nullptr, get_season_number, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "get_season_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_season_number, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: http_request
 		//
-		result = sqlite3_create_function_v2(instance, "http_request", -1, SQLITE_UTF8, nullptr, http_request, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "http_request", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, http_request, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: url_encode
 		//
-		result = sqlite3_create_function_v2(instance, "url_encode", 1, SQLITE_UTF8, nullptr, url_encode, nullptr, nullptr, nullptr);
+		result = sqlite3_create_function_v2(instance, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Only execute schema creation steps if the database is being initialized; the caller needs
