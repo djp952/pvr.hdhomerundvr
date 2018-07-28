@@ -33,7 +33,7 @@ msgid "EDL"
 msgstr ""
 
 msgctxt "#30100"
-msgid "Pause discovery while streaming Live TV channels"
+msgid "Pause discovery tasks while streaming"
 msgstr ""
 
 msgctxt "#30101"
@@ -122,10 +122,6 @@ msgstr ""
 
 msgctxt "#30123"
 msgid "Trigger recording discovery immediately after playback"
-msgstr ""
-
-msgctxt "#30124"
-msgid "Enable verbose data transfer logs"
 msgstr ""
 
 msgctxt "#30125"
@@ -246,6 +242,10 @@ msgstr ""
 
 msgctxt "#30228"
 msgid "16 MiB"
+msgstr ""
+
+msgctxt "#30229"
+msgid "32 KiB"
 msgstr ""
 
 msgctxt "#30301"

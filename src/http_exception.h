@@ -20,78 +20,50 @@
 // SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef __STRING_EXCEPTION_H_
-#define __STRING_EXCEPTION_H_
+#ifndef __HTTP_EXCEPTION_H_
+#define __HTTP_EXCEPTION_H_
 #pragma once
 
-#include <exception>
-#include <sstream>
-#include <string>
+#include <HttpStatusCodes_C++11.h>
+
+#include "string_exception.h"
 
 #pragma warning(push, 4)	
 
 //-----------------------------------------------------------------------------
-// Class string_exception
+// Class http_exception
 //
-// std::exception used to contain a simple message string
+// Specialization of string_exception for HTTP response codes
 
-class string_exception : public std::exception
+class http_exception : public string_exception
 {
 public:
 
 	// Instance Constructor
 	//
-	template<typename... _args>
-	string_exception(_args&&... args) : m_what(format_message(std::forward<_args>(args)...)) {}
-
-	// Copy Constructor
-	//
-	string_exception(string_exception const& rhs) : m_what(rhs.m_what) {}
-
-	// char const* conversion operator
-	//
-	operator char const*() const
-	{
-		return m_what.c_str();
-	}
+	http_exception(long responsecode) : string_exception("HTTP ", responsecode, ": ", HttpStatus::reasonPhrase(responsecode)), m_responsecode(responsecode) {}
 
 	//-------------------------------------------------------------------------
 	// Member Functions
 
-	// what (std::exception)
+	// responsecode
 	//
-	// Gets a pointer to the exception message text
-	virtual char const* what(void) const noexcept override
+	// Gets the HTTP response code associated with the exception
+	long responsecode(void) const noexcept
 	{
-		return m_what.c_str();
+		return m_responsecode;
 	}
 		
 private:
 
-	//-----------------------------------------------------------------------
-	// Private Member Functions
-
-	// format_message
-	//
-	// Variadic string generator used by the constructor
-	template<typename... _args>
-	static std::string format_message(_args&&... args)
-	{
-		std::ostringstream stream;
-		int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
-		(void)unpack;
-
-		return stream.str();
-	}
-
 	//-------------------------------------------------------------------------
 	// Member Variables
 
-	std::string					m_what;			// Exception message
+	long 				m_responsecode;			// HTTP response code
 };
 
 //-----------------------------------------------------------------------------
 
 #pragma warning(pop)
 
-#endif	// __STRING_EXCEPTION_H_
+#endif	// __HTTP_EXCEPTION_H_
