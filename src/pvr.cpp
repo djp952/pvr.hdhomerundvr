@@ -1032,6 +1032,7 @@ static int mincount_enum_to_bytes(int nvalue)
 		case 3: return (4 KiB);		// 4 Kilobytes
 		case 4: return (8 KiB);		// 8 Kilobytes
 		case 5: return (16 KiB);	// 16 Kilobytes
+		case 6: return (32 KiB);	// 32 Kilobytes
 	};
 
 	return (1 KiB);					// 1 Kilobyte = default

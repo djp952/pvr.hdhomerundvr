@@ -59,7 +59,7 @@ private:
 	//-------------------------------------------------------------------------
 	// Member Variables
 
-	long const			m_responsecode;			// HTTP response code
+	long 				m_responsecode;			// HTTP response code
 };
 
 //-----------------------------------------------------------------------------
