@@ -221,10 +221,10 @@ struct addon_settings {
 	// Indicates the number of seconds to pause before initiating the startup discovery task
 	int startup_discovery_task_delay;
 
-	// stream_read_minimum_byte_count
+	// stream_read_chunk_size
 	//
 	// Indicates the minimum number of bytes to return from a stream read
-	int stream_read_minimum_byte_count;
+	int stream_read_chunk_size;
 
 	// stream_read_timeout
 	//
@@ -355,7 +355,7 @@ static addon_settings g_settings = {
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
-	(4 KiB),				// stream_read_minimum_byte_count
+	(4 KiB),				// stream_read_chunk_size
 	2500,					// stream_read_timeout
 	(1 MiB),				// stream_ring_buffer_size
 	false,					// enable_recording_edl
@@ -533,6 +533,25 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 //---------------------------------------------------------------------------
 // HELPER FUNCTIONS
 //---------------------------------------------------------------------------
+
+// chunksize_enum_to_bytes
+//
+// Converts the chunk size enumeration values into a number of bytes
+static int chunksize_enum_to_bytes(int nvalue)
+{	
+	switch(nvalue) {
+
+		case 0: return 0;			// None
+		case 1: return (1 KiB);		// 1 Kilobyte
+		case 2: return (2 KiB);		// 2 Kilobytes
+		case 3: return (4 KiB);		// 4 Kilobytes
+		case 4: return (8 KiB);		// 8 Kilobytes
+		case 5: return (16 KiB);	// 16 Kilobytes
+		case 6: return (32 KiB);	// 32 Kilobytes
+	};
+
+	return (4 KiB);					// 4 Kilobytes = default
+}
 
 // copy_settings
 //
@@ -1031,25 +1050,6 @@ static void log_notice(_args&&... args)
 	log_message(ADDON::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
 }
 
-// mincount_enum_to_bytes
-//
-// Converts the minimum read count enumeration values into a number of bytes
-static int mincount_enum_to_bytes(int nvalue)
-{	
-	switch(nvalue) {
-
-		case 0: return 0;			// None
-		case 1: return (1 KiB);		// 1 Kilobyte
-		case 2: return (2 KiB);		// 2 Kilobytes
-		case 3: return (4 KiB);		// 4 Kilobytes
-		case 4: return (8 KiB);		// 8 Kilobytes
-		case 5: return (16 KiB);	// 16 Kilobytes
-		case 6: return (32 KiB);	// 32 Kilobytes
-	};
-
-	return (1 KiB);					// 1 Kilobyte = default
-}
-
 // edltype_to_string
 //
 // Converts a PVR_EDL_TYPE enumeration value into a string
@@ -1262,7 +1262,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
-			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
+			if(g_addon->GetSetting("stream_read_chunk_size", &nvalue)) g_settings.stream_read_chunk_size = chunksize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("stream_read_timeout", &nvalue)) g_settings.stream_read_timeout = nvalue;
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
@@ -1737,15 +1737,15 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// stream_read_minimum_byte_count
+	// stream_read_chunk_size
 	//
-	else if(strcmp(name, "stream_read_minimum_byte_count") == 0) {
+	else if(strcmp(name, "stream_read_chunk_size") == 0) {
 
-		int nvalue = mincount_enum_to_bytes(*reinterpret_cast<int const*>(value));
-		if(nvalue != g_settings.stream_read_minimum_byte_count) {
+		int nvalue = chunksize_enum_to_bytes(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.stream_read_chunk_size) {
 
-			g_settings.stream_read_minimum_byte_count = nvalue;
-			log_notice(__func__, ": setting stream_read_minimum_byte_count changed to ", nvalue, " bytes");
+			g_settings.stream_read_chunk_size = nvalue;
+			log_notice(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -3423,7 +3423,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 			// Start the new channel stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size, settings.stream_read_timeout);
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -3613,7 +3613,11 @@ PVR_ERROR GetStreamReadChunkSize(int* chunksize)
 {
 	if(chunksize == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+	*chunksize = settings.stream_read_chunk_size;
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------
@@ -3649,7 +3653,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
-			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size, settings.stream_read_timeout);
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
