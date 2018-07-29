@@ -3563,9 +3563,22 @@ PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_VALUE* /*props*/, unsigned int* /*numprops*/)
+PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
-	return PVR_ERROR_NOT_IMPLEMENTED;
+	// Copy out the current state of the PVR client settings
+	struct addon_settings settings = copy_settings();
+
+	// PVR_STREAM_PROPERTY_MIMETYPE
+	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
+
+	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
+	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (settings.disable_realtime_indicator) ? "true" : "false");
+
+	*numprops = 2;
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------
@@ -3579,9 +3592,19 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_V
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_NAMED_VALUE* /*props*/, unsigned int* /*numprops*/)
+PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
-	return PVR_ERROR_NOT_IMPLEMENTED;
+	// PVR_STREAM_PROPERTY_MIMETYPE
+	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
+
+	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
+	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, "false");
+
+	*numprops = 2;
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------
