@@ -1035,7 +1035,7 @@ static int mincount_enum_to_bytes(int nvalue)
 		case 6: return (32 KiB);	// 32 Kilobytes
 	};
 
-	return (1 KiB);					// 1 Kilobyte = default
+	return (4 KiB);					// 4 Kilobytes = default
 }
 
 // edltype_to_string
