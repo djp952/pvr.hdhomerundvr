@@ -3533,8 +3533,31 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
-	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+	assert(g_addon);
+
+	if(!g_dvrstream) return -1;
+
+	// Save the current stream position in order to make an attempt to recover the stream on exception
+	long long current = g_dvrstream->position();
+
+	// Attempt to seek to the specified position
+	try { return g_dvrstream->seek(position, whence); }
+
+	// If an expected exception type (like http_exception) has been thrown, attempt stream recovery
+	catch(std::exception& ex) {
+
+		// Log the seek operation failure and indicate at what position the recovery attempt will be made
+		log_error(__func__, ": seek operation (positiion=", position, ", whence=", whence, ") failed with exception: ", ex.what(), ". Attempting recovery at position ", current);
+
+		// Alert the user that a seek failure has occurred with an error notification
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Live Stream seek operation failed (%s).", ex.what());
+
+		// Attempt to recover the stream by seeking to the previous current position
+		try { return g_dvrstream->seek(current, SEEK_SET); }
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
+		catch(...) { return handle_generalexception(__func__, -1); }
+	}
+
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
@@ -3549,7 +3572,8 @@ long long SeekLiveStream(long long position, int whence)
 
 long long PositionLiveStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
+	// Don't report the position for a real-time stream
+	try { return (g_dvrstream && !g_dvrstream->realtime()) ? g_dvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3757,7 +3781,8 @@ long long SeekRecordedStream(long long position, int whence)
 
 long long PositionRecordedStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->position() : -1; }
+	// Don't report the position for a real-time stream
+	try { return (g_dvrstream && !g_dvrstream->realtime()) ? g_dvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
