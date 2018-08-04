@@ -3372,6 +3372,8 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	char			channelstr[64];			// Channel number as a string
 	std::string		streamurl;				// Generated stream URL
 
+	assert(g_addon);
+
 	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
 	if(channel.iEncryptionSystem != 0) {
 	
@@ -3442,7 +3444,13 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		return true;
 	}
 
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	// Queue a notification for the user when a live stream cannot be opened, don't just silently log it
+	catch(std::exception& ex) { 
+		
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Live Stream creation failed (%s).", ex.what());
+		return handle_stdexception(__func__, ex, false); 
+	}
+
 	catch(...) { return handle_generalexception(__func__, false); }
 }
 
@@ -3644,6 +3652,8 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 
 bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
+	assert(g_addon);
+
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
@@ -3674,7 +3684,13 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		return true;
 	}
 
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	// Queue a notification for the user when a recorded stream cannot be opened, don't just silently log it
+	catch(std::exception& ex) { 
+		
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Recorded Stream creation failed (%s).", ex.what());
+		return handle_stdexception(__func__, ex, false); 
+	}
+
 	catch(...) { return handle_generalexception(__func__, false); }
 }
 
