@@ -504,7 +504,7 @@ long long dvrstream::length(void) const
 //---------------------------------------------------------------------------
 // dvrstream::position
 //
-// Gets the current position of the stream; or -1 if stream is real-time
+// Gets the current position of the stream
 //
 // Arguments:
 //
@@ -512,7 +512,7 @@ long long dvrstream::length(void) const
 
 long long dvrstream::position(void) const
 {
-	return (m_length == MAX_STREAM_LENGTH) ? -1 : m_readpos;
+	return m_readpos;
 }
 
 //---------------------------------------------------------------------------
@@ -697,10 +697,8 @@ long long dvrstream::seek(long long position, int whence)
 		return newposition;								// Successful ring buffer seek
 	}
 
-	// Attempt to restart the stream at the calculated position; if HTTP 416: Range not satisfiable
-	// is thrown, make one more attempt using the highest possible byte offset that was reported
-	try { return restart(newposition); }
-	catch(http_exception& httpex) { if(httpex.responsecode() == 416L) return restart(m_length - 1); else throw; }
+	// Attempt to restart the stream at the calculated position
+	return restart(newposition);
 }
 
 //---------------------------------------------------------------------------
