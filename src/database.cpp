@@ -911,7 +911,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the channel lineups for all available tuner devices; watch for results that return 'null'
-		execute_non_query(instance, "insert into discover_lineup select deviceid, http_request(json_extract(device.data, '$.LineupURL')) "
+		execute_non_query(instance, "insert into discover_lineup select deviceid, http_request(json_extract(device.data, '$.LineupURL') || '?show=demo') "
 			"as json from device where device.type = 'tuner' and cast(json as text) <> 'null'");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
@@ -1145,7 +1145,8 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 		"case when ?1 then json_extract(entry.value, '$.GuideNumber') || ' ' else '' end || "
 		"case when guide.channelid is null then json_extract(entry.value, '$.GuideName') else guide.channelname end as channelname, "
 		"guide.iconurl as iconurl, "
-		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm "
+		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm, "
+		"coalesce(json_extract(entry.value, '$.Demo'), 0) as demo "
 		"from lineup, json_each(lineup.data) as entry left outer join guide on encode_channel_id(json_extract(entry.value, '$.GuideNumber')) = guide.channelid "
 		"where nullif(json_extract(entry.value, '$.DRM'), ?2) is null "
 		"order by channelid";
@@ -1168,6 +1169,11 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
 			item.drm = (sqlite3_column_int(statement, 3) != 0);
+			item.demo = (sqlite3_column_int(statement, 4) != 0);
+
+			// Use the $.Demo flag to indicate that the channel is tuner-direct only, this
+			// prevents attempts from accessing the stream from the storage engine
+			if(item.demo) item.channelid.parts.tuneronly = true;
 
 			callback(item);						// Invoke caller-supplied callback
 		}
@@ -2515,7 +2521,9 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 	std::string					streamurl;				// Generated stream URL
 	int							result;					// Result from SQLite function call
 
-	if(instance == nullptr) return streamurl;
+	// Channels that are tuner-direct only or an invalid instance yields a null stream URL
+	// indicating that the stream has to be based from a tuner instead of the storage engine
+	if(channelid.parts.tuneronly || instance == nullptr) return streamurl;
 
 	// Prepare a scalar result query to generate a stream URL for the specified channel
 	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "

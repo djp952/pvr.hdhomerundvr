@@ -1,5 +1,6 @@
-v1.2.11 (2018.08.xx)
-  - Fix bug causing "DVR stream read operation minimum size" to be 1KiB instead of 4KiB if not explicitly set
+v1.3.0 (2018.08.xx)
+  - Change internal channel identifier encoding to indicate tuner-direct only streams that cannot be accessed via an HDHomeRun RECORD engine
+  - Fix bug causing "DVR stream read operation minimum size" to default to 1KiB instead of 4KiB if not explicitly set
   - Fix bug causing tuner-direct streams to improperly be reported to Kodi as zero length and not real-time
 
 v1.2.10 (2018.07.28)
