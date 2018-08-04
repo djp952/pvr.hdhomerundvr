@@ -64,6 +64,16 @@ public:
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount);
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
 
+	// currentpts
+	//
+	// Gets the current presentation timestamp
+	uint64_t currentpts(void) const;
+	
+	// currenttime
+	//
+	// Gets the current time of the stream
+	time_t currenttime(void) const;
+
 	// length
 	//
 	// Gets the length of the stream
@@ -88,6 +98,16 @@ public:
 	//
 	// Sets the stream pointer to a specific position
 	long long seek(long long position, int whence);
+
+	// startpts
+	//
+	// Gets the starting presentation timestamp
+	uint64_t startpts(void) const;
+
+	// starttime
+	//
+	// Gets the starting time for the stream
+	time_t starttime(void) const;
 
 private:
 
@@ -170,6 +190,9 @@ private:
 	long long						m_readpos = 0;					// Current read position
 	long long						m_writepos = 0;					// Current write position
 	long long						m_length = MAX_STREAM_LENGTH;	// Length of the stream
+	time_t							m_starttime = 0;				// Start time of the stream
+	uint64_t						m_startpts = 0;					// Starting presentation timestamp
+	uint64_t						m_currentpts = 0;				// Current presentation timestamp
 
 	// RING BUFFER
 	//
@@ -180,7 +203,10 @@ private:
 
 	// PACKET FILTER
 	//
+	bool							m_enablefilter = true;			// Flag if packet filter is enabled
 	std::set<uint16_t>				m_pmtpids;						// Set of PMT program ids
+	bool							m_enablepcrs = true;			// Flag if PCR reads are enabled
+	uint16_t						m_pcrpid = 0;					// Program Clock PID
 };
 
 //-----------------------------------------------------------------------------
