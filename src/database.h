@@ -46,10 +46,11 @@ union channelid {
 
 	struct {
 	
-		// CCCCCCCCCCCCCCCCCCCC SSSSSSSSSSSS (little endian)
+		// T CCCCCCCCCCCCCCCCCCC SSSSSSSSSSSS (little endian)
 		//
+		unsigned int	tuneronly : 1;		// Tuner-direct only channel flag
 		unsigned int	subchannel : 12;	// Subchannel number (0 - 4095)
-		unsigned int	channel : 20;		// Channel number (0 - 1048575)
+		unsigned int	channel : 19;		// Channel number (0 - 524287)
 
 	} parts;
 	
@@ -68,6 +69,7 @@ struct channel {
 	char const*			inputformat;
 	char const*			iconurl;
 	bool				drm;
+	bool				demo;
 };
 
 // channel_visibility
