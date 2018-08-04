@@ -619,7 +619,8 @@ long long dvrstream::restart(long long position)
 	// Reset all of the stream state and ring buffer values back to the defaults
 	m_paused = m_headers = m_canseek = false;
 	m_head = m_tail = 0;
-	m_startpos = m_readpos = m_writepos = m_length = 0;
+	m_startpos = m_readpos = m_writepos = 0;
+	m_length = MAX_STREAM_LENGTH;
 
 	// Format the Range: header value to apply to the transfer object, do not use CURLOPT_RESUME_FROM_LARGE 
 	// as it will not insert the request header when the position is zero
@@ -656,8 +657,8 @@ long long dvrstream::seek(long long position, int whence)
 {
 	long long			newposition = 0;			// New stream position
 
-	// If the stream cannot be seeked, just return the current position
-	if(!m_canseek) return m_readpos;
+	// If the stream cannot be seeked, return -1 to indicate the operation is not supported.
+	if(!m_canseek) return -1;
 
 	// Calculate the new position of the stream
 	if(whence == SEEK_SET) newposition = std::max(position, 0LL);

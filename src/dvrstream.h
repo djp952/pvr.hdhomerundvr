@@ -156,31 +156,31 @@ private:
 
 	// DATA TRANSFER
 	//
-	CURL*							m_curl = nullptr;			// CURL easy interface handle
-	CURLM*							m_curlm = nullptr;			// CURL multi interface handle
-	size_t const					m_readmincount;				// Minimum read byte count
+	CURL*							m_curl = nullptr;				// CURL easy interface handle
+	CURLM*							m_curlm = nullptr;				// CURL multi interface handle
+	size_t const					m_readmincount;					// Minimum read byte count
 
 	// STREAM STATE
 	//
-	unsigned int const				m_readtimeout;				// Read timeout in milliseconds
-	bool							m_paused = false;			// Flag if transfer is paused
-	bool							m_headers = false;			// Flag if headers have been processed
-	bool							m_canseek = false;			// Flag if stream can be seeked
-	long long						m_startpos = 0;				// Starting position
-	long long						m_readpos = 0;				// Current read position
-	long long						m_writepos = 0;				// Current write position
-	long long						m_length = 0;				// Length of the stream
+	unsigned int const				m_readtimeout;					// Read timeout in milliseconds
+	bool							m_paused = false;				// Flag if transfer is paused
+	bool							m_headers = false;				// Flag if headers have been processed
+	bool							m_canseek = false;				// Flag if stream can be seeked
+	long long						m_startpos = 0;					// Starting position
+	long long						m_readpos = 0;					// Current read position
+	long long						m_writepos = 0;					// Current write position
+	long long						m_length = MAX_STREAM_LENGTH;	// Length of the stream
 
 	// RING BUFFER
 	//
-	size_t const					m_buffersize;				// Size of the ring buffer
-	std::unique_ptr<uint8_t[]>		m_buffer;					// Ring buffer stroage
-	size_t							m_head = 0;					// Head (write) buffer position
-	size_t							m_tail = 0;					// Tail (read) buffer position
+	size_t const					m_buffersize;					// Size of the ring buffer
+	std::unique_ptr<uint8_t[]>		m_buffer;						// Ring buffer stroage
+	size_t							m_head = 0;						// Head (write) buffer position
+	size_t							m_tail = 0;						// Tail (read) buffer position
 
 	// PACKET FILTER
 	//
-	std::set<uint16_t>				m_pmtpids;					// Set of PMT program ids
+	std::set<uint16_t>				m_pmtpids;						// Set of PMT program ids
 };
 
 //-----------------------------------------------------------------------------

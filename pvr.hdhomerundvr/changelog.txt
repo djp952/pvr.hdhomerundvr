@@ -1,5 +1,6 @@
 v1.2.11 (2018.08.xx)
   - Fix bug causing "DVR stream read operation minimum size" to be 1KiB instead of 4KiB if not explicitly set
+  - Fix bug causing tuner-direct streams to improperly be reported to Kodi as zero length and not real-time
 
 v1.2.10 (2018.07.28)
   - Update SQLite database engine to version 3.24.0
