@@ -285,7 +285,7 @@ time_t dvrstream::currenttime(void) const
 	// Calculate the current playback time via the delta between the current
 	// and starting presentation timestamp values (90KHz periods)
 	uint64_t delta = (m_currentpts - m_startpts) / 90000;
-	assert(delta <= std::numeric_limits<time_t>::max());
+	assert(delta <= static_cast<uint64_t>(std::numeric_limits<time_t>::max()));
 	return m_starttime + static_cast<time_t>(delta);
 }
 
