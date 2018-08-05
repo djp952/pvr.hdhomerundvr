@@ -256,11 +256,6 @@ struct addon_settings {
 	//
 	// Indicates the number of milliseconds to subtract to an EDL end value
 	int recording_edl_end_padding;
-
-	// disable_realtime_indicator
-	//
-	// Flag indicating that the IsRealTimeStream function should always return false
-	bool disable_realtime_indicator;
 };
 
 //---------------------------------------------------------------------------
@@ -358,7 +353,6 @@ static addon_settings g_settings = {
 	"",						// recording_edl_folder
 	0,						// recording_edl_start_padding
 	0,						// recording_edl_end_padding
-	false,					// disable_realtime_indicator
 };
 
 // g_settings_lock
@@ -1313,7 +1307,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
 			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
-			if(g_addon->GetSetting("disable_realtime_indicator", &bvalue)) g_settings.disable_realtime_indicator = bvalue;
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -1914,18 +1907,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.recording_edl_end_padding = nvalue;
 			log_notice(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
-		}
-	}
-
-	// disable_realtime_indicator
-	//
-	else if(strcmp(name, "disable_realtime_indicator") == 0) {
-
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.disable_realtime_indicator) {
-
-			g_settings.disable_realtime_indicator = bvalue;
-			log_notice(__func__, ": setting disable_realtime_indicator changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -3461,6 +3442,8 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	char			channelstr[64];			// Channel number as a string
 	std::string		streamurl;				// Generated stream URL
 
+	assert(g_addon);
+
 	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
 	if(channel.iEncryptionSystem != 0) {
 	
@@ -3534,7 +3517,13 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		return true;
 	}
 
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	// Queue a notification for the user when a live stream cannot be opened, don't just silently log it
+	catch(std::exception& ex) { 
+		
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Live Stream creation failed (%s).", ex.what());
+		return handle_stdexception(__func__, ex, false); 
+	}
+
 	catch(...) { return handle_generalexception(__func__, false); }
 }
 
@@ -3738,6 +3727,8 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 
 bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
+	assert(g_addon);
+
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
@@ -3768,7 +3759,13 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		return true;
 	}
 
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	// Queue a notification for the user when a recorded stream cannot be opened, don't just silently log it
+	catch(std::exception& ex) { 
+		
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Recorded Stream creation failed (%s).", ex.what());
+		return handle_stdexception(__func__, ex, false); 
+	}
+
 	catch(...) { return handle_generalexception(__func__, false); }
 }
 
@@ -4030,7 +4027,10 @@ void SetSpeed(int /*speed*/)
 
 time_t GetPlayingTime(void)
 {
-	return 0;
+	// This is only reported for realtime streams
+	try { return (g_dvrstream && g_dvrstream->realtime()) ? g_dvrstream->currenttime() : 0; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
+	catch(...) { return handle_generalexception(__func__, 0); }
 }
 
 //---------------------------------------------------------------------------
@@ -4044,7 +4044,10 @@ time_t GetPlayingTime(void)
 
 time_t GetBufferTimeStart(void)
 {
-	return 0;
+	// This is only reported for realtime streams
+	try { return (g_dvrstream && g_dvrstream->realtime()) ? g_dvrstream->starttime() : 0; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
+	catch(...) { return handle_generalexception(__func__, 0); }
 }
 
 //---------------------------------------------------------------------------
@@ -4058,7 +4061,10 @@ time_t GetBufferTimeStart(void)
 
 time_t GetBufferTimeEnd(void)
 {
-	return 0;
+	// This is only reported for realtime streams, and is always the actual clock time
+	try { return (g_dvrstream && g_dvrstream->realtime()) ? time(nullptr) : 0; }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
+	catch(...) { return handle_generalexception(__func__, 0); }
 }
 
 //---------------------------------------------------------------------------
@@ -4086,8 +4092,19 @@ char const* GetBackendHostname(void)
 
 bool IsTimeshifting(void)
 {
-	// Detection of time-shifting is not currently supported
-	return false;
+	// Only realtime streams are capable of timeshifting
+	if(!g_dvrstream || !g_dvrstream->realtime()) return false;
+
+	try {
+
+		// Get the calculated playback time of the stream.  If non-zero and is
+		// less than the current time (less one second for padding), it's timeshifting
+		time_t currenttime = g_dvrstream->currenttime();
+		return ((currenttime != 0) && (currenttime < (time(nullptr) - 1)));
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
+	catch(...) { return handle_generalexception(__func__, false); }
 }
 
 //---------------------------------------------------------------------------
