@@ -427,7 +427,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
       <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20180727-be9a6798-master-armeabi-v7a</KodiApk>
+      <KodiApk>kodi-20180803-ed7ecfdf-master-armeabi-v7a</KodiApk>
       <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
@@ -458,7 +458,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
       <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20180727-be9a6798-master-arm64-v8a</KodiApk>
+      <KodiApk>kodi-20180803-ed7ecfdf-master-arm64-v8a</KodiApk>
       <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-aarch64-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
