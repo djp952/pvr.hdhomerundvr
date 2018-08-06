@@ -46,11 +46,10 @@ union channelid {
 
 	struct {
 	
-		// T CCCCCCCCCCCCCCCCCCC SSSSSSSSSSSS (little endian)
+		// CCCCCCCCCCCCCCCCCCCC SSSSSSSSSSSS (little endian)
 		//
-		unsigned int	tuneronly : 1;		// Tuner-direct only channel flag
 		unsigned int	subchannel : 12;	// Subchannel number (0 - 4095)
-		unsigned int	channel : 19;		// Channel number (0 - 524287)
+		unsigned int	channel : 20;		// Channel number (0 - 1048575)
 
 	} parts;
 	
@@ -69,7 +68,6 @@ struct channel {
 	char const*			inputformat;
 	char const*			iconurl;
 	bool				drm;
-	bool				demo;
 };
 
 // channel_visibility
@@ -511,6 +509,11 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid);
 //
 // Gets the number of timers in the database
 int get_timer_count(sqlite3* instance, int maxdays);
+
+// get_tuner_direct_channel_flag
+//
+// Gets a flag indicating if a channel can only be streamed directly from a tuner device
+bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid);
 
 // get_tuner_stream_url
 //

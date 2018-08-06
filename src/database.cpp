@@ -1145,8 +1145,7 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 		"case when ?1 then json_extract(entry.value, '$.GuideNumber') || ' ' else '' end || "
 		"case when guide.channelid is null then json_extract(entry.value, '$.GuideName') else guide.channelname end as channelname, "
 		"guide.iconurl as iconurl, "
-		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm, "
-		"coalesce(json_extract(entry.value, '$.Demo'), 0) as demo "
+		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm "
 		"from lineup, json_each(lineup.data) as entry left outer join guide on encode_channel_id(json_extract(entry.value, '$.GuideNumber')) = guide.channelid "
 		"where nullif(json_extract(entry.value, '$.DRM'), ?2) is null "
 		"order by channelid";
@@ -1169,11 +1168,6 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
 			item.drm = (sqlite3_column_int(statement, 3) != 0);
-			item.demo = (sqlite3_column_int(statement, 4) != 0);
-
-			// Use the $.Demo flag to indicate that the channel is tuner-direct only, this
-			// prevents attempts from accessing the stream from the storage engine
-			if(item.demo) item.channelid.parts.tuneronly = true;
 
 			callback(item);						// Invoke caller-supplied callback
 		}
@@ -2521,9 +2515,7 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 	std::string					streamurl;				// Generated stream URL
 	int							result;					// Result from SQLite function call
 
-	// Channels that are tuner-direct only or an invalid instance yields a null stream URL
-	// indicating that the stream has to be based from a tuner instead of the storage engine
-	if(channelid.parts.tuneronly || instance == nullptr) return streamurl;
+	if(instance == nullptr) return streamurl;
 
 	// Prepare a scalar result query to generate a stream URL for the specified channel
 	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
@@ -2595,6 +2587,53 @@ int get_timer_count(sqlite3* instance, int maxdays)
 
 		sqlite3_finalize(statement);
 		return timers;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// get_tuner_direct_channel_flag
+//
+// Gets a flag indicating if a channel can only be streamed directly from a tuner device
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	channelid		- Channel to be checked for tuner-direct only access
+
+bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid)
+{
+	sqlite3_stmt*			statement;				// SQL statement to execute
+	bool					directonly = false;		// Tuner-direct channel flag
+	int						result;					// Result from SQLite function
+	
+	if(instance == nullptr) return 0;
+
+	// Select a boolean flag indicating if any instances of this channel in the lineup table
+	// are flagged as tuner-direct only channels
+	auto sql = "select coalesce((select json_extract(lineupdata.value, '$.Demo') as tuneronly "
+		"from lineup, json_each(lineup.data) as lineupdata "
+		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) and tuneronly is not null limit 1), 0)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, channelid.value);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) directonly = (sqlite3_column_int(statement, 0) != 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return directonly;
 	}
 
 	catch(...) { sqlite3_finalize(statement); throw; }
