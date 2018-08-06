@@ -124,10 +124,6 @@ msgctxt "#30123"
 msgid "Trigger recording discovery immediately after playback"
 msgstr ""
 
-msgctxt "#30125"
-msgid "Disable reporting of real-time MPEG-TS streams"
-msgstr ""
-
 msgctxt "#30126"
 msgid "Prepend season/episode number to episode name in EPG"
 msgstr ""

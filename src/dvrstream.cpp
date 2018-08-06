@@ -59,6 +59,40 @@ long long const dvrstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::m
 size_t const dvrstream::MPEGTS_PACKET_LENGTH = 188;
 	
 //---------------------------------------------------------------------------
+// decode_pcr90khz
+//
+// Decodes a PCR (Program Clock Reference) value at the 90KHz clock
+//
+// Arguments:
+//
+//	ptr		- Pointer to the data to be decoded
+
+inline uint64_t decode_pcr90khz(uint8_t const* ptr)
+{
+	assert(ptr != nullptr);
+
+	// The 90KHz clock is encoded as a single 33 bit value at the start of the data
+	return (static_cast<uint64_t>(ptr[0]) << 25) | (static_cast<uint32_t>(ptr[1]) << 17) | (static_cast<uint32_t>(ptr[2]) << 9) | (static_cast<uint16_t>(ptr[3]) << 1) | (ptr[4] >> 7);
+}
+
+//---------------------------------------------------------------------------
+// decode_pcr27mhz
+//
+// Decodes a PCR (Program Clock Reference) value at the 27MHz clock
+//
+// Arguments:
+//
+//	ptr		- Pointer to the data to be decoded
+
+inline uint64_t decode_pcr27mhz(uint8_t const* ptr)
+{
+	assert(ptr != nullptr);
+
+	// The 27Mhz clock is decoded by multiplying the 33-bit 90KHz base clock by 300 and adding the 9-bit extension
+	return (decode_pcr90khz(ptr) * 300) + (static_cast<uint16_t>(ptr[4] & 0x01) << 8) + ptr[5];
+}
+
+//---------------------------------------------------------------------------
 // read_be8
 //
 // Reads a big-endian 8 bit value from memory
@@ -215,6 +249,44 @@ void dvrstream::close(void)
 
 	m_curl = nullptr;				// Reset easy handle to null
 	m_curlm = nullptr;				// Reset multi handle to null
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::currentpts
+//
+// Gets the current presentation timestamp value
+//
+// Arguments:
+//
+//	NONE
+
+uint64_t dvrstream::currentpts(void) const
+{
+	return m_currentpts;
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::currenttime
+//
+// Gets the current playback time based on the presentation timestamps
+//
+// Arguments:
+//
+//	NONE
+
+time_t dvrstream::currenttime(void) const
+{
+	// If either of the presentation timestamps are missing, report zero
+	if((m_startpts == 0) || (m_currentpts == 0)) return 0;
+
+	// If the current presentation timestamp is before the start, report zero
+	if(m_currentpts < m_startpts) return 0;
+
+	// Calculate the current playback time via the delta between the current
+	// and starting presentation timestamp values (90KHz periods)
+	uint64_t delta = (m_currentpts - m_startpts) / 90000;
+	assert(delta <= static_cast<uint64_t>(std::numeric_limits<time_t>::max()));
+	return m_starttime + static_cast<time_t>(delta);
 }
 
 //---------------------------------------------------------------------------
@@ -410,6 +482,10 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 
 void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 {
+	// The packet filter can be disabled completely for a stream if the
+	// MPEG-TS packets become misaligned; leaving it enabled might trash things
+	if(!m_enablefilter) return;
+
 	// Iterate over all of the packets provided in the buffer
 	for(size_t index = 0; index < count; index++) {
 
@@ -425,14 +501,60 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
 		bool payload = (ts_header & 0x00000010) == 0x00000010;
 
-		// Check the sync byte, should always be 0x47.  If the packets aren't
-		// in sync, abort the operation -- they will all be out of sync
+		// Check the sync byte, should always be 0x47.  If the packets aren't in sync
+		// all kinds of bad things can happen
 		assert(sync == 0x47);
-		if(sync != 0x47) return;
+		if(sync != 0x47) { 
+			
+			m_enablefilter = m_enablepcrs = false;		// Stop filtering packets
+			m_startpts = m_currentpts = 0;				// Disable PCR reporting
 
-		// Skip over the header and any adaptation bytes
+			return;
+		}
+
+		// Move the pointer beyond the TS header
 		current += 4U;
-		if(adaptation) current += read_be8(current);
+
+		// If the packet contains adaptation bytes check for and handle the PCR
+		if(adaptation) {
+
+			// Get the adapation field length, this needs to be at least 7 bytes for
+			// it to possibly include the PCR value
+			uint8_t adaptationlength = read_be8(current);
+			if((adaptationlength >= 7) && (m_enablepcrs)) {
+
+				// Only use the first PID on which a PCR has been detected, there may
+				// be multiple elementary streams that contain PCR values
+				if((m_pcrpid == 0) || (pid == m_pcrpid)) {
+
+					// Check the adaptation flags to see if a PCR is in this packet
+					uint8_t adaptationflags = read_be8(current + 1U);
+					if((adaptationflags & 0x10) == 0x10) {
+
+						// If the PCR PID hasn't been set, use this PID from now on
+						if(m_pcrpid == 0) m_pcrpid = pid;
+
+						// Decode the current PCR using the 90KHz period only, there is 
+						// no need to deal with the full 27MHz period
+						m_currentpts = decode_pcr90khz(current + 2U);
+						if(m_startpts == 0) m_startpts = m_currentpts;
+
+						assert(m_currentpts >= m_startpts);
+
+						// If the current PCR is less than the original PCR value something has
+						// gone wrong; disable all PCR detection and reporting on this stream
+						if(m_currentpts < m_startpts) {
+
+							m_enablepcrs = false;
+							m_startpts = m_currentpts = 0;
+						}
+					}
+				}
+			}
+
+			// Move the pointer beyond the adaptation data
+			current += adaptationlength;
+		}
 
 		// >> PAT
 		if((pid == 0x0000) && (payload)) {
@@ -504,7 +626,7 @@ long long dvrstream::length(void) const
 //---------------------------------------------------------------------------
 // dvrstream::position
 //
-// Gets the current position of the stream; or -1 if stream is real-time
+// Gets the current position of the stream
 //
 // Arguments:
 //
@@ -512,7 +634,7 @@ long long dvrstream::length(void) const
 
 long long dvrstream::position(void) const
 {
-	return (m_length == MAX_STREAM_LENGTH) ? -1 : m_readpos;
+	return m_readpos;
 }
 
 //---------------------------------------------------------------------------
@@ -551,6 +673,9 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished
 	if(available == 0) return 0;
 
+	// Wait until the first successful read operation to set the start time for the stream
+	if(m_starttime == 0) m_starttime = time(nullptr);
+	
 	// Reads are no longer aligned to return full MPEG-TS packets, determine the offset
 	// from the current read position to the first full packet of data
 	size_t packetoffset = static_cast<size_t>(align::up(m_readpos, MPEGTS_PACKET_LENGTH) - m_readpos);
@@ -616,10 +741,13 @@ long long dvrstream::restart(long long position)
 	CURLMcode curlmresult = curl_multi_remove_handle(m_curlm, m_curl);
 	if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_remove_handle() failed: ", curl_multi_strerror(curlmresult));
 
-	// Reset all of the stream state and ring buffer values back to the defaults
+	// Reset all of the stream state and ring buffer values back to the defaults; leave the 
+	// start time and start presentation timestamp values at their original values
 	m_paused = m_headers = m_canseek = false;
 	m_head = m_tail = 0;
-	m_startpos = m_readpos = m_writepos = m_length = 0;
+	m_startpos = m_readpos = m_writepos = 0;
+	m_length = MAX_STREAM_LENGTH;
+	m_currentpts = 0;
 
 	// Format the Range: header value to apply to the transfer object, do not use CURLOPT_RESUME_FROM_LARGE 
 	// as it will not insert the request header when the position is zero
@@ -656,8 +784,8 @@ long long dvrstream::seek(long long position, int whence)
 {
 	long long			newposition = 0;			// New stream position
 
-	// If the stream cannot be seeked, just return the current position
-	if(!m_canseek) return m_readpos;
+	// If the stream cannot be seeked, return -1 to indicate the operation is not supported.
+	if(!m_canseek) return -1;
 
 	// Calculate the new position of the stream
 	if(whence == SEEK_SET) newposition = std::max(position, 0LL);
@@ -696,10 +824,36 @@ long long dvrstream::seek(long long position, int whence)
 		return newposition;								// Successful ring buffer seek
 	}
 
-	// Attempt to restart the stream at the calculated position; if HTTP 416: Range not satisfiable
-	// is thrown, make one more attempt using the highest possible byte offset that was reported
-	try { return restart(newposition); }
-	catch(http_exception& httpex) { if(httpex.responsecode() == 416L) return restart(m_length - 1); else throw; }
+	// Attempt to restart the stream at the calculated position
+	return restart(newposition);
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::startpts
+//
+// Gets the initial presentation timestamp value
+//
+// Arguments:
+//
+//	NONE
+
+uint64_t dvrstream::startpts(void) const
+{
+	return m_startpts;
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::starttime
+//
+// Gets the time at which the stream started
+//
+// Arguments:
+//
+//	NONE
+
+time_t dvrstream::starttime(void) const
+{
+	return m_starttime;
 }
 
 //---------------------------------------------------------------------------

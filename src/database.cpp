@@ -911,7 +911,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the channel lineups for all available tuner devices; watch for results that return 'null'
-		execute_non_query(instance, "insert into discover_lineup select deviceid, http_request(json_extract(device.data, '$.LineupURL')) "
+		execute_non_query(instance, "insert into discover_lineup select deviceid, http_request(json_extract(device.data, '$.LineupURL') || '?show=demo') "
 			"as json from device where device.type = 'tuner' and cast(json as text) <> 'null'");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
@@ -2587,6 +2587,53 @@ int get_timer_count(sqlite3* instance, int maxdays)
 
 		sqlite3_finalize(statement);
 		return timers;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// get_tuner_direct_channel_flag
+//
+// Gets a flag indicating if a channel can only be streamed directly from a tuner device
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	channelid		- Channel to be checked for tuner-direct only access
+
+bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid)
+{
+	sqlite3_stmt*			statement;				// SQL statement to execute
+	bool					directonly = false;		// Tuner-direct channel flag
+	int						result;					// Result from SQLite function
+	
+	if(instance == nullptr) return 0;
+
+	// Select a boolean flag indicating if any instances of this channel in the lineup table
+	// are flagged as tuner-direct only channels
+	auto sql = "select coalesce((select json_extract(lineupdata.value, '$.Demo') as tuneronly "
+		"from lineup, json_each(lineup.data) as lineupdata "
+		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) and tuneronly is not null limit 1), 0)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, channelid.value);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) directonly = (sqlite3_column_int(statement, 0) != 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return directonly;
 	}
 
 	catch(...) { sqlite3_finalize(statement); throw; }

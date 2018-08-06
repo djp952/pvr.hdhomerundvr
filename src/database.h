@@ -510,6 +510,11 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid);
 // Gets the number of timers in the database
 int get_timer_count(sqlite3* instance, int maxdays);
 
+// get_tuner_direct_channel_flag
+//
+// Gets a flag indicating if a channel can only be streamed directly from a tuner device
+bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid);
+
 // get_tuner_stream_url
 //
 // Generates a stream URL for the specified channel on the specified tuner

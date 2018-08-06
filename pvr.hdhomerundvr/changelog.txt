@@ -1,9 +1,23 @@
-v1.2.10 (2018.07.xx)
+v1.3.1 (2018.08.xx)
+  - Revert new channel identifier encoding in favor of detecting tuner-direct only streams at the time of URL generation
+  - Add logging of streaming requests for 'tuner only' channels stating that the RECORD engine, if available, will not be used
+
+v1.3.0 (2018.08.04)
+  - Change internal channel identifier encoding to indicate tuner-direct only streams that cannot be accessed via an HDHomeRun RECORD engine
+  - Fix bug causing "DVR stream read operation minimum size" to default to 1KiB instead of 4KiB if not explicitly set
+  - Fix bug causing tuner-direct streams to improperly be reported to Kodi as zero length and not real-time
+  - Display notification when a live stream seek operation fails and attempt to recover the stream at the last known position
+  - Disable stream packet filtering when misalignment of MPEG-TS packets has been detected
+  - Add support for Kodi Timeshifting display indicators when playing Live TV streams using first detected MPEG-TS stream with PCR values
+  - Remove "Disable reporting of real-time MPEG-TS streams" advanced setting (performance concern)
+  - Trigger a Kodi error notification when a Live TV or Recorded TV stream cannot be created successfully
+
+v1.2.10 (2018.07.28)
   - Update SQLite database engine to version 3.24.0
   - Refactor Live TV / Recorded TV stream implementation to eliminate use of the worker thread
   - Reduce default Live TV / Recorded TV stream ring buffer size to 1MiB
-  - Increase default "DVR stream read operation minimum size" advanced option to 4KiB
-  - Add 32KiB value for "DVR stream read operation minimum size" advanced option
+  - Increase default "DVR stream read operation minimum size" advanced setting to 4KiB
+  - Add 32KiB value for "DVR stream read operation minimum size" advanced setting
   - Rename "Pause discovery while streaming Live TV channels" setting to "Pause discovery tasks while streaming"
   - Apply "Pause discovery tasks while streaming" during playback of Recorded TV streams
   - Apply standard URL encoding to device authorization code(s) when querying the backend services
