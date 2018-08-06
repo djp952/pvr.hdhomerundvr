@@ -3468,9 +3468,14 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
+		// Generate a log message for tuner-direct channels indicating that the storage engine will not be used;
+		// streamurl will be left as a zero-length string triggering the tuner-direct action below
+		if(get_tuner_direct_channel_flag(dbhandle, channelid))
+			log_notice(__func__, ": channel ", channelstr, " is flagged as tuner-direct only; an available storage engine will not be used for this stream");
+
 		// If direct tuning is disabled, first attempt to generate the stream URL for the specified 
 		// channel from the storage engine; if that fails we can fall back to using a tuner directly
-		if(settings.use_direct_tuning == false) {
+		else if(settings.use_direct_tuning == false) {
 			
 			streamurl = get_stream_url(dbhandle, channelid);
 			if(streamurl.length() == 0) log_notice(__func__, ": unable to generate storage engine stream URL for channel ", 

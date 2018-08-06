@@ -1,3 +1,7 @@
+v1.3.1 (2018.08.05)
+  - Revert new channel identifier encoding in favor of detecting tuner-direct only streams at the time of URL generation
+  - Add logging of streaming requests for 'tuner only' channels stating that the RECORD engine, if available, will not be used
+
 v1.3.0 (2018.08.04)
   - Change internal channel identifier encoding to indicate tuner-direct only streams that cannot be accessed via an HDHomeRun RECORD engine
   - Fix bug causing "DVR stream read operation minimum size" to default to 1KiB instead of 4KiB if not explicitly set
