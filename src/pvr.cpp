@@ -226,11 +226,6 @@ struct addon_settings {
 	// Indicates the minimum number of bytes to return from a stream read
 	int stream_read_minimum_byte_count;
 
-	// stream_read_timeout
-	//
-	// Indicates the stream read timeout value (milliseconds)
-	int stream_read_timeout;
-
 	// stream_ring_buffer_size
 	//
 	// Indicates the size of the stream ring buffer to allocate
@@ -345,7 +340,6 @@ static addon_settings g_settings = {
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
 	(4 KiB),				// stream_read_minimum_byte_count
-	2500,					// stream_read_timeout
 	(1 MiB),				// stream_ring_buffer_size
 	false,					// enable_recording_edl
 	"",						// recording_edl_folder
@@ -1242,7 +1236,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
-			if(g_addon->GetSetting("stream_read_timeout", &nvalue)) g_settings.stream_read_timeout = nvalue;
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
@@ -1774,18 +1767,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.stream_read_minimum_byte_count = nvalue;
 			log_notice(__func__, ": setting stream_read_minimum_byte_count changed to ", nvalue, " bytes");
-		}
-	}
-
-	// stream_read_timeout
-	//
-	else if(strcmp(name, "stream_read_timeout") == 0) {
-
-		int nvalue = *reinterpret_cast<int const*>(value);
-		if(nvalue != g_settings.stream_read_timeout) {
-
-			g_settings.stream_read_timeout = nvalue;
-			log_notice(__func__, ": setting stream_read_timeout changed to ", nvalue, " milliseconds");
 		}
 	}
 
@@ -3441,7 +3422,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 			// Start the new channel stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -3681,7 +3662,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
-			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count, settings.stream_read_timeout);
+			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
