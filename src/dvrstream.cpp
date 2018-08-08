@@ -870,14 +870,24 @@ bool dvrstream::transfer_until(std::function<bool(void)> predicate)
 {
 	int				numfds;				// Number of active file descriptors
 
-	// If the data transfer has been paused for any reason, restart it now
-	if(m_paused) curl_easy_pause(m_curl, CURLPAUSE_CONT);
-	m_paused = false;
+	// If the stream has been paused due to the ring buffer filling up, attempt to resume it
+	// CAUTION: calling curl_easy_pause() with CURLPAUSE_CONT *immediately* attempts to write 
+	// outstanding data into the ring buffer= so when it returns m_paused may have been set 
+	// back to true if the ring buffer is still full after attempting to resume
+	if(m_paused) {
 
-	// Continue to execute the data transfer until the predicate has been satisfied or
-	// the transfer operation has completed
+		m_paused = false;									// Reset the stream paused flag
+		curl_easy_pause(m_curl, CURLPAUSE_CONT);			// Resume transfer on the stream
+	}
+
+	// If the stream is still paused (buffer is still full) and the predicate can be satisfied,
+	// go ahead and let the caller do what it wants to do
+	if(m_paused && predicate()) return true;
+
+	// Continue to execute the data transfer until the predicate has been satisfied, the data
+	// transfer operation is complete, or the stream has been paused due to a full buffer condition
 	CURLMcode curlmresult = curl_multi_perform(m_curlm, &numfds);
-	while((curlmresult == CURLM_OK) && (numfds > 0) && (predicate() == false)) {
+	while((curlmresult == CURLM_OK) && (!m_paused) && (numfds > 0) && (predicate() == false)) {
 
 		curlmresult = curl_multi_wait(m_curlm, nullptr, 0, m_readtimeout, &numfds);
 		if(curlmresult == CURLM_OK) curlmresult = curl_multi_perform(m_curlm, &numfds);
@@ -901,7 +911,7 @@ bool dvrstream::transfer_until(std::function<bool(void)> predicate)
 		else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 	}
 
-	return predicate();				// Evaluate the predicate as the result
+	return predicate();				// Re-evaluate the predicate as the result
 }
 
 //---------------------------------------------------------------------------
