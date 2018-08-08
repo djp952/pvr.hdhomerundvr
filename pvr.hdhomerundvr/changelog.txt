@@ -1,6 +1,7 @@
 v1.3.2 (2018.08.xx)
   - Update cURL library to version 7.61.0
-  - Fix bug causing HTTP stream to remain in a paused state if the ring buffer has been completely filled
+  - Fix bug causing HTTP stream to remain in a paused state indefinitely if the ring buffer has been completely filled
+  - Remove "DVR stream read operation timeout (milliseconds)" advanced option
 
 v1.3.1 (2018.08.05)
   - Revert new channel identifier encoding in favor of detecting tuner-direct only streams at the time of URL generation

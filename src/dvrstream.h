@@ -62,7 +62,6 @@ public:
 	static std::unique_ptr<dvrstream> create(char const* url);
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize);
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount);
-	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
 
 	// currentpts
 	//
@@ -119,11 +118,6 @@ private:
 	// Default minimum amount of data to return from a read request
 	static size_t const DEFAULT_READ_MINCOUNT;
 
-	// DEFAULT_READ_TIMEOUT_MS
-	//
-	// Default amount of time for a read operation to succeed
-	static unsigned int const DEFAULT_READ_TIMEOUT_MS;
-
 	// DEFAULT_RINGBUFFER_SIZE
 	//
 	// Default ring buffer size, in bytes
@@ -141,7 +135,7 @@ private:
 
 	// Instance Constructor
 	//
-	dvrstream(char const* url, size_t buffersize, size_t readmincount, unsigned int readtimeout);
+	dvrstream(char const* url, size_t buffersize, size_t readmincount);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -182,7 +176,6 @@ private:
 
 	// STREAM STATE
 	//
-	unsigned int const				m_readtimeout;					// Read timeout in milliseconds
 	bool							m_paused = false;				// Flag if transfer is paused
 	bool							m_headers = false;				// Flag if headers have been processed
 	bool							m_canseek = false;				// Flag if stream can be seeked
