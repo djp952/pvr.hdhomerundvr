@@ -92,10 +92,6 @@ msgctxt "#30115"
 msgid "DVR stream ring buffer size"
 msgstr ""
 
-msgctxt "#30116"
-msgid "DVR stream read operation timeout (milliseconds)"
-msgstr ""
-
 msgctxt "#30117"
 msgid "Use backend genre string(s) in Electronic Program Guide (EPG)"
 msgstr ""
