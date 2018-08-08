@@ -104,6 +104,7 @@
     <ClInclude Include="..\depends\curl\lib\curlx.h" />
     <ClInclude Include="..\depends\curl\lib\curl_addrinfo.h" />
     <ClInclude Include="..\depends\curl\lib\curl_base64.h" />
+    <ClInclude Include="..\depends\curl\lib\curl_ctype.h" />
     <ClInclude Include="..\depends\curl\lib\curl_des.h" />
     <ClInclude Include="..\depends\curl\lib\curl_endian.h" />
     <ClInclude Include="..\depends\curl\lib\curl_fnmatch.h" />
@@ -118,7 +119,9 @@
     <ClInclude Include="..\depends\curl\lib\curl_multibyte.h" />
     <ClInclude Include="..\depends\curl\lib\curl_ntlm_core.h" />
     <ClInclude Include="..\depends\curl\lib\curl_ntlm_wb.h" />
+    <ClInclude Include="..\depends\curl\lib\curl_path.h" />
     <ClInclude Include="..\depends\curl\lib\curl_printf.h" />
+    <ClInclude Include="..\depends\curl\lib\curl_range.h" />
     <ClInclude Include="..\depends\curl\lib\curl_rtmp.h" />
     <ClInclude Include="..\depends\curl\lib\curl_sasl.h" />
     <ClInclude Include="..\depends\curl\lib\curl_sec.h" />
@@ -303,6 +306,14 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\curl_ctype.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="..\depends\curl\lib\curl_des.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -368,6 +379,22 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\curl_ntlm_wb.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\curl_path.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\curl_range.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
