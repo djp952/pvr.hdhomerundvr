@@ -281,6 +281,7 @@
     <ClInclude Include="..\depends\curl\lib\warnless.h" />
     <ClInclude Include="..\depends\curl\lib\wildcard.h" />
     <ClInclude Include="..\depends\curl\lib\x509asn1.h" />
+    <ClInclude Include="..\depends\http-status-codes-cpp\HttpStatusCodes_C++11.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channels.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channelscan.h" />
