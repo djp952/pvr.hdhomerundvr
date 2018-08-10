@@ -4086,12 +4086,17 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 {
 	assert(times != nullptr);
 
-	// TODO: This is all just a guess right now
+	// For non-realtime streams, let Kodi figure this out on it's own; it can do a better job
+	if((!g_dvrstream) || (!g_dvrstream->realtime()))  return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-	times->startTime = (g_dvrstream) && (g_dvrstream->realtime()) ? g_dvrstream->starttime() : 0;
-	times->ptsStart = (g_dvrstream) ? g_dvrstream->startpts() : 0;
-	times->ptsBegin = (g_dvrstream) && (g_dvrstream->realtime()) ? g_dvrstream->startpts() : 0;
-	times->ptsEnd = 0;		// todo
+	times->startTime = g_dvrstream->starttime();
+
+	// TODO: Still not certain this is correct for GetStreamTimes(), but based on the code
+	// in VideoPlayer.cpp and a great deal of trial and error, setting the start and begin pts
+	// both to zero and the setting the end in microseconds seems to work acceptably for now
+	times->ptsStart = 0;
+	times->ptsBegin = 0;
+	times->ptsEnd = (static_cast<int64_t>(time(nullptr) - g_dvrstream->starttime())) * 1000000;		// <-- microseconds
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
