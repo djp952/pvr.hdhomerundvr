@@ -63,11 +63,6 @@ public:
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize);
 	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount);
 
-	// currentpts
-	//
-	// Gets the current presentation timestamp
-	uint64_t currentpts(void) const;
-	
 	// currenttime
 	//
 	// Gets the current time of the stream
@@ -97,11 +92,6 @@ public:
 	//
 	// Sets the stream pointer to a specific position
 	long long seek(long long position, int whence);
-
-	// startpts
-	//
-	// Gets the starting presentation timestamp
-	uint64_t startpts(void) const;
 
 	// starttime
 	//

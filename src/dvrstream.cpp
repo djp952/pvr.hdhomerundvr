@@ -246,20 +246,6 @@ void dvrstream::close(void)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::currentpts
-//
-// Gets the current presentation timestamp value
-//
-// Arguments:
-//
-//	NONE
-
-uint64_t dvrstream::currentpts(void) const
-{
-	return m_currentpts;
-}
-
-//---------------------------------------------------------------------------
 // dvrstream::currenttime
 //
 // Gets the current playback time based on the presentation timestamps
@@ -800,20 +786,6 @@ long long dvrstream::seek(long long position, int whence)
 
 	// Attempt to restart the stream at the calculated position
 	return restart(newposition);
-}
-
-//---------------------------------------------------------------------------
-// dvrstream::startpts
-//
-// Gets the initial presentation timestamp value
-//
-// Arguments:
-//
-//	NONE
-
-uint64_t dvrstream::startpts(void) const
-{
-	return m_startpts;
 }
 
 //---------------------------------------------------------------------------
