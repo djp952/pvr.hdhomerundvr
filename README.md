@@ -3,17 +3,18 @@
 Unofficial Kodi HDHomeRun DVR PVR Client   
 ## [__USER DOCUMENTATION AND DOWNLOADS__](https://github.com/djp952/pvr.hdhomerundvr/wiki)   
    
-Copyright (C)2017 Michael G. Brehm    
+Copyright (C)2018 Michael G. Brehm    
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
-[__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2017, Daniel Stenberg, daniel@haxx.se, and many contributors   
-[__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2017 Silicondust USA Inc     
+[__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2018, Daniel Stenberg, daniel@haxx.se, and many contributors   
+[__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2018 Silicondust USA Inc     
    
 ## BUILD ENVIRONMENT
 **REQUIRED COMPONENTS**   
-* Windows 10 x64 1709 (16299) "Fall Creator's Update"   
+* Windows 10 x64 1803 (17134) "April 2018 Update"   
 * Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop)   
-* Bash on Ubuntu on Windows 16.04.2 LTS   
+* Windows Subsystem for Linux   
+* [Ubuntu on Windows 16.04.4 LTS](https://www.microsoft.com/store/productId/9NBLGGH4MSV6)   
 
 **OPTIONAL COMPONENTS**   
 * Android NDK r12b for Windows 64-bit   
@@ -22,8 +23,8 @@ Copyright (C)2017 Michael G. Brehm
 * Raspberry Pi Cross-Compiler   
 * OSXCROSS Cross-Compiler (with Mac OSX 10.11 SDK)   
    
-**REQUIRED: CONFIGURE BASH ON UBUNTU ON WINDOWS**   
-* Open "Bash on Ubuntu on Windows"   
+**REQUIRED: CONFIGURE UBUNTU ON WINDOWS**   
+* Open "Ubuntu"   
 ```
 sudo dpkg --add-architecture i386
 sudo apt-get update
@@ -55,7 +56,7 @@ android update sdk --all -u -t build-tools-25.0.2
 ```
       
 **OPTIONAL: CONFIGURE ORACLE JAVA SE RUNTIME ENVIRONMENT AND CREATE PUBLIC-KEY CERTIFICATE**   
-*Necessary to build Android APK Targets*   
+*Necessary to build Android APK and Universal Windows Platform APPX Targets*   
    
 Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:   
 [Java SE Runtime Environment 8 - Downloads](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)   
@@ -67,7 +68,7 @@ Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:
 **OPTIONAL: CONFIGURE RASPBERRY PI CROSS-COMPILER**   
 *Necessary to build Raspbian Targets*   
    
-* Open "Bash on Ubuntu on Windows"   
+* Open "Ubuntu"   
 ```
 git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 ```
@@ -76,9 +77,9 @@ git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 *Necessary to build OS X Targets*   
 
 * Generate the MAC OSX 10.11 SDK Package for OSXCROSS by following the instructions provided at [PACKAGING THE SDK](https://github.com/tpoechtrager/osxcross#packaging-the-sdk).  The suggested version of Xcode to use when generating the SDK package is Xcode 7.3.1 (May 3, 2016).
-* Open "Bash on Ubuntu on Windows"   
+* Open "Ubuntu"   
 ```
-sudo apt-get make install clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
+sudo apt-get install make clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
 git clone https://github.com/tpoechtrager/osxcross --depth=1
 cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh
@@ -137,6 +138,11 @@ Examples:
 | linux-x86\_64 | Linux X64 | /t:linux-x86\_64 |
 | osx-x86\_64 | Mac OS X X64 | /t:osx-x86\_64 |
 | raspbian-armhf | Raspbian ARM (hard float) | /t:raspbian-armhf |
+| uwp-arm | Universal Windows Platform ARM | /t:uwp-arm |
+| uwp-win32 | Universal Windows Platform X86 | /t:uwp-win32 |
+| uwp-x64 | Universal Windows Platform X64 | /t:uwp-x64 |
+| uwpappx-win32 | Universal Windows Platform X86 APPX | /t:uwpappx-win32 /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| uwpappx-x64 | Universal Windows Platform X64 APPX | /t:uwpappx-x64 /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | windows-win32 | Windows X86 | /t:windows-win32 |
 | windows-x64 | Windows X64 | /t:windows-x64 |
    
@@ -144,12 +150,14 @@ Examples:
    
 | Target | Platform(s) | MSBUILD Parameters |
 | :-- | :-- | :-- |
-| all | All platforms | /t:all /p:Keystore={keystore};KeystorePassword={keystore-password} |
-| android | All Android platforms | /t:android |
-| androidapk | All Android APK platforms | /t:androidapk /p:Keystore={keystore};KeystorePassword={keystore-password} |
-| linux | All Linux platforms | /t:linux |
-| osx | All Mac OS X platforms | /t:osx |
-| windows (default) | All Windows platforms | /t:windows |
+| all | All targets | /t:all /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| android | All Android targets | /t:android |
+| androidapk | All Android APK targets | /t:androidapk /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| linux | All Linux targets | /t:linux |
+| osx | All Mac OS X targets | /t:osx |
+| uwp | All Universal Windows Platform targets | /t:uwp |
+| uwpappx | All Universal Windows Platform APPX targets | /t:uwpappx /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| windows (default) | All Windows targets | /t:windows |
    
 ## ADDITIONAL LICENSE INFORMATION
    
