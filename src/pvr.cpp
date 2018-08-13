@@ -4065,9 +4065,11 @@ PVR_ERROR SetEPGTimeFrame(int days)
 
 void OnSystemSleep()
 {
+	// CAUTION: This function will be called on a different thread than the main PVR
+	// callback functions -- do not attempt to manipulate any in-progress streams
+
 	try {
 
-		g_dvrstream.reset();			// Destroy any active stream instance
 		g_scheduler.stop();				// Stop the scheduler
 		g_scheduler.clear();			// Clear out any pending tasks
 	}
@@ -4087,6 +4089,9 @@ void OnSystemSleep()
 
 void OnSystemWake()
 {
+	// CAUTION: This function will be called on a different thread than the main PVR
+	// callback functions -- do not attempt to manipulate any in-progress streams
+
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
