@@ -3,6 +3,7 @@ v1.3.2 (2018.08.xx)
   - Fix bug causing HTTP stream to remain in a paused state indefinitely if the ring buffer has been completely filled
   - Remove "DVR stream read operation timeout (milliseconds)" advanced option
   - Fix bug causing potential access violation when system is suspended during an active Live TV or Recorded TV stream
+  - Apply workaround for SQLite database engine concern causing some HTTP queries to be executed multiple times
 
 v1.3.1 (2018.08.05)
   - Revert new channel identifier encoding in favor of detecting tuner-direct only streams at the time of URL generation

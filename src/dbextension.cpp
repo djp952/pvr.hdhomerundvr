@@ -149,9 +149,9 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 		return result;
 	}
 
-	// http_request
+	// http_request (non-deterministic)
 	//
-	result = sqlite3_create_function_v2(db, "http_request", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, http_request, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "http_request", -1, SQLITE_UTF8, nullptr, http_request, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) {
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
