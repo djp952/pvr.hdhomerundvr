@@ -819,13 +819,40 @@ static void discover_startup_task(scalar_condition<bool> const& /*cancel*/)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Discover all of the local device and backend service data
-		discover_devices(dbhandle, settings.use_broadcast_device_discovery);
-		discover_lineups(dbhandle, lineups_changed);
-		discover_recordings(dbhandle, recordings_changed);
-		discover_guide(dbhandle, guide_changed);
-		discover_recordingrules(dbhandle, recordingrules_changed);
-		discover_episodes(dbhandle, episodes_changed);
+		// Discover all of the local device and backend service data -- failures here are not
+		// fatal and will just be logged rather than aborting all of the discovery tasks
+
+		// DISCOVER: Devices
+		try { discover_devices(dbhandle, settings.use_broadcast_device_discovery); }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+		catch(...) { handle_generalexception(__func__); }
+
+		// DISCOVER: Lineups
+		try { discover_lineups(dbhandle, lineups_changed); }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+		catch(...) { handle_generalexception(__func__); }
+
+		// DISCOVER: Recordings
+		try { discover_recordings(dbhandle, recordings_changed); }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+		catch(...) { handle_generalexception(__func__); }
+
+		// DISCOVER: Guide Metadata
+		try { discover_guide(dbhandle, guide_changed); }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+		catch(...) { handle_generalexception(__func__); }
+
+		// DISCOVER: Recording Rules
+		try { discover_recordingrules(dbhandle, recordingrules_changed); }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+		catch(...) { handle_generalexception(__func__); }
+
+		// DISCOVER: Episodes
+		try { discover_episodes(dbhandle, episodes_changed); }
+		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+		catch(...) { handle_generalexception(__func__); }
+
+		// Execute any necessary triggers based on what discovery data has changed
 
 		// TRIGGER: Channels
 		if(lineups_changed || guide_changed) {
