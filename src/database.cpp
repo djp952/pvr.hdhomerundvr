@@ -67,8 +67,8 @@ extern char const VERSION_VERSION3_ANSI[];
 
 void clean_filename(sqlite3_context* context, int argc, sqlite3_value** argv);
 void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
-void discover_devices_broadcast(sqlite3* instance);
-void discover_devices_http(sqlite3* instance);
+bool discover_devices_broadcast(sqlite3* instance);
+bool discover_devices_http(sqlite3* instance);
 void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
 void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv);
 void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** argv);
@@ -627,6 +627,8 @@ void discover_devices(sqlite3* instance, bool usebroadcast)
 
 void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 {
+	bool			hastuners = false;			// Flag indicating if any tuners were detected
+
 	changed = false;							// Initialize [out] argument
 
 	if(instance == nullptr) throw std::invalid_argument("instance");
@@ -639,8 +641,12 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 
 		// The logic required to load the temp table from broadcast differs greatly from the method
 		// used to load from the HTTP API; the specific mechanisms have been broken out into helpers
-		if(usebroadcast) discover_devices_broadcast(instance);
-		else discover_devices_http(instance);
+		hastuners = (usebroadcast) ? discover_devices_broadcast(instance) : discover_devices_http(instance);
+
+		// If no tuner devices were found during discovery, throw an exception to abort the device discovery.
+		// The intention here is to prevent transient discovery problems from clearing out the existing devices
+		// and channel lineups from Kodi -- this causes problems with the EPG when they come back again
+		if(!hastuners) throw string_exception(__func__, ": no tuner devices were discovered; aborting device discovery");
 
 		// This requires a multi-step operation against the device table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -682,10 +688,13 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 //
 //	instance		- SQLite database instance
 
-void discover_devices_broadcast(sqlite3* instance)
+bool discover_devices_broadcast(sqlite3* instance)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
+	bool					hastuners = false;		// Flag indicating tuners were found
+	sqlite3_stmt*			statement;				// SQL statement to execute
+	int						result;					// Result from SQLite function
+
+	assert(instance != nullptr);
 
 	// deviceid | type | data
 	auto sql = "insert into discover_device values(printf('%08X', ?1), ?2, ?3)";
@@ -697,6 +706,9 @@ void discover_devices_broadcast(sqlite3* instance)
 		// Enumerate the devices on the local network accessible via UDP broadcast and insert them
 		// into the temp table using the baseurl as 'data' rather than the discovery JSON
 		enumerate_devices([&](struct discover_device const& device) -> void { 
+
+			// The presence or lack of tuner devices is used as the function return value
+			if(device.devicetype == device_type::tuner) hastuners = true;
 			
 			// Bind the query parameter(s)
 			result = sqlite3_bind_int(statement, 1, device.deviceid);
@@ -725,6 +737,9 @@ void discover_devices_broadcast(sqlite3* instance)
 
 	// Update the deviceid column for storage devices, the broadcast mechanism has no means to return the StorageID
 	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where type = 'storage'");
+
+	// Indicate if any tuner devices were detected during discovery or not
+	return hastuners;
 }
 
 //---------------------------------------------------------------------------
@@ -736,9 +751,14 @@ void discover_devices_broadcast(sqlite3* instance)
 //
 //	instance		- SQLite database instance
 
-void discover_devices_http(sqlite3* instance)
+bool discover_devices_http(sqlite3* instance)
 {
-	//
+	sqlite3_stmt*				statement;				// Database query statement
+	int							tuners = 0;				// Number of tuners found
+	int							result;					// Result from SQLite function call
+
+	assert(instance != nullptr);
+														//
 	// NOTE: This had to be broken up into a multi-step query involving a temp table to avoid a SQLite bug/feature
 	// wherein using a function (http_request in this case) as part of a column definition is reevaluated when
 	// that column is subsequently used as part of a WHERE clause:
@@ -754,6 +774,27 @@ void discover_devices_http(sqlite3* instance)
 		"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data from json_each(http_request('http://api.hdhomerun.com/discover')) as discovery");
 	execute_non_query(instance, "insert into discover_device select deviceid, type, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
 	execute_non_query(instance, "drop table discover_device_http");
+
+	// Determine if any tuner devices were discovered from the HTTP discovery query
+	auto sql = "select count(deviceid) as numtuners from discover_device where type = 'tuner'";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try { 
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) tuners = sqlite3_column_int(statement, 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return (tuners > 0);
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
 }
 
 //---------------------------------------------------------------------------
