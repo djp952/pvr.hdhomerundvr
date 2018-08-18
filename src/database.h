@@ -394,6 +394,11 @@ void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_
 // Enumerates the tuners that can tune a specific channel
 void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback callback);
 
+// enumerate_demo_channelids
+//
+// Enumerates channels marked as 'Demo' in the lineups
+void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
+
 // enumerate_device_names
 //
 // Enumerates the available device names
