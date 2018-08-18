@@ -1351,6 +1351,53 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 }
 
 //---------------------------------------------------------------------------
+// enumerate_demo_channelids
+//
+// Enumerates the channels marked as 'Demo' in the lineups
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	showdrm		- Flag to show DRM channels
+//	callback	- Callback function
+
+void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (callback == nullptr)) return;
+
+	// channelid
+	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
+		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.Demo') = 1 "
+		"and nullif(json_extract(entry.value, '$.DRM'), ?1) is null";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the query and iterate over all returned rows
+		while(sqlite3_step(statement) == SQLITE_ROW) {
+
+			union channelid channelid;
+			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
+			
+			callback(channelid);
+		}
+	
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // enumerate_device_names
 //
 // Enumerates the available device names

@@ -2283,7 +2283,7 @@ PVR_ERROR GetEPGTagStreamProperties(EPG_TAG const* /*tag*/, PVR_NAMED_VALUE* /*p
 
 int GetChannelGroupsAmount(void)
 {
-	return 3;		// "Favorite Channels", "HD Channels" and "SD Channels"
+	return 4;		// "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
 }
 
 //---------------------------------------------------------------------------
@@ -2320,6 +2320,10 @@ PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool radio)
 	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "SD Channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
+	// Demo Channels
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Demo Channels");
+	g_pvr->TransferChannelGroup(handle, &group);
+
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
@@ -2339,12 +2343,13 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	// Determine which group enumerator to use for the operation, there are only
-	// three to choose from: "Favorite Channels", "HD Channels" and "SD Channels"
+	// Determine which group enumerator to use for the operation, there are only four to
+	// choose from: "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.strGroupName, "Favorite Channels") == 0) enumerator = enumerate_favorite_channelids;
 	else if(strcmp(group.strGroupName, "HD Channels") == 0) enumerator = enumerate_hd_channelids;
 	else if(strcmp(group.strGroupName, "SD Channels") == 0) enumerator = enumerate_sd_channelids;
+	else if(strcmp(group.strGroupName, "Demo Channels") == 0) enumerator = enumerate_demo_channelids;
 
 	// If neither enumerator was selected, there isn't any work to do here
 	if(enumerator == nullptr) return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -2418,7 +2423,10 @@ PVR_ERROR OpenDialogChannelScan(void)
 
 int GetChannelsAmount(void)
 {
-	try { return get_channel_count(connectionpool::handle(g_connpool), copy_settings().show_drm_protected_channels); }
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
+	try { return get_channel_count(connectionpool::handle(g_connpool), settings.show_drm_protected_channels); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
