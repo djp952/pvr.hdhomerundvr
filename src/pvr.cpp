@@ -430,8 +430,6 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 
 		// iAttributes
 		//
-		// todo: PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE can be set here, but seems to have bugs right now, after Kodi
-		// is stopped and restarted, the cached EPG data prevents adding a new timer if this is set
 		PVR_TIMER_TYPE_IS_REPEATING | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_RECORD_ONLY_NEW_EPISODES | 
 			PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE | PVR_TIMER_TYPE_SUPPORTS_ANY_CHANNEL,
 
@@ -461,8 +459,6 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 
 		// iAttributes
 		//
-		// todo: PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE can be set here, but seems to have bugs right now, after Kodi
-		// is stopped and restarted, the cached EPG data prevents adding a new timer if this is set
 		PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE,
 
 		// strDescription
@@ -3129,9 +3125,6 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// todo: can use strSeriesLink here for EPG timers instead of searching, once that works properly in Kodi.
-		// Right now the strSeriesLink information seems to disappear after Kodi is stopped and restarted
-
 		// seriesrule / epgseriesrule --> recordingrule_type::series
 		//
 		if((timer.iTimerType == timer_type::seriesrule) || (timer.iTimerType == timer_type::epgseriesrule)) {
@@ -3167,8 +3160,12 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			//
 			else {
 
-				// Perform an exact-match search against the backend to locate the seriesid
-				seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
+				// Get the seriesid for the recording rule; if one has been specified as part of the timer request use it.
+				// Otherwise search for it with a title match against the backend services
+				seriesid.assign(timer.strSeriesLink);
+				if(seriesid.length() == 0) seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
+
+				// If no match was found, the timer cannot be added; use a dialog box rather than returning an error
 				if(seriesid.length() == 0) {
 					
 					g_gui->Dialog_OK_ShowAndGetInput("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
@@ -3196,8 +3193,10 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			union channelid channelid;
 			channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
 
-			// Try to find the seriesid for the recording rule by the channel and starttime first, then do a title match
-			seriesid = find_seriesid(dbhandle, channelid, timer.startTime);
+			// Get the seriesid for the recording rule; if one has been specified as part of the timer request use it.
+			// Otherwise search for it first by channel and start time, falling back to a title match if necessary
+			seriesid.assign(timer.strSeriesLink);
+			if(seriesid.length() == 0) seriesid = find_seriesid(dbhandle, channelid, timer.startTime);
 			if(seriesid.length() == 0) seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
 
 			// If no match was found, the timer cannot be added; use a dialog box rather than returning an error
