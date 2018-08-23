@@ -1,4 +1,4 @@
-v1.3.3 (2018.08.xx)
+v1.3.3 (2018.08.22)
   - Treat discovery errors generated during PVR startup as non-fatal and continue execution of remaining discovery tasks
   - Abort device discovery if no tuner devices were discovered; leave existing device and channel lineup information intact
   - Add "Demo Channels" channel group
