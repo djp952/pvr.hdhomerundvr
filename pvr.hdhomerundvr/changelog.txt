@@ -1,3 +1,6 @@
+v1.3.3a (2018.09.16)
+  - (Android) Target the proper Android API for Jarvis - API 17 (Jelly Bean)
+
 v1.3.3 (2018.08.22)
   - Treat discovery errors generated during PVR startup as non-fatal and continue execution of remaining discovery tasks
   - Abort device discovery if no tuner devices were discovered; leave existing device and channel lineup information intact
