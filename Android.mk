@@ -26,14 +26,14 @@ LOCAL_PATH := $(call my-dir)
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcurl-prebuilt
-LOCAL_SRC_FILES := depends/libcurl/android-$(TARGET_ARCH_ABI)/lib/libcurl.a
+LOCAL_SRC_FILES := depends/libcurl/$(TARGET_ABI)/lib/libcurl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libuuid
 #
 include $(CLEAR_VARS)
 LOCAL_MODULE := libuuid-prebuilt
-LOCAL_SRC_FILES := depends/libuuid/android-$(TARGET_ARCH_ABI)/lib/libuuid.a
+LOCAL_SRC_FILES := depends/libuuid/$(TARGET_ABI)/lib/libuuid.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libhdhomerundvr
@@ -46,8 +46,8 @@ LOCAL_C_INCLUDES += \
 	depends/xbmc/xbmc/linux \
 	depends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi \
 	depends/http-status-codes-cpp \
-	depends/libcurl/android-$(TARGET_ARCH_ABI)/include \
-	depends/libuuid/android-$(TARGET_ARCH_ABI)/include \
+	depends/libcurl/$(TARGET_ABI)/include \
+	depends/libuuid/$(TARGET_ABI)/include \
 	depends/libhdhomerun \
 	depends/sqlite \
 	tmp/version
