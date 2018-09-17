@@ -442,13 +442,13 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
       <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20180905-b69ac071-master-armeabi-v7a</KodiApk>
+      <KodiApk>kodi-18.0-Leia_beta2-armeabi-v7a</KodiApk>
       <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/android/arm/master/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
+    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
 
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
@@ -473,13 +473,13 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
       <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20180905-b69ac071-master-arm64-v8a</KodiApk>
+      <KodiApk>kodi-18.0-Leia_beta2-arm64-v8a</KodiApk>
       <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-aarch64-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/android/arm64-v8a/master/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
+    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm64-v8a/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
 
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
@@ -503,7 +503,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20180903-5d7e1dbd-master-x86</KodiAppx>
+      <KodiAppx>Kodi-20180915-d9368de2-master-x86</KodiAppx>
       <ZukiAppx>kodi-18.0-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
@@ -544,7 +544,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20180905-b69ac071-master-x64</KodiAppx>
+      <KodiAppx>Kodi-20180915-d9368de2-master-x64</KodiAppx>
       <ZukiAppx>kodi-18.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
