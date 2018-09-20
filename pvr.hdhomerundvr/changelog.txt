@@ -1,3 +1,6 @@
+v1.3.4 (2018.10.xx)
+  - Update SQLite database engine to version 3.25.1
+
 v1.3.3a (2018.09.16)
   - (Android) Target the proper Android API for Jarvis - API 17 (Jelly Bean)
 
