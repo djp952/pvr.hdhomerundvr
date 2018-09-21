@@ -1,6 +1,7 @@
 v1.3.4 (2018.10.xx)
   - Update SQLite database engine to version 3.25.1
   - Update cURL library to version 7.61.1
+  - (Linux/Raspbian/OSX) Define NDEBUG during build to suppress internal debug assertions
 
 v1.3.3a (2018.09.16)
   - (Android) Target the proper Android API for Jarvis - API 17 (Jelly Bean)
