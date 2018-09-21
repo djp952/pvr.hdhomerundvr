@@ -177,7 +177,6 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &dvrstream::curl_write);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
-			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_RANGE, "0-");
 			if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
 
