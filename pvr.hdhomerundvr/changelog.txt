@@ -1,7 +1,8 @@
-v1.3.4 (2018.10.xx)
+v1.3.4 (2018.09.21)
   - Update SQLite database engine to version 3.25.1
   - Update cURL library to version 7.61.1
-  - (Linux/Raspbian/OSX) Define NDEBUG during build to suppress internal debug assertions
+  - (Linux/Raspbian/OSX) Fix bug allowing internal debug assertions to be raised erroneously and terminating Kodi
+  - Fix bug introduced in v1.2.10 causing default cURL progress meter to be written to stdout
 
 v1.3.3 (2018.08.22)
   - Treat discovery errors generated during PVR startup as non-fatal and continue execution of remaining discovery tasks
