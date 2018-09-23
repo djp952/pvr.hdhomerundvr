@@ -4113,8 +4113,8 @@ char const* GetBackendHostname(void)
 
 bool IsTimeshifting(void)
 {
-	// Only realtime streams are capable of timeshifting
-	if(!g_dvrstream || !g_dvrstream->realtime()) return false;
+	// Only realtime seekable streams are capable of timeshifting
+	if(!g_dvrstream || !g_dvrstream->realtime() || !g_dvrstream->canseek()) return false;
 
 	try {
 
