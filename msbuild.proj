@@ -442,7 +442,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
       <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20180924-3af76f1a-master-armeabi-v7a</KodiApk>
+      <KodiApk>kodi-20180925-10b615c7-master-armeabi-v7a</KodiApk>
       <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
@@ -473,7 +473,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
       <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20180924-3af76f1a-master-arm64-v8a</KodiApk>
+      <KodiApk>kodi-20180925-10b615c7-master-arm64-v8a</KodiApk>
       <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-aarch64-$(AddonVersion)</ZukiApk>
     </PropertyGroup>
 
@@ -544,7 +544,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20180924-3af76f1a-master-x64</KodiAppx>
+      <KodiAppx>Kodi-20180925-10b615c7-master-x64</KodiAppx>
       <ZukiAppx>kodi-18.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
