@@ -49,7 +49,7 @@ sqlite_exception::sqlite_exception(int code)
 
 sqlite_exception::sqlite_exception(int code, char const* message)
 {
-	char* what = sqlite3_mprintf("%s (%d): %s", sqlite3_errstr(code), code, (message) ? message : "<null>");
+	char* what = sqlite3_mprintf("%s (%d)", (message) ? message : sqlite3_errstr(code), code);
 	m_what.assign((what) ? what : "sqlite_exception(code, message)");
 	sqlite3_free(reinterpret_cast<void*>(what));
 }

@@ -51,6 +51,7 @@
 #include "hdhr.h"
 #include "scalar_condition.h"
 #include "scheduler.h"
+#include "sqlite_exception.h"
 #include "string_exception.h"
 
 #pragma warning(push, 4)
@@ -1389,9 +1390,22 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					menuhook.category = PVR_MENUHOOK_CHANNEL;
 					g_pvr->AddMenuHook(&menuhook);
 
-					// Create the global database connection pool instance, the file name is based on the versionb
-					std::string databasefile = "file:///" + std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
-					g_connpool = std::make_shared<connectionpool>(databasefile.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
+					// Generate the local file system and URL-based file names for the PVR database, the file name is based on the version
+					std::string databasefile = std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
+					std::string databasefileurl = "file:///" + databasefile;
+
+					// Create the global database connection pool instance
+					try { g_connpool = std::make_shared<connectionpool>(databasefileurl.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI); }
+					catch(sqlite_exception const& dbex) {
+
+						log_error(__func__, ": unable to create/open the PVR database ", databasefile, " - ", dbex.what());
+						
+						// If any SQLite-specific errors were thrown during database open/create, attempt to delete and recreate the database
+						log_notice(__func__, ": attempting to delete and recreate the PVR database");
+						g_addon->DeleteFile(databasefile.c_str());
+						g_connpool = std::make_shared<connectionpool>(databasefileurl .c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
+						log_notice(__func__, ": successfully recreated the PVR database");
+					}
 
 					try {
 
