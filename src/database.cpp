@@ -595,7 +595,7 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage");
+	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");
 }
 
 //---------------------------------------------------------------------------
