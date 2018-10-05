@@ -367,8 +367,7 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 
 	// timer_type::seriesrule
 	//
-	// Timer type for non-EPG series rules, requires a series name match operation to create. Also used when editing
-	// an existing recording rule as the EPG/seriesid information will not be available
+	// Timer type for non-EPG series rules, requires a series link or name match operation to create. Can be both edited and deleted.
 	{
 		// iID
 		timer_type::seriesrule,
@@ -396,14 +395,7 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 
 	// timer_type::datetimeonlyrule
 	//
-	// Timer type for non-EPG date time only rules, requires a series name match operation to create. Also used when editing
-	// an existing recording rule as the EPG/seriesid information will not be available
-	//
-	// TODO: Made read-only since there is no way to get it to display the proper date selector.  Making it one-shot or manual
-	// rather than repeating removes it from the Timer Rules area and causes other problems.  If Kodi allowed the date selector
-	// to be displayed I think that would suffice, and wouldn't be that difficult or disruptive to the Kodi code.  For now, the
-	// PVR_TIMER_TYPE_SUPPORTS_FIRST_DAY flag was added to show the date of the recording.  Unfortunately, this also means that
-	// the timer rule cannot be deleted, which sucks.
+	// Timer type for non-EPG date time only rules, requires a series link or name match operation to create. Cannot be edited but can be deleted.
 	{
 		// iID
 		timer_type::datetimeonlyrule,
@@ -411,7 +403,7 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 		// iAttributes
 		PVR_TIMER_TYPE_IS_REPEATING | PVR_TIMER_TYPE_IS_READONLY | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_TITLE_EPG_MATCH | 
 			PVR_TIMER_TYPE_SUPPORTS_FIRST_DAY | PVR_TIMER_TYPE_SUPPORTS_START_TIME | PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | 
-			PVR_TIMER_TYPE_FORBIDS_EPG_TAG_ON_CREATE,
+			PVR_TIMER_TYPE_FORBIDS_EPG_TAG_ON_CREATE | PVR_TIMER_TYPE_SUPPORTS_READONLY_DELETE,
 
 		// strDescription
 		"Record Once Rule",
@@ -475,7 +467,7 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 	
 	// timer_type::seriestimer
 	//
-	// used for existing episode timers; these cannot be edited or deleted by the end user
+	// used for existing episode timers; these cannot be edited or deleted
 	{
 		// iID
 		timer_type::seriestimer,
@@ -496,14 +488,14 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 
 	// timer_type::datetimeonlytimer
 	//
-	// used for existing date/time only episode timers; these cannot be edited by the user, but allows the
-	// timer and it's associated parent rule to be deleted successfully via the live TV interface
+	// used for existing date/time only episode timers; these cannot be edited or deleted
 	{
 		// iID
 		timer_type::datetimeonlytimer,
 
 		// iAttributes
-		PVR_TIMER_TYPE_FORBIDS_NEW_INSTANCES | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_TIME | PVR_TIMER_TYPE_SUPPORTS_END_TIME,
+		PVR_TIMER_TYPE_IS_READONLY | PVR_TIMER_TYPE_FORBIDS_NEW_INSTANCES | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_TIME | 
+			PVR_TIMER_TYPE_SUPPORTS_END_TIME,
 		
 		// strDescription
 		"Record Once Episode",
@@ -3038,7 +3030,6 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			snprintf(timer.strEpgSearchString, std::extent<decltype(timer.strEpgSearchString)>::value, "%s", item.title);
 
 			// firstDay
-			// TODO: This is a hack for datetimeonly rules so that they can show the date.  See comments above.
 			if(item.type == recordingrule_type::datetimeonly) timer.firstDay = item.datetimeonly;
 
 			// iPreventDuplicateEpisodes
