@@ -1594,6 +1594,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"select json_extract(entry.value, '$.SeriesID') as seriesid, "
 		"json_extract(entry.value, '$.Title') as title, "
+		"fnv_hash(?2, json_extract(value, '$.StartTime'), json_extract(value, '$.EndTime')) as broadcastid, "
 		"json_extract(entry.value, '$.StartTime') as starttime, "
 		"json_extract(entry.value, '$.EndTime') as endtime, "
 		"json_extract(entry.value, '$.Synopsis') as synopsis, "
@@ -1639,18 +1640,19 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 				struct guideentry item;
 				item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 				item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+				item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
 				item.channelid = channelid.value;
-				item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
-				item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
-				item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 4));
-				item.year = sqlite3_column_int(statement, 5);
-				item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
-				item.genretype = sqlite3_column_int(statement, 7);
-				item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
-				item.originalairdate = sqlite3_column_int(statement, 9);
-				item.seriesnumber = sqlite3_column_int(statement, 10);
-				item.episodenumber = sqlite3_column_int(statement, 11);
-				item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
+				item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
+				item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
+				item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
+				item.year = sqlite3_column_int(statement, 6);
+				item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
+				item.genretype = sqlite3_column_int(statement, 8);
+				item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
+				item.originalairdate = sqlite3_column_int(statement, 10);
+				item.seriesnumber = sqlite3_column_int(statement, 11);
+				item.episodenumber = sqlite3_column_int(statement, 12);
+				item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
 
 				// Move the starttime to the last seen endtime to continue the backend queries
 				if(item.endtime > starttime) starttime = item.endtime;

@@ -95,6 +95,7 @@ struct guideentry {
 
 	char const*			seriesid;
 	char const*			title;
+	unsigned int		broadcastid;
 	unsigned int		channelid;
 	time_t				starttime;
 	time_t				endtime;
