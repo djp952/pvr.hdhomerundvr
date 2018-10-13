@@ -1121,7 +1121,8 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
 			// iUniqueBroadcastId (required)
-			epgtag.iUniqueBroadcastId = static_cast<unsigned int>(item.starttime);
+			assert(item.broadcastid > EPG_TAG_INVALID_UID);
+			epgtag.iUniqueBroadcastId = item.broadcastid;
 
 			// iUniqueChannelId (required)
 			epgtag.iUniqueChannelId = item.channelid;
@@ -4132,7 +4133,7 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 	assert(times != nullptr);
 
 	// For non-realtime streams, let Kodi figure this out on it's own; it can do a better job
-	if((!g_dvrstream) || (!g_dvrstream->realtime()))  return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	if((!g_dvrstream) || (!g_dvrstream->realtime())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
 	times->startTime = g_dvrstream->starttime();
 
