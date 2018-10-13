@@ -1122,7 +1122,8 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
 			// iUniqueBroadcastId (required)
-			epgtag.iUniqueBroadcastId = static_cast<unsigned int>(item.starttime);
+			assert(item.broadcastid > EPG_TAG_INVALID_UID);
+			epgtag.iUniqueBroadcastId = item.broadcastid;
 
 			// strTitle (required)
 			if(item.title == nullptr) return;
