@@ -24,14 +24,11 @@
   
   <PropertyGroup>
     <AddonVersion></AddonVersion>           <!-- Set by AddonVersion Target -->
-    <ApkSignerExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\apksigner</ApkSignerExe>     
-    <ApkToolJar>depends\apktool\apktool_2.2.4.jar</ApkToolJar>
     <BashExe>$(WINDIR)\Sysnative\bash.exe</BashExe>
     <Configuration>Release</Configuration>
     <Keystore></Keystore>                   <!-- Must be set on the command line -->
     <KeystorePassword></KeystorePassword>   <!-- Must be set on the command line -->
     <KodiBaseline>leia</KodiBaseline>
-    <ZipAlignExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\zipalign</ZipAlignExe>
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
@@ -430,99 +427,6 @@
 
   </Target>
 
-  <!-- BUILD: ANDROIDAPK-ARM -->
-  <Target Name="androidapk-arm" DependsOnTargets="AddonVersion;android-arm">
-
-    <Error Condition="'$(ANDROID_SDK_ROOT)' == ''" Text="Environment variable ANDROID_SDK_ROOT has not been set"/>
-    <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
-    <Error Condition="'$(Keystore)' == ''" Text="Variable Keystore has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
-    <Error Condition="'$(KeystorePassword)' == ''" Text="Variable KeystorePassword has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
-
-    <PropertyGroup>
-      <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
-      <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20181120-bacbbc3a-master-armeabi-v7a</KodiApk>
-      <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiApk>
-    </PropertyGroup>
-
-    <MakeDir Directories="tmp" ContinueOnError="false"/>
-    <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/android/arm/master/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
-
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
-    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
-    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
-    <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
-    <Copy SourceFiles="out\android-arm\armeabi-v7a\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk)\lib\armeabi-v7a\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) b -p out\$(KodiApk)-framework out\$(KodiApk)" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk)\dist\$(KodiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
-
-  </Target>
-
-  <!-- BUILD: ANDROIDAPK-AARCH64 -->
-  <Target Name="androidapk-aarch64" DependsOnTargets="AddonVersion;android-aarch64">
-
-    <Error Condition="'$(ANDROID_SDK_ROOT)' == ''" Text="Environment variable ANDROID_SDK_ROOT has not been set"/>
-    <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
-    <Error Condition="'$(Keystore)' == ''" Text="Variable Keystore has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
-    <Error Condition="'$(KeystorePassword)' == ''" Text="Variable KeystorePassword has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
-
-    <PropertyGroup>
-      <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
-      <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20181120-bacbbc3a-master-arm64-v8a</KodiApk>
-      <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-aarch64-$(AddonVersion)</ZukiApk>
-    </PropertyGroup>
-
-    <MakeDir Directories="tmp" ContinueOnError="false"/>
-    <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/android/arm64-v8a/master/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
-
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
-    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
-    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
-    <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
-    <Copy SourceFiles="out\android-aarch64\arm64-v8a\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk)\lib\arm64-v8a\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) b -p out\$(KodiApk)-framework out\$(KodiApk)" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk)\dist\$(KodiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
-
-  </Target>
-
-  <!-- BUILD: ANDROIDAPK-X86 -->
-  <Target Name="androidapk-x86" DependsOnTargets="AddonVersion;android-x86">
-
-    <Error Condition="'$(ANDROID_SDK_ROOT)' == ''" Text="Environment variable ANDROID_SDK_ROOT has not been set"/>
-    <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
-    <Error Condition="'$(Keystore)' == ''" Text="Variable Keystore has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
-    <Error Condition="'$(KeystorePassword)' == ''" Text="Variable KeystorePassword has not been set; specify with /p:Keystore=xxx;KeystorePassword=xxx"/>
-
-    <PropertyGroup>
-      <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <ApkVersionCode>1800$(BuildNumber)</ApkVersionCode>
-      <ApkVersionName>18.0-zuki.pvr.hdhomerundvr-$(AddonVersion)</ApkVersionName>
-      <KodiApk>kodi-20181120-bacbbc3a-master-x86</KodiApk>
-      <ZukiApk>kodi-18.0-zuki.pvr.hdhomerundvr-x86-$(AddonVersion)</ZukiApk>
-    </PropertyGroup>
-
-    <MakeDir Directories="tmp" ContinueOnError="false"/>
-    <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/android/x86/master/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
-
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
-    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
-    <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionName:\s*'.*'" replacewith="versionName: '$(ApkVersionName)'" />
-    <Exec Command="PowerShell Expand-Archive -Path out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip -DestinationPath out\$(KodiApk)\assets\addons\" ContinueOnError="false"/>
-    <Copy SourceFiles="out\android-x86\x86\libhdhomerundvr.so" DestinationFiles="out\$(KodiApk)\lib\x86\libhdhomerundvr.so" ContinueOnError="false"/>
-    <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) b -p out\$(KodiApk)-framework out\$(KodiApk)" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ZipAlignExe)&quot; -f -p 4 out\$(KodiApk)\dist\$(KodiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
-    <Exec Command="&quot;$(ApkSignerExe)&quot; sign --ks $(Keystore) --ks-pass pass:$(KeystorePassword) --out out\$(ZukiApk).apk out\$(KodiApk)\dist\$(KodiApk)-aligned.apk" ContinueOnError="false"/>
-
-  </Target>
-
   <!-- BUILD: UWPAPPX-WIN32 -->
   <Target Name="uwpappx-win32" DependsOnTargets="AddonVersion;uwp-win32">
 
@@ -550,7 +454,7 @@
 	
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).appx')" Importance="high" Text="Downloading $(KodiAppx).appx ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/windows/uwp32/master/$(KodiAppx).appx" Output="tmp\$(KodiAppx).appx"/>
+    <DownloadFile Condition="!Exists('tmp\$(KodiAppx).appx')" Uri="http://mirrors.kodi.tv/nightlies/windows/uwp32/master/$(KodiAppx).appx" Output="tmp\$(KodiAppx).appx"/>
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).appx /l /d out\$(KodiAppx)" ContinueOnError="false"/>
@@ -591,7 +495,7 @@
 	
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).appx')" Importance="high" Text="Downloading $(KodiAppx).appx ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/nightlies/windows/uwp64/master/$(KodiAppx).appx" Output="tmp\$(KodiAppx).appx"/>
+    <DownloadFile Condition="!Exists('tmp\$(KodiAppx).appx')" Uri="http://mirrors.kodi.tv/nightlies/windows/uwp64/master/$(KodiAppx).appx" Output="tmp\$(KodiAppx).appx"/>
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).appx /l /d out\$(KodiAppx)" ContinueOnError="false"/>
@@ -613,9 +517,8 @@
   <Target Name="raspbian" DependsOnTargets="raspbian-armhf"/>
   <Target Name="osx" DependsOnTargets="osx-x86_64"/>
   <Target Name="android" DependsOnTargets="android-arm;android-aarch64;android-x86"/>
-  <Target Name="androidapk" DependsOnTargets="androidapk-arm;androidapk-aarch64;androidapk-x86"/>
   
   <!-- BUILD: ALL -->
-  <Target Name="all" DependsOnTargets="windows;uwp;uwpappx;linux;raspbian;osx;android;androidapk"/>
+  <Target Name="all" DependsOnTargets="windows;uwp;uwpappx;linux;raspbian;osx;android"/>
 
 </Project>

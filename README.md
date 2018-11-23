@@ -11,14 +11,13 @@ Copyright (C)2018 Michael G. Brehm
    
 ## BUILD ENVIRONMENT
 **REQUIRED COMPONENTS**   
-* Windows 10 x64 1803 (17134) "April 2018 Update"   
-* Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop)   
+* Windows 10 x64 1809 (17763) "October 2018 Update"   
+* Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop, Windows 10 SDK (10.0.14393.0), and C++ Universal Windows Platform Tools)   
 * Windows Subsystem for Linux   
-* [Ubuntu on Windows 16.04.4 LTS](https://www.microsoft.com/store/productId/9NBLGGH4MSV6)   
+* [Ubuntu on Windows 16.04 LTS](https://www.microsoft.com/store/productId/9PJN388HP8C9)   
 
 **OPTIONAL COMPONENTS**   
 * Android NDK r12b for Windows 64-bit   
-* Android SDK tools r25.2.3 for Windows   
 * Oracle Java SE Runtime Environment 8   
 * Raspberry Pi Cross-Compiler   
 * OSXCROSS Cross-Compiler (with Mac OSX 10.11 SDK)   
@@ -41,29 +40,15 @@ Download the Android NDK r12b for Windows 64-bit:
 * Extract the contents of the .zip file somewhere   
 * Set a System Environment Variable named ANDROID_NDK_ROOT that points to the extracted android-ndk-r12b folder
    
-**OPTIONAL: CONFIGURE ANDROID SDK**   
-*Necessary to build Android APK Targets*   
-   
-Download the Android SDK tools r25.2.3 for Windows:   
-[https://dl.google.com/android/repository/tools_r25.2.3-windows.zip](https://dl.google.com/android/repository/tools_r25.2.3-windows.zip)   
-   
-* Extract the contents of the .zip file somewhere   
-* Set a System Environment Variable named ANDROID_SDK_ROOT that points to the location the .zip was extracted   
-* Open "Developer Command Prompt for VS2017"     
-```
-cd /d %ANDROID_SDK_ROOT%\tools
-android update sdk --all -u -t build-tools-25.0.2
-```
-      
 **OPTIONAL: CONFIGURE ORACLE JAVA SE RUNTIME ENVIRONMENT AND CREATE PUBLIC-KEY CERTIFICATE**   
-*Necessary to build Android APK and Universal Windows Platform APPX Targets*   
+*Necessary to build Universal Windows Platform APPX Targets*   
    
 Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:   
 [Java SE Runtime Environment 8 - Downloads](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html)   
 
 * Extract the contents of the jre-8xxx-windows-x64.tar.gz file somewhere   
 * Set a System Environment Variable named JAVA_HOME that points to the location the tar.gz was extracted   
-* Generate a custom public-key certificate that can be used to sign the generated Android APK file. Follow the instructions provided by Google at the Android Developer [Sign Your App](https://developer.android.com/studio/publish/app-signing.html) page.   
+* Generate a custom public-key certificate that can be used to sign the generated package(s). Follow the instructions provided by Google at the Android Developer [Sign Your App](https://developer.android.com/studio/publish/app-signing.html) page.   
    
 **OPTIONAL: CONFIGURE RASPBERRY PI CROSS-COMPILER**   
 *Necessary to build Raspbian Targets*   
@@ -117,11 +102,6 @@ Examples:
 > msbuild /t:linux
 > ```
    
-> Build all Android APK platforms:   
-> ```
-> msbuild /t:androidapk /p:Keystore={keystore};KeystorePassword={keystore-password}
-> ```
-   
 *INDIVIDUAL TARGETS*    
    
 | Target | Platform | MSBUILD Parameters |
@@ -129,8 +109,6 @@ Examples:
 | android-aarch64 | Android ARM64 | /t:android-aarch64 |
 | android-arm | Android ARM | /t:android-arm |
 | android-x86 | Android X86 | /t:android-x86 |
-| androidapk-aarch64 | Android ARM64 APK | /t:androidapk-aarch64 /p:Keystore={keystore};KeystorePassword={keystore-password} |
-| androidapk-arm | Android ARM APK | /t:androidapk-arm /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | linux-aarch64 | Linux ARM64 | /t:linux-aarch64 |
 | linux-armel | Linux ARM | /t:linux-armel |
 | linux-armhf | Linux ARM (hard float) | /t:linux-armhf |
@@ -152,7 +130,6 @@ Examples:
 | :-- | :-- | :-- |
 | all | All targets | /t:all /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | android | All Android targets | /t:android |
-| androidapk | All Android APK targets | /t:androidapk /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | linux | All Linux targets | /t:linux |
 | osx | All Mac OS X targets | /t:osx |
 | uwp | All Universal Windows Platform targets | /t:uwp |
