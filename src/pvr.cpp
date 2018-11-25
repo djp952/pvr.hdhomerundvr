@@ -2818,7 +2818,27 @@ PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int las
 
 int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 {
-	try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
+	static std::string last_recordingid;			// TEMPORARY - REMOVE THIS (See Below)
+	static int last_result = -1;					// TEMPORARY - REMOVE THIS (See Below)
+
+	// try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
+
+	// TEMPORARY PROBLEM RESOLUTION
+	//
+	// Leia is calling this function in a loop for the same recording repeatedly when an episode title
+	// is highlighted in the Recordings area.  Polling the entire recorded_files.json just to get this
+	// information is turning out to be quite wasteful and needs to be refactored, however as a quick
+	// fix for now just watch for this particular loop issue and deal with it so people can use the PVR
+
+	try {
+
+		if(strcasecmp(recording.strRecordingId, last_recordingid.c_str()) == 0) return last_result;
+
+		last_recordingid.assign(recording.strRecordingId);
+		last_result = get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId);
+		return last_result;
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }

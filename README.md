@@ -12,7 +12,7 @@ Copyright (C)2018 Michael G. Brehm
 ## BUILD ENVIRONMENT
 **REQUIRED COMPONENTS**   
 * Windows 10 x64 1809 (17763) "October 2018 Update"   
-* Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop, Windows 10 SDK (10.0.14393.0), and C++ Universal Windows Platform Tools)   
+* Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop, Windows 10 SDK (10.0.16299.0), and C++ Universal Windows Platform Tools)   
 * Windows Subsystem for Linux   
 * [Ubuntu on Windows 16.04 LTS](https://www.microsoft.com/store/productId/9PJN388HP8C9)   
 
