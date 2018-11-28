@@ -1,3 +1,6 @@
+v1.3.6 (2018.11.xx)
+  - Improve performance of Recorded TV last played (resume) position discovery
+
 v1.3.5 (2018.10.13)
   - Update SQLite database engine to version 3.25.2
   - Automatically delete and recreate the PVR database if any exceptions occur opening it during startup
