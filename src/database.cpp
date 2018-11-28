@@ -2492,11 +2492,12 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 
 	if(instance == nullptr) return 0;
 
-	// Prepare a scalar result query to get the last played position of the recording from the storage engine
-	auto sql = "with httprequest(response) as (select http_request(json_extract(device.data, '$.StorageURL')) from device where device.type = 'storage') "
-		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry "
-		"where json_extract(entry.value, '$.CmdURL') like ?1 limit 1";
-	
+	// Prepare a scalar result query to get the last played position of the recording from the storage engine. Limit the amount 
+	// of JSON that needs to be sifted through by specifically asking for the series that this recording belongs to
+	auto sql = "with httprequest(response) as (select http_request(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
+		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?1)) from device where device.type = 'storage') "
+		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1";
+
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 

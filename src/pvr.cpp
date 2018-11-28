@@ -2818,25 +2818,24 @@ PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int las
 
 int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 {
-	static std::string last_recordingid;			// TEMPORARY - REMOVE THIS (See Below)
-	static int last_result = -1;					// TEMPORARY - REMOVE THIS (See Below)
+	static std::string		previousRecordingId;		// The previously accessed recording id
+	static int				previousResult = -1;		// The previous result from this function
 
-	// try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
-
-	// TEMPORARY PROBLEM RESOLUTION
-	//
-	// Leia is calling this function in a loop for the same recording repeatedly when an episode title
-	// is highlighted in the Recordings area.  Polling the entire recorded_files.json just to get this
-	// information is turning out to be quite wasteful and needs to be refactored, however as a quick
-	// fix for now just watch for this particular loop issue and deal with it so people can use the PVR
+	// NOTE: Kodi may call this function repeatedly if the user has a recording selected in the GUI in
+	// order to provide realtime status indicators. Acquiring the last played position is an expensive
+	// operation for this PVR -- if Kodi asks for the same information multiple times in a row, use the 
+	// previously determined results instead of executing the entire operation again
 
 	try {
 
-		if(strcasecmp(recording.strRecordingId, last_recordingid.c_str()) == 0) return last_result;
+		// If multiple requests come in for the same recording, use the previously cached result
+		if(strcasecmp(recording.strRecordingId, previousRecordingId.c_str()) == 0) return previousResult;
 
-		last_recordingid.assign(recording.strRecordingId);
-		last_result = get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId);
-		return last_result;
+		// Different recording than the last one that was requested
+		previousRecordingId.assign(recording.strRecordingId);
+		previousResult = get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId);
+		
+		return previousResult;
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
