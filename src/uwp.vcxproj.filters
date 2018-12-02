@@ -491,6 +491,15 @@
     <ClInclude Include="..\depends\http-status-codes-cpp\HttpStatusCodes_C++11.h">
       <Filter>External Libraries\http-status-codes-cpp</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\vtls\mesalink.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\doh.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\urlapi-int.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -953,6 +962,15 @@
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\curl_range.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\vtls\mesalink.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\doh.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\urlapi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
