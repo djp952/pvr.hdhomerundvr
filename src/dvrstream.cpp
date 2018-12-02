@@ -524,6 +524,10 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 			// Align the payload using the pointer provided when pusi is set
 			if(pusi) current += read_be8(current) + 1U;
 
+			// Watch out for a TABLEID of 0xFF, this indicates that the remainder
+			// of the packet is just stuffed with 0xFF and nothing useful is here
+			if(read_be8(current) == 0xFF) continue;
+
 			// Get the first and last section indices and skip to the section data
 			uint8_t firstsection = read_be8(current + 6U);
 			uint8_t lastsection = read_be8(current + 7U);
@@ -540,7 +544,7 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 		}
 
 		// >> PMT
-		if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
+		else if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
 
 			// Get the length of the entire payload to be sure we don't exceed it
 			size_t payloadlen = MPEGTS_PACKET_LENGTH - (current - packet);
