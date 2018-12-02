@@ -4154,14 +4154,12 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 	// For non-realtime streams, let Kodi figure this out on it's own; it can do a better job
 	if((!g_dvrstream) || (!g_dvrstream->realtime())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-	times->startTime = g_dvrstream->starttime();
+	times->startTime = g_dvrstream->starttime();	// Actual start time (wall clock UTC)
+	times->ptsStart = 0;							// Starting PTS gets set to zero
+	times->ptsBegin = 0;							// Timeshift buffer start PTS also gets set to zero
 
-	// TODO: Still not certain this is correct for GetStreamTimes(), but based on the code
-	// in VideoPlayer.cpp and a great deal of trial and error, setting the start and begin pts
-	// both to zero and the setting the end in microseconds seems to work acceptably for now
-	times->ptsStart = 0;
-	times->ptsBegin = 0;
-	times->ptsEnd = (static_cast<int64_t>(time(nullptr) - g_dvrstream->starttime())) * 1000000;		// <-- microseconds
+	// Set the timeshift buffer end time to the number of microseconds between now and actual start time
+	times->ptsEnd = (static_cast<int64_t>(time(nullptr) - g_dvrstream->starttime())) * DVD_TIME_BASE;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
