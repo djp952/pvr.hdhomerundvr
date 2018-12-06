@@ -2818,26 +2818,7 @@ PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int las
 
 int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 {
-	static std::string		previousRecordingId;		// The previously accessed recording id
-	static int				previousResult = -1;		// The previous result from this function
-
-	// NOTE: Kodi may call this function repeatedly if the user has a recording selected in the GUI in
-	// order to provide realtime status indicators. Acquiring the last played position is an expensive
-	// operation for this PVR -- if Kodi asks for the same information multiple times in a row, use the 
-	// previously determined results instead of executing the entire operation again
-
-	try {
-
-		// If multiple requests come in for the same recording, use the previously cached result
-		if(strcasecmp(recording.strRecordingId, previousRecordingId.c_str()) == 0) return previousResult;
-
-		// Different recording than the last one that was requested
-		previousRecordingId.assign(recording.strRecordingId);
-		previousResult = get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId);
-		
-		return previousResult;
-	}
-
+	try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
