@@ -4132,8 +4132,9 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 {
 	assert(times != nullptr);
 
-	// For non-realtime streams, let Kodi figure this out on it's own; it can do a better job
-	if((!g_dvrstream) || (!g_dvrstream->realtime())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	// For non-realtime streams, let Kodi figure this out on it's own; it can do a better job.
+	// For non-seekable realtime streams this also needs to be blocked so Kodi won't try to seek on it
+	if((!g_dvrstream) || (!g_dvrstream->realtime()) || (!g_dvrstream->canseek())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
 	times->startTime = g_dvrstream->starttime();	// Actual start time (wall clock UTC)
 	times->ptsStart = 0;							// Starting PTS gets set to zero
