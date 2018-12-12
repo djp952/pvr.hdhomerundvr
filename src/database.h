@@ -347,8 +347,8 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid);
 // discover_devices
 //
 // Reloads the information about the available devices
-void discover_devices(sqlite3* instance, bool usebroadcast);
-void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed);
+void discover_devices(sqlite3* instance, bool usebroadcast, bool excludestorage);
+void discover_devices(sqlite3* instance, bool usebroadcast, bool excludestorage, bool& changed);
 
 // discover_episodes
 //
