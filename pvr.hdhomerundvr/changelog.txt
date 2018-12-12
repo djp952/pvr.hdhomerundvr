@@ -1,3 +1,6 @@
+v1.3.8 (2019.01.xx)
+  - Add "Disable discovery of HDHomeRun RECORD devices" advanced setting
+
 v1.3.7 (2018.12.09)
   - Update SQLite database engine to version 3.26.0
   - Update cURL library to version 7.62.0
