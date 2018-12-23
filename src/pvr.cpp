@@ -172,6 +172,11 @@ struct addon_settings {
 	// Flag indicating that DRM channels should be shown to the user
 	bool show_drm_protected_channels;
 
+	// use_channel_names_from_lineup
+	//
+	// Flag indicating that the channel names should come from the lineup not the EPG
+	bool use_channel_names_from_lineup;
+
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -335,6 +340,7 @@ static addon_settings g_settings = {
 	false,					// prepend_episode_numbers_in_epg
 	false,					// use_backend_genre_strings
 	false,					// show_drm_protected_channels
+	false,					// use_channel_names_from_lineup
 	86400,					// delete_datetime_rules_after			default = 1 day
 	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
@@ -1256,6 +1262,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("prepend_episode_numbers_in_epg", &bvalue)) g_settings.prepend_episode_numbers_in_epg = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
+			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
@@ -1660,6 +1667,20 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.show_drm_protected_channels = bvalue;
 			log_notice(__func__, ": setting show_drm_protected_channels changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			g_pvr->TriggerChannelUpdate();
+			g_pvr->TriggerChannelGroupsUpdate();
+		}
+	}
+
+	// use_channel_names_from_lineup
+	//
+	else if(strcmp(name, "use_channel_names_from_lineup") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_channel_names_from_lineup) {
+
+			g_settings.use_channel_names_from_lineup = bvalue;
+			log_notice(__func__, ": setting use_channel_names_from_lineup changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -2537,7 +2558,7 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the channels in the database
-		enumerate_channels(dbhandle, settings.prepend_channel_numbers, settings.show_drm_protected_channels, [&](struct channel const& item) -> void {
+		enumerate_channels(dbhandle, settings.prepend_channel_numbers, settings.show_drm_protected_channels, settings.use_channel_names_from_lineup, [&](struct channel const& item) -> void {
 
 			PVR_CHANNEL channel;								// PVR_CHANNEL to be transferred to Kodi
 			memset(&channel, 0, sizeof(PVR_CHANNEL));			// Initialize the structure

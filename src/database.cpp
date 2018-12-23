@@ -1224,9 +1224,10 @@ void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 //	instance		- Database instance
 //	prependnumbers	- Flag to append the channel numbers
 //	showdrm			- Flag to show DRM channels
+//	lineupnames		- Flag to use names from the lineup not the EPG
 //	callback		- Callback function
 
-void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, enumerate_channels_callback callback)
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1237,11 +1238,11 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 	auto sql = "select "
 		"distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid, "
 		"case when ?1 then json_extract(entry.value, '$.GuideNumber') || ' ' else '' end || "
-		"case when guide.channelid is null then json_extract(entry.value, '$.GuideName') else guide.channelname end as channelname, "
+		"case when (?2 or guide.channelid is null) then json_extract(entry.value, '$.GuideName') else guide.channelname end as channelname, "
 		"guide.iconurl as iconurl, "
 		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm "
 		"from lineup, json_each(lineup.data) as entry left outer join guide on encode_channel_id(json_extract(entry.value, '$.GuideNumber')) = guide.channelid "
-		"where nullif(json_extract(entry.value, '$.DRM'), ?2) is null "
+		"where nullif(json_extract(entry.value, '$.DRM'), ?3) is null "
 		"order by channelid";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -1251,7 +1252,8 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 
 		// Bind the query parameters
 		result = sqlite3_bind_int(statement, 1, (prependnumbers) ? 1 : 0);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (showdrm) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (lineupnames) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, (showdrm) ? 1 : 0);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows

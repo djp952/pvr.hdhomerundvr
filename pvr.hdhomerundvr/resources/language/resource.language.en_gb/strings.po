@@ -128,6 +128,10 @@ msgctxt "#30127"
 msgid "Disable discovery of HDHomeRun RECORD devices"
 msgstr ""
 
+msgctxt "#30128"
+msgid "Use channel names from tuner device(s) in channel lineups"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
