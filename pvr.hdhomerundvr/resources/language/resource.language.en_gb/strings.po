@@ -120,10 +120,6 @@ msgctxt "#30123"
 msgid "Trigger recording discovery immediately after playback"
 msgstr ""
 
-msgctxt "#30126"
-msgid "Prepend season/episode number to episode name in EPG"
-msgstr ""
-
 msgctxt "#30127"
 msgid "Disable discovery of HDHomeRun RECORD devices"
 msgstr ""
@@ -248,12 +244,8 @@ msgctxt "#30229"
 msgid "32 KiB"
 msgstr ""
 
-msgctxt "#30301"
-msgid "Delete episode"
-msgstr ""
-
 msgctxt "#30302"
-msgid "Delete and re-record episode"
+msgid "Delete and re-record"
 msgstr ""
 
 msgctxt "#30303"

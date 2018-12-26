@@ -63,7 +63,6 @@
 // MENUHOOK_XXXXXX
 //
 // Menu hook identifiers
-#define MENUHOOK_RECORD_DELETENORERECORD				1
 #define MENUHOOK_RECORD_DELETERERECORD					2
 #define MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY			3
 #define MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY			4
@@ -156,11 +155,6 @@ struct addon_settings {
 	//
 	// Flag to re-discover recordings immediately after playback has stopped
 	bool discover_recordings_after_playback;
-
-	// prepend_episode_numbers_in_epg
-	//
-	// Flag to prepend the episode number to the episode name in the EPG
-	bool prepend_episode_numbers_in_epg;
 
 	// use_backend_genre_strings
 	//
@@ -344,7 +338,6 @@ static addon_settings g_settings = {
 	false,					// prepend_channel_numbers
 	false,					// use_episode_number_as_title
 	false,					// discover_recordings_after_playback
-	false,					// prepend_episode_numbers_in_epg
 	false,					// use_backend_genre_strings
 	false,					// show_drm_protected_channels
 	false,					// use_channel_names_from_lineup
@@ -1127,7 +1120,7 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the guide entries in the database for this channel and time frame
-		enumerate_guideentries(dbhandle, channelid, start, end, settings.prepend_episode_numbers_in_epg, [&](struct guideentry const& item) -> void {
+		enumerate_guideentries(dbhandle, channelid, start, end, [&](struct guideentry const& item) -> void {
 
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
@@ -1263,7 +1256,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
 			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
-			if(g_addon->GetSetting("prepend_episode_numbers_in_epg", &bvalue)) g_settings.prepend_episode_numbers_in_epg = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
@@ -1301,15 +1293,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		
 				try {
 
-					// PVR_MENUHOOK_TIMER
-					//
-					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-					menuhook.iHookId = MENUHOOK_RECORD_DELETENORERECORD;
-					menuhook.iLocalizedStringId = 30301;
-					menuhook.category = PVR_MENUHOOK_RECORDING;
-					g_pvr->AddMenuHook(&menuhook);
-
-					// PVR_MENUHOOK_RECORDING
+					// MENUHOOK_RECORD_DELETERERECORD
 					//
 					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
 					menuhook.iHookId = MENUHOOK_RECORD_DELETERERECORD;
@@ -1585,18 +1569,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.discover_recordings_after_playback = bvalue;
 			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
-		}
-	}
-
-	// prepend_episode_numbers_in_epg
-	//
-	else if(strcmp(name, "prepend_episode_numbers_in_epg") == 0) {
-
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.prepend_episode_numbers_in_epg) {
-
-			g_settings.prepend_episode_numbers_in_epg = bvalue;
-			log_notice(__func__, ": setting prepend_episode_numbers_in_epg changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -1976,23 +1948,9 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 	// Get the current time to reschedule tasks as requested
 	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-	// MENUHOOK_RECORD_DELETENORERECORD
-	//
-	if((menuhook.iHookId == MENUHOOK_RECORD_DELETENORERECORD) && (item.cat == PVR_MENUHOOK_RECORDING)) {
-
-		// This is a standard deletion; you need at least 2 hooks to get the menu to appear otherwise the
-		// user will only see the text "Client actions" in the context menu
-		try { delete_recording(connectionpool::handle(g_connpool), item.data.recording.strRecordingId, false); }
-		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
-		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
-
-		g_pvr->TriggerRecordingUpdate();
-		return PVR_ERROR::PVR_ERROR_NO_ERROR;
-	}
-
 	// MENUHOOK_RECORD_DELETERERECORD
 	//
-	else if((menuhook.iHookId == MENUHOOK_RECORD_DELETERERECORD) && (item.cat == PVR_MENUHOOK_RECORDING)) {
+	if((menuhook.iHookId == MENUHOOK_RECORD_DELETERERECORD) && (item.cat == PVR_MENUHOOK_RECORDING)) {
 
 		// Delete the recording with the re-record flag set to true
 		try { delete_recording(connectionpool::handle(g_connpool), item.data.recording.strRecordingId, true); }

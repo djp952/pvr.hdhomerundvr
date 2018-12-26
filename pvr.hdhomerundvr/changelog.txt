@@ -1,4 +1,9 @@
-v1.3.8 (2019.12.23)
+v1.3.9 (2019.01.xx)
+  - Remove "Prepend season/episode number to episode name in EPG" setting
+  - Remove "Delete episode" option from Recordings context menu
+  - Rename "Delete and re-record episode" to "Delete and re-record" in Recordings context menu
+
+v1.3.8 (2018.12.23)
   - Add "Disable discovery of HDHomeRun RECORD devices" advanced setting
   - Add "Use channel names from tuner device(s) in channel lineups" setting
   - (Windows/UWP) Update Windows SDK and Platform Toolset versions

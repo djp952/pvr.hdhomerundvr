@@ -8,7 +8,6 @@
     <setting id="use_episode_number_as_title" label="30112" type="bool" default="false"/>
     <setting id="discover_recordings_after_playback" label="30123" type="bool" default="false"/>
     <setting id="use_backend_genre_strings" label="30117" type="bool" default="false"/>
-    <setting id="prepend_episode_numbers_in_epg" label="30126" type="bool" default="false"/>
     <setting id="show_drm_protected_channels" label="30118" type="bool" default="false"/>
     <setting id="use_channel_names_from_lineup" label="30128" type="bool" default="false"/>
     <setting id="delete_datetime_rules_after" label="30108" type="enum" lvalues="30213|30209|30210|30211|30212" default="3"/>

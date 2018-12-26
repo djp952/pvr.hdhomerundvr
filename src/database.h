@@ -423,7 +423,7 @@ void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_ch
 // enumerate_guideentries
 //
 // Enumerates the available guide entries for a channel and time period
-void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, bool prependnumber, enumerate_guideentries_callback callback);
+void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_guideentries_callback callback);
 
 // enumerate_hd_channelids
 //
