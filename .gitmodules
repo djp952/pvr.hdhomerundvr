@@ -1,6 +1,3 @@
-[submodule "apktool"]
-	path = depends/apktool
-	url = https://github.com/djp952/prebuilt-apktool.git
 [submodule "build"]
 	path = depends/build
 	url = https://github.com/djp952/build.git
