@@ -1,4 +1,5 @@
 v1.3.9 (2019.01.xx)
+  - Update cURL library to version 7.63.0
   - Remove "Prepend season/episode number to episode name in EPG" setting
   - Remove "Delete episode" option from Recordings context menu
   - Rename "Delete and re-record episode" to "Delete and re-record" in Recordings context menu

@@ -63,12 +63,6 @@
       <UniqueIdentifier>{35a035c7-1d43-4f6d-b371-1031b57a527c}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="External Libraries\curl\Source Files\vauth">
-      <UniqueIdentifier>{174b9982-af55-4b10-b4ff-7524a95e19d1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External Libraries\curl\Source Files\vtls">
-      <UniqueIdentifier>{a054928c-a317-4c82-b196-972251c7f415}</UniqueIdentifier>
-    </Filter>
     <Filter Include="External Libraries\curl\Header Files\vauth">
       <UniqueIdentifier>{0336a692-480e-4a5a-adcb-50b03bbbaa19}</UniqueIdentifier>
     </Filter>
@@ -78,6 +72,12 @@
     <Filter Include="External Libraries\http-status-codes-cpp">
       <UniqueIdentifier>{b18a11fc-4539-4f38-b016-85d9ae8c887f}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="External Libraries\curl\Source Files\vauth">
+      <UniqueIdentifier>{a054928c-a317-4c82-b196-972251c7f415}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\curl\Source Files\vtls">
+      <UniqueIdentifier>{174b9982-af55-4b10-b4ff-7524a95e19d1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -167,9 +167,6 @@
     </ClInclude>
     <ClInclude Include="..\depends\curl\lib\vauth\vauth.h">
       <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\axtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\curl\lib\vtls\cyassl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
@@ -563,77 +560,74 @@
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
       <Filter>External Libraries\libhdhomerun\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\axtls.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\cyassl.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\darwinssl.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\gskit.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\gtls.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\mbedtls.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\nss.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\openssl.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\polarssl.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\polarssl_threadlock.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\schannel.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\vtls.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\cleartext.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\cram.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\digest.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\digest_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\krb5_gssapi.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\krb5_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\ntlm.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\ntlm_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\oauth2.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\spnego_gssapi.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\spnego_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vauth\vauth.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\base64.c">
       <Filter>External Libraries\curl\Source Files</Filter>
@@ -960,7 +954,7 @@
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\mesalink.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\doh.c">
       <Filter>External Libraries\curl\Source Files</Filter>
