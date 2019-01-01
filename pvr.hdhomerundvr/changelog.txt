@@ -1,5 +1,6 @@
 v1.3.9 (2019.01.xx)
   - Update cURL library to version 7.63.0
+  - Display notification when no tuner device(s) were detected during startup
 
 v1.3.8 (2018.12.23)
   - Add "Disable discovery of HDHomeRun RECORD devices" advanced setting
