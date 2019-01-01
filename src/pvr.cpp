@@ -1422,6 +1422,9 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 							log_notice(__func__, ": initiating local network resource discovery (startup)");
 							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery, g_settings.disable_storage_devices);
 							discover_lineups(dbhandle);
+
+							// Alert the user if no tuner device(s) were found during startup or are cached in the database
+							if(get_tuner_count(dbhandle) == 0) g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected");
 						}
 
 						// Failure to perform the synchronous device and lineup discovery is not fatal

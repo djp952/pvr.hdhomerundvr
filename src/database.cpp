@@ -2739,6 +2739,45 @@ int get_timer_count(sqlite3* instance, int maxdays)
 }
 
 //---------------------------------------------------------------------------
+// get_tuner_count
+//
+// Gets the number of tuner devices listed in the database
+//
+// Arguments:
+//
+//	instance		- Database instance
+
+int get_tuner_count(sqlite3* instance)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							tuners = 0;			// Number of tuners found
+	int							result;				// Result from SQLite function
+	
+	if(instance == nullptr) return 0;
+
+	// Select the number of tuner devices listed in the device table
+	auto sql = "select count(*) from device where type = 'tuner'";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) tuners = sqlite3_column_int(statement, 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return tuners;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_tuner_direct_channel_flag
 //
 // Gets a flag indicating if a channel can only be streamed directly from a tuner device
