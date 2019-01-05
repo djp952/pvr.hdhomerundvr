@@ -4,6 +4,7 @@ v1.3.9 (2019.01.xx)
   - Remove "Delete episode" option from Recordings context menu
   - Rename "Delete and re-record episode" to "Delete and re-record" in Recordings context menu
   - Display notification when no tuner device(s) were detected during startup
+  - Refactor GetStreamTimes() implementation to properly report status of in-progress recorded streams
 
 v1.3.8 (2018.12.23)
   - Add "Disable discovery of HDHomeRun RECORD devices" advanced setting

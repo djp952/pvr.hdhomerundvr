@@ -365,6 +365,16 @@ static addon_settings g_settings = {
 // Synchronization object to serialize access to addon settings
 static std::mutex g_settings_lock;
 
+// g_stream_starttime
+//
+// Start time to report for the current stream
+static time_t g_stream_starttime = 0;
+
+// g_stream_endtime
+//
+// End time to report for the current stream
+static time_t g_stream_endtime = 0;
+
 // g_timertypes (const)
 //
 // Array of PVR_TIMER_TYPE structures to pass to Kodi
@@ -3439,6 +3449,10 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			// Start the new channel stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
 			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+
+			// For live streams, set the start time to now and set the end time to time_t::max()
+			g_stream_starttime = time(nullptr);
+			g_stream_endtime = std::numeric_limits<time_t>::max();
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -3487,6 +3501,9 @@ void CloseLiveStream(void)
 		// propagated before destroying it; destructor alone won't throw
 		if(g_dvrstream) g_dvrstream->close();
 		g_dvrstream.reset();
+
+		// Reset the global stream start and end time trackers
+		g_stream_starttime = g_stream_endtime = 0;
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -3740,6 +3757,10 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
 			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+
+			// For recorded streams, set the start and end times based on the recording metadata
+			g_stream_starttime = recording.recordingTime;
+			g_stream_endtime = recording.recordingTime + recording.iDuration;
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -3788,6 +3809,9 @@ void CloseRecordedStream(void)
 		// propagated before destroying it; destructor alone won't throw
 		if(g_dvrstream) g_dvrstream->close();
 		g_dvrstream.reset();
+
+		// Reset the global stream start and end time trackers
+		g_stream_starttime = g_stream_endtime = 0;
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -4137,16 +4161,16 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 {
 	assert(times != nullptr);
 
-	// For non-realtime streams, let Kodi figure this out on it's own; it can do a better job.
-	// For non-seekable realtime streams this also needs to be blocked so Kodi won't try to seek on it
-	if((!g_dvrstream) || (!g_dvrstream->realtime()) || (!g_dvrstream->canseek())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	// Block this function for non-seekable streams otherwise Kodi will allow those operations
+	if((!g_dvrstream) || (!g_dvrstream->canseek())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-	times->startTime = g_dvrstream->starttime();	// Actual start time (wall clock UTC)
+	times->startTime = g_stream_starttime;			// Actual start time (wall clock UTC)
 	times->ptsStart = 0;							// Starting PTS gets set to zero
 	times->ptsBegin = 0;							// Timeshift buffer start PTS also gets set to zero
 
-	// Set the timeshift buffer end time to the number of microseconds between now and actual start time
-	times->ptsEnd = (static_cast<int64_t>(time(nullptr) - g_dvrstream->starttime())) * DVD_TIME_BASE;
+	// Set the timeshift buffer end time to the lesser of the current wall clock time or the stream end time
+	time_t now = time(nullptr);
+	times->ptsEnd = (((now < g_stream_endtime) ? now : g_stream_endtime) - g_stream_starttime) * DVD_TIME_BASE;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
