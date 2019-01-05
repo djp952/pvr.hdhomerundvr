@@ -1,4 +1,4 @@
-v1.3.9 (2019.01.xx)
+v1.3.9 (2019.01.04)
   - Update cURL library to version 7.63.0
   - Display notification when no tuner device(s) were detected during startup
 
