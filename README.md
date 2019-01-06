@@ -3,7 +3,7 @@
 Unofficial Kodi HDHomeRun DVR PVR Client   
 ## [__USER DOCUMENTATION AND DOWNLOADS__](https://github.com/djp952/pvr.hdhomerundvr/wiki)   
    
-Copyright (C)2018 Michael G. Brehm    
+Copyright (C)2016-2019 Michael G. Brehm    
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
 [__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2018, Daniel Stenberg, daniel@haxx.se, and many contributors   
