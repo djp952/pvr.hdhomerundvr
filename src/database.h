@@ -489,7 +489,7 @@ int get_recording_count(sqlite3* instance);
 // get_recording_filename
 //
 // Generates the filename for a recording
-std::string get_recording_filename(sqlite3* instance, char const* recordingid);
+std::string get_recording_filename(sqlite3* instance, char const* recordingid, bool flatten);
 
 // get_recording_lastposition
 //
