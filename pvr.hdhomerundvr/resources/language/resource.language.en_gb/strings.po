@@ -109,11 +109,11 @@ msgid "EDL file path"
 msgstr ""
 
 msgctxt "#30121"
-msgid "Start time padding (milliseconds)"
+msgid "CUT indicator start time padding (milliseconds)"
 msgstr ""
 
 msgctxt "#30122"
-msgid "End time padding (milliseconds)"
+msgid "CUT indicator end time padding (milliseconds)"
 msgstr ""
 
 msgctxt "#30123"
@@ -126,6 +126,14 @@ msgstr ""
 
 msgctxt "#30128"
 msgid "Use channel names from tuner device(s) in channel lineups"
+msgstr ""
+
+msgctxt "#30129"
+msgid "Use simplified (flattened) file hierarchy"
+msgstr ""
+
+msgctxt "#30130"
+msgid "Report CUT indicators as COMBREAK indicators"
 msgstr ""
 
 msgctxt "#30201"

@@ -25,8 +25,10 @@
   <category label="30003">
     <setting id="enable_recording_edl" label="30119" type="bool" default="false"/>
     <setting id="recording_edl_folder" enable="eq(-1,true)" label="30120" type="folder" source="auto" option="writeable"/>
-    <setting id="recording_edl_start_padding" enable="eq(-2,true)" label="30121" type="slider" default="0" range="0,500,10000" option="int"/>
-    <setting id="recording_edl_end_padding" enable="eq(-3,true)" label="30122" type="slider" default="0" range="0,500,10000" option="int"/>
+    <setting id="recording_edl_folder_is_flat" enable="eq(-2,true)" label="30129" type="bool" default="false"/>
+    <setting id="recording_edl_cut_as_comskip" enable="eq(-3,true)" label="30130" type="bool" default="false"/>
+    <setting id="recording_edl_start_padding" enable="eq(-4,true)" label="30121" type="slider" default="0" range="0,500,10000" option="int"/>
+    <setting id="recording_edl_end_padding" enable="eq(-5,true)" label="30122" type="slider" default="0" range="0,500,10000" option="int"/>
   </category>
 
   <category label="30002">

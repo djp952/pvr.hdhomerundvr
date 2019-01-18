@@ -246,6 +246,16 @@ struct addon_settings {
 	// Folder containing the recorded TV edit decision list files
 	std::string recording_edl_folder;
 
+	// recording_edl_folder_is_flat
+	//
+	// Indicates that the specified EDL folder is flattened (no subdirectories)
+	bool recording_edl_folder_is_flat;
+
+	// recording_edl_cut_as_comskip
+	//
+	// Indicates that EDL CUT indicators should be replaced with COMSKIP indicators
+	bool recording_edl_cut_as_comskip;
+
 	// recording_edl_start_padding
 	//
 	// Indicates the number of milliseconds to add to an EDL start value
@@ -356,6 +366,8 @@ static addon_settings g_settings = {
 	(1 MiB),				// stream_ring_buffer_size
 	false,					// enable_recording_edl
 	"",						// recording_edl_folder
+	false,					// recording_edl_folder_is_flat
+	false,					// recording_edl_cut_as_comskip
 	0,						// recording_edl_start_padding
 	0,						// recording_edl_end_padding
 };
@@ -1288,6 +1300,8 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
+			if(g_addon->GetSetting("recording_edl_folder_is_flat", &bvalue)) g_settings.recording_edl_folder_is_flat = bvalue;
+			if(g_addon->GetSetting("recording_edl_cut_as_comskip", &bvalue)) g_settings.recording_edl_cut_as_comskip = bvalue;
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
 			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
 
@@ -1827,6 +1841,30 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.recording_edl_folder.assign(reinterpret_cast<char const*>(value));
 			log_notice(__func__, ": setting recording_edl_folder changed to ", g_settings.recording_edl_folder.c_str());
+		}
+	}
+
+	// recording_edl_folder_is_flat
+	//
+	else if(strcmp(name, "recording_edl_folder_is_flat") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.recording_edl_folder_is_flat) {
+
+			g_settings.recording_edl_folder_is_flat = bvalue;
+			log_notice(__func__, ": setting recording_edl_folder_is_flat changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// recording_edl_cut_as_comskip
+	//
+	else if(strcmp(name, "recording_edl_cut_as_comskip") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.recording_edl_cut_as_comskip) {
+
+			g_settings.recording_edl_cut_as_comskip = bvalue;
+			log_notice(__func__, ": setting recording_edl_cut_as_comskip changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2872,7 +2910,7 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Generate the base file name for the recording by combining the folder with the recording metadata
-		std::string basename = get_recording_filename(dbhandle, recording.strRecordingId);
+		std::string basename = get_recording_filename(dbhandle, recording.strRecordingId, settings.recording_edl_folder_is_flat);
 		if(basename.length() == 0) throw string_exception("unable to determine the base file name of the specified recording");
 
 		// Generate the full name of the .EDL file and if it exists, attempt to process it
@@ -2910,9 +2948,12 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 						start = std::min(std::max(start, 0.0F), std::max(end, 0.0F));
 						end = std::max(std::max(end, 0.0F), std::max(start, 0.0F));
 
+						// Replace CUT indicators with COMSKIP indicators if requested
+						if((static_cast<PVR_EDL_TYPE>(type) == PVR_EDL_TYPE_CUT) && (g_settings.recording_edl_cut_as_comskip)) type = static_cast<int>(PVR_EDL_TYPE_COMBREAK);
+
 						// Log the adjusted values for the entry and add a PVR_EDL_ENTRY to the vector<>
-						log_notice(__func__, ": adding edit decision list entry (start=", start, "ms, end=", end, "ms, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
-						entries.emplace_back(PVR_EDL_ENTRY{ static_cast<int64_t>(start * 1000.0F), static_cast<int64_t>(end * 1000.0F), static_cast<PVR_EDL_TYPE>(type)});
+						log_notice(__func__, ": adding edit decision list entry (start=", start, "s, end=", end, "s, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
+						entries.emplace_back(PVR_EDL_ENTRY { static_cast<int64_t>(start * 1000.0F), static_cast<int64_t>(end * 1000.0F), static_cast<PVR_EDL_TYPE>(type)});
 					}
 
 					else log_error(__func__, ": invalid edit decision list entry detected at line #", linenumber);
@@ -2923,6 +2964,8 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 
 			else log_error(__func__, ": unable to open edit decision list file: ", filename.c_str());
 		}
+
+		else log_notice(__func__, ": edit decision list file not found: ", filename.c_str());
 
 		// Copy the parsed entries, if any, from the vector<> into the output array
 		*count = static_cast<int>(std::min(entries.size(), static_cast<size_t>(*count)));

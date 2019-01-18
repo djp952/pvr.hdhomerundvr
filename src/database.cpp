@@ -2444,8 +2444,9 @@ int get_recording_count(sqlite3* instance)
 //
 //	instance		- Database instance
 //	recordingid		- Recording identifier (command url)
+//	flatten			- Flag to omit the directory name ($.DisplayGroupTitle)
 
-std::string get_recording_filename(sqlite3* instance, char const* recordingid)
+std::string get_recording_filename(sqlite3* instance, char const* recordingid, bool flatten)
 {
 	sqlite3_stmt*				statement;				// Database query statement
 	std::string					filename;				// Generated file name
@@ -2455,13 +2456,14 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid)
 
 	// Prepare a scalar result query to generate the file name of the recording MPG file
 	//
-	// FORMAT: {DisplayGroupTitle}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
-	auto sql = "select rtrim(clean_filename(json_extract(value, '$.DisplayGroupTitle')), ' .') || '/' || "
+	// STANDARD FORMAT  : {DisplayGroupTitle}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
+	// FLATTENED FORMAT : {Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
+	auto sql = "select case when ?1 then '' else rtrim(clean_filename(json_extract(value, '$.DisplayGroupTitle')), ' .') || '/' end || "
 		"clean_filename(json_extract(value, '$.Title')) || ' ' || "
 		"coalesce(json_extract(value, '$.EpisodeNumber') || ' ', '') || "
 		"coalesce(strftime('%Y%m%d', datetime(json_extract(value, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
 		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(value, '$.StartTime'), 'unixepoch')) || ']' as filename "
-		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?1 limit 1";
+		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?2 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2469,7 +2471,8 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid)
 	try {
 
 		// Bind the query parameters
-		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
+		result = sqlite3_bind_int(statement, 1, (flatten) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, recordingid, -1, SQLITE_STATIC);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 		
 		// Execute the scalar query
