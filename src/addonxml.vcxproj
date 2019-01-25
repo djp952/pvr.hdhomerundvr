@@ -13,16 +13,16 @@
   <ItemGroup>
     <CustomBuild Include="addon.xml.tt">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-android.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-linux.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-osx.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-windows.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!windowsstore -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-uwp.xml" "%(FullPath)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-android.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-linux.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-osx.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-windows.xml" "%(FullPath)"
-"$(DevEnvDir)TextTransform.exe" -a !!platform!windowsstore -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -out "$(ProjectDir)..\tmp\addon-uwp.xml" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!true" -out "$(ProjectDir)..\tmp\addon-android.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!false" -out "$(ProjectDir)..\tmp\addon-linux.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!true" -out "$(ProjectDir)..\tmp\addon-osx.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!true" -out "$(ProjectDir)..\tmp\addon-windows.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!windowsstore -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!false" -out "$(ProjectDir)..\tmp\addon-uwp.xml" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(DevEnvDir)TextTransform.exe" -a !!platform!android -a !!dllname!libhdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!true" -out "$(ProjectDir)..\tmp\addon-android.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!linux -a !!dllname!zuki.pvr.hdhomerundvr.so -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!false" -out "$(ProjectDir)..\tmp\addon-linux.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!osx -a !!dllname!zuki.pvr.hdhomerundvr.dylib -a "!!changelogtxt!$(ProjectDir)..\\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!true" -out "$(ProjectDir)..\tmp\addon-osx.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!windx -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!true" -out "$(ProjectDir)..\tmp\addon-windows.xml" "%(FullPath)"
+"$(DevEnvDir)TextTransform.exe" -a !!platform!windowsstore -a !!dllname!zuki.pvr.hdhomerundvr.dll -a "!!changelogtxt!$(ProjectDir)..\pvr.hdhomerundvr\changelog.txt" -a "!!versiontxt!$(ProjectDir)..\tmp\version\version.txt" -a "!!addrepo!false" -out "$(ProjectDir)..\tmp\addon-uwp.xml" "%(FullPath)"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating addon.xml files</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating addon.xml files</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\addon-android.xml;$(ProjectDir)..\tmp\addon-linux.xml;$(ProjectDir)..\tmp\addon-osx.xml;$(ProjectDir)..\tmp\addon-windows.xml;$(ProjectDir)..\tmp\addon-uwp.xml;%(Outputs)</Outputs>
@@ -33,6 +33,7 @@
     <Xml Include="..\tmp\addon-android.xml" />
     <Xml Include="..\tmp\addon-linux.xml" />
     <Xml Include="..\tmp\addon-osx.xml" />
+    <Xml Include="..\tmp\addon-uwp.xml" />
     <Xml Include="..\tmp\addon-windows.xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

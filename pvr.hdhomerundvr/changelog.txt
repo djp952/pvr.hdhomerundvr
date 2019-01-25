@@ -5,6 +5,7 @@ v1.3.10 (2019.01.xx)
   - Rename "End time padding (milliseconds)" EDL setting to "CUT indicator end time padding (milliseconds)"
   - Correct improperly specified units of time from "ms" to "s" when logging the parsed EDL file entries
   - Add log message indicating the expected path to an EDL file that could not be found
+  - (Windows/Android/OSX) Support automatic addon updates via custom repository
 
 v1.3.9 (2019.01.04)
   - Update cURL library to version 7.63.0
