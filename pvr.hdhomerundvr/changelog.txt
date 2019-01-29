@@ -1,4 +1,4 @@
-v1.3.10 (2019.01.xx)
+v1.3.10 (2019.01.28)
   - Add "Use simplified (flattened) file hierarchy" Edit Decision List (EDL) setting
   - Add "Report CUT indicators as COMBREAK indicators" EDL setting
   - Rename "Start time padding (milliseconds)" EDL setting to "CUT indicator start time padding (milliseconds)"
