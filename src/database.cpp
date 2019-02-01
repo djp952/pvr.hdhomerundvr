@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cctype>
 #include <exception>
+#include <list>
 #include <stdint.h>
 #include <string.h>
 #include <uuid/uuid.h>
@@ -33,6 +34,7 @@
 
 #include "curlshare.h"
 #include "hdhr.h"
+#include "http_exception.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
 
@@ -70,6 +72,16 @@ void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 bool discover_devices_broadcast(sqlite3* instance, bool excludestorage);
 bool discover_devices_http(sqlite3* instance, bool excludestorage);
 void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
+int epg_bestindex(sqlite3_vtab* vtab, sqlite3_index_info* info);
+int epg_close(sqlite3_vtab_cursor* cursor);
+int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal);
+int epg_connect(sqlite3* instance, void* aux, int argc, const char* const* argv, sqlite3_vtab** vtab, char** err);
+int epg_disconnect(sqlite3_vtab* vtab);
+int epg_eof(sqlite3_vtab_cursor* cursor);
+int epg_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* indexstr, int argc, sqlite3_value** argv);
+int epg_next(sqlite3_vtab_cursor* cursor);
+int epg_open(sqlite3_vtab* vtab, sqlite3_vtab_cursor** cursor);
+int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv);
 void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv);
 void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** argv);
 void get_channel_number(sqlite3_context* context, int argc, sqlite3_value** argv);
@@ -82,94 +94,56 @@ void url_encode(sqlite3_context* context, int argc, sqlite3_value** argv);
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
 
-// CURL_WRITEFUNCTION
+// byte_string
+//
+// Alias for an std::basic_string<> of bytes
+typedef std::basic_string<uint8_t> byte_string;
+
+// curl_writefunction
 //
 // Function pointer for a CURL write function implementation
-typedef size_t(*CURL_WRITEFUNCTION)(void const*, size_t, size_t, void*);
+typedef size_t(*curl_writefunction)(void const*, size_t, size_t, void*);
 
-// sqlite_buffer
+// epg_vtab_columns
 //
-// A simple dynamically allocated buffer used to collect incremental data
-// that can then be passed into SQLite and released with sqlite3_free
-class sqlite_buffer
+// Constants indicating the epg virtual table column ordinals
+enum epg_vtab_columns {
+
+	value		= 0,		// value text
+	deviceauth,				// deviceauth text hidden
+	channel,				// channel integer hidden
+	starttime,				// starttime integer hidden
+	endtime,				// endtime integer hidden
+};
+
+// epg_vtab
+//
+// Subclassed version of sqlite3_vtab for the epg virtual table
+struct epg_vtab : public sqlite3_vtab 
 {
-public:
-
-	// Constructor / Destructor
+	// Instance Constructor
 	//
-	sqlite_buffer() {}
-	~sqlite_buffer() { if(m_data) sqlite3_free(m_data); }
+	epg_vtab() { memset(static_cast<sqlite3_vtab*>(this), 0, sizeof(sqlite3_vtab)); }
+};
 
-	// append
+// epg_vtab_cursor
+//
+// Subclassed version of sqlite3_vtab_cursor for the epg virtual table
+struct epg_vtab_cursor : public sqlite3_vtab_cursor
+{
+	// Instance Constructor
 	//
-	// Appends data into the buffer
-	size_t append(void const* data, size_t length)
-	{
-		if((data == nullptr) || (length == 0)) return 0;
+	epg_vtab_cursor() { memset(static_cast<sqlite3_vtab_cursor*>(this), 0, sizeof(sqlite3_vtab_cursor)); }
 
-		// sqlite3_malloc accepts a signed integer value, not a size_t
-		if(length > static_cast<size_t>(std::numeric_limits<int>::max())) throw std::bad_alloc();
-
-		// If the buffer has not been allocated, allocate a single chunk
-		if(m_data == nullptr) {
-
-			m_data = reinterpret_cast<uint8_t*>(sqlite3_malloc(static_cast<int>(length)));
-			if(m_data == nullptr) throw std::bad_alloc();
-
-			m_size = length;
-			m_position = 0;
-		}
-
-		// If the buffer has been exhausted, allocate another chunk
-		else {
-
-			// sqlite3_realloc accepts a signed integer value, not a size_t
-			if(m_size + length > static_cast<size_t>(std::numeric_limits<int>::max())) throw std::bad_alloc();
-
-			uint8_t* newdata = reinterpret_cast<uint8_t*>(sqlite3_realloc(m_data, static_cast<int>(m_size + length)));
-			if(newdata == nullptr) throw std::bad_alloc();
-
-			m_data = newdata;
-			m_size += length;
-		}
-
-		// Append the data to the current position in the reallocated buffer
-		memcpy(&m_data[m_position], data, length);
-		m_position += length;
-
-		return length;
-	}
-
-	// detach
+	// Fields
 	//
-	// Detaches the buffer pointer, presumably to hand it to SQLite.
-	// Caller is responsible for calling sqlite3_free() on the pointer
-	uint8_t* detach(void)
-	{
-		uint8_t* result = m_data;
-		
-		m_data = nullptr;
-		m_size = m_position = 0;
+	std::string			deviceauth;			// deviceauth string
+	int					channel = 0;		// channel number
+	time_t				starttime = 0;		// start time
+	time_t				endtime = 0;		// end time
+	size_t				currentrow = 0;		// current row
 
-		return result;
-	}
-
-	// size
-	//
-	// Gets the length of the data in the buffer
-	size_t size(void) const { return m_position; }
-
-private:
-
-	sqlite_buffer(sqlite_buffer const&)=delete;
-	sqlite_buffer& operator=(sqlite_buffer const&)=delete;
-
-	//-----------------------------------------------------------------------
-	// Member Variables
-
-	uint8_t*				m_data = nullptr;			// Allocated data
-	size_t					m_size = 0;					// Allocation length
-	size_t					m_position = 0;				// Current position
+	std::vector<byte_string> rows;			// returned rows
 };
 
 //---------------------------------------------------------------------------
@@ -181,6 +155,42 @@ private:
 // Global curlshare instance used with all easy interface handles generated
 // by the database layer via the http_request function
 static curlshare g_curlshare;
+
+// g_epg_module
+//
+// Defines the entry points for the epg virtual table
+static sqlite3_module g_epg_module = {
+
+	0,						// iVersion
+	nullptr,				// xCreate
+	epg_connect,			// xConnect
+	epg_bestindex,			// xBestIndex
+	epg_disconnect,			// xDisconnect
+	nullptr,				// xDestroy
+	epg_open,				// xOpen
+	epg_close,				// xClose
+	epg_filter,				// xFilter
+	epg_next,				// xNext
+	epg_eof,				// xEof
+	epg_column,				// xColumn
+	epg_rowid,				// xRowid
+	nullptr,				// xUpdate
+	nullptr,				// xBegin
+	nullptr,				// xSync
+	nullptr,				// xCommit
+	nullptr,				// xRollback
+	nullptr,				// xFindMethod
+	nullptr,				// xRename
+	nullptr,				// xSavepoint
+	nullptr,				// xRelease
+	nullptr,				// xRollbackTo
+	nullptr					// xShadowName
+};
+
+// g_useragent
+//
+// Static string to use as the User-Agent for database driven HTTP requests
+static std::string g_useragent = "Kodi-PVR/" + std::string(ADDON_INSTANCE_VERSION_PVR) + " " + VERSION_PRODUCTNAME_ANSI + "/" + VERSION_VERSION3_ANSI;
 
 //
 // CONNECTIONPOOL IMPLEMENTATION
@@ -1599,15 +1609,16 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// Prevent asking for anything older than 4 hours in the past (14400 = (60 * 60 * 4) = 4 hours)
+	// Prevent asking for anything older than 4 hours in the past or more than 14 days in the future
 	time_t now = time(nullptr);
-	starttime = std::max(starttime, now - 14400);
+	starttime = std::max(starttime, now - 14400);			// (60 * 60 * 4) = 4 hours
+	endtime = std::min(endtime, now + 1209600);				// (60 * 60 * 24 * 14) = 14 days
 
 	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename
 	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"select json_extract(entry.value, '$.SeriesID') as seriesid, "
 		"json_extract(entry.value, '$.Title') as title, "
-		"fnv_hash(?2, json_extract(value, '$.StartTime'), json_extract(value, '$.EndTime')) as broadcastid, "
+		"fnv_hash(?1, json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.EndTime')) as broadcastid, "
 		"json_extract(entry.value, '$.StartTime') as starttime, "
 		"json_extract(entry.value, '$.EndTime') as endtime, "
 		"json_extract(entry.value, '$.Synopsis') as synopsis, "
@@ -1619,8 +1630,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
 		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from deviceauth, "
-		"json_each(json_extract(nullif(http_request('http://api.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Channel=' || decode_channel_id(?1) || '&Start=' || ?2), 'null'), '$[0].Guide')) as entry";
+		"from deviceauth, epg(deviceauth.code, decode_channel_id(?1), ?2, ?3), json_each(json_extract(epg.value, '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1632,6 +1642,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 			// Bind the query parameters
 			result = sqlite3_bind_int(statement, 1, channelid.value);
 			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(starttime));
+			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(endtime));
 			if(result != SQLITE_OK) throw sqlite_exception(result);
 
 			// Execute the SQL statement
@@ -2048,6 +2059,404 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 	}
 
 	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// epg_bestindex
+//
+// Determines the best index to use when querying the virtual table
+//
+// Arguments:
+//
+//	vtab	- Virtual Table instance
+//	info	- Selected index information to populate
+
+int epg_bestindex(sqlite3_vtab* /*vtab*/, sqlite3_index_info* info)
+{
+	// usable_constraint_index (local)
+	//
+	// Finds the first usable constraint for the specified column ordinal
+	auto usable_constraint_index = [](sqlite3_index_info* info, int ordinal) -> int {
+
+		// The constraints aren't necessarily in the order specified by the table, loop to find it
+		for(int index = 0; index < info->nConstraint; index++) {
+
+			auto constraint = &info->aConstraint[index];
+			if(constraint->iColumn == ordinal) return ((constraint->usable) && (constraint->op == SQLITE_INDEX_CONSTRAINT_EQ)) ? index : -1;
+		}
+
+		return -1;
+	};
+
+	// Ensure that valid constraints have been specified for all of the input columns and set them as
+	// the input arguments for xFilter() in the proper order
+	for(int ordinal = epg_vtab_columns::deviceauth; ordinal <= epg_vtab_columns::endtime; ordinal++) {
+
+		// Find the index of the first usable constraint for this ordinal, if none are found abort
+		int index = usable_constraint_index(info, ordinal);
+		if(index < 0) return SQLITE_CONSTRAINT;
+
+		// Set the constraint value to be passed into xFilter() as an argument, ensuring that the
+		// argument ordering matches what xFilter() will be expecting
+		info->aConstraintUsage[index].argvIndex = ordinal;
+		info->aConstraintUsage[index].omit = 1;
+	}
+
+	// There is only one viable index to be selected, set the cost to 1.0
+	info->estimatedCost = 1.0;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_close
+//
+// Closes and deallocates a virtual table cursor instance
+//
+// Arguments:
+//
+//	cursor		- Cursor instance allocated by xOpen
+
+int epg_close(sqlite3_vtab_cursor* cursor)
+{
+	if(cursor != nullptr) delete reinterpret_cast<epg_vtab_cursor*>(cursor);
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_column
+//
+// Accesses the data in the specified column of the current cursor row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	context		- Result context object
+//	ordinal		- Ordinal of the column being accessed
+
+int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal)
+{
+	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
+	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
+	assert(epgcursor != nullptr);
+
+	// Accessing the value column requires a valid reference to the current row data
+	if((ordinal == epg_vtab_columns::value) && (epgcursor->currentrow < epgcursor->rows.size())) {
+
+		auto const& value = epgcursor->rows[epgcursor->currentrow];
+		sqlite3_result_text(context, reinterpret_cast<char const*>(value.data()), static_cast<int>(value.size()), SQLITE_TRANSIENT);
+	}
+
+	// The remaining columns are static in nature and can be accessed from any row
+	else switch(ordinal) {
+
+		case epg_vtab_columns::deviceauth: sqlite3_result_text(context, epgcursor->deviceauth.c_str(), -1, SQLITE_TRANSIENT); break;
+		case epg_vtab_columns::channel: sqlite3_result_int(context, epgcursor->channel); break;
+		case epg_vtab_columns::starttime: sqlite3_result_int(context, static_cast<int>(epgcursor->starttime)); break;
+		case epg_vtab_columns::endtime: sqlite3_result_int(context, static_cast<int>(epgcursor->endtime)); break;
+
+		// Invalid ordinal or invalid row when accessing the value column yields null
+		default: sqlite3_result_null(context);
+	}
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_connect
+//
+// Connects to the specified virtual table
+//
+// Arguments:
+//
+//	instance	- SQLite database instance handle
+//	aux			- Client data pointer provided to sqlite3_create_module[_v2]()
+//	argc		- Number of provided metadata strings
+//	argv		- Metadata strings
+//	vtab		- On success contains the allocated virtual table instance
+//	err			- On error contains a string-based error message
+
+int epg_connect(sqlite3* instance, void* aux, int /*argc*/, const char* const* /*argv*/, sqlite3_vtab** vtab, char** err)
+{
+	// declare_vtab
+	//
+	// Function pointer required for conversion of the 'aux' argument back into a sqlite3_declare_vtab() pointer. When this
+	// library is being used as a SQLite extension module for debugging purposes, the sqlite3_declare_vtab() compiled into
+	// the library will be invoked instead of the one in the calling process.  This leads to unexpected results and will crash
+	// since the necessary SQLite global variables have not been properly initialized
+	typedef int(*DECLARE_VTAB_FUNCTION)(sqlite3*, const char*);
+	DECLARE_VTAB_FUNCTION declare_vtab = (aux != nullptr) ? reinterpret_cast<DECLARE_VTAB_FUNCTION>(aux) : sqlite3_declare_vtab;
+
+	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
+	int result = declare_vtab(instance, "create table epg(value text, deviceauth text hidden, channel integer hidden, starttime integer hidden, endtime integer hidden)");
+	if(result != SQLITE_OK) return result;
+
+	// Allocate and initialize the custom virtual table class
+	try { *vtab = static_cast<sqlite3_vtab*>(new epg_vtab()); }
+	catch(std::exception const& ex) { *err = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; }
+	catch(...) { return SQLITE_ERROR; }
+
+	return (*vtab == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_disconnect
+//
+// Disconnects from the EPG virtual table
+//
+// Arguments:
+//
+//	vtab		- Virtual table instance allocated by xConnect
+
+int epg_disconnect(sqlite3_vtab* vtab)
+{
+	if(vtab != nullptr) delete reinterpret_cast<epg_vtab*>(vtab);
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_eof
+//
+// Determines if the specified cursor has moved beyond the last row of data
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+
+int epg_eof(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
+	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
+	assert(epgcursor != nullptr);
+
+	// Return 1 if the current row points beyond the number of rows available
+	return (epgcursor->currentrow >= epgcursor->rows.size()) ? 1 : 0;
+}
+
+//---------------------------------------------------------------------------
+// epg_filter
+//
+// Executes a search of the virtual table
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	indexnum	- Virtual table index number from xBestIndex()
+//	indexstr	- Virtual table index string from xBestIndex()
+//	argc		- Number of arguments assigned by xBestIndex()
+//	argv		- Argument data assigned by xBestIndex()
+
+int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*indexstr*/, int argc, sqlite3_value** argv)
+{
+	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
+	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
+	assert(epgcursor != nullptr);
+
+	// write_function (local)
+	//
+	// cURL write callback to append data to the provided byte_string instance
+	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
+
+		try { reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); }
+		catch(...) { return 0; }
+		
+		return size * count;
+	};
+
+	try {
+
+		// All four arguments must have been specified by xBestIndex
+		if(argc != 4) throw string_exception(__func__, ": invalid argument count provided by xBestIndex");
+
+		// Assign the deviceauth string to the epg_vtab_cursor instance; if this information is missing the backend
+		// requests cannot succeed so abort the operation now
+		epgcursor->deviceauth.assign(reinterpret_cast<char const*>(sqlite3_value_text(argv[0])));
+		if(epgcursor->deviceauth.length() == 0) throw string_exception(__func__, ": null or zero-length deviceauth string");
+
+		// Assign the remaining argument data to the epg_vtab_cursor instance
+		epgcursor->channel = sqlite3_value_int(argv[1]);
+		epgcursor->starttime = sqlite3_value_int(argv[2]);
+		epgcursor->endtime = sqlite3_value_int(argv[3]);
+
+		// Use local variables to track starttime and endtime as the queries are generated
+		time_t starttime = epgcursor->starttime;
+		time_t endtime = epgcursor->endtime;
+
+		// Initialize a cURL multiple interface session to handle the pipelined/multiplexed data transfers
+		CURLM* curlm = curl_multi_init();
+		if(curlm == nullptr) throw string_exception(__func__, "curl_multi_init() failed");
+
+		try {
+
+			// Create a list<> to hold the individual transfer information (no iterator invalidation)
+			std::list<std::pair<CURL*, byte_string>> transfers;
+
+			try {
+
+				// Create all of the required individual transfer objects necessary to satisfy the EPG request.  The backend will
+				// return no more than 8 hours of data per request, so break it up into 7.5 hour chunks to avoid any holes
+				while(starttime < endtime) {
+
+					// Create and initialize the cURL easy interface handle for this transfer operation
+					CURL* curl = curl_easy_init();
+					if(curl == nullptr) throw string_exception(__func__, "curl_easy_init() failed");
+
+					// Generate the URL required to execute this transfer operation
+					auto url = sqlite3_mprintf("http://api.hdhomerun.com/api/guide?DeviceAuth=%s&Channel=%d&Start=%d", epgcursor->deviceauth.c_str(), epgcursor->channel, starttime);
+
+					// Create the transfer instance to track this operation in the list<>
+					auto transfer = transfers.emplace(transfers.end(), std::make_pair(curl, byte_string()));
+
+					// Set the CURL options and execute the web request to get the JSON string data
+					CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&transfer->second));
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
+
+					// Release the URL string after cURL initializations are complete
+					sqlite3_free(url);
+
+					// Verify that initialization of the cURL easy interface handle was completed successfully
+					if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
+
+					// Loop to the next required transfer instance; use a value of (27000 = 7.5 hours) to set 30 minutes of overlap
+					starttime += 27000;
+				}
+
+				// Add all of the generated cURL easy interface objects to the cURL multi interface object
+				for(auto const& transfer : transfers) {
+
+					CURLMcode curlmresult = curl_multi_add_handle(curlm, transfer.first);
+					if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_add_handle() failed: ", curl_multi_strerror(curlmresult));
+				}
+
+				// Execute the transfer operation(s) until they have all completed
+				int numfds = 0;
+				CURLMcode curlmresult = curl_multi_perform(curlm, &numfds);
+				while((curlmresult == CURLM_OK) && (numfds > 0)) {
+
+					curlmresult = curl_multi_wait(curlm, nullptr, 0, 500, &numfds);
+					if(curlmresult == CURLM_OK) curlmresult = curl_multi_perform(curlm, &numfds);
+				}
+
+				// After the transfer operation(s) have completed, verify the HTTP status of each one
+				// and abort the operation if any of them did not return HTTP 200: OK
+				for(auto& transfer : transfers) {
+
+					long responsecode = 200;			// Assume HTTP 200: OK
+
+					// The response code will come back as zero if there was no response from the host,
+					// otherwise it should be a standard HTTP response code
+					curl_easy_getinfo(transfer.first, CURLINFO_RESPONSE_CODE, &responsecode);
+
+					if(responsecode == 0) throw string_exception("no response from host");
+					else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
+
+					// HTTP 200: OK was received, add the transferred data into the cursor object as a new row
+					epgcursor->rows.emplace_back(std::move(transfer.second));
+				}
+
+				// Clean up and destroy the generated cURL easy interface handles
+				for(auto& iterator : transfers) {
+					
+					curl_multi_remove_handle(curlm, iterator.first);  
+					curl_easy_cleanup(iterator.first);
+				}
+			}
+
+			// Clean up any destroy any created cURL easy interface handles on exception
+			catch(...) { 
+				
+				for(auto& iterator : transfers) {
+					
+					curl_multi_remove_handle(curlm, iterator.first); 
+					curl_easy_cleanup(iterator.first); 
+				}
+				
+				throw; 
+			}
+
+			// Clean up and destroy the cURL multi interface handle
+			curl_multi_cleanup(curlm);
+		}
+
+		// Clean up and destroy the multi handle on exception
+		catch(...) { curl_multi_cleanup(curlm); throw; }
+	}
+	
+	catch(std::exception const& ex) { epgcursor->pVtab->zErrMsg = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; }
+	catch(...) { return SQLITE_ERROR; }
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_next
+//
+// Advances the virtual table cursor to the next row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cusror instance
+
+int epg_next(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
+	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
+	assert(epgcursor != nullptr);
+
+	// The only way this can fail is if xNext() was called too many times, which shouldn't
+	// happen unless there is a bug so send back SQLITE_INTERNAL if it does happen
+	return ((++epgcursor->currentrow) <= epgcursor->rows.size()) ? SQLITE_OK : SQLITE_INTERNAL;
+}
+
+//---------------------------------------------------------------------------
+// epg_open
+//
+// Creates and intializes a new virtual table cursor instance
+//
+// Arguments:
+//
+//	vtab		- Virtual table instance
+//	cursor		- On success contains the allocated virtual table cursor instance
+
+int epg_open(sqlite3_vtab* /*vtab*/, sqlite3_vtab_cursor** cursor)
+{
+	// Allocate and initialize the custom virtual table cursor class
+	try { *cursor = static_cast<sqlite3_vtab_cursor*>(new epg_vtab_cursor()); }
+	catch(...) { return SQLITE_ERROR; }
+
+	return (*cursor == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// epg_rowid
+//
+// Retrieves the ROWID for the current virtual table cursor row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	rowid		- On success contains the ROWID for the current row
+
+int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
+{
+	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
+	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
+	assert(epgcursor != nullptr);
+
+	// Use the current row index as the ROWID for the cursor
+	*rowid = static_cast<sqlite_int64>(epgcursor->currentrow);
+
+	return SQLITE_OK;
 }
 
 //---------------------------------------------------------------------------
@@ -2899,12 +3308,7 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
 	long				responsecode = 200;		// HTTP response code
-	sqlite_buffer		blob;					// Dynamically allocated blob buffer
-
-	// useragent
-	//
-	// Static string to use as the User-Agent for this HTTP request
-	static std::string useragent = "Kodi-PVR/" + std::string(ADDON_INSTANCE_VERSION_PVR) + " " + VERSION_PRODUCTNAME_ANSI + "/" + VERSION_VERSION3_ANSI;
+	byte_string			blob;					// Dynamically allocated blob buffer
 
 	if((argc < 1) || (argc > 2) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
 
@@ -2915,8 +3319,10 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	// Create a write callback for libcurl to invoke to write the data
 	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
 
-		try { return reinterpret_cast<sqlite_buffer*>(userdata)->append(data, (size * count)); }
+		try { reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); }
 		catch(...) { return 0; }
+		
+		return size * count;
 	};
 
 	// Initialize the CURL session for the download operation
@@ -2925,13 +3331,13 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 	// Set the CURL options and execute the web request to get the JSON string data
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, useragent.c_str());
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<CURL_WRITEFUNCTION>(write_function));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
@@ -2967,8 +3373,8 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(cb > static_cast<size_t>(std::numeric_limits<int>::max())) 
 		return sqlite3_result_error(context, "blob data exceeds std::numeric_limits<int>::max() in length", -1);
 
-	// Send the resultant blob to SQLite as the result from this scalar function; detach from the sqlite_buffer
-	return (cb > 0) ? sqlite3_result_blob(context, blob.detach(), static_cast<int>(cb), sqlite3_free) : sqlite3_result_null(context);
+	// Send the resultant blob to SQLite as the result from this scalar function
+	return (cb > 0) ? sqlite3_result_blob(context, blob.data(), static_cast<int>(blob.size()), SQLITE_TRANSIENT) : sqlite3_result_null(context);
 }
 
 //---------------------------------------------------------------------------
@@ -3158,6 +3564,11 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 		// scalar function: encode_channel_id
 		//
 		result = sqlite3_create_function_v2(instance, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// virtual table module: epg
+		//
+		result = sqlite3_create_module_v2(instance, "epg", &g_epg_module, nullptr, nullptr);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// scalar function: fnv_hash
