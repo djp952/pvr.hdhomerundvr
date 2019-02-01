@@ -34,11 +34,23 @@
 #include <sqlite3ext.h>
 SQLITE_EXTENSION_INIT1
 
-// FUNCTION PROTOTYPES
+#pragma warning(push, 4)
+
+// database.cpp
 //
 void clean_filename(sqlite3_context* context, int argc, sqlite3_value** argv);
 void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
 void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv);
+int epg_bestindex(sqlite3_vtab* vtab, sqlite3_index_info* info);
+int epg_close(sqlite3_vtab_cursor* cursor);
+int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal);
+int epg_connect(sqlite3* instance, void* aux, int argc, const char* const* argv, sqlite3_vtab** vtab, char** err);
+int epg_disconnect(sqlite3_vtab* vtab);
+int epg_eof(sqlite3_vtab_cursor* cursor);
+int epg_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* indexstr, int argc, sqlite3_value** argv);
+int epg_next(sqlite3_vtab_cursor* cursor);
+int epg_open(sqlite3_vtab* vtab, sqlite3_vtab_cursor** cursor);
+int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
 void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv);
 void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** argv);
 void get_channel_number(sqlite3_context* context, int argc, sqlite3_value** argv);
@@ -47,7 +59,40 @@ void get_season_number(sqlite3_context* context, int argc, sqlite3_value** argv)
 void http_request(sqlite3_context* context, int argc, sqlite3_value** argv);
 void url_encode(sqlite3_context* context, int argc, sqlite3_value** argv);
 
-#pragma warning(push, 4)
+//---------------------------------------------------------------------------
+// GLOBAL VARIABLES
+//---------------------------------------------------------------------------
+
+// g_epg_module
+//
+// Defines the entry points for the epg virtual table
+static sqlite3_module g_epg_module = {
+
+	0,						// iVersion
+	nullptr,				// xCreate
+	epg_connect,			// xConnect
+	epg_bestindex,			// xBestIndex
+	epg_disconnect,			// xDisconnect
+	nullptr,				// xDestroy
+	epg_open,				// xOpen
+	epg_close,				// xClose
+	epg_filter,				// xFilter
+	epg_next,				// xNext
+	epg_eof,				// xEof
+	epg_column,				// xColumn
+	epg_rowid,				// xRowid
+	nullptr,				// xUpdate
+	nullptr,				// xBegin
+	nullptr,				// xSync
+	nullptr,				// xCommit
+	nullptr,				// xRollback
+	nullptr,				// xFindMethod
+	nullptr,				// xRename
+	nullptr,				// xSavepoint
+	nullptr,				// xRelease
+	nullptr,				// xRollbackTo
+	nullptr					// xShadowName
+};
 
 //---------------------------------------------------------------------------
 // sqlite3_extension_init
@@ -96,6 +141,19 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	
 		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
 		snprintf(*errmsg, 512, "Unable to register scalar function encode_channel_id");
+		return result;
+	}
+
+	// epg
+	//
+	// NOTE: Provides the address of the sqlite3_declare_vtab() function that is in the calling process.  This allows the
+	// virtual table to behave semi-properly when used via the extension. This is only necessary because the extension module
+	// already has sqlite compiled into it, and calling the improper version of the function will not work properly.
+	result = sqlite3_create_module_v2(db, "epg", &g_epg_module, reinterpret_cast<void*>(sqlite3_api->declare_vtab), nullptr);
+	if(result != SQLITE_OK) {
+
+		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
+		snprintf(*errmsg, 512, "Unable to register virtual table module epg");
 		return result;
 	}
 
