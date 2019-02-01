@@ -20,10 +20,6 @@
 // SOFTWARE.
 //---------------------------------------------------------------------------
 
-// Visual C++ 2013 Compatibility
-//
-#include "vc2013.h"
-
 // string support
 //
 #include <string.h>
@@ -121,115 +117,60 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	// clean_filename
 	//
 	int result = sqlite3_create_function_v2(db, "clean_filename", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, clean_filename, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function clean_filename");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function clean_filename"); return result; }
 
 	// decode_channel_id
 	//
 	result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function decode_channel_id");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_channel_id"); return result; }
 
 	// encode_channel_id
 	//
 	result = sqlite3_create_function_v2(db, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function encode_channel_id");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function encode_channel_id"); return result; }
 
 	// epg
 	//
 	// NOTE: Provides the address of the sqlite3_declare_vtab() function that is in the calling process.  This allows the
-	// virtual table to behave semi-properly when used via the extension. This is only necessary because the extension module
-	// already has sqlite compiled into it, and calling the improper version of the function will not work properly.
+	// virtual table to behave properly when used via the extension module. Invoking the compiled-in version of the function
+	// will attempt to access uninitialized global variables and crash.
 	result = sqlite3_create_module_v2(db, "epg", &g_epg_module, reinterpret_cast<void*>(sqlite3_api->declare_vtab), nullptr);
-	if(result != SQLITE_OK) {
-
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register virtual table module epg");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module epg"); return result; }
 
 	// fnv_hash
 	//
 	result = sqlite3_create_function_v2(db, "fnv_hash", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, fnv_hash, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function fnv_hash");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function fnv_hash"); return result; }
 
 	// generate_uuid (non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "generate_uuid", 0, SQLITE_UTF8, nullptr, generate_uuid, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function generate_uuid");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function generate_uuid"); return result; }
 
 	// get_channel_number
 	//
 	result = sqlite3_create_function_v2(db, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function get_channel_number");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_channel_number"); return result; }
 
 	// get_episode_number
 	//
 	result = sqlite3_create_function_v2(db, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function get_episode_number");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_episode_number"); return result; }
 
 	// get_season_number
 	//
 	result = sqlite3_create_function_v2(db, "get_season_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_season_number, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function get_season_number");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_season_number"); return result; }
 
 	// http_request (non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "http_request", -1, SQLITE_UTF8, nullptr, http_request, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function http_request");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_request"); return result; }
 
 	// url_encode
 	//
 	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) {
-	
-		*errmsg = reinterpret_cast<char*>(sqlite3_malloc(512));
-		snprintf(*errmsg, 512, "Unable to register scalar function url_encode");
-		return result;
-	}
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_encode"); return result; }
 
 	return SQLITE_OK;
 }
