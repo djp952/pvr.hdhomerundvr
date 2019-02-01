@@ -1,3 +1,6 @@
+v1.3.11 (2019.02.xx)
+  - Update libhdhomerun library to version 2018.10.27
+
 v1.3.10 (2019.01.28)
   - Add "Use simplified (flattened) file hierarchy" Edit Decision List (EDL) setting
   - Add "Report CUT indicators as COMBREAK indicators" EDL setting
