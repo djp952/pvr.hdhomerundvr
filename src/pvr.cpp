@@ -4203,6 +4203,7 @@ void OnPowerSavingDeactivated()
 PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 {
 	assert(times != nullptr);
+	assert(g_stream_starttime <= g_stream_endtime);
 
 	// Block this function for non-seekable streams otherwise Kodi will allow those operations
 	if((!g_dvrstream) || (!g_dvrstream->canseek())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
@@ -4213,7 +4214,7 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 
 	// Set the timeshift buffer end time to the lesser of the current wall clock time or the stream end time
 	time_t now = time(nullptr);
-	times->ptsEnd = (((now < g_stream_endtime) ? now : g_stream_endtime) - g_stream_starttime) * DVD_TIME_BASE;
+	times->ptsEnd = static_cast<int64_t>(((now < g_stream_endtime) ? now : g_stream_endtime) - g_stream_starttime) * DVD_TIME_BASE;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
