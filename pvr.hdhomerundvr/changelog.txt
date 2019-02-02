@@ -2,6 +2,7 @@ v1.3.11 (2019.02.xx)
   - Update libhdhomerun library to version 2018.10.27
   - Use pipelined/multiplexed HTTP requests when accessing backend EPG data
   - Fix bug introduced in v1.3.9 that caused different EPG broadcast IDs to be generated
+  - (Android) Restrict exported symbols to prevent name collisions with shared libraries
 
 v1.3.10 (2019.01.28)
   - Add "Use simplified (flattened) file hierarchy" Edit Decision List (EDL) setting
