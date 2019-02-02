@@ -1,4 +1,4 @@
-v1.3.11 (2019.02.xx)
+v1.3.11 (2019.02.02)
   - Update libhdhomerun library to version 2018.10.27
   - Use pipelined/multiplexed HTTP requests when accessing backend EPG data
   - (Android) Restrict exported symbols to prevent name collisions with shared libraries
