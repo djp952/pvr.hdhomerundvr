@@ -73,6 +73,9 @@ LOCAL_STATIC_LIBRARIES += \
 LOCAL_LDLIBS += \
 	-llog
 
+LOCAL_LDFLAGS += \
+	-Wl,--version-script=exportlist/exportlist.android
+
 LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_channels.c \
 	depends/libhdhomerun/hdhomerun_channelscan.c \
