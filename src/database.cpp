@@ -1630,7 +1630,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		"json_extract(entry.value, '$.OriginalAirdate') as originalairdate, "
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
-		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber') || ' - ', '') else '' end || json_extract(entry.value, '$.EpisodeTitle') as episodename "
+		"case when ?1 then coalesce(json_extract(entry.value, '$.EpisodeNumber') || ' - ', '') else '' end || json_extract(entry.value, '$.EpisodeTitle') as episodename "
 		"from deviceauth, epg(deviceauth.code, decode_channel_id(?2), ?3, ?4), json_each(json_extract(epg.value, '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
