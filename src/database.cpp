@@ -138,7 +138,7 @@ struct epg_vtab_cursor : public sqlite3_vtab_cursor
 	// Fields
 	//
 	std::string			deviceauth;			// deviceauth string
-	int					channel = 0;		// channel number
+	std::string			channel;			// channel number
 	time_t				starttime = 0;		// start time
 	time_t				endtime = 0;		// end time
 	size_t				currentrow = 0;		// current row
@@ -2154,7 +2154,7 @@ int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordina
 	else switch(ordinal) {
 
 		case epg_vtab_columns::deviceauth: sqlite3_result_text(context, epgcursor->deviceauth.c_str(), -1, SQLITE_TRANSIENT); break;
-		case epg_vtab_columns::channel: sqlite3_result_int(context, epgcursor->channel); break;
+		case epg_vtab_columns::channel: sqlite3_result_text(context, epgcursor->channel.c_str(), -1, SQLITE_TRANSIENT); break;
 		case epg_vtab_columns::starttime: sqlite3_result_int(context, static_cast<int>(epgcursor->starttime)); break;
 		case epg_vtab_columns::endtime: sqlite3_result_int(context, static_cast<int>(epgcursor->endtime)); break;
 
@@ -2191,7 +2191,7 @@ int epg_connect(sqlite3* instance, void* aux, int /*argc*/, const char* const* /
 	DECLARE_VTAB_FUNCTION declare_vtab = (aux != nullptr) ? reinterpret_cast<DECLARE_VTAB_FUNCTION>(aux) : sqlite3_declare_vtab;
 
 	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
-	int result = declare_vtab(instance, "create table epg(value text, deviceauth text hidden, channel integer hidden, starttime integer hidden, endtime integer hidden)");
+	int result = declare_vtab(instance, "create table epg(value text, deviceauth text hidden, channel text hidden, starttime integer hidden, endtime integer hidden)");
 	if(result != SQLITE_OK) return result;
 
 	// Allocate and initialize the custom virtual table class
@@ -2272,13 +2272,15 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 		// All four arguments must have been specified by xBestIndex
 		if(argc != 4) throw string_exception(__func__, ": invalid argument count provided by xBestIndex");
 
-		// Assign the deviceauth string to the epg_vtab_cursor instance; if this information is missing the backend
-		// requests cannot succeed so abort the operation now
+		// Assign the deviceauth string to the epg_vtab_cursor instance; must be present
 		epgcursor->deviceauth.assign(reinterpret_cast<char const*>(sqlite3_value_text(argv[0])));
 		if(epgcursor->deviceauth.length() == 0) throw string_exception(__func__, ": null or zero-length deviceauth string");
 
-		// Assign the remaining argument data to the epg_vtab_cursor instance
-		epgcursor->channel = sqlite3_value_int(argv[1]);
+		// Assign the channel string to the epg_vtab_cursor instance; must be present
+		epgcursor->channel.assign(reinterpret_cast<char const*>(sqlite3_value_text(argv[1])));
+		if(epgcursor->channel.length() == 0) throw string_exception(__func__, ": null or zero-length channel string");
+
+		// Assign the start and end time values to the cursor instance
 		epgcursor->starttime = sqlite3_value_int(argv[2]);
 		epgcursor->endtime = sqlite3_value_int(argv[3]);
 
@@ -2306,7 +2308,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					if(curl == nullptr) throw string_exception(__func__, "curl_easy_init() failed");
 
 					// Generate the URL required to execute this transfer operation
-					auto url = sqlite3_mprintf("http://api.hdhomerun.com/api/guide?DeviceAuth=%s&Channel=%d&Start=%d", epgcursor->deviceauth.c_str(), epgcursor->channel, starttime);
+					auto url = sqlite3_mprintf("http://api.hdhomerun.com/api/guide?DeviceAuth=%s&Channel=%s&Start=%d", epgcursor->deviceauth.c_str(), epgcursor->channel.c_str(), starttime);
 
 					// Create the transfer instance to track this operation in the list<>
 					auto transfer = transfers.emplace(transfers.end(), std::make_pair(curl, byte_string()));
