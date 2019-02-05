@@ -3636,6 +3636,11 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 			// Set the current channel number
 			g_currentchannel.store(channel.iUniqueId);
+
+			// Log some additional information about the stream for diagnostic purposes
+			log_notice(__func__, ": canseek = ", g_dvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": length = ", g_dvrstream->length());
+			log_notice(__func__, ": realtime = ", g_dvrstream->realtime() ? "true" : "false");
 		}
 
 		catch(...) { g_scheduler.resume(); g_currentchannel.store(-1); throw; }
@@ -3878,6 +3883,11 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
 			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
+
+			// Log some additional information about the stream for diagnostic purposes
+			log_notice(__func__, ": canseek = ", g_dvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": length = ", g_dvrstream->length());
+			log_notice(__func__, ": realtime = ", g_dvrstream->realtime() ? "true" : "false");
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
