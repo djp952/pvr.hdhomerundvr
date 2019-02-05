@@ -3496,6 +3496,13 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			// For live streams, set the start time to now and set the end time to time_t::max()
 			g_stream_starttime = time(nullptr);
 			g_stream_endtime = std::numeric_limits<time_t>::max();
+
+			// Log some additional information about the stream for diagnostic purposes
+			log_notice(__func__, ": canseek = ", g_dvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": length = ", g_dvrstream->length());
+			log_notice(__func__, ": realtime = ", g_dvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
+			// don't log end time here, asctime/localtime won't work if time_t is 64-bit on this platform
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -3804,6 +3811,13 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			// For recorded streams, set the start and end times based on the recording metadata
 			g_stream_starttime = recording.recordingTime;
 			g_stream_endtime = recording.recordingTime + recording.iDuration;
+
+			// Log some additional information about the stream for diagnostic purposes
+			log_notice(__func__, ": canseek = ", g_dvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": length = ", g_dvrstream->length());
+			log_notice(__func__, ": realtime = ", g_dvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
+			log_notice(__func__, ": endtime = ", g_stream_endtime, " (epoch) = ", strtok(asctime(localtime(&g_stream_endtime)), "\n"), " (local)");
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
