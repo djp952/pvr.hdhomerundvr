@@ -88,6 +88,44 @@ inline uint64_t decode_pcr27mhz(uint8_t const* ptr)
 }
 
 //---------------------------------------------------------------------------
+// curl_multi_get_result
+//
+// Retrieves the result from a cURL easy handle assigned to a multi handle
+//
+// Arguments:
+//
+//	multi		- cURL multi interface handle
+//	easy		- cURL easy interface handle
+//	result		- On success, receives the easy handle result code
+
+static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
+{
+	int					nummessages;			// Number of messages in the queue
+	struct CURLMsg*		msg = nullptr;			// Pointer to next cURL message
+
+	assert((multi != nullptr) && (easy != nullptr) && (result != nullptr));
+
+	*result = CURLE_OK;					// Initialize [out] variable
+
+	// Read the first informational message from the queue
+	msg = curl_multi_info_read(multi, &nummessages);
+	while(msg != nullptr) {
+
+		// If this message applies to the easy handle and indicates DONE, return the result
+		if((msg->easy_handle == easy) && (msg->msg == CURLMSG_DONE)) {
+
+			*result = msg->data.result;
+			return true;
+		}
+
+		// Iterate to the next message in the queue
+		msg = curl_multi_info_read(multi, &nummessages);
+	}
+
+	return false;
+}
+
+//---------------------------------------------------------------------------
 // read_be8
 //
 // Reads a big-endian 8 bit value from memory
@@ -173,6 +211,8 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
 			// Set the options for the easy interface curl handle
 			CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_URL, url);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_TIME, 5L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, &dvrstream::curl_responseheaders);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &dvrstream::curl_write);
@@ -618,7 +658,7 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 	size_t				bytesread = 0;			// Total bytes actually read
 	size_t				available = 0;			// Available bytes to read
 
-	// Verify that the minimum read count has been aligned properly during construction
+	assert((m_curlm != nullptr) && (m_curl != nullptr));
 	assert(m_readmincount == align::down(m_readmincount, MPEGTS_PACKET_LENGTH));
 	assert(m_readmincount >= MPEGTS_PACKET_LENGTH);
 
@@ -698,7 +738,8 @@ bool dvrstream::realtime(void) const
 
 long long dvrstream::restart(long long position)
 {
-	assert(position >= 0);				// Should always be a positive value
+	assert((m_curlm != nullptr) && (m_curl != nullptr));
+	assert(position >= 0);
 
 	// Remove the easy transfer handle from the multi transfer handle
 	CURLMcode curlmresult = curl_multi_remove_handle(m_curlm, m_curl);
@@ -746,6 +787,8 @@ long long dvrstream::restart(long long position)
 long long dvrstream::seek(long long position, int whence)
 {
 	long long			newposition = 0;			// New stream position
+
+	assert((m_curlm != nullptr) && (m_curl != nullptr));
 
 	// If the stream cannot be seeked, return -1 to indicate the operation is not supported.
 	if(!m_canseek) return -1;
@@ -819,26 +862,29 @@ bool dvrstream::transfer_until(std::function<bool(void)> predicate)
 {
 	int				numfds;				// Number of active file descriptors
 
+	assert((m_curlm != nullptr) && (m_curl != nullptr));
+
 	// If the stream has been paused due to the ring buffer filling up, attempt to resume it
 	// CAUTION: calling curl_easy_pause() with CURLPAUSE_CONT *immediately* attempts to write 
-	// outstanding data into the ring buffer= so when it returns m_paused may have been set 
+	// outstanding data into the ring buffer so when it returns m_paused may have been set 
 	// back to true if the ring buffer is still full after attempting to resume
 	if(m_paused) {
 
 		m_paused = false;									// Reset the stream paused flag
 		curl_easy_pause(m_curl, CURLPAUSE_CONT);			// Resume transfer on the stream
+
+		if(m_paused) return predicate();					// Still paused, abort
 	}
 
-	// If the stream is still paused (buffer is still full) and the predicate can be satisfied,
-	// go ahead and let the caller do what it wants to do
-	if(m_paused && predicate()) return true;
+	// Attempt an initial data transfer operation and abort if there are no transfers
+	CURLMcode curlmresult = curl_multi_perform(m_curlm, &numfds);
+	if(numfds == 0) return predicate();
 
 	// Continue to execute the data transfer until the predicate has been satisfied, the data
 	// transfer operation is complete, or the stream has been paused due to a full buffer condition
-	CURLMcode curlmresult = curl_multi_perform(m_curlm, &numfds);
 	while((curlmresult == CURLM_OK) && (!m_paused) && (numfds > 0) && (predicate() == false)) {
 
-		curlmresult = curl_multi_wait(m_curlm, nullptr, 0, 500, &numfds);
+		curlmresult = curl_multi_wait(m_curlm, nullptr, 0, 500, nullptr);
 		if(curlmresult == CURLM_OK) curlmresult = curl_multi_perform(m_curlm, &numfds);
 	}
 
@@ -846,16 +892,23 @@ bool dvrstream::transfer_until(std::function<bool(void)> predicate)
 	if(curlmresult != CURLM_OK) throw string_exception(__func__, ": ", curl_multi_strerror(curlmresult));
 
 	// If the number of file descriptors has reduced to zero, the transfer has completed.
-	// Check for an HTTP error response on the transfer and throw an http_exception that
-	// will let the caller decide what to do about it
+	// Check for a cURL error or an HTTP error response on the transfer
 	if(numfds == 0) {
 
-		long responsecode = 200;			// Assume HTTP 200: OK
+		CURLcode		result = CURLE_OK;			// Assume everything went well
+		long			responsecode = 200;			// Assume HTTP 200: OK
+
+		// Get the cURL result code for the easy handle and remove it from the multi
+		// interface to prevent any more data transfer operations from taking place
+		curl_multi_get_result(m_curlm, m_curl, &result);
+		curl_multi_remove_handle(m_curlm, m_curl);
+
+		// If the cURL result indicated a failure, throw it as an exception
+		if(result != CURLE_OK) throw string_exception(curl_easy_strerror(result));
 
 		// The response code will come back as zero if there was no response from the host,
 		// otherwise it should be a standard HTTP response code
 		curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responsecode);
-
 		if(responsecode == 0) throw string_exception("no response from host");
 		else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 	}
