@@ -3709,11 +3709,23 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	// NOTE: This disobeys the API and returns 0 instead of -1 on an error/exception.
-	// Returning -1 does not appear to be sufficient to stop Kodi from calling this again
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : 0; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
-	catch(...) { return handle_generalexception(__func__, 0); }
+	assert(g_addon);
+
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+
+	catch(std::exception& ex) {
+
+		// Log the exception and alert the user of the failure with an error notification
+		log_error(__func__, ": read operation failed with exception: ", ex.what());
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
+
+		// Kodi is going to continue to call this function until it thinks the stream has ended so
+		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
+		try { return static_cast<int>(g_dvrstream->read(buffer, size)); }
+		catch(...) { return 0; }
+	}
+
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3730,27 +3742,15 @@ long long SeekLiveStream(long long position, int whence)
 {
 	assert(g_addon);
 
-	if(!g_dvrstream) return -1;
+	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
 
-	// Save the current stream position in order to make an attempt to recover the stream on exception
-	long long current = g_dvrstream->position();
-
-	// Attempt to seek to the specified position
-	try { return g_dvrstream->seek(position, whence); }
-
-	// If an expected exception type (like http_exception) has been thrown, attempt stream recovery
 	catch(std::exception& ex) {
 
-		// Log the seek operation failure and indicate at what position the recovery attempt will be made
-		log_error(__func__, ": seek operation (positiion=", position, ", whence=", whence, ") failed with exception: ", ex.what(), ". Attempting recovery at position ", current);
+		// Log the exception and alert the user of the failure with an error notification
+		log_error(__func__, ": seek operation failed with exception: ", ex.what());
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
 
-		// Alert the user that a seek failure has occurred with an error notification
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Live Stream seek operation failed (%s).", ex.what());
-
-		// Attempt to recover the stream by seeking to the previous current position
-		try { return g_dvrstream->seek(current, SEEK_SET); }
-		catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
-		catch(...) { return handle_generalexception(__func__, -1); }
+		return -1;
 	}
 
 	catch(...) { return handle_generalexception(__func__, -1); }
@@ -3881,7 +3881,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		try {
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
-			log_notice(__func__, ": streaming recording ", recording.strTitle, " via url ", streamurl.c_str());
+			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
 			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
 
 			// Log some additional information about the stream for diagnostic purposes
@@ -3954,11 +3954,23 @@ void CloseRecordedStream(void)
 
 int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
-	// NOTE: This disobeys the API and returns 0 instead of -1 on an error/exception.
-	// Returning -1 does not appear to be sufficient to stop Kodi from calling this again
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : 0; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
-	catch(...) { return handle_generalexception(__func__, 0); }
+	assert(g_addon);
+
+	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+
+	catch(std::exception& ex) {
+
+		// Log the exception and alert the user of the failure with an error notification
+		log_error(__func__, ": read operation failed with exception: ", ex.what());
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
+
+		// Kodi is going to continue to call this function until it thinks the stream has ended so
+		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
+		try { return static_cast<int>(g_dvrstream->read(buffer, size)); }
+		catch(...) { return 0; }
+	}
+
+	catch(...) { return handle_generalexception(__func__, -1); }
 }
 
 //---------------------------------------------------------------------------
@@ -3973,10 +3985,18 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 long long SeekRecordedStream(long long position, int whence)
 {
+	assert(g_addon);
+
 	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
-	catch(...) { return handle_generalexception(__func__, -1); }
-}
+
+	catch(std::exception& ex) {
+
+		// Log the exception and alert the user of the failure with an error notification
+		log_error(__func__, ": seek operation failed with exception: ", ex.what());
+		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
+
+		return -1;
+	}
 
 //---------------------------------------------------------------------------
 // PositionRecordedStream
