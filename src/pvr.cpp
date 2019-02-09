@@ -3726,7 +3726,7 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* channel, PVR_NAMED_VALUE
 
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
-	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, g_dvrstream->mediatype());
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "%s", g_dvrstream->mediatype());
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
@@ -3764,7 +3764,7 @@ PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* recording, PVR_NAMED
 
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
-	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, g_dvrstream->mediatype());
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "%s", g_dvrstream->mediatype());
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
