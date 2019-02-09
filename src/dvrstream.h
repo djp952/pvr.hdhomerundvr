@@ -73,6 +73,11 @@ public:
 	// Gets the length of the stream
 	long long length(void) const;
 
+	// mediatype
+	//
+	// Gets the media type of the stream
+	char const* mediatype(void) const;
+
 	// position
 	//
 	// Gets the current position of the stream
@@ -102,6 +107,11 @@ private:
 
 	dvrstream(dvrstream const&)=delete;
 	dvrstream& operator=(dvrstream const&)=delete;
+
+	// DEFAULT_MEDIA_TYPE
+	//
+	// Default media type to report for the stream
+	static char const* DEFAULT_MEDIA_TYPE;
 
 	// DEFAULT_READ_MIN
 	//
@@ -160,36 +170,37 @@ private:
 
 	// DATA TRANSFER
 	//
-	CURL*							m_curl = nullptr;				// CURL easy interface handle
-	CURLM*							m_curlm = nullptr;				// CURL multi interface handle
-	size_t const					m_readmincount;					// Minimum read byte count
+	CURL*						m_curl = nullptr;					// CURL easy interface handle
+	CURLM*						m_curlm = nullptr;					// CURL multi interface handle
+	size_t const				m_readmincount;						// Minimum read byte count
 
 	// STREAM STATE
 	//
-	bool							m_paused = false;				// Flag if transfer is paused
-	bool							m_headers = false;				// Flag if headers have been processed
-	bool							m_canseek = false;				// Flag if stream can be seeked
-	long long						m_startpos = 0;					// Starting position
-	long long						m_readpos = 0;					// Current read position
-	long long						m_writepos = 0;					// Current write position
-	long long						m_length = MAX_STREAM_LENGTH;	// Length of the stream
-	time_t							m_starttime = 0;				// Start time of the stream
-	uint64_t						m_startpts = 0;					// Starting presentation timestamp
-	uint64_t						m_currentpts = 0;				// Current presentation timestamp
+	bool						m_paused = false;					// Flag if transfer is paused
+	bool						m_headers = false;					// Flag if headers have been processed
+	bool						m_canseek = false;					// Flag if stream can be seeked
+	long long					m_startpos = 0;						// Starting position
+	long long					m_readpos = 0;						// Current read position
+	long long					m_writepos = 0;						// Current write position
+	std::string					m_mediatype = DEFAULT_MEDIA_TYPE;	// Stream media type 
+	long long					m_length = MAX_STREAM_LENGTH;		// Length of the stream
+	time_t						m_starttime = 0;					// Start time of the stream
+	uint64_t					m_startpts = 0;						// Starting presentation timestamp
+	uint64_t					m_currentpts = 0;					// Current presentation timestamp
 
 	// RING BUFFER
 	//
-	size_t const					m_buffersize;					// Size of the ring buffer
-	std::unique_ptr<uint8_t[]>		m_buffer;						// Ring buffer stroage
-	size_t							m_head = 0;						// Head (write) buffer position
-	size_t							m_tail = 0;						// Tail (read) buffer position
+	size_t const				m_buffersize;						// Size of the ring buffer
+	std::unique_ptr<uint8_t[]>	m_buffer;							// Ring buffer stroage
+	size_t						m_head = 0;							// Head (write) buffer position
+	size_t						m_tail = 0;							// Tail (read) buffer position
 
 	// PACKET FILTER
 	//
-	bool							m_enablefilter = true;			// Flag if packet filter is enabled
-	std::set<uint16_t>				m_pmtpids;						// Set of PMT program ids
-	bool							m_enablepcrs = true;			// Flag if PCR reads are enabled
-	uint16_t						m_pcrpid = 0;					// Program Clock PID
+	bool						m_enablefilter = true;				// Flag if packet filter is enabled
+	std::set<uint16_t>			m_pmtpids;							// Set of PMT program ids
+	bool						m_enablepcrs = true;				// Flag if PCR reads are enabled
+	uint16_t					m_pcrpid = 0;						// Program Clock PID
 };
 
 //-----------------------------------------------------------------------------
