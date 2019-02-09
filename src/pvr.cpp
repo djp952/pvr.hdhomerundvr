@@ -377,6 +377,13 @@ static addon_settings g_settings = {
 // Synchronization object to serialize access to addon settings
 static std::mutex g_settings_lock;
 
+// g_stream_close_hack
+//
+// Flag to help deal with starting the stream during GetStreamProperties() -- the PVR
+// always calls CloseStream() before calling OpenStream(), which stops and restarts
+// the stream unnecessarily
+static bool g_stream_close_hack = false;
+
 // g_stream_starttime
 //
 // Start time to report for the current stream
@@ -3532,6 +3539,10 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 void CloseLiveStream(void)
 {
+	// Opening the stream in GetChannelStreamProperties has a side effect in that while the
+	// stream is already open, Kodi will still always call CloseLiveStream() before OpenLiveStream()
+	if(g_stream_close_hack) { g_stream_close_hack = false; return; }
+
 	try {
 		
 		// Create a copy of the current addon settings structure
@@ -3723,6 +3734,10 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* channel, PVR_NAMED_VALUE
 
 	*numprops = 2;
 
+	// Hack to prevent CloseLiveStream() from actually closing the stream since it was opened before 
+	// OpenLiveStream() has technically been called by Kodi
+	g_stream_close_hack = true;
+
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
@@ -3756,6 +3771,10 @@ PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* recording, PVR_NAMED
 	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (g_dvrstream->realtime() ? "true" : "false"));
 
 	*numprops = 2;
+
+	// Hack to prevent CloseRecordedStream() from actually closing the stream since it was opened before 
+	// OpenRecordedStream() has technically been called by Kodi
+	g_stream_close_hack = true;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -3872,6 +3891,10 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 void CloseRecordedStream(void)
 {
+	// Opening the stream in GetRecordingStreamProperties has a side effect in that while the
+	// stream is already open, Kodi will still always call CloseRecordedStream() before OpenRecordedStream()
+	if(g_stream_close_hack) { g_stream_close_hack = false; return; }
+
 	try {
 
 		// Create a copy of the current addon settings structure
