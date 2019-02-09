@@ -33,6 +33,11 @@
 
 #pragma warning(push, 4)
 
+// dvrstream::DEFAULT_MEDIA_TYPE (static)
+//
+// Default media type to report for the stream
+char const* dvrstream::DEFAULT_MEDIA_TYPE = "video/mp2t";
+
 // dvrstream::DEFAULT_READ_MINCOUNT (static)
 //
 // Default minimum amount of data to return from a read request
@@ -383,9 +388,11 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 {
 	static const char ACCEPT_RANGES_HEADER[]		= "Accept-Ranges: bytes";
 	static const char CONTENT_RANGE_HEADER[]		= "Content-Range: bytes";
+	static const char CONTENT_TYPE_HEADER[]			= "Content-Type:";
 	static const char EMPTY_HEADER[]				= "\r\n";
 	static const size_t ACCEPT_RANGES_HEADER_LEN	= strlen(ACCEPT_RANGES_HEADER);
 	static const size_t CONTENT_RANGE_HEADER_LEN	= strlen(CONTENT_RANGE_HEADER);
+	static const size_t CONTENT_TYPE_HEADER_LEN		= strlen(CONTENT_TYPE_HEADER);
 	static const size_t EMPTY_HEADER_LEN			= strlen(EMPTY_HEADER);
 
 	size_t cb = size * count;						// Calculate the actual byte count
@@ -409,11 +416,6 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 		long long end = MAX_STREAM_LENGTH - 1;			// <range-end>
 		long long length = MAX_STREAM_LENGTH;			// <size>
 
-		// Copy the header data into a local buffer to ensure null termination of the string
-		std::unique_ptr<char[]> buffer(new char[cb + 1]);
-		memcpy(&buffer[0], data, cb);
-		buffer[cb] = 0;
-
 		// Attempt to parse a complete Content-Range: header to retrieve all the values, otherwise
 		// fall back on just attempting to get the size.  The latter condition occurs on a seek
 		// beyond the size of a fixed-length stream, so set the start value to match the size
@@ -423,6 +425,16 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 		// Reset the stream read/write positions and overall length
 		instance->m_startpos = instance->m_readpos = instance->m_writepos = start;
 		instance->m_length = length;
+	}
+
+	// Content-Type: <media-type>[; charset=<charset>][ ;boundary=<boundary>]
+	else if((cb >= CONTENT_TYPE_HEADER_LEN) && (strncmp(CONTENT_TYPE_HEADER, data, CONTENT_TYPE_HEADER_LEN) == 0)) {
+
+		char mediatype[128];						// <media-type>
+
+		// Attempt to parse the media-type from the Context-Type header and set for the stream if found
+		if(sscanf(std::string(data, cb).c_str(), "Content-Type: %127[^;\r\n]", mediatype) == 1) 
+			instance->m_mediatype.assign(mediatype);
 	}
 
 	// \r\n (empty header)
@@ -641,6 +653,20 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 long long dvrstream::length(void) const
 {
 	return (m_length == MAX_STREAM_LENGTH) ? -1 : m_length;
+}
+
+//---------------------------------------------------------------------------
+// dvrstream::mediatype
+//
+// Gets the media type of the stream
+//
+// Arguments:
+//
+//	NONE
+
+char const* dvrstream::mediatype(void) const
+{
+	return m_mediatype.c_str();
 }
 
 //---------------------------------------------------------------------------
