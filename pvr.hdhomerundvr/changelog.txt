@@ -3,6 +3,7 @@ v1.3.13 (2019.02.xx)
   - Add mechanism to detect and report dropped streams if data transfer rate falls to zero
   - Fix bug that caused a dropped stream to be waited on infinitely for more data to become available
   - Log an error message when unexpected zero length reads occur on in-progress streams
+  - Open streams at the point where metadata is being requested to provide accurate media type indicator
 
 v1.3.12 (2019.02.02)
   - Fix bug introduced in v1.3.11 that prevented EPG listings for channels with subchannels (x.x) from loading

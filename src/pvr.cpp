@@ -3424,6 +3424,9 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 	assert(g_addon);
 
+	// The stream may have already been opened by a call to GetChannelStreamProperties()
+	if(g_dvrstream) return true;
+
 	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
 	if(channel.iEncryptionSystem != 0) {
 	
@@ -3481,9 +3484,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// If none of the above methods yielded a valid URL, we're done here
 		if(streamurl.length() == 0) throw string_exception("unable to generate a valid stream URL for channel ", channelstr);
 
-		// Stop and destroy any existing stream instance before opening the new one
-		g_dvrstream.reset();
-
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
 
@@ -3506,7 +3506,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			// don't log end time here, asctime/localtime won't work if time_t is 64-bit on this platform
 		}
 
-		catch(...) { g_scheduler.resume(); throw; }
+		catch(...) { g_dvrstream.reset(); g_scheduler.resume(); throw; }
 
 		return true;
 	}
@@ -3703,18 +3703,23 @@ PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
+PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* channel, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
+	// This function is called before OpenLiveStream() will be called, but the required properties are
+	// dynamic based on the stream metadata.  To fulfill the request, attempt to open the stream now
+	if((g_dvrstream) || (OpenLiveStream(*channel) == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	assert(g_dvrstream);
+
 	// Copy out the current state of the PVR client settings
 	struct addon_settings settings = copy_settings();
 
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
-	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, g_dvrstream->mediatype());
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
-	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (g_dvrstream && g_dvrstream->realtime()) ? "true" : "false");
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (g_dvrstream->realtime() ? "true" : "false"));
 
 	*numprops = 2;
 
@@ -3732,15 +3737,23 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_V
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
+PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* recording, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
+	// This function is called before OpenRecordedStream() will be called, but the required properties are
+	// dynamic based on the stream metadata.  To fulfill the request, attempt to open the stream now
+	if((g_dvrstream) || (OpenRecordedStream(*recording) == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	assert(g_dvrstream);
+
+	// Copy out the current state of the PVR client settings
+	struct addon_settings settings = copy_settings();
+
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
-	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, g_dvrstream->mediatype());
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
-	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, "false");
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (g_dvrstream->realtime() ? "true" : "false"));
 
 	*numprops = 2;
 
@@ -3796,6 +3809,9 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
 	assert(g_addon);
 
+	// The stream may have already been opened by a call to GetRecordingStreamProperties()
+	if(g_dvrstream) return true;
+
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
@@ -3807,9 +3823,6 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		// Generate the stream URL for the specified channel
 		std::string streamurl = get_recording_stream_url(dbhandle, recording.strRecordingId);
 		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified recording");
-
-		// Stop and destroy any existing stream instance before opening the new one
-		g_dvrstream.reset();
 
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
@@ -3833,7 +3846,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			log_notice(__func__, ": endtime   = ", g_stream_endtime, " (epoch) = ", strtok(asctime(localtime(&g_stream_endtime)), "\n"), " (local)");
 		}
 
-		catch(...) { g_scheduler.resume(); throw; }
+		catch(...) { g_dvrstream.reset(); g_scheduler.resume(); throw; }
 
 		return true;
 	}

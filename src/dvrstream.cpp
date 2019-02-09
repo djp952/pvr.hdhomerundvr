@@ -515,9 +515,8 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
 		bool payload = (ts_header & 0x00000010) == 0x00000010;
 
-		// Check the sync byte, should always be 0x47.  If the packets aren't in sync
-		// all kinds of bad things can happen
-		assert(sync == 0x47);
+		// If the sync byte isn't 0x47, this either isn't an MPEG-TS stream or the packets
+		// have become misaligned.  In either case the packet filter must be disabled.
 		if(sync != 0x47) { 
 			
 			m_enablefilter = m_enablepcrs = false;		// Stop filtering packets
