@@ -3924,6 +3924,7 @@ long long SeekRecordedStream(long long position, int whence)
 
 		return -1;
 	}
+}
 
 //---------------------------------------------------------------------------
 // PositionRecordedStream
