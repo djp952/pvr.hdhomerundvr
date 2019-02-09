@@ -3574,7 +3574,18 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
 	assert(g_addon);
 
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+	if(!g_dvrstream) return -1;
+
+	try { 
+	
+		// Attempt to read the requested number of bytes from the stream
+		int result = static_cast<int>(g_dvrstream->read(buffer, size));
+
+		// Live streams should always return data, log an error on any zero-length read
+		if(result == 0) log_error(__func__, ": zero-length read on stream at position ", g_dvrstream->position());
+
+		return result;
+	}
 
 	catch(std::exception& ex) {
 
@@ -3889,7 +3900,25 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
 	assert(g_addon);
 
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+	if(!g_dvrstream) return -1;
+
+	try { 
+	
+		// Attempt to read the requested number of bytes from the stream
+		int result = static_cast<int>(g_dvrstream->read(buffer, size));
+
+		// Recorded streams may be real-time if they were in progress when started, but it
+		// is still normal for them to end at some point and return no data.  If no data was 
+		// read from a real-time stream and the current system clock is before the expected 
+		// end time of that stream, log a zero-length read error
+		if(result == 0) {
+
+			time_t now = time(nullptr);
+			if((g_dvrstream->realtime()) && (now < g_stream_endtime)) log_error(__func__, ": zero-length read on stream at position ", g_dvrstream->position());
+		}
+
+		return result;
+	}
 
 	catch(std::exception& ex) {
 
