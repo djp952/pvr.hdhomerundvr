@@ -29,6 +29,7 @@
 #include <functional>
 #include <memory>
 #include <set>
+#include <string>
 
 //---------------------------------------------------------------------------
 // Class dvrstream
