@@ -4312,6 +4312,11 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 	// Block this function for non-seekable streams otherwise Kodi will allow those operations
 	if((!g_dvrstream) || (!g_dvrstream->canseek())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
+	// SPECIAL CASE: If start time and end time are the same, and this is a fixed-length stream also 
+	// let Kodi handle it - it can figure this out from the stream data. This can happen if the duration 
+	// of a recorded stream was not reported properly or came back as zero (credit: timecutter)
+	if((g_stream_starttime == g_stream_endtime) && (g_dvrstream->realtime() == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+
 	times->startTime = g_stream_starttime;			// Actual start time (wall clock UTC)
 	times->ptsStart = 0;							// Starting PTS gets set to zero
 	times->ptsBegin = 0;							// Timeshift buffer start PTS also gets set to zero
