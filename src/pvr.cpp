@@ -2731,6 +2731,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 			// iDuration
 			recording.iDuration = item.duration;
+			assert(recording.iDuration > 0);
 
 			// iLastPlayedPosition
 			//
@@ -3706,7 +3707,7 @@ PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
 //---------------------------------------------------------------------------
 // GetChannelStreamProperties
 //
-// Gets the properties for channel streams when the input stream is not handled
+// Get the stream properties for a channel from the backend
 //
 // Arguments:
 //
@@ -3744,7 +3745,7 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* channel, PVR_NAMED_VALUE
 //---------------------------------------------------------------------------
 // GetRecordingStreamProperties
 //
-// Gets the properties for recording streams when the input stream is not handled
+// Get the stream properties for a recording from the backend
 //
 // Arguments:
 //
