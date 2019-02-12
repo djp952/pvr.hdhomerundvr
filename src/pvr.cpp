@@ -4315,14 +4315,18 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 
 	// SPECIAL CASE: If start time and end time are the same, and this is a fixed-length stream also 
 	// let Kodi handle it - it can figure this out from the stream data. This can happen if the duration 
-	// of a recorded stream was not reported properly or came back as zero (credit: timecutter)
+	// of a recorded stream was not reported properly for some reason (credit: timecutter)
 	if((g_stream_starttime == g_stream_endtime) && (g_dvrstream->realtime() == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-	times->startTime = g_stream_starttime;			// Actual start time (wall clock UTC)
+	// Set the start time to the actual start time (UTC) for realtime streams, otherwise zero
+	// Using zero here is required to enable calls to SetRecordingLastPlayedPosition()
+	times->startTime = (g_dvrstream->realtime()) ? g_stream_starttime : 0;
+
 	times->ptsStart = 0;							// Starting PTS gets set to zero
 	times->ptsBegin = 0;							// Timeshift buffer start PTS also gets set to zero
 
-	// Set the timeshift buffer end time to the lesser of the current wall clock time or the stream end time
+	// Set the timeshift duration to the delta between the start time and the lesser of the 
+	// current wall clock time or the known stream end time
 	time_t now = time(nullptr);
 	times->ptsEnd = static_cast<int64_t>(((now < g_stream_endtime) ? now : g_stream_endtime) - g_stream_starttime) * DVD_TIME_BASE;
 
