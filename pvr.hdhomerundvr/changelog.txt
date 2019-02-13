@@ -1,11 +1,11 @@
-v1.3.13 (2019.02.xx)
+v1.3.13 (2019.02.12)
   - Update SQLite database engine to version 3.27.1
   - Update cURL library to version 7.64.0
-  - Add logging of detected stream properties (real-time, seekable, etc) when opening streams
-  - Add mechanism to detect and report dropped streams if data transfer rate falls to zero
+  - Log detected stream properties (real-time, seekable, etc) for diagnostic purposes
+  - Log unexpected zero length reads that occur on in-progress streams as errors
+  - Detect and report dropped streams if data transfer rate falls to zero
+  - Accurately set the media type (MIME type) stream indicator as reported by the DVR engine
   - Fix bug that caused a dropped stream to be waited on infinitely for more data to become available
-  - Log an error message when unexpected zero length reads occur on in-progress streams
-  - Open streams at the point where metadata is being requested to provide accurate media type indicator
   - Fix bug preventing Kodi from calling into SetRecordingLastPlayedPosition()
 
 v1.3.12 (2019.02.02)
