@@ -31,6 +31,7 @@
 #include <string.h>
 #include <uuid/uuid.h>
 #include <xbmc_pvr_types.h>
+#include <version.h>
 
 #include "curlshare.h"
 #include "hdhr.h"
@@ -39,11 +40,6 @@
 #include "string_exception.h"
 
 #pragma warning(push, 4)
-
-// pvr.cpp (via version.h)
-//
-extern char const VERSION_PRODUCTNAME_ANSI[];
-extern char const VERSION_VERSION3_ANSI[];
 
 // Check SQLITE_THREADSAFE
 //
