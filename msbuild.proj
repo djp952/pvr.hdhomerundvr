@@ -438,7 +438,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20190127-7f93d8b2-master-x86</KodiAppx>
+      <KodiAppx>Kodi-20190205-cde4b1df-master-x86</KodiAppx>
       <ZukiAppx>kodi-18.0-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
@@ -477,10 +477,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>18.0.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>18.1.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20190127-7f93d8b2-master-x64</KodiAppx>
-      <ZukiAppx>kodi-18.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20190217-33be1ecb-master-x64</KodiAppx>
+      <ZukiAppx>kodi-18.1-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
