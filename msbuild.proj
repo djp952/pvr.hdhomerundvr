@@ -35,20 +35,6 @@
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
-  <!-- DownloadFile: Downloads a file using System.Net.WebClient -->
-  <UsingTask TaskName="DownloadFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-    <ParameterGroup>
-      <Uri ParameterType="System.String" Required="true"/>
-      <Output ParameterType="System.String" Required="true"/>
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.Core"/>
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[new System.Net.WebClient().DownloadFile(Uri, Output);]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
   <!-- ReplaceInFile: Replaces text in a file based on a regular expression -->
   <UsingTask TaskName="ReplaceInFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -396,7 +382,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
+	<Exec Condition="!Exists('tmp\$(KodiApk).apk')" Command="curl http://mirrors.kodi.tv/releases/android/arm/$(KodiApk).apk -L -o tmp\$(KodiApk).apk " ContinueOnError="false" />
 
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
@@ -427,7 +413,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiApk).apk')" Uri="http://mirrors.kodi.tv/releases/android/arm64-v8a/$(KodiApk).apk" Output="tmp\$(KodiApk).apk"/>
+	<Exec Condition="!Exists('tmp\$(KodiApk).apk')" Command="curl http://mirrors.kodi.tv/releases/android/arm64-v8a/$(KodiApk).apk -L -o tmp\$(KodiApk).apk " ContinueOnError="false" />
 
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
