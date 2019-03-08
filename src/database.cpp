@@ -86,6 +86,8 @@ void get_season_number(sqlite3_context* context, int argc, sqlite3_value** argv)
 void http_request(sqlite3_context* context, int argc, sqlite3_value** argv);
 void url_encode(sqlite3_context* context, int argc, sqlite3_value** argv);
 
+template<typename... _args> static int execute_non_query(sqlite3* instance, _args&&... args);
+
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
@@ -2458,24 +2460,30 @@ int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
 }
 
 //---------------------------------------------------------------------------
-// execute_non_query
+// execute_non_query (local)
 //
-// Executes a non-query against the database
+// Executes a database query and returns the number of rows affected
 //
 // Arguments:
 //
 //	instance	- Database instance
-//	sql			- SQL non-query to execute
+//	sql			- SQL query to execute
 
-int execute_non_query(sqlite3* instance, char const* sql)
+template<typename... _args>
+static int execute_non_query(sqlite3* instance, _args&&... args)
 {
 	char*		errmsg = nullptr;		// Error message from SQLite
 	int			result;					// Result from SQLite function call
 	
+	// Unpack the variadic arguments into a string stream
+	std::ostringstream sql;
+	int unpack[] = {0, ( static_cast<void>(sql << args), 0 ) ... };
+	(void)unpack;
+
 	try {
 	
 		// Attempt to execute the statement and throw the error on failure
-		result = sqlite3_exec(instance, sql, nullptr, nullptr, &errmsg);
+		result = sqlite3_exec(instance, sql.str().c_str(), nullptr, nullptr, &errmsg);
 		if(result != SQLITE_OK) throw sqlite_exception(result, errmsg);
 
 		// Return the number of changes made by the preceeding query

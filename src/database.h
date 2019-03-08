@@ -456,11 +456,6 @@ void enumerate_series(sqlite3* instance, char const* title, enumerate_series_cal
 // Enumerates the available timers
 void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback callback);
 
-// execute_non_query
-//
-// executes a non-query against the database
-int execute_non_query(sqlite3* instance, char const* sql);
-
 // find_seriesid
 //
 // Retrieves the series id associated with a specific channel/time combination
