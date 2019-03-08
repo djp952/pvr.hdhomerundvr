@@ -32,20 +32,6 @@
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
-  <!-- DownloadFile: Downloads a file using System.Net.WebClient -->
-  <UsingTask TaskName="DownloadFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-    <ParameterGroup>
-      <Uri ParameterType="System.String" Required="true"/>
-      <Output ParameterType="System.String" Required="true"/>
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.Core"/>
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[new System.Net.WebClient().DownloadFile(Uri, Output);]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
   <!-- ReadCertificateSubject: Reads the subject from an X.509 certificate file (.cer, .pfx) -->
   <UsingTask TaskName="ReadCertificateSubject" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -454,7 +440,7 @@
 	
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).appx')" Importance="high" Text="Downloading $(KodiAppx).appx ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiAppx).appx')" Uri="http://mirrors.kodi.tv/nightlies/windows/uwp32/master/$(KodiAppx).appx" Output="tmp\$(KodiAppx).appx"/>
+	<Exec Condition="!Exists('tmp\$(KodiAppx).appx')" Command="curl http://mirrors.kodi.tv/nightlies/windows/uwp32/master/$(KodiAppx).appx -L -o tmp\$(KodiAppx).appx " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).appx /l /d out\$(KodiAppx)" ContinueOnError="false"/>
@@ -495,7 +481,7 @@
 	
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).appx')" Importance="high" Text="Downloading $(KodiAppx).appx ..."/>
-    <DownloadFile Condition="!Exists('tmp\$(KodiAppx).appx')" Uri="http://mirrors.kodi.tv/nightlies/windows/uwp64/master/$(KodiAppx).appx" Output="tmp\$(KodiAppx).appx"/>
+	<Exec Condition="!Exists('tmp\$(KodiAppx).appx')" Command="curl http://mirrors.kodi.tv/nightlies/windows/uwp64/master/$(KodiAppx).appx -L -o tmp\$(KodiAppx).appx " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).appx /l /d out\$(KodiAppx)" ContinueOnError="false"/>
