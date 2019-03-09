@@ -1,5 +1,6 @@
-v1.3.14 (2019.03.xx)
+v1.4.0 (2019.03.xx)
   - Update SQLite database engine to version 3.27.2
+  - Retrieve DVR service authorization flag for tuner(s) during device discovery
 
 v1.3.13 (2019.02.12)
   - Update SQLite database engine to version 3.27.1

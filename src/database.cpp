@@ -707,8 +707,8 @@ bool discover_devices_broadcast(sqlite3* instance, bool excludestorage)
 
 	assert(instance != nullptr);
 
-	// deviceid | type | data
-	auto sql = "insert into discover_device values(printf('%08X', ?1), ?2, ?3)";
+	// deviceid | type | dvrauthorized | data
+	auto sql = "insert into discover_device values(printf('%08X', ?1), ?2, null, ?3)";
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
@@ -752,6 +752,9 @@ bool discover_devices_broadcast(sqlite3* instance, bool excludestorage)
 	// Update the deviceid column for storage devices, the broadcast mechanism has no means to return the StorageID
 	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where type = 'storage'");
 
+	// Update the DVR service authorization flag for each discovered tuner device
+	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(http_request('http://api.hdhomerun.com/api/account?DeviceAuth=' || coalesce(url_encode(json_extract(data, '$.DeviceAuth')), ''), null), '$.DVR') where type = 'tuner'");
+
 	// Indicate if any tuner devices were detected during discovery or not
 	return hastuners;
 }
@@ -787,13 +790,17 @@ bool discover_devices_http(sqlite3* instance, bool excludestorage)
 	execute_non_query(instance, "create temp table discover_device_http as select "
 		"coalesce(json_extract(discovery.value, '$.DeviceID'), json_extract(discovery.value, '$.StorageID')) as deviceid, "
 		"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
+		"null as dvrauthorized, "
 		"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data from json_each(http_request('http://api.hdhomerun.com/discover')) as discovery");
 	
 	// Given that this is a multi-step operation, it's easier to use a different query altogether to exclude storage devices from discover_device
-	if(!excludestorage) execute_non_query(instance, "insert into discover_device select deviceid, type, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
-	else execute_non_query(instance, "insert into discover_device select deviceid, type, data from discover_device_http where data is not null and json_extract(data, '$.StorageID') is null and json_extract(data, '$.Legacy') is null");
+	if(!excludestorage) execute_non_query(instance, "insert into discover_device select deviceid, type, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
+	else execute_non_query(instance, "insert into discover_device select deviceid, type, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.StorageID') is null and json_extract(data, '$.Legacy') is null");
 
 	execute_non_query(instance, "drop table discover_device_http");
+
+	// Update the DVR service authorization flag for each discovered tuner device
+	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(http_request('http://api.hdhomerun.com/api/account?DeviceAuth=' || coalesce(url_encode(json_extract(data, '$.DeviceAuth')), ''), null), '$.DVR') where type = 'tuner'");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
 	auto sql = "select count(deviceid) as numtuners from discover_device where type = 'tuner'";
@@ -933,8 +940,7 @@ void discover_guide(sqlite3* instance, bool& changed)
 			"insert into discover_guide select "
 			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
-			"json_extract(discovery.value, '$.ImageURL') as iconurl, "
-			"null as data "
+			"json_extract(discovery.value, '$.ImageURL') as iconurl "
 			"from deviceauth, json_each(http_request('http://api.hdhomerun.com/api/guide?DeviceAuth=' || coalesce(deviceauth.code, ''))) as discovery");
 
 		// This requires a multi-step operation against the guide table; start a transaction
@@ -1437,7 +1443,8 @@ void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback c
 	if((instance == nullptr) || (callback == nullptr)) return;
 
 	// name
-	auto sql = "select coalesce(json_extract(data, '$.FriendlyName'), 'unknown') || ' ' || deviceid as name from device";
+	auto sql = "select coalesce(json_extract(data, '$.FriendlyName'), 'unknown') || ' ' || deviceid || "
+		"case when coalesce(dvr, 0) = 1 then ' (DVR authorized)' else '' end as name from device";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2512,7 +2519,7 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 	std::string					seriesid;				// Discovered series identifier
 	int							result;					// Result from SQLite function call
 
-	if(instance == nullptr) return 0;
+	if(instance == nullptr) return seriesid;
 
 	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the electronic program guide API to locate a seriesid based on a channel and timestamp
@@ -2560,7 +2567,7 @@ std::string find_seriesid(sqlite3* instance, char const* title)
 	std::string					seriesid;				// Discovered series identifier
 	int							result;					// Result from SQLite function call
 
-	if(instance == nullptr) return 0;
+	if(instance == nullptr) return seriesid;
 
 	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the search API to locate a series id based on the series title
@@ -3626,8 +3633,8 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: device
 			// 
-			// deviceid(pk) | type | data
-			execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, type text, data text)");
+			// deviceid(pk) | type | dvrauthorized | data
+			execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, type text, dvrauthorized integer, data text)");
 
 			// table: lineup
 			//
@@ -3641,8 +3648,8 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: guide
 			//
-			// channelid(pk) | channelname | iconurl | data
-			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text, data text)");
+			// channelid(pk) | channelname | iconurl
+			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, channelname text, iconurl text)");
 
 			// table: recordingrule
 			//
