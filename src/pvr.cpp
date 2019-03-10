@@ -104,7 +104,7 @@ static void discover_guide_task(scalar_condition<bool> const& cancel);
 static void discover_lineups_task(scalar_condition<bool> const& cancel);
 static void discover_recordingrules_task(scalar_condition<bool> const& cancel);
 static void discover_recordings_task(scalar_condition<bool> const& cancel);
-static void discover_startup_task(scalar_condition<bool> const& cancel);
+static void discover_startup_task(bool includedevices, scalar_condition<bool> const& cancel);
 
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
@@ -1504,13 +1504,13 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 						catch(std::exception& ex) { handle_stdexception(__func__, ex); }
 						catch(...) { handle_generalexception(__func__); }
 
-						// To help reduce trigger 'chatter' at startup, a special optimized task was created that loads
-						// all discovery data and only triggers the PVR update(s) once per category.  Delay the launch 
-						// of this initial startup discovery task for a reasonable amount of time to allow the PVR to 
-						// finish it's start up processing -- failure to do so may trigger a race condition that leads
-						// to a deadlock in Kodi that can occur when channel information changes while the EPGs are created
+						// To help reduce trigger 'chatter' at startup, a special optimized task was created that loads all discovery data and 
+						// only triggers the PVR update(s) once per category.  Delay the launch of this initial startup discovery task for a 
+						// reasonable amount of time to allow the PVR to finish it's start up processing -- failure to do so may trigger a race 
+						// condition that leads to a deadlock in Kodi that can occur when channel information changes while the EPGs are created.
+						// Since the devices and lineups were synchronously discovered already, bind false as the first argument to skip those
 						log_notice(__func__, ": delaying startup discovery task for ", g_settings.startup_discovery_task_delay, " seconds");					
-						g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(g_settings.startup_discovery_task_delay), discover_startup_task);
+						g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(g_settings.startup_discovery_task_delay), std::bind(discover_startup_task, false, std::placeholders::_1));
 						g_scheduler.start();
 					}
 
@@ -2361,7 +2361,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			// Schedule a startup discovery to occur and reload the entire database from scratch;
 			// the startup task is more efficient with the callbacks to Kodi than the periodic ones
 			log_notice(__func__, ": scheduling startup discovery task");
-			g_scheduler.add(now, discover_startup_task);
+			g_scheduler.add(now, std::bind(discover_startup_task, true, std::placeholders::_1));
 	
 			g_scheduler.start();				// Restart the task scheduler
 		}
