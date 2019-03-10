@@ -827,7 +827,7 @@ static void discover_recordings_task(scalar_condition<bool> const& /*cancel*/)
 // discover_startup_task
 //
 // Scheduled task implementation to discover all data during PVR startup
-static void discover_startup_task(scalar_condition<bool> const& /*cancel*/)
+static void discover_startup_task(bool includedevices, scalar_condition<bool> const& /*cancel*/)
 {
 	bool				lineups_changed = false;			// Flag if lineups have changed
 	bool				recordings_changed = false;			// Flag if recordings have changed
@@ -846,18 +846,20 @@ static void discover_startup_task(scalar_condition<bool> const& /*cancel*/)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Discover all of the local device and backend service data -- failures here are not
-		// fatal and will just be logged rather than aborting all of the discovery tasks
+		// When the PVR is first starting up, the devices and lineups are discovered synchronously
+		// as part of that process.  Skip these to eliminate duplicating that work
+		if(includedevices) { 
 
-		// DISCOVER: Devices
-		try { discover_devices(dbhandle, settings.use_broadcast_device_discovery, settings.disable_storage_devices); }
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-		catch(...) { handle_generalexception(__func__); }
+			// DISCOVER: Devices
+			try { discover_devices(dbhandle, settings.use_broadcast_device_discovery, settings.disable_storage_devices); }
+			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+			catch(...) { handle_generalexception(__func__); }
 
-		// DISCOVER: Lineups
-		try { discover_lineups(dbhandle, lineups_changed); }
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-		catch(...) { handle_generalexception(__func__); }
+			// DISCOVER: Lineups
+			try { discover_lineups(dbhandle, lineups_changed); }
+			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+			catch(...) { handle_generalexception(__func__); }
+		}
 
 		// DISCOVER: Recordings
 		try { discover_recordings(dbhandle, recordings_changed); }
@@ -1258,7 +1260,7 @@ void ADDON_Announce(char const* flag, char const* sender, char const* message, v
 			// The special discover_startup_task takes care of all discoveries in a more optimized
 			// fashion than invoking the periodic ones; use that on wakeup too
 			log_notice(__func__, ": scheduling startup discovery task (delayed ", settings.startup_discovery_task_delay, " seconds)");
-			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.startup_discovery_task_delay), discover_startup_task);
+			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.startup_discovery_task_delay), std::bind(discover_startup_task, true, std::placeholders::_1));
 
 			g_scheduler.start();				// Restart the scheduler
 		}
