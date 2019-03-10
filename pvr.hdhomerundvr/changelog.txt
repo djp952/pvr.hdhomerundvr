@@ -3,6 +3,7 @@ v1.4.0 (2019.03.xx)
   - Retrieve DVR service authorization flag for tuner(s) during device discovery
   - Increase default discovery interval from 5 minutes to 1 hour
   - Increase default lineup discovery interval from 10 minutes to 45 minutes
+  - Prevent redundant rediscovery of devices and channel lineups during PVR startup task
 
 v1.3.13 (2019.02.12)
   - Update SQLite database engine to version 3.27.1
