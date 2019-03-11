@@ -2681,6 +2681,51 @@ void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** /*argv*/)
 }
 
 //---------------------------------------------------------------------------
+// get_authorization_string
+//
+// Gets the device authorization string for the available tuner(s)
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+//	dvrauthorized	- Flag to only include tuner(s) with DVR authorization
+
+std::string get_authorization_string(sqlite3* instance, bool dvrauthorized)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	std::string					authstring;				// Generated device authorization string
+	int							result;					// Result from SQLite function call
+
+	if(instance == nullptr) return authstring;
+
+	// Prepare a scalar query to generate the requested combined device authorization string
+	auto sql = "select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device "
+		"where type = 'tuner' and coalesce(dvrauthorized, 0) in (1, ?1)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try { 
+
+		// Bind the query parameters(s)
+		result = sqlite3_bind_int(statement, 1, (dvrauthorized) ? 1 : 0);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) authstring.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return authstring;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_available_storage_space
 //
 // Gets the total amount of free space on the backend
