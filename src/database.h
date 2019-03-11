@@ -466,6 +466,11 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 // Retrieves the series id associated with a title
 std::string find_seriesid(sqlite3* instance, char const* title);
 
+// get_authorization_string
+//
+// Gets the device authorization string for the available tuner(s)
+std::string get_authorization_string(sqlite3* instance, bool dvrauthorized);
+
 // get_available_storage_space
 //
 // Gets the total amount of free space on the backend
