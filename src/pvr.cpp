@@ -1436,11 +1436,15 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 						try {
 						
+							connectionpool::handle dbhandle(g_connpool);
+
+							// Clear out existing tuner device authorization code(s) on startup, there is no good way to know if they are
+							// still valid or not and discover_devices() purposely doesn't remove cached data if no devices are found
+							clear_authorization_strings(dbhandle);
+
 							// Kodi currently has no means to create EPG entries in the database for channels that are
 							// added after the PVR manager has been started.  Synchronously execute a device and lineup
 							// discovery so that the initial set of channels are immediately available to Kodi
-							connectionpool::handle dbhandle(g_connpool);
-
 							log_notice(__func__, ": initiating local network resource discovery (startup)");
 							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery, g_settings.disable_storage_devices);
 							enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
