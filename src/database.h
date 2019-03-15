@@ -324,6 +324,11 @@ private:
 // Adds a new recording rule to the database
 void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule);
 
+// clear_authorization_strings
+//
+// Clears the device authorization string from all available tuners
+void clear_authorization_strings(sqlite3* instance);
+
 // clear_database
 //
 // Clears all discovery data out of the database
@@ -466,10 +471,10 @@ std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t t
 // Retrieves the series id associated with a title
 std::string find_seriesid(sqlite3* instance, char const* title);
 
-// get_authorization_string
+// get_authorization_strings
 //
-// Gets the device authorization string for the available tuner(s)
-std::string get_authorization_string(sqlite3* instance, bool dvrauthorized);
+// Gets the device authorization string for all available tuners
+std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized);
 
 // get_available_storage_space
 //

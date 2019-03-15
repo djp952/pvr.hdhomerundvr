@@ -457,6 +457,23 @@ void clear_database(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// clear_authorization_strings
+//
+// Clears the device authorization string from all available tuners
+//
+// Arguments:
+//
+//	instance	- Database instance handle
+
+void clear_authorization_strings(sqlite3* instance)
+{
+	if(instance == nullptr) return;
+
+	// Remove all 'DeviceAuth' JSON properties from the device discovery data
+	execute_non_query(instance, "update device set data = json_remove(data, '$.DeviceAuth')");
+}
+
+//---------------------------------------------------------------------------
 // close_database
 //
 // Closes a SQLite database handle
@@ -2681,16 +2698,16 @@ void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** /*argv*/)
 }
 
 //---------------------------------------------------------------------------
-// get_authorization_string
+// get_authorization_strings
 //
-// Gets the device authorization string for the available tuner(s)
+// Gets the device authorization string for all available tuners
 //
 // Arguments:
 //
 //	instance		- SQLite database instance
 //	dvrauthorized	- Flag to only include tuner(s) with DVR authorization
 
-std::string get_authorization_string(sqlite3* instance, bool dvrauthorized)
+std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized)
 {
 	sqlite3_stmt*				statement;				// Database query statement
 	std::string					authstring;				// Generated device authorization string
