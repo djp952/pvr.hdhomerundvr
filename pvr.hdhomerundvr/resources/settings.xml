@@ -37,7 +37,6 @@
     <setting id="startup_discovery_task_delay" label="30113" type="slider" default="3" range="1,1,10" option="int"/>
     <setting id="stream_read_minimum_byte_count" label="30114" type="enum" lvalues="30218|30219|30220|30221|30222|30223|30229" default="3"/>
     <setting id="stream_ring_buffer_size" label="30115" type="enum" lvalues="30224|30225|30226|30227|30228" default="0"/>
-    <setting id="disable_storage_devices" label="30127" type="bool" default="false"/>
   </category>
 
 </settings>
