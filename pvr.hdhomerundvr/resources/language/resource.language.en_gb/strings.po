@@ -124,10 +124,6 @@ msgctxt "#30126"
 msgid "Prepend season/episode number to episode name in EPG"
 msgstr ""
 
-msgctxt "#30127"
-msgid "Disable discovery of HDHomeRun RECORD devices"
-msgstr ""
-
 msgctxt "#30128"
 msgid "Use channel names from tuner device(s) in channel lineups"
 msgstr ""
