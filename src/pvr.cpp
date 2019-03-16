@@ -576,8 +576,9 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Discover the devices on the local network and check for changes
+		auto caller = __func__;
 		discover_devices(dbhandle, settings.use_broadcast_device_discovery, changed);
-		enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
+		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 
 		if(changed) {
 
@@ -848,8 +849,9 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 			// DISCOVER: Devices
 			try { 
 				
+				auto caller = __func__;
 				discover_devices(dbhandle, settings.use_broadcast_device_discovery); 
-				enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
+				enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 			}
 
 			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
@@ -1148,7 +1150,7 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
 			// iUniqueBroadcastId (required)
-			assert(item.broadcastid > EPG_TAG_INVALID_UID);
+			assert(item.broadcastid > 0);
 			epgtag.iUniqueBroadcastId = item.broadcastid;
 
 			// strTitle (required)
@@ -1498,8 +1500,9 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 							// added after the PVR manager has been started.  Synchronously execute a device and lineup
 							// discovery so that the initial set of channels are immediately available to Kodi
 							log_notice(__func__, ": initiating local network resource discovery (startup)");
+							auto caller = __func__;
 							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
-							enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
+							enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 							discover_lineups(dbhandle);
 
 							// Alert the user if no tuner device(s) were found during startup or are cached in the database
