@@ -221,11 +221,6 @@ struct addon_settings {
 	// Indicates the number of seconds to pause before initiating the startup discovery task
 	int startup_discovery_task_delay;
 
-	// disable_storage_devices
-	//
-	// Indicates that HDHomeRun RECORD storage devices should be excluded from discovery
-	bool disable_storage_devices;
-
 	// stream_read_chunk_size
 	//
 	// Indicates the minimum number of bytes to return from a stream read
@@ -361,7 +356,6 @@ static addon_settings g_settings = {
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
-	false,					// disable_storage_devices
 	(4 KiB),				// stream_read_chunk_size
 	(1 MiB),				// stream_ring_buffer_size
 	false,					// enable_recording_edl
@@ -610,7 +604,7 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Discover the devices on the local network and check for changes
-		discover_devices(dbhandle, settings.use_broadcast_device_discovery, settings.disable_storage_devices, changed);
+		discover_devices(dbhandle, settings.use_broadcast_device_discovery, changed);
 		enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 
 		if(changed) {
@@ -882,7 +876,7 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 			// DISCOVER: Devices
 			try { 
 				
-				discover_devices(dbhandle, settings.use_broadcast_device_discovery, settings.disable_storage_devices); 
+				discover_devices(dbhandle, settings.use_broadcast_device_discovery); 
 				enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 			}
 
@@ -1310,7 +1304,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
-			if(g_addon->GetSetting("disable_storage_devices", &bvalue)) g_settings.disable_storage_devices = bvalue;
 			if(g_addon->GetSetting("stream_read_chunk_size", &nvalue)) g_settings.stream_read_chunk_size = chunksize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
@@ -1451,7 +1444,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 							// added after the PVR manager has been started.  Synchronously execute a device and lineup
 							// discovery so that the initial set of channels are immediately available to Kodi
 							log_notice(__func__, ": initiating local network resource discovery (startup)");
-							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery, g_settings.disable_storage_devices);
+							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
 							enumerate_device_names(dbhandle, [caller = __func__](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 							discover_lineups(dbhandle);
 
@@ -1798,22 +1791,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.startup_discovery_task_delay = nvalue;
 			log_notice(__func__, ": setting startup_discovery_task_delay changed to ", nvalue, " seconds");
-		}
-	}
-
-	// disable_storage_devices
-	//
-	else if(strcmp(name, "disable_storage_devices") == 0) {
-
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.disable_storage_devices) {
-
-			g_settings.disable_storage_devices = bvalue;
-			log_notice(__func__, ": setting disable_storage_devices changed to ", (bvalue) ? "true" : "false", " -- schedule device discovery");
-
-			// Reschedule the device discovery task to run as soon as possible
-			g_scheduler.remove(discover_devices_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 		}
 	}
 
