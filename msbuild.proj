@@ -132,7 +132,7 @@
     <PropertyGroup>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-i686/include -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC -m32</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11 -m32</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y -m32</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
@@ -168,7 +168,7 @@
     <PropertyGroup>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-x86_64/include -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
@@ -204,7 +204,7 @@
     <PropertyGroup>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armel/include -Idepends/libuuid/linux-armel/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-armel" ContinueOnError="false"/>
@@ -240,7 +240,7 @@
     <PropertyGroup>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armhf/include -Idepends/libuuid/linux-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-armhf" ContinueOnError="false"/>
@@ -276,7 +276,7 @@
     <PropertyGroup>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-aarch64/include -Idepends/libuuid/linux-aarch64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-aarch64" ContinueOnError="false"/>
@@ -313,7 +313,7 @@
       <ENV>PATH=~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin</ENV>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/raspbian-armhf/include -Idepends/libuuid/raspbian-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\raspbian-armhf" ContinueOnError="false"/>
@@ -350,7 +350,7 @@
       <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH=~/osxcross/target/bin</ENV>
       <CPPFLAGS>-mmacosx-version-min=10.7 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/osx-x86_64/include -Idepends/libuuid/osx-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC -stdlib=libc++</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -fPIC -std=c++11 -stdlib=libc++</CXXFLAGS>
+      <CXXFLAGS>-DNDEBUG -fPIC -std=c++1y -stdlib=libc++</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\osx-x86_64" ContinueOnError="false"/>
@@ -424,7 +424,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20190205-cde4b1df-master-x86</KodiAppx>
+      <KodiAppx>Kodi-20190316-a2079469-master-x86</KodiAppx>
       <ZukiAppx>kodi-18.0-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
@@ -465,7 +465,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.1.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20190217-33be1ecb-master-x64</KodiAppx>
+      <KodiAppx>Kodi-20190316-a2079469-master-x64</KodiAppx>
       <ZukiAppx>kodi-18.1-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
