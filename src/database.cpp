@@ -1580,7 +1580,7 @@ void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate
 
 	// recordingruleid
 	auto sql = "select distinct(recordingruleid) as recordingruleid from recordingrule "
-		"where json_extract(data, '$.DateTimeOnly') < (cast(strftime('%s', 'now') as int) - ?1)";
+		"where json_extract(data, '$.DateTimeOnly') < (cast(strftime('%s', 'now') as integer) - ?1)";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1634,7 +1634,7 @@ void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t
 		"json_extract(entry.value, '$.StartTime') as starttime, "
 		"json_extract(entry.value, '$.EndTime') as endtime, "
 		"json_extract(entry.value, '$.Synopsis') as synopsis, "
-		"cast(strftime('%Y', coalesce(json_extract(entry.value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
+		"cast(strftime('%Y', coalesce(json_extract(entry.value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
 		"json_extract(entry.value, '$.ImageURL') as iconurl, "
 		"coalesce((select genretype from genremap where filter like json_extract(entry.value, '$.Filter[0]')), 0) as genretype, "
 		"json_extract(entry.value, '$.Filter[0]') as genres, "
@@ -1795,7 +1795,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 		"json_extract(value, '$.EpisodeTitle') as episodename, "
 		"get_season_number(json_extract(value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
-		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as int) as year, "
+		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
 		"json_extract(value, '$.PlayURL') as streamurl, "
 		"case when json_extract(value, '$.DisplayGroupTitle') is null then json_extract(value, '$.Title') else json_extract(value, '$.DisplayGroupTitle') end as directory, "
 		"json_extract(value, '$.Synopsis') as plot, "
