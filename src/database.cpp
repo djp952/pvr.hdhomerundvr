@@ -466,13 +466,37 @@ void clear_database(sqlite3* instance)
 // Arguments:
 //
 //	instance	- Database instance handle
+//	expiry		- Expiration time, in seconds
 
-void clear_authorization_strings(sqlite3* instance)
+void clear_authorization_strings(sqlite3* instance, int expiry)
 {
-	if(instance == nullptr) return;
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							result;				// Result from SQLite function
+	
+	if((instance == nullptr) || (expiry <= 0)) return;
 
-	// Remove all 'DeviceAuth' JSON properties from the device discovery data
-	execute_non_query(instance, "update device set data = json_remove(data, '$.DeviceAuth')");
+	// Remove all stale 'DeviceAuth' JSON properties from the device discovery data
+	auto sql = "update device set data = json_remove(data, '$.DeviceAuth') "
+		"where coalesce(discovered, 0) < (cast(strftime('%s', 'now') as integer) - ?1)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameter(s)
+		result = sqlite3_bind_int(statement, 1, expiry);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the query; there shouldn't be any result set returned from it
+		result = sqlite3_step(statement);
+		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+	
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
 }
 
 //---------------------------------------------------------------------------

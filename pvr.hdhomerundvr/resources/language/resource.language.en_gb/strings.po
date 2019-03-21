@@ -136,6 +136,10 @@ msgctxt "#30130"
 msgid "Report CUT indicators as COMBREAK indicators"
 msgstr ""
 
+msgctxt "#30131"
+msgid "Invalidate device authorization codes after"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -252,12 +256,20 @@ msgctxt "#30229"
 msgid "32 KiB"
 msgstr ""
 
-msgctxt "#30301"
-msgid "Delete episode"
+msgctxt "#30230"
+msgid "8 Hours"
+msgstr ""
+
+msgctxt "#30231"
+msgid "16 Hours"
+msgstr ""
+
+msgctxt "#30232"
+msgid "20 Hours"
 msgstr ""
 
 msgctxt "#30302"
-msgid "Delete and re-record episode"
+msgid "Delete and re-record"
 msgstr ""
 
 msgctxt "#30303"
