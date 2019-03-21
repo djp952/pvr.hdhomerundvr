@@ -326,8 +326,8 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 
 // clear_authorization_strings
 //
-// Clears the device authorization string from all available tuners
-void clear_authorization_strings(sqlite3* instance);
+// Clears stale device authorization string from all available tuners
+void clear_authorization_strings(sqlite3* instance, int expiry);
 
 // clear_database
 //

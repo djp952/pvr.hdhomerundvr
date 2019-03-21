@@ -238,6 +238,11 @@ struct addon_settings {
 	// Indicates the size of the stream ring buffer to allocate
 	int stream_ring_buffer_size;
 
+	// deviceauth_stale_after
+	//
+	// Amount of time (seconds) after which an expired device authorization code is removed
+	int deviceauth_stale_after;
+
 	// enable_recording_edl
 	//
 	// Enables support recorded TV edit decision lists
@@ -360,6 +365,7 @@ static addon_settings g_settings = {
 	3,						// startup_discovery_task_delay
 	(4 KiB),				// stream_read_minimum_byte_count
 	(1 MiB),				// stream_ring_buffer_size
+	72000,					// deviceauth_stale_after				default = 20 hours
 	false,					// enable_recording_edl
 	"",						// recording_edl_folder
 	false,					// recording_edl_folder_is_flat
@@ -557,6 +563,27 @@ static int delete_expired_enum_to_seconds(int nvalue)
 	return -1;						// Never = default
 }
 
+// deviceauth_stale_enum_to_seconds
+//
+// Converts the device authorization code expiration enumeration values into a number of seconds
+static int deviceauth_stale_enum_to_seconds(int nvalue)
+{
+	switch(nvalue) {
+
+		case 0: return -1;			// Never
+		case 1: return 7200;		// 2 hours
+		case 2: return 14400;		// 4 hours
+		case 3: return 28800;		// 8 hours
+		case 4: return 43200;		// 12 hours
+		case 5: return 57600;		// 16 hours
+		case 6: return 72000;		// 20 hours
+		case 7: return 86400;		// 1 day
+	};
+
+	return -1;						// Never = default
+}
+
+
 // discover_devices_task
 //
 // Scheduled task implementation to discover the HDHomeRun devices
@@ -574,6 +601,9 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// Clear any invalid device authorization strings present in the existing discovery data
+		clear_authorization_strings(dbhandle, settings.deviceauth_stale_after);
 
 		// Discover the devices on the local network and check for changes
 		auto caller = __func__;
@@ -1354,6 +1384,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
+			if(g_addon->GetSetting("deviceauth_stale_after", &nvalue)) g_settings.deviceauth_stale_after = deviceauth_stale_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
 			if(g_addon->GetSetting("recording_edl_folder_is_flat", &bvalue)) g_settings.recording_edl_folder_is_flat = bvalue;
@@ -1494,7 +1525,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 							// Clear out existing tuner device authorization code(s) on startup, there is no good way to know if they are
 							// still valid or not and discover_devices() purposely doesn't remove cached data if no devices are found
-							clear_authorization_strings(dbhandle);
+							clear_authorization_strings(dbhandle, g_settings.deviceauth_stale_after);
 
 							// Kodi currently has no means to create EPG entries in the database for channels that are
 							// added after the PVR manager has been started.  Synchronously execute a device and lineup
@@ -1782,7 +1813,11 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.delete_datetime_rules_after) {
 
 			g_settings.delete_datetime_rules_after = nvalue;
-			log_notice(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds");
+			log_notice(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds -- schedule recording rule discovery");
+
+			// Reschedule the recording rule discovery task to run as soon as possible
+			g_scheduler.remove(discover_recordingrules_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
 		}
 	}
 
@@ -1937,6 +1972,22 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.stream_ring_buffer_size = nvalue;
 			log_notice(__func__, ": setting stream_ring_buffer_size changed to ", nvalue, " bytes");
+		}
+	}
+
+	// deviceauth_stale_after
+	//
+	else if(strcmp(name, "deviceauth_stale_after") == 0) {
+
+		int nvalue = deviceauth_stale_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		if(nvalue != g_settings.deviceauth_stale_after) {
+
+			g_settings.deviceauth_stale_after = nvalue;
+			log_notice(__func__, ": setting deviceauth_stale_after changed to ", nvalue, " seconds -- schedule device discovery");
+
+			// Reschedule the device discovery task to run as soon as possible
+			g_scheduler.remove(discover_devices_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 		}
 	}
 
