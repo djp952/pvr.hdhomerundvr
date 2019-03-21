@@ -36,6 +36,7 @@
     <setting id="startup_discovery_task_delay" label="30113" type="slider" default="3" range="1,1,10" option="int"/>
     <setting id="stream_read_chunk_size" label="30114" type="enum" lvalues="30218|30219|30220|30221|30222|30223|30229" default="3"/>
     <setting id="stream_ring_buffer_size" label="30115" type="enum" lvalues="30224|30225|30226|30227|30228" default="0"/>
+    <setting id="deviceauth_stale_after" label="30131" type="enum" lvalues="30213|30207|30208|30230|30210|30231|30232|30211" default="6"/>
   </category>
 
 </settings>
