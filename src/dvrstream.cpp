@@ -195,6 +195,8 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
 	m_readmincount(std::max(align::down(readmincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
 	m_buffersize(align::up(buffersize, 65536))
 {
+	size_t		available = 0;				// Amount of available ring buffer data
+
 	if(url == nullptr) throw std::invalid_argument("url");
 
 	// Allocate the ring buffer using the 64KiB upward-aligned buffer size
@@ -231,8 +233,16 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
 
 			try {
 
-				// Attempt to begin the data transfer and wait for the HTTP headers to be processed
-				if(!transfer_until([&]() -> bool { return m_headers == true; })) throw string_exception(__func__, ": failed to receive HTTP response headers");
+				// Attempt to begin the data transfer and wait for both the HTTP headers to be processed
+				// and for the initial chunk of data to become available in the ring buffer
+				transfer_until([&]() -> bool { 
+					
+					available = (m_tail > m_head) ? (m_buffersize - m_tail) + m_head : m_head - m_tail;
+					return ((m_headers == true) && (available > 0));
+				});
+
+				if(!m_headers) throw string_exception(__func__, ": failed to receive HTTP response headers");
+				if(available == 0) throw string_exception(__func__, ": failed to receive HTTP response body");
 			}
 
 			// Remove the easy handle from the multi interface on exception
@@ -763,6 +773,8 @@ bool dvrstream::realtime(void) const
 
 long long dvrstream::restart(long long position)
 {
+	size_t		available = 0;				// Amount of available ring buffer data
+
 	assert((m_curlm != nullptr) && (m_curl != nullptr));
 	assert(position >= 0);
 
@@ -792,9 +804,16 @@ long long dvrstream::restart(long long position)
 	curlmresult = curl_multi_add_handle(m_curlm, m_curl);
 	if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_remove_handle() failed: ", curl_multi_strerror(curlmresult));
 
-	// Execute the data transfer until the HTTP headers have been received and processed
-	if(!transfer_until([&]() -> bool { return m_headers == true; })) 
-		throw string_exception(__func__, ": failed to receive HTTP response headers");
+	// Attempt to begin the data transfer and wait for both the HTTP headers to be processed
+	// and for the initial chunk of data to become available in the ring buffer
+	transfer_until([&]() -> bool { 
+					
+		available = (m_tail > m_head) ? (m_buffersize - m_tail) + m_head : m_head - m_tail;
+		return ((m_headers == true) && (available > 0));
+	});
+
+	if(!m_headers) throw string_exception(__func__, ": failed to receive HTTP response headers");
+	if(available == 0) throw string_exception(__func__, ": failed to receive HTTP response body");
 
 	return m_readpos;					// Return new starting position of the stream
 }
