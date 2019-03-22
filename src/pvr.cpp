@@ -918,28 +918,28 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 		// TRIGGER: Channels
 		if(lineups_changed || guide_changed) {
 			
-			log_notice(__func__, ": discovery data changed -- trigger channel update");
+			log_notice(__func__, ": lineup / guide discovery data changed -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
 		}
 
 		// TRIGGER: Channel Groups
 		if(lineups_changed) {
 			
-			log_notice(__func__, ": discovery data changed -- trigger channel group update");
+			log_notice(__func__, ": lineup discovery data changed -- trigger channel group update");
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
 
 		// TRIGGER: Recordings
 		if(recordings_changed) {
 			
-			log_notice(__func__, ": discovery data changed -- trigger recording update");
+			log_notice(__func__, ": recording discovery data changed -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 
 		// TRIGGER: Timers
 		if(recordingrules_changed || episodes_changed) {
 			
-			log_notice(__func__, ": discovery data changed -- trigger timer update");
+			log_notice(__func__, ": recording rule / recording rule episode discovery data changed -- trigger timer update");
 			g_pvr->TriggerTimerUpdate();
 		}
 
