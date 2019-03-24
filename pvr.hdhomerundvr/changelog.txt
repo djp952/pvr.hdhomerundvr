@@ -1,14 +1,15 @@
 v1.4.0 (2019.03.xx)
   - Update SQLite database engine to version 3.27.2
+  - Add "Invalidate tuner device authorization codes after" advanced setting
+  - Change default discovery interval from 5 minutes to 1 hour
+  - Change default lineup discovery interval from 10 minutes to 45 minutes
+  - Remove "Disable discovery of HDHomeRun RECORD devices" advanced setting
   - Retrieve DVR service authorization flag for tuner(s) during device discovery
   - Maintain database timestamps indicating when all backend data was last discovered
   - Log discovered HDHomeRun devices after device discovery completes
-  - Increase default discovery interval from 5 minutes to 1 hour
-  - Increase default lineup discovery interval from 10 minutes to 45 minutes
   - Prevent redundant rediscovery of devices and channel lineups during PVR startup task
-  - Add "Invalidate tuner device authorization codes after" advanced setting
-  - Remove "Disable discovery of HDHomeRun RECORD devices" advanced setting
   - Fix bug preventing recording rule discovery from executing if "Delete expired date/time recording rules after" setting has changed
+  - Fix bug causing unnecessary timer updates when series episodes are available via multiple channels
 
 v1.3.13 (2019.02.12)
   - Update SQLite database engine to version 3.27.1

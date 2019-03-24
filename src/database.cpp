@@ -900,6 +900,15 @@ void discover_episodes(sqlite3* instance, bool& changed)
 			"http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || entry.seriesid) as data "
 			"from deviceauth, (select distinct json_extract(data, '$.SeriesID') as seriesid from recordingrule where seriesid is not null) as entry");
 
+		// Filter the resultant JSON data to only include episodes associated with a recording rule and sort that data by both the start
+		// time and the channel number; the backend ordering is unreliable when a series exists on multiple channels
+		execute_non_query(instance, "update discover_episode set data = (select json_group_array(entry.value) from discover_episode as self, json_each(self.data) as entry "
+			"where self.seriesid = discover_episode.seriesid and json_extract(entry.value, '$.RecordingRule') = 1 "
+			"order by json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.ChannelNumber'))");
+
+		// Remove any series data that was nulled out by the previous operation (json_group_array() will actually return '[]' instead of null).
+		execute_non_query(instance, "delete from discover_episode where data is null or data like '[]'");
+
 		// This requires a multi-step operation against the episode table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
 
@@ -2069,8 +2078,7 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		"from episode, json_each(episode.data) "
 		"left outer join recordingrule on episode.seriesid = recordingrule.seriesid and json_extract(value, '$.StartTime') = json_extract(recordingrule.data, '$.DateTimeOnly') "
 		"left outer join guidenumbers on json_extract(value, '$.ChannelNumber') = guidenumbers.guidenumber "
-		"where json_extract(value, '$.RecordingRule') = 1 and "
-		"(starttime < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
+		"where (starttime < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -3217,8 +3225,8 @@ int get_timer_count(sqlite3* instance, int maxdays)
 	if(maxdays < 0) maxdays = 31;
 
 	// Select the number of episodes set to record in the specified timeframe
-	auto sql = "select count(*) from episode, json_each(episode.data) where json_extract(value, '$.RecordingRule') = 1 and "
-		"(json_extract(value, '$.StartTime') < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
+	auto sql = "select count(*) from episode, json_each(episode.data) "
+		"where (json_extract(value, '$.StartTime') < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
