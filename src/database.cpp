@@ -2356,6 +2356,13 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					// Generate the URL required to execute this transfer operation
 					auto url = sqlite3_mprintf("http://api.hdhomerun.com/api/guide?DeviceAuth=%s&Channel=%s&Start=%d", epgcursor->deviceauth.c_str(), epgcursor->channel.c_str(), starttime);
 
+				#if defined(_WINDOWS) && defined(_DEBUG)
+					// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
+					char debugurl[256];
+					snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s: %s\r\n", __func__, url);
+					OutputDebugStringA(debugurl);
+				#endif
+
 					// Create the transfer instance to track this operation in the list<>
 					auto transfer = transfers.emplace(transfers.end(), std::make_pair(curl, byte_string()));
 
@@ -3425,6 +3432,13 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 		
 		return size * count;
 	};
+
+#if defined(_WINDOWS) && defined(_DEBUG)
+	// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
+	char debugurl[256];
+	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s: %s\r\n", __func__, url);
+	OutputDebugStringA(debugurl);
+#endif
 
 	// Initialize the CURL session for the download operation
 	CURL* curl = curl_easy_init();
