@@ -3,6 +3,7 @@ v1.4.0 (2019.03.xx)
   - Add "Invalidate tuner device authorization codes after" advanced setting
   - Change default discovery interval from 5 minutes to 1 hour
   - Change default lineup discovery interval from 10 minutes to 45 minutes
+  - Migrate addon settings definition to new format; add help strings for all settings
   - Remove "Disable discovery of HDHomeRun RECORD devices" advanced setting
   - Retrieve DVR service authorization flag for tuner(s) during device discovery
   - Maintain database timestamps indicating when all backend data was last discovered

@@ -319,3 +319,108 @@ msgstr ""
 msgctxt "#30403"
 msgid "Sports"
 msgstr ""
+
+msgctxt "#30501"
+msgid "When set to ON the PVR will use a UDP broadcast to discover devices on the local network instead of requesting the information from the cloud-based backend."
+msgstr ""
+
+msgctxt "#30502"
+msgid "When set to ON the PVR will disable all discovery tasks while a Live TV or Recorded TV stream is in progress."
+msgstr ""
+
+msgctxt "#30503"
+msgid "When set to ON the channel number will be prepended to the channel name when reported to Kodi."
+msgstr ""
+
+msgctxt "#30504"
+msgid "When set to ON the title for recordings will be replaced with the season and episode number when available."
+msgstr ""
+
+msgctxt "#30505"
+msgid "When set to ON a Recording discovery will be initiated immediately after any Live TV or Recorded TV stream has ended."
+msgstr ""
+
+msgctxt "#30506"
+msgid "When set to ON the EPG genre string(s) will be set to the string(s) provided by the backend instead of attempting to map them into Kodi-specific genres."
+msgstr ""
+
+msgctxt "#30507"
+msgid "When set to ON channels marked as DRM-protected by the HDHomeRun tuner device(s) will still be listed in the Kodi channel lineups."
+msgstr ""
+
+msgctxt "#30508"
+msgid "When set to ON the channel names reported to Kodi will be the names provided by the HDHomeRun tuner device(s) instead of the backend EPG data."
+msgstr ""
+
+msgctxt "#30509"
+msgid "Specifies the age at which an expired date/time recording rule (timer rule) will be automatically deleted."
+msgstr ""
+
+msgctxt "#30510"
+msgid "Specifies the interval between re-discovery of the HDHomeRun tuner and HDHomeRun RECORD device(s) on the local network."
+msgstr ""
+
+msgctxt "#30511"
+msgid "Specifies the interval between re-discovery of available channel lineups from previously discovered HDHomeRun tuner device(s)."
+msgstr ""
+
+msgctxt "#30512"
+msgid "Specifies the interval between re-discovery of the EPG metadata (channel identifiers, names, logo images) from the HDHomeRun backend services."
+msgstr ""
+
+msgctxt "#30513"
+msgid "Specifies the interval between re-discovery of available recordings from previously discovered HDHomeRun RECORD device(s)."
+msgstr ""
+
+msgctxt "#30514"
+msgid "Specifies the interval between re-discovery of available recording rules (Kodi Timer Rules) from the HDHomeRun backend services."
+msgstr ""
+
+msgctxt "#30515"
+msgid "Specifies the interval between re-discovery of available recording rule episodes (Kodi Timers) from the HDHomeRun backend services."
+msgstr ""
+
+msgctxt "#30516"
+msgid "Enables support for detection of Comskip Edit Decision List (EDL) files."
+msgstr ""
+
+msgctxt "#30517"
+msgid "Specifies the base path to search for Recorded TV Edit Decision List (EDL) files."
+msgstr ""
+
+msgctxt "#30518"
+msgid "When set to ON only the base path will be searched for Edit Decision List (EDL) files.  When set to OFF Edit Decision List (EDL) files must be located in a subdirectory that matches the series name as displayed in Kodi."
+msgstr ""
+
+msgctxt "#30519"
+msgid "When set to ON Edit Decision List (EDL) CUT indicators will be treated as COMSKIP indicators."
+msgstr ""
+
+msgctxt "#30520"
+msgid "Specifies the amount of time to artificially add to each entry present in the Edit Decision List (EDL) file."
+msgstr ""
+
+msgctxt "#30521"
+msgid "Specifies the amount of time to artificially subtract from each entry present in the Edit Decision List (EDL) file."
+msgstr ""
+
+msgctxt "#30522"
+msgid "When set to ON Live TV channels will be streamed directly from an available HDHomeRun tuner device instead of the HDHomeRun RECORD device."
+msgstr ""
+
+msgctxt "#30523"
+msgid "Specifies the amount of delay inserted between PVR startup and execution of the initial discovery tasks."
+msgstr ""
+
+msgctxt "#30524"
+msgid "Specifies the amount of data Kodi will request as a single chunk of Live TV or Recorded TV streams."
+msgstr ""
+
+msgctxt "#30525"
+msgid "Specifies the size of the internal ring buffer used to cache Live TV and Recorded TV stream data."
+msgstr ""
+
+msgctxt "#30526"
+msgid "Specifies the amount of time after which cached HDHomeRun tuner device authorization strings will be considered invalid."
+msgstr ""
+
