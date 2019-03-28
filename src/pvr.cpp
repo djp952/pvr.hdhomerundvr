@@ -544,25 +544,6 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 // HELPER FUNCTIONS
 //---------------------------------------------------------------------------
 
-// chunksize_enum_to_bytes
-//
-// Converts the chunk size enumeration values into a number of bytes
-static int chunksize_enum_to_bytes(int nvalue)
-{	
-	switch(nvalue) {
-
-		case 0: return 0;			// None
-		case 1: return (1 KiB);		// 1 Kilobyte
-		case 2: return (2 KiB);		// 2 Kilobytes
-		case 3: return (4 KiB);		// 4 Kilobytes
-		case 4: return (8 KiB);		// 8 Kilobytes
-		case 5: return (16 KiB);	// 16 Kilobytes
-		case 6: return (32 KiB);	// 32 Kilobytes
-	};
-
-	return (4 KiB);					// 4 Kilobytes = default
-}
-
 // copy_settings
 //
 // Atomically creates a copy of the global addon_settings structure
@@ -571,44 +552,6 @@ inline struct addon_settings copy_settings(void)
 	std::unique_lock<std::mutex> settings_lock(g_settings_lock);
 	return g_settings;
 }
-
-// delete_expired_enum_to_seconds
-//
-// Converts the delete expired rules interval enumeration values into a number of seconds
-static int delete_expired_enum_to_seconds(int nvalue)
-{
-	switch(nvalue) {
-
-		case 0: return -1;			// Never
-		case 1: return 21600;		// 6 hours
-		case 2: return 43200;		// 12 hours
-		case 3: return 86400;		// 1 day
-		case 4: return 172800;		// 2 days
-	};
-
-	return -1;						// Never = default
-}
-
-// deviceauth_stale_enum_to_seconds
-//
-// Converts the device authorization code expiration enumeration values into a number of seconds
-static int deviceauth_stale_enum_to_seconds(int nvalue)
-{
-	switch(nvalue) {
-
-		case 0: return -1;			// Never
-		case 1: return 7200;		// 2 hours
-		case 2: return 14400;		// 4 hours
-		case 3: return 28800;		// 8 hours
-		case 4: return 43200;		// 12 hours
-		case 5: return 57600;		// 16 hours
-		case 6: return 72000;		// 20 hours
-		case 7: return 86400;		// 1 day
-	};
-
-	return -1;						// Never = default
-}
-
 
 // discover_devices_task
 //
@@ -1031,33 +974,6 @@ static _result handle_stdexception(char const* function, std::exception const& e
 	return result;
 }
 
-// interval_enum_to_seconds
-//
-// Converts the discovery interval enumeration values into a number of seconds
-static int interval_enum_to_seconds(int nvalue)
-{	
-	switch(nvalue) {
-
-		case 0: return 300;			// 5 minutes
-		case 1: return 600;			// 10 minutes
-		case 2: return 900;			// 15 minutes
-		case 3: return 1800;		// 30 minutes
-		case 4: return 2700;		// 45 minutes
-		case 5: return 3600;		// 1 hour
-		case 6: return 7200;		// 2 hours
-		case 7: return 14400;		// 4 hours
-		
-		// 30 seconds and 1 minute were added after the fact, for compatibility
-		// with existing settings they were put at the end.  Local network
-		// discoveries can be executed more quickly if the user prefers that
-
-		case 8: return 30;			// 30 seconds
-		case 9: return 60;			// 1 minute
-	};
-
-	return 600;						// 10 minutes = default
-}
-	
 // log_debug
 //
 // Variadic method of writing a LOG_DEBUG entry into the Kodi application log
@@ -1135,23 +1051,6 @@ static char const* const edltype_to_string(PVR_EDL_TYPE const& type)
 	}
 
 	return "<UNKNOWN>";
-}
-
-// ringbuffersize_enum_to_bytes
-//
-// Converts the ring buffer size enumeration values into a number of bytes
-static int ringbuffersize_enum_to_bytes(int nvalue)
-{	
-	switch(nvalue) {
-
-		case 0: return (1 MiB);		// 1 Megabyte
-		case 1: return (2 MiB);		// 2 Megabytes
-		case 2: return (4 MiB);		// 4 Megabytes
-		case 3: return (8 MiB);		// 8 Megabytes
-		case 4: return (16 MiB);	// 16 Megabytes
-	};
-
-	return (4 MiB);					// 4 Megabytes = default
 }
 
 // try_getepgforchannel
@@ -1320,23 +1219,23 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
-			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
+			if(g_addon->GetSetting("delete_datetime_rules_after_v2", &nvalue)) g_settings.delete_datetime_rules_after = nvalue;
 
 			// Load the discovery interval settings
 			if(g_addon->GetSetting("use_broadcast_device_discovery", &bvalue)) g_settings.use_broadcast_device_discovery = bvalue;
-			if(g_addon->GetSetting("discover_devices_interval", &nvalue)) g_settings.discover_devices_interval = interval_enum_to_seconds(nvalue);
-			if(g_addon->GetSetting("discover_lineups_interval", &nvalue)) g_settings.discover_lineups_interval = interval_enum_to_seconds(nvalue);
-			if(g_addon->GetSetting("discover_guide_interval", &nvalue)) g_settings.discover_guide_interval = interval_enum_to_seconds(nvalue);
-			if(g_addon->GetSetting("discover_recordings_interval", &nvalue)) g_settings.discover_recordings_interval = interval_enum_to_seconds(nvalue);
-			if(g_addon->GetSetting("discover_recordingrules_interval", &nvalue)) g_settings.discover_recordingrules_interval = interval_enum_to_seconds(nvalue);
-			if(g_addon->GetSetting("discover_episodes_interval", &nvalue)) g_settings.discover_episodes_interval = interval_enum_to_seconds(nvalue);
+			if(g_addon->GetSetting("discover_devices_interval_v2", &nvalue)) g_settings.discover_devices_interval = nvalue;
+			if(g_addon->GetSetting("discover_lineups_interval_v2", &nvalue)) g_settings.discover_lineups_interval = nvalue;
+			if(g_addon->GetSetting("discover_guide_interval_v2", &nvalue)) g_settings.discover_guide_interval = nvalue;
+			if(g_addon->GetSetting("discover_recordings_interval_v2", &nvalue)) g_settings.discover_recordings_interval = nvalue;
+			if(g_addon->GetSetting("discover_recordingrules_interval_v2", &nvalue)) g_settings.discover_recordingrules_interval = nvalue;
+			if(g_addon->GetSetting("discover_episodes_interval_v2", &nvalue)) g_settings.discover_episodes_interval = nvalue;
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
-			if(g_addon->GetSetting("stream_read_chunk_size", &nvalue)) g_settings.stream_read_chunk_size = chunksize_enum_to_bytes(nvalue);
-			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
-			if(g_addon->GetSetting("deviceauth_stale_after", &nvalue)) g_settings.deviceauth_stale_after = deviceauth_stale_enum_to_seconds(nvalue);
+			if(g_addon->GetSetting("stream_read_chunk_size_v2", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
+			if(g_addon->GetSetting("stream_ring_buffer_size_v2", &nvalue)) g_settings.stream_ring_buffer_size = nvalue;
+			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
 			if(g_addon->GetSetting("recording_edl_folder_is_flat", &bvalue)) g_settings.recording_edl_folder_is_flat = bvalue;
@@ -1686,9 +1585,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// delete_datetime_rules_after
 	//
-	else if(strcmp(name, "delete_datetime_rules_after") == 0) {
+	else if(strcmp(name, "delete_datetime_rules_after_v2") == 0) {
 
-		int nvalue = delete_expired_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.delete_datetime_rules_after) {
 
 			g_settings.delete_datetime_rules_after = nvalue;
@@ -1718,9 +1617,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// discover_devices_interval
 	//
-	else if(strcmp(name, "discover_devices_interval") == 0) {
+	else if(strcmp(name, "discover_devices_interval_v2") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.discover_devices_interval) {
 
 			// Reschedule the discover_devices_task to execute at the specified interval from now
@@ -1733,9 +1632,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// discover_episodes_interval
 	//
-	else if(strcmp(name, "discover_episodes_interval") == 0) {
+	else if(strcmp(name, "discover_episodes_interval_v2") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.discover_episodes_interval) {
 
 			// Reschedule the discover_episodes_task to execute at the specified interval from now
@@ -1748,9 +1647,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// discover_guide_interval
 	//
-	else if(strcmp(name, "discover_guide_interval") == 0) {
+	else if(strcmp(name, "discover_guide_interval_v2") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.discover_guide_interval) {
 
 			// Reschedule the discover_guide_task to execute at the specified interval from now
@@ -1763,9 +1662,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// discover_lineups_interval
 	//
-	else if(strcmp(name, "discover_lineups_interval") == 0) {
+	else if(strcmp(name, "discover_lineups_interval_v2") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.discover_lineups_interval) {
 
 			// Reschedule the discover_lineups_task to execute at the specified interval from now
@@ -1778,9 +1677,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// discover_recordings_interval
 	//
-	else if(strcmp(name, "discover_recordings_interval") == 0) {
+	else if(strcmp(name, "discover_recordings_interval_v2") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.discover_recordings_interval) {
 
 			// Reschedule the discover_recordings_task to execute at the specified interval from now
@@ -1793,9 +1692,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// discover_recordingrules_interval
 	//
-	else if(strcmp(name, "discover_recordingrules_interval") == 0) {
+	else if(strcmp(name, "discover_recordingrules_interval_v2") == 0) {
 
-		int nvalue = interval_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.discover_recordingrules_interval) {
 
 			// Reschedule the discover_recordingrules_task to execute at the specified interval from now
@@ -1832,9 +1731,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// stream_read_chunk_size
 	//
-	else if(strcmp(name, "stream_read_chunk_size") == 0) {
+	else if(strcmp(name, "stream_read_chunk_size_v2") == 0) {
 
-		int nvalue = chunksize_enum_to_bytes(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.stream_read_chunk_size) {
 
 			g_settings.stream_read_chunk_size = nvalue;
@@ -1844,9 +1743,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// stream_ring_buffer_size
 	//
-	else if(strcmp(name, "stream_ring_buffer_size") == 0) {
+	else if(strcmp(name, "stream_ring_buffer_size_v2") == 0) {
 
-		int nvalue = ringbuffersize_enum_to_bytes(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.stream_ring_buffer_size) {
 
 			g_settings.stream_ring_buffer_size = nvalue;
@@ -1856,9 +1755,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// deviceauth_stale_after
 	//
-	else if(strcmp(name, "deviceauth_stale_after") == 0) {
+	else if(strcmp(name, "deviceauth_stale_after_v2") == 0) {
 
-		int nvalue = deviceauth_stale_enum_to_seconds(*reinterpret_cast<int const*>(value));
+		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.deviceauth_stale_after) {
 
 			g_settings.deviceauth_stale_after = nvalue;

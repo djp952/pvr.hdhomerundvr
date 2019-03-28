@@ -53,16 +53,16 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="delete_datetime_rules_after" type="integer" label="30108" help="30509">
+        <setting id="delete_datetime_rules_after_v2" type="integer" label="30108" help="30509">
           <level>0</level>
-          <default>3</default>
+          <default>86400</default>
           <constraints>
             <options>
-              <option label="30213">0</option>
-              <option label="30209">1</option>
-              <option label="30210">2</option>
-              <option label="30211">3</option>
-              <option label="30212">4</option>
+              <option label="30213">-1</option>
+              <option label="30209">21600</option>
+              <option label="30210">43200</option>
+              <option label="30211">86400</option>
+              <option label="30212">172800</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
@@ -74,115 +74,115 @@
     <category id="discovery_intervals" label="30001">
       <group id="1" label="-1">
 
-        <setting id="discover_devices_interval" type="integer" label="30101" help="30510">
+      <setting id="discover_devices_interval_v2" type="integer" label="30101" help="30510">
           <level>0</level>
-          <default>5</default>
+          <default>3600</default>
           <constraints>
             <options>
-              <option label="30201">0</option>
-              <option label="30202">1</option>
-              <option label="30203">2</option>
-              <option label="30204">3</option>
-              <option label="30205">4</option>
-              <option label="30206">5</option>
-              <option label="30207">6</option>
-              <option label="30208">7</option>
-              <option label="30216">8</option>
-              <option label="30217">9</option>
+              <option label="30216">30</option>
+              <option label="30217">60</option>
+              <option label="30201">300</option>
+              <option label="30202">600</option>
+              <option label="30203">900</option>
+              <option label="30204">1800</option>
+              <option label="30205">2700</option>
+              <option label="30206">3600</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="discover_lineups_interval" type="integer" label="30102" help="30511">
+        <setting id="discover_lineups_interval_v2" type="integer" label="30102" help="30511">
           <level>0</level>
-          <default>4</default>
+          <default>2700</default>
           <constraints>
             <options>
-              <option label="30201">0</option>
-              <option label="30202">1</option>
-              <option label="30203">2</option>
-              <option label="30204">3</option>
-              <option label="30205">4</option>
-              <option label="30206">5</option>
-              <option label="30207">6</option>
-              <option label="30208">7</option>
-              <option label="30216">8</option>
-              <option label="30217">9</option>
+              <option label="30216">30</option>
+              <option label="30217">60</option>
+              <option label="30201">300</option>
+              <option label="30202">600</option>
+              <option label="30203">900</option>
+              <option label="30204">1800</option>
+              <option label="30205">2700</option>
+              <option label="30206">3600</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="discover_guide_interval" type="integer" label="30103" help="30512">
+        <setting id="discover_guide_interval_v2" type="integer" label="30103" help="30512">
           <level>0</level>
-          <default>5</default>
+          <default>3600</default>
           <constraints>
             <options>
-              <option label="30201">0</option>
-              <option label="30202">1</option>
-              <option label="30203">2</option>
-              <option label="30204">3</option>
-              <option label="30205">4</option>
-              <option label="30206">5</option>
-              <option label="30207">6</option>
-              <option label="30208">7</option>
+              <option label="30201">300</option>
+              <option label="30202">600</option>
+              <option label="30203">900</option>
+              <option label="30204">1800</option>
+              <option label="30205">2700</option>
+              <option label="30206">3600</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="discover_recordings_interval" type="integer" label="30104" help="30513">
+        <setting id="discover_recordings_interval_v2" type="integer" label="30104" help="30513">
           <level>0</level>
-          <default>1</default>
+          <default>600</default>
           <constraints>
             <options>
-              <option label="30201">0</option>
-              <option label="30202">1</option>
-              <option label="30203">2</option>
-              <option label="30204">3</option>
-              <option label="30205">4</option>
-              <option label="30206">5</option>
-              <option label="30207">6</option>
-              <option label="30208">7</option>
-              <option label="30216">8</option>
-              <option label="30217">9</option>
+              <option label="30216">30</option>
+              <option label="30217">60</option>
+              <option label="30201">300</option>
+              <option label="30202">600</option>
+              <option label="30203">900</option>
+              <option label="30204">1800</option>
+              <option label="30205">2700</option>
+              <option label="30206">3600</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="discover_recordingrules_interval" type="integer" label="30105" help="30514">
+        <setting id="discover_recordingrules_interval_v2" type="integer" label="30105" help="30514">
           <level>0</level>
-          <default>6</default>
+          <default>7200</default>
           <constraints>
             <options>
-              <option label="30201">0</option>
-              <option label="30202">1</option>
-              <option label="30203">2</option>
-              <option label="30204">3</option>
-              <option label="30205">4</option>
-              <option label="30206">5</option>
-              <option label="30207">6</option>
-              <option label="30208">7</option>
+              <option label="30201">300</option>
+              <option label="30202">600</option>
+              <option label="30203">900</option>
+              <option label="30204">1800</option>
+              <option label="30205">2700</option>
+              <option label="30206">3600</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="discover_episodes_interval" type="integer" label="30106" help="30515">
+        <setting id="discover_episodes_interval_v2" type="integer" label="30106" help="30515">
           <level>0</level>
-          <default>6</default>
+          <default>7200</default>
           <constraints>
             <options>
-              <option label="30201">0</option>
-              <option label="30202">1</option>
-              <option label="30203">2</option>
-              <option label="30204">3</option>
-              <option label="30205">4</option>
-              <option label="30206">5</option>
-              <option label="30207">6</option>
-              <option label="30208">7</option>
+              <option label="30201">300</option>
+              <option label="30202">600</option>
+              <option label="30203">900</option>
+              <option label="30204">1800</option>
+              <option label="30205">2700</option>
+              <option label="30206">3600</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
@@ -290,51 +290,51 @@
           </control>
         </setting>
 
-        <setting id="stream_read_chunk_size" type="integer" label="30114" help="30524">
+        <setting id="stream_read_chunk_size_v2" type="integer" label="30114" help="30524">
           <level>0</level>
-          <default>3</default>
+          <default>4096</default>
           <constraints>
             <options>
               <option label="30218">0</option>
-              <option label="30219">1</option>
-              <option label="30220">2</option>
-              <option label="30221">3</option>
-              <option label="30222">4</option>
-              <option label="30223">5</option>
-              <option label="30229">6</option>
+              <option label="30219">1024</option>
+              <option label="30220">2048</option>
+              <option label="30221">4096</option>
+              <option label="30222">8192</option>
+              <option label="30223">16384</option>
+              <option label="30229">32768</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="stream_ring_buffer_size" type="integer" label="30115" help="30525">
+        <setting id="stream_ring_buffer_size_v2" type="integer" label="30115" help="30525">
           <level>0</level>
-          <default>0</default>
+          <default>1048576</default>
           <constraints>
             <options>
-              <option label="30224">0</option>
-              <option label="30225">1</option>
-              <option label="30226">2</option>
-              <option label="30227">3</option>
-              <option label="30228">4</option>
+              <option label="30224">1048576</option>
+              <option label="30225">2097152</option>
+              <option label="30226">4194304</option>
+              <option label="30227">8388608</option>
+              <option label="30228">16777216</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="deviceauth_stale_after" type="integer" label="30131" help="30526">
+        <setting id="deviceauth_stale_after_v2" type="integer" label="30131" help="30526">
           <level>0</level>
-          <default>6</default>
+          <default>72000</default>
           <constraints>
             <options>
-              <option label="30213">0</option>
-              <option label="30207">1</option>
-              <option label="30208">2</option>
-              <option label="30230">3</option>
-              <option label="30210">4</option>
-              <option label="30231">5</option>
-              <option label="30232">6</option>
-              <option label="30211">7</option>
+              <option label="30213">-1</option>
+              <option label="30207">7200</option>
+              <option label="30208">14400</option>
+              <option label="30230">28800</option>
+              <option label="30210">43200</option>
+              <option label="30231">57600</option>
+              <option label="30232">72000</option>
+              <option label="30211">86400</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>
