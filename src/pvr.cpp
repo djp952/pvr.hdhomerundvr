@@ -882,34 +882,34 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 				enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 			}
 
-			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-			catch(...) { handle_generalexception(__func__); }
+			catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (devices)").c_str(), ex); }
+			catch(...) { handle_generalexception(std::string(__func__, " (devices)").c_str()); }
 
 			// DISCOVER: Lineups
 			try { discover_lineups(dbhandle, lineups_changed); }
-			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-			catch(...) { handle_generalexception(__func__); }
+			catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (lineups)").c_str(), ex); }
+			catch(...) { handle_generalexception(std::string(__func__, " (lineups)").c_str()); }
 		}
 
 		// DISCOVER: Recordings
 		try { discover_recordings(dbhandle, recordings_changed); }
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-		catch(...) { handle_generalexception(__func__); }
+		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (recordings)").c_str(), ex); }
+		catch(...) { handle_generalexception(std::string(__func__, " (recordings)").c_str()); }
 
 		// DISCOVER: Guide Metadata
 		try { discover_guide(dbhandle, guide_changed); }
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-		catch(...) { handle_generalexception(__func__); }
+		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (guide metadata)").c_str(), ex); }
+		catch(...) { handle_generalexception(std::string(__func__, " (guide metadata)").c_str()); }
 
 		// DISCOVER: Recording Rules
 		try { discover_recordingrules(dbhandle, recordingrules_changed); }
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-		catch(...) { handle_generalexception(__func__); }
+		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (recording rules)").c_str(), ex); }
+		catch(...) { handle_generalexception(std::string(__func__, " (recording rules)").c_str()); }
 
 		// DISCOVER: Episodes
 		try { discover_episodes(dbhandle, episodes_changed); }
-		catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-		catch(...) { handle_generalexception(__func__); }
+		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (episodes)").c_str(), ex); }
+		catch(...) { handle_generalexception(std::string(__func__, " (episodes)").c_str()); }
 
 		// Execute any necessary triggers based on what discovery data has changed
 
