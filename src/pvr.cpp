@@ -1144,7 +1144,7 @@ static int ringbuffersize_enum_to_bytes(int nvalue)
 		case 4: return (16 MiB);	// 16 Megabytes
 	};
 
-	return (4 MiB);					// 4 Megabytes = default
+	return (1 MiB);					// 1 Megabyte = default
 }
 
 // try_getepgforchannel
