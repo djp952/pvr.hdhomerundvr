@@ -81,7 +81,7 @@ msgid "Use season/episode number as title for recordings"
 msgstr ""
 
 msgctxt "#30113"
-msgid "Startup discovery task delay (seconds)"
+msgid "Startup discovery task delay"
 msgstr ""
 
 msgctxt "#30114"
@@ -109,11 +109,11 @@ msgid "EDL file path"
 msgstr ""
 
 msgctxt "#30121"
-msgid "CUT indicator start time padding (milliseconds)"
+msgid "CUT indicator start time padding"
 msgstr ""
 
 msgctxt "#30122"
-msgid "CUT indicator end time padding (milliseconds)"
+msgid "CUT indicator end time padding"
 msgstr ""
 
 msgctxt "#30123"
