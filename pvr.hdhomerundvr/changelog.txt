@@ -1,5 +1,6 @@
 v1.4.0 (2019.03.xx)
   - Update SQLite database engine to version 3.27.2
+  - Update cURL library to version 7.64.1
   - Add "Invalidate tuner device authorization codes after" advanced setting
   - Change default discovery interval from 5 minutes to 1 hour
   - Change default lineup discovery interval from 10 minutes to 45 minutes
