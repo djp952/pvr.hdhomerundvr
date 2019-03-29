@@ -173,9 +173,6 @@
     <ClInclude Include="..\depends\curl\lib\vtls\cyassl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\darwinssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\curl\lib\vtls\gskit.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
@@ -566,9 +563,6 @@
       <Filter>External Libraries\libhdhomerun\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\cyassl.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\darwinssl.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\gskit.c">
