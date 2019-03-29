@@ -9,6 +9,7 @@ v1.4.0 (2019.03.xx)
   - Maintain database timestamps indicating when all backend data was last discovered
   - Log discovered HDHomeRun devices after device discovery completes
   - Prevent redundant rediscovery of devices and channel lineups during PVR startup task
+  - Use separate HTTP connection and DNS lookup cache for Electronic Program Guide (EPG) requests
   - Fix bug preventing recording rule discovery from executing if "Delete expired date/time recording rules after" setting has changed
   - Fix bug causing unnecessary timer updates when series episodes are available via multiple channels
 
