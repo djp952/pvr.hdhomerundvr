@@ -36,17 +36,7 @@
 
 curlshare::curlshare() : m_curlsh(nullptr)
 {
-	m_curlsh = curl_share_init();
-	if(m_curlsh == nullptr) throw string_exception(__func__, ": curl_share_init() failed");
-
-	// Set up the cURL share interface to share DNS and connection caches and provide the
-	// required callbacks to the static lock and unlock synchronization routines
-	CURLSHcode curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
-	if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
-	if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_LOCKFUNC, curl_lock);
-	if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_UNLOCKFUNC, curl_unlock);
-	if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_USERDATA, this);
-	if(curlshresult != CURLSHE_OK) throw string_exception(__func__, ": curl_share_setopt() failed: ", curl_share_strerror(curlshresult));
+	reset();				
 }
 
 //-----------------------------------------------------------------------------
@@ -114,6 +104,47 @@ void curlshare::curl_unlock(CURL* /*handle*/, curl_lock_data data, void* context
 	else throw string_exception(__func__, ": invalid curl_lock_data type");
 }
 	
+//-----------------------------------------------------------------------------
+// curlshare::reset
+//
+// Reinitializes the cURL share instance
+//
+// Arguments:
+//
+//	NONE
+
+void curlshare::reset(void)
+{
+	// Clean up and null out any existing cURL share interface
+	if(m_curlsh != nullptr) curl_share_cleanup(m_curlsh);
+	m_curlsh = nullptr;
+
+	// Initialize a new cURL share interface instance
+	m_curlsh = curl_share_init();
+	if(m_curlsh == nullptr) throw string_exception(__func__, ": curl_share_init() failed");
+
+	try {
+
+		// Set up the cURL share interface to share DNS and connection caches and provide the
+		// required callbacks to the static lock and unlock synchronization routines
+		CURLSHcode curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
+		if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
+		if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_LOCKFUNC, curl_lock);
+		if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_UNLOCKFUNC, curl_unlock);
+		if(curlshresult == CURLSHE_OK) curlshresult = curl_share_setopt(m_curlsh, CURLSHOPT_USERDATA, this);
+		if(curlshresult != CURLSHE_OK) throw string_exception(__func__, ": curl_share_setopt() failed: ", curl_share_strerror(curlshresult));
+	}
+
+	catch(...) { 
+		
+		// Clean up the initialized cURL share interface on any exception
+		if(m_curlsh != nullptr) curl_share_cleanup(m_curlsh);
+		m_curlsh = nullptr;
+
+		throw;
+	}
+}
+
 //---------------------------------------------------------------------------
 
 #pragma warning(pop)

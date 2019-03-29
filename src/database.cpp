@@ -148,16 +148,6 @@ struct epg_vtab_cursor : public sqlite3_vtab_cursor
 // GLOBAL VARIABLES
 //---------------------------------------------------------------------------
 
-// g_curlshare_epg
-//
-// Global curlshare instance used with the epg virtual table
-static curlshare g_curlshare_epg;
-
-// g_curlshare_http
-//
-// Global curlshare instance used with the http_request function
-static curlshare g_curlshare_http;
-
 // g_epg_module
 //
 // Defines the entry points for the epg virtual table
@@ -2302,6 +2292,8 @@ int epg_eof(sqlite3_vtab_cursor* cursor)
 
 int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*indexstr*/, int argc, sqlite3_value** argv)
 {
+	static curlshare curlshare;				// Static curlshare instance used only with this function
+
 	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
 	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
 	assert(epgcursor != nullptr);
@@ -2380,7 +2372,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&transfer->second));
-					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare_epg));
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(curlshare));
 
 					// Release the URL string after cURL initializations are complete
 					sqlite3_free(url);
@@ -2449,8 +2441,9 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 			curl_multi_cleanup(curlm);
 		}
 
-		// Clean up and destroy the multi handle on exception
-		catch(...) { curl_multi_cleanup(curlm); throw; }
+		// Clean up and destroy the multi handle on exception.  Also reset the cURL
+		// share interface to ensure a new DNS lookup and connection next time through
+		catch(...) { curl_multi_cleanup(curlm); curlshare.reset(); throw; }
 	}
 	
 	catch(std::exception const& ex) { epgcursor->pVtab->zErrMsg = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; }
@@ -3421,6 +3414,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
 	long				responsecode = 200;		// HTTP response code
 	byte_string			blob;					// Dynamically allocated blob buffer
+	static curlshare	curlshare;				// Static curlshare instance used only with this function
 
 	if((argc < 1) || (argc > 2) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
 
@@ -3458,7 +3452,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare_http));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
 	curl_easy_cleanup(curl);
