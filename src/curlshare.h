@@ -51,6 +51,12 @@ public:
 	// CURLSH* conversion operator
 	//
 	operator CURLSH*() const;
+
+	//-----------------------------------------------------------------------
+	// Member Functions
+
+	// Reinitializes the cURL share instance
+	void reset(void);
 	
 private:
 
