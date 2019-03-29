@@ -148,11 +148,15 @@ struct epg_vtab_cursor : public sqlite3_vtab_cursor
 // GLOBAL VARIABLES
 //---------------------------------------------------------------------------
 
-// g_curlshare
+// g_curlshare_epg
 //
-// Global curlshare instance used with all easy interface handles generated
-// by the database layer via the http_request function
-static curlshare g_curlshare;
+// Global curlshare instance used with the epg virtual table
+static curlshare g_curlshare_epg;
+
+// g_curlshare_http
+//
+// Global curlshare instance used with the http_request function
+static curlshare g_curlshare_http;
 
 // g_epg_module
 //
@@ -2378,7 +2382,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&transfer->second));
-					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare_epg));
 
 					// Release the URL string after cURL initializations are complete
 					sqlite3_free(url);
@@ -3456,7 +3460,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare_http));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
 	curl_easy_cleanup(curl);
