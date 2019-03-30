@@ -59,17 +59,8 @@
 #define TARGET_WINDOWS
 #endif // _WINDOWS
 
-//---------------------------------------------------------------------------
-// SQLite Declarations
-
-#define SQLITE_THREADSAFE 2			// SQLITE_CONFIG_MULTITHREAD
-#define SQLITE_ENABLE_JSON1	1		// Enable the JSON1 extensions
-#define SQLITE_TEMP_STORE 3			// Enable in-memory temp storage
-
-#include <sqlite3.h>				// Include SQLite declarations
-
 //--------------------------------------------------------------------------
-// libcurl Declarations
+// libcurl
 
 #define CURL_STATICLIB				// Using libcurl in a static library
 #include <curl/curl.h>				// Include CURL declarations
