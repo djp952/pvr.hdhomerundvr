@@ -48,6 +48,7 @@
 #include <libXBMC_pvr.h>
 
 #include "database.h"
+#include "dbtypes.h"
 #include "dvrstream.h"
 #include "hdhr.h"
 #include "scalar_condition.h"

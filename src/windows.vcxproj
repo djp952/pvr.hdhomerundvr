@@ -225,6 +225,7 @@
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="curlshare.h" />
     <ClInclude Include="database.h" />
+    <ClInclude Include="dbtypes.h" />
     <ClInclude Include="dvrstream.h" />
     <ClInclude Include="hdhr.h" />
     <ClInclude Include="http_exception.h" />
@@ -1348,10 +1349,7 @@
     <ClCompile Include="compat\uuid.cpp" />
     <ClCompile Include="curlshare.cpp" />
     <ClCompile Include="database.cpp" />
-    <ClCompile Include="dbextension.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="dbextension.cpp" />
     <ClCompile Include="dvrstream.cpp" />
     <ClCompile Include="hdhr.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
