@@ -3462,8 +3462,6 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 
 PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 {
-	std::string				seriesid;			// The rule series id
-
 	assert(g_pvr);
 
 	// Get the current time as a unix timestamp, used to set up AfterOriginalAirdateOnly
@@ -3508,7 +3506,7 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 		else return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
 		// Attempt to modify the recording rule in the database/backend service
-		modify_recordingrule(dbhandle, recordingrule, seriesid);
+		modify_recordingrule(dbhandle, recordingrule);
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
