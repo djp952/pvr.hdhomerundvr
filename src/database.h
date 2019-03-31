@@ -396,7 +396,7 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 // modify_recordingrule
 //
 // Modifies an existing recording rule
-void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule, std::string& seriesid);
+void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule);
 
 // open_database
 //

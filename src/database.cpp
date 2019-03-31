@@ -2588,9 +2588,8 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 //
 //	instance		- Database instance
 //	recordingrule	- Recording rule to be modified with updated information
-//	seriesid		- On success, contains the series id for the recording rule
 
-void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule, std::string& seriesid)
+void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -2669,29 +2668,6 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 			sqlite3_finalize(statement);			// Finalize the SQLite statement
-		}
-
-		catch(...) { sqlite3_finalize(statement); throw; }
-
-		// Retrieve the seriesid for the recording rule for the caller
-		sql = "select seriesid from recordingrule where recordingrule.recordingruleid = ?1";
-
-		// Prepare the query
-		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		try { 
-
-			// Bind the non-null query parameter(s)
-			result = sqlite3_bind_int(statement, 1, recordingrule.recordingruleid);
-			if(result != SQLITE_OK) throw sqlite_exception(result);
-
-			// Execute the query; one result column is expected
-			result = sqlite3_step(statement);
-			if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
-			else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-			sqlite3_finalize(statement);
 		}
 
 		catch(...) { sqlite3_finalize(statement); throw; }
