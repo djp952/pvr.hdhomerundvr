@@ -3161,13 +3161,11 @@ int GetTimersAmount(void)
 
 PVR_ERROR GetTimers(ADDON_HANDLE handle)
 {
-	time_t					now;			// Current date/time as seconds from epoch
-
 	assert(g_pvr);				
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	time(&now);								// Get the current date/time for comparison
+	time_t now = time(nullptr);				// Get the current date/time for comparison
 
 	// Collect all of the PVR_TIMER structures locally so that the database
 	// connection isn't open any longer than necessary
@@ -3296,12 +3294,11 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 PVR_ERROR AddTimer(PVR_TIMER const& timer)
 {
 	std::string				seriesid;			// The seriesid for the timer
-	time_t					now;				// The current date/time
 
 	assert(g_pvr);
 
 	// Get the current time as a unix timestamp, used to set up AfterOriginalAirdateOnly
-	time(&now);
+	time_t now = time(nullptr);
 
 	// Create an initialize a new recordingrule to be passed to the database
 	struct recordingrule recordingrule;
@@ -3466,12 +3463,11 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 {
 	std::string				seriesid;			// The rule series id
-	time_t					now;				// The current date/time
 
 	assert(g_pvr);
 
 	// Get the current time as a unix timestamp, used to set up AfterOriginalAirdateOnly
-	time(&now);
+	time_t now = time(nullptr);
 
 	// Create an initialize a new recordingrule to be passed to the database
 	struct recordingrule recordingrule;
