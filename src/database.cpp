@@ -23,6 +23,8 @@
 #include "stdafx.h"
 #include "database.h"
 
+#include <cstddef>
+
 #include "hdhr.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
@@ -37,10 +39,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
 
-bool discover_devices_broadcast(sqlite3* instance);
-bool discover_devices_http(sqlite3* instance);
-
-template<typename... _args> static int execute_non_query(sqlite3* instance, _args&&... args);
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, const char* value);
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int value);
+static bool discover_devices_broadcast(sqlite3* instance);
+static bool discover_devices_http(sqlite3* instance);
+template<typename... _parameters> static int execute_non_query(sqlite3* instance, char const* sql, _parameters&&... parameters);
 
 //---------------------------------------------------------------------------
 // CONNECTIONPOOL IMPLEMENTATION
@@ -248,6 +251,45 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 
 	// Drop the temporary table on any exception
 	catch(...) { execute_non_query(instance, "drop table add_recordingrule_temp"); throw; }
+}
+
+//---------------------------------------------------------------------------
+// bind_parameter (local)
+//
+// Used by execute_non_query to bind a string parameter
+//
+// Arguments:
+//
+//	statement		- SQL statement instance
+//	paramindex		- Index of the parameter to bind; will be incremented
+//	value			- Value to bind as the parameter
+
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, char const* value)
+{
+	int					result;				// Result from binding operation
+
+	// If a null string pointer was provided, bind it as NULL instead of TEXT
+	if(value == nullptr) result = sqlite3_bind_null(statement, paramindex++);
+	else result = sqlite3_bind_text(statement, paramindex++, value, -1, SQLITE_STATIC);
+
+	if(result != SQLITE_OK) throw sqlite_exception(result);
+}
+
+//---------------------------------------------------------------------------
+// bind_parameter (local)
+//
+// Used by execute_non_query to bind an integer parameter
+//
+// Arguments:
+//
+//	statement		- SQL statement instance
+//	paramindex		- Index of the parameter to bind; will be incremented
+//	value			- Value to bind as the parameter
+
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int value)
+{
+	int result = sqlite3_bind_int(statement, paramindex++, value);
+	if(result != SQLITE_OK) throw sqlite_exception(result);
 }
 
 //---------------------------------------------------------------------------
@@ -515,7 +557,7 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 }
 
 //---------------------------------------------------------------------------
-// discover_devices_broadcast
+// discover_devices_broadcast (local)
 //
 // discover_devices helper -- loads the discover_device table from UDP broadcast
 //
@@ -523,7 +565,7 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 //
 //	instance		- SQLite database instance
 
-bool discover_devices_broadcast(sqlite3* instance)
+static bool discover_devices_broadcast(sqlite3* instance)
 {
 	bool					hastuners = false;		// Flag indicating tuners were found
 	sqlite3_stmt*			statement;				// SQL statement to execute
@@ -581,7 +623,7 @@ bool discover_devices_broadcast(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
-// discover_devices_http
+// discover_devices_http (local)
 //
 // discover_devices helper -- loads the discover_device table from the HTTP API
 //
@@ -589,7 +631,7 @@ bool discover_devices_broadcast(sqlite3* instance)
 //
 //	instance		- SQLite database instance
 
-bool discover_devices_http(sqlite3* instance)
+static bool discover_devices_http(sqlite3* instance)
 {
 	sqlite3_stmt*				statement;				// Database query statement
 	int							tuners = 0;				// Number of tuners found
@@ -1866,31 +1908,47 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 //
 // Arguments:
 //
-//	instance	- Database instance
-//	sql			- SQL query to execute
+//	instance		- Database instance
+//	sql				- SQL query to execute
+//	parameters		- Parameters to be bound to the query
 
-template<typename... _args>
-static int execute_non_query(sqlite3* instance, _args&&... args)
+template<typename... _parameters>
+static int execute_non_query(sqlite3* instance, char const* sql, _parameters&&... parameters)
 {
-	char*		errmsg = nullptr;		// Error message from SQLite
-	int			result;					// Result from SQLite function call
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							paramindex = 1;		// Bound parameter index value
+
+	if(instance == nullptr) throw std::invalid_argument("instance");
+	if(sql == nullptr) throw std::invalid_argument("sql");
+
+	// Suppress unreferenced local variable warning when there are no parameters to bind
+	(void)paramindex;
 	
-	// Unpack the variadic arguments into a string stream
-	std::ostringstream sql;
-	int unpack[] = {0, ( static_cast<void>(sql << args), 0 ) ... };
-	(void)unpack;
+	// Prepare the statement
+	int result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
-	
-		// Attempt to execute the statement and throw the error on failure
-		result = sqlite3_exec(instance, sql.str().c_str(), nullptr, nullptr, &errmsg);
-		if(result != SQLITE_OK) throw sqlite_exception(result, errmsg);
 
-		// Return the number of changes made by the preceeding query
+		// Bind the provided query parameter(s) by unpacking the parameter pack
+       int unpack[] = { 0, (static_cast<void>(bind_parameter(statement, paramindex, parameters)), 0) ... };
+       (void)unpack;
+
+		// Execute the query; ignore any rows that are returned
+		do result = sqlite3_step(statement);
+		while(result == SQLITE_ROW);
+
+		// The final result from sqlite3_step should be SQLITE_DONE
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Finalize the statement
+		sqlite3_finalize(statement);
+
+		// Return the number of changes made by the statement
 		return sqlite3_changes(instance);
 	}
 
-	catch(...) { if(errmsg) sqlite3_free(errmsg); throw; }
+	catch(...) { sqlite3_finalize(statement); throw; }       
 }
 
 //---------------------------------------------------------------------------
@@ -2873,37 +2931,15 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 
 void set_recording_lastposition(sqlite3* instance, char const* recordingid, int lastposition)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
-	// Prepare a query that will update the specified recording on the storage device and the local database
-	auto sql = "with httprequest(response) as (select http_request(?1 || '&cmd=set&Resume=' || ?2)) "
+	// Update the specified recording on the storage device and in the local database
+	execute_non_query(instance, "with httprequest(response) as (select http_request(?1 || '&cmd=set&Resume=' || ?2)) "
 		"replace into recording select deviceid, discovered, "
 		"(select case when fullkey is null then recording.data else json_set(recording.data, fullkey || '.Resume', ?2) end) as data "
 		"from httprequest, recording, "
-		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameter(s)
-		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, lastposition);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the query; there shouldn't be any result set returned from it
-		result = sqlite3_step(statement);
-		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)",
+		recordingid, lastposition);
 }
 
 //---------------------------------------------------------------------------
