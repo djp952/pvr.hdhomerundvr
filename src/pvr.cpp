@@ -3096,6 +3096,9 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			// iEpgUid
 			timer.iEpgUid = static_cast<unsigned int>(item.starttime);
 
+			// strSeriesLink
+			snprintf(timer.strSeriesLink, std::extent<decltype(timer.strSeriesLink)>::value, "%s", item.seriesid);
+
 			// Copy the PVR_TIMER structure into the local vector<>
 			timers.push_back(timer);
 		});
