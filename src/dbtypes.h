@@ -170,6 +170,7 @@ struct timer {
 	unsigned int				recordingruleid;
 	enum recordingrule_type		parenttype;
 	unsigned int				timerid;
+	char const*					seriesid;
 	union channelid				channelid;
 	time_t						starttime;
 	time_t						endtime;
