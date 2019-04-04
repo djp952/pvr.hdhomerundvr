@@ -339,7 +339,10 @@ int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordina
 	if((ordinal == epg_vtab_columns::value) && (epgcursor->currentrow < epgcursor->rows.size())) {
 
 		auto const& value = epgcursor->rows[epgcursor->currentrow];
-		sqlite3_result_text(context, reinterpret_cast<char const*>(value.data()), static_cast<int>(value.size()), SQLITE_TRANSIENT);
+
+		// Watch out for zero-length results - convert into NULL
+		if(value.size() == 0) sqlite3_result_null(context);
+		else sqlite3_result_text(context, reinterpret_cast<char const*>(value.data()), static_cast<int>(value.size()), SQLITE_TRANSIENT);
 	}
 
 	// The remaining columns are static in nature and can be accessed from any row
