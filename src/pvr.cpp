@@ -3468,6 +3468,11 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		// Attempt to add the new recording rule to the database/backend service
 		add_recordingrule(dbhandle, recordingrule);
 
+		// Update the episode information for the specified series; issue a log warning if the operation fails
+		try { discover_episodes_seriesid(dbhandle, seriesid.c_str()); }
+		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
+		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
+
 		// Force a timer update in Kodi to refresh whatever this did on the backend
 		g_pvr->TriggerTimerUpdate();
 	}
@@ -3490,6 +3495,8 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 
 PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 {
+	unsigned int			recordingruleid = 0;		// Backend recording rule identifier
+
 	assert(g_pvr);
 
 	try {
@@ -3497,25 +3504,33 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// datetimeonlytimer --> delete the parent rule
+		// Determine the recording rule identifier for this timer object
 		//
-		if(timer.iTimerType == timer_type::datetimeonlytimer) delete_recordingrule(dbhandle, timer.iParentClientIndex);
-
-		// seriesrule / datetimeonlyrule --> delete the rule
+		// datetimeonlytimer             --> use the parent recording rule identifier
+		// seriesrule / datetimeonlyrule --> use the recording rule identifier
+		// anything else                 --> not implemented
 		//
-		else if((timer.iTimerType == timer_type::seriesrule) || (timer.iTimerType == timer_type::datetimeonlyrule))
-			delete_recordingrule(dbhandle, timer.iClientIndex);
-
-		// anything else --> not implemented
-		//
+		if(timer.iTimerType == timer_type::datetimeonlytimer) recordingruleid = timer.iParentClientIndex;
+		else if((timer.iTimerType == timer_type::seriesrule) || (timer.iTimerType == timer_type::datetimeonlyrule)) recordingruleid = timer.iClientIndex;
 		else return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+
+		// Determine the series identifier for the recording rule before it gets deleted
+		std::string seriesid = get_recordingrule_seriesid(dbhandle, recordingruleid);
+		if(seriesid.length() == 0) throw string_exception(__func__, ": could not determine seriesid for timer");
+
+		// Attempt to delete the recording rule from the backend and the database
+		delete_recordingrule(dbhandle, recordingruleid);
+
+		// Update the episode information for the specified series; issue a log warning if the operation fails
+		try { discover_episodes_seriesid(dbhandle, seriesid.c_str()); }
+		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
+		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
-	// Force a timer update in Kodi to refresh whatever this did on the backend; there
-	// shouldn't be a need to update the EPG here as no new series would have been added
+	// Force a timer update in Kodi to refresh whatever this did on the backend
 	g_pvr->TriggerTimerUpdate();
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;	
@@ -3575,8 +3590,17 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 		// any other timer type is not supported
 		else return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-		// Attempt to modify the recording rule in the database/backend service
+		// Determine the series identifier for the recording rule before it gets modified
+		std::string seriesid = get_recordingrule_seriesid(dbhandle, recordingrule.recordingruleid);
+		if(seriesid.length() == 0) throw string_exception(__func__, ": could not determine seriesid for timer");
+
+		// Attempt to modify the recording rule on the backend and in the database
 		modify_recordingrule(dbhandle, recordingrule);
+
+		// Update the episode information for the specified series; issue a log warning if the operation fails
+		try { discover_episodes_seriesid(dbhandle, seriesid.c_str()); }
+		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
+		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
