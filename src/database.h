@@ -214,9 +214,12 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed);
 
 // discover_episodes
 //
-// Reloads the information about episodes associated with a recording rule
+// Reloads the information about all episodes associated with a recording rule
 void discover_episodes(sqlite3* instance);
 void discover_episodes(sqlite3* instance, bool& changed);
+
+// discovers the information about episodes associated with a specific series
+void discover_episodes_seriesid(sqlite3* instance, char const* seriesid);
 
 // discover_guide
 //
@@ -266,11 +269,6 @@ void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channe
 //
 // Enumerates the available device names
 void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback callback);
-
-// enumerate_episode_channelids
-//
-// Enumerates all channels associated with any series episodes
-void enumerate_episode_channelids(sqlite3* instance, enumerate_channelids_callback callback);
 
 // enumerate_expired_recordingruleids
 //
@@ -367,6 +365,11 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 //
 // Gets the number of available recording rules in the database
 int get_recordingrule_count(sqlite3* instance);
+
+// get_recordingrule_seriesid
+//
+// Gets the series identifier for the specified recording rule
+std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recordingruleid);
 
 // get_stream_url
 //

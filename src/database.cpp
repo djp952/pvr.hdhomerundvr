@@ -142,115 +142,51 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 	
 	if(instance == nullptr) return;
 
-	// Clone the episode table schema into a temporary table to avoid the WHERE clause problem below
-	execute_non_query(instance, "drop table if exists add_recordingrule_temp");
-	execute_non_query(instance, "create temp table add_recordingrule_temp as select * from episode limit 0");
+	// Add the new recording rule
+	auto sql = "replace into recordingrule "
+		"select json_extract(value, '$.RecordingRuleID') as recordingruleid, "
+		"cast(strftime('%s', 'now') as integer) as discovered, "
+		"json_extract(value, '$.SeriesID') as seriesid, "
+		"value as data "
+		"from "
+		"json_each((with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
+		"select nullif(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
+		"case when ?2 is null then '' else '&RecentOnly=' || ?2 end || "
+		"case when ?3 is null then '' else '&ChannelOnly=' || decode_channel_id(?3) end || "
+		"case when ?4 is null then '' else '&AfterOriginalAirdateOnly=' || strftime('%s', date(?4, 'unixepoch')) end || "
+		"case when ?5 is null then '' else '&DateTimeOnly=' || ?5 end || "
+		"case when ?6 is null then '' else '&StartPadding=' || ?6 end || "
+		"case when ?7 is null then '' else '&EndPadding=' || ?7 end), 'null') as data "
+		"from deviceauth))";
+
+	// Prepare the query
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
 
-		// Start a database transaction
-		execute_non_query(instance, "begin immediate transaction");
+		// Bind the non-null query parameter(s)
+		result = sqlite3_bind_text(statement, 1, recordingrule.seriesid, -1, SQLITE_STATIC);
+		if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
+		if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
+		if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
+		if((result == SQLITE_OK) && (recordingrule.datetimeonly != 0)) result = sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.datetimeonly));
+		if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 6, recordingrule.startpadding);
+		if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 7, recordingrule.endpadding);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		try {
+		// Execute the query - no result set is expected
+		result = sqlite3_step(statement);
+		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
-			// Add the new recording rule and replace/insert all updated rules for the series
-			auto sql = "replace into recordingrule "
-				"select json_extract(value, '$.RecordingRuleID') as recordingruleid, "
-				"cast(strftime('%s', 'now') as integer) as discovered, "
-				"json_extract(value, '$.SeriesID') as seriesid, "
-				"value as data "
-				"from "
-				"json_each((with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
-				"select nullif(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=add&SeriesID=' || ?1 || "
-				"case when ?2 is null then '' else '&RecentOnly=' || ?2 end || "
-				"case when ?3 is null then '' else '&ChannelOnly=' || decode_channel_id(?3) end || "
-				"case when ?4 is null then '' else '&AfterOriginalAirdateOnly=' || strftime('%s', date(?4, 'unixepoch')) end || "
-				"case when ?5 is null then '' else '&DateTimeOnly=' || ?5 end || "
-				"case when ?6 is null then '' else '&StartPadding=' || ?6 end || "
-				"case when ?7 is null then '' else '&EndPadding=' || ?7 end), 'null') as data "
-				"from deviceauth))";
-
-			// Prepare the query
-			result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-			if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-			try {
-
-				// Bind the non-null query parameter(s)
-				result = sqlite3_bind_text(statement, 1, recordingrule.seriesid, -1, SQLITE_STATIC);
-				if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
-				if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
-				if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
-				if((result == SQLITE_OK) && (recordingrule.datetimeonly != 0)) result = sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.datetimeonly));
-				if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 6, recordingrule.startpadding);
-				if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 7, recordingrule.endpadding);
-				if(result != SQLITE_OK) throw sqlite_exception(result);
-
-				// Execute the query - no result set is expected
-				result = sqlite3_step(statement);
-				if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-				if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-				sqlite3_finalize(statement);			// Finalize the SQLite statement
-			}
-
-			catch(...) { sqlite3_finalize(statement); throw; }
-
-			//
-			// NOTE: This had to be broken up into a multi-step query involving a temp table to avoid a SQLite bug/feature
-			// wherein using a function (http_request in this case) as part of a column definition is reevaluated when
-			// that column is subsequently used as part of a WHERE clause:
-			//
-			// [http://mailinglists.sqlite.org/cgi-bin/mailman/private/sqlite-users/2015-August/061083.html]
-			//
-			
-			// Update the episode data to take the new recording rule(s) into account; watch out for the web
-			// services returning 'null' on the episode query -- this happens when there are no episodes
-			sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
-				"insert into add_recordingrule_temp select ?1 as seriesid, "
-				"cast(strftime('%s', 'now') as integer) as discovered, "
-				"http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || ?1) as data "
-				"from deviceauth";
-
-			// Prepare the query
-			result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-			if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-			try {
-
-				// Bind the non-null query parameter(s)
-				result = sqlite3_bind_text(statement, 1, recordingrule.seriesid, -1, SQLITE_STATIC);
-				if(result != SQLITE_OK) throw sqlite_exception(result);
-
-				// Execute the query - no result set is expected
-				result = sqlite3_step(statement);
-				if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-				if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-				sqlite3_finalize(statement);			// Finalize the SQLite statement
-			}
-
-			catch(...) { sqlite3_finalize(statement); throw; }
-
-			// Complete the replace operation into the episode table from the temporary table that was generated above
-			execute_non_query(instance, "replace into episode select seriesid, discovered, data from add_recordingrule_temp where cast(data as text) <> 'null'");
-
-			// Commit the transaction
-			execute_non_query(instance, "commit transaction");
-		}
-
-		// Rollback the entire transaction on any failure above
-		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
-
-		// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-		try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");
-
-		// Drop the temporary table
-		execute_non_query(instance, "drop table add_recordingrule_temp");
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
 
-	// Drop the temporary table on any exception
-	catch(...) { execute_non_query(instance, "drop table add_recordingrule_temp"); throw; }
+	catch(...) { sqlite3_finalize(statement); throw; }
+
+	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
+	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");
 }
 
 //---------------------------------------------------------------------------
@@ -432,44 +368,30 @@ void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 	
 	if(instance == nullptr) return;
 
-	execute_non_query(instance, "begin immediate transaction");
+	// Delete the recording rule from the backend services and the local database
+	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
+		"delete from recordingrule where recordingruleid in "
+		"(select case when cast(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || "
+		"'&Cmd=delete&RecordingRuleID=' || ?1) as text) = 'null' then ?1 else null end from deviceauth)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
 
-		// Delete the recording rule from the backend services and the local database
-		auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
-			"delete from recordingrule where recordingruleid in "
-			"(select case when cast(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || "
-			"'&Cmd=delete&RecordingRuleID=' || ?1) as text) = 'null' then ?1 else null end from deviceauth)";
+		// Bind the query parameter(s)
+		result = sqlite3_bind_int(statement, 1, recordingruleid);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+		// Execute the query; there shouldn't be any result set returned from it
+		result = sqlite3_step(statement);
+		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
-		try {
-
-			// Bind the query parameter(s)
-			result = sqlite3_bind_int(statement, 1, recordingruleid);
-			if(result != SQLITE_OK) throw sqlite_exception(result);
-
-			// Execute the query; there shouldn't be any result set returned from it
-			result = sqlite3_step(statement);
-			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-			sqlite3_finalize(statement);			// Finalize the SQLite statement
-		}
-
-		catch(...) { sqlite3_finalize(statement); throw; }
-
-		// Remove episode data that no longer has an associated recording rule
-		execute_non_query(instance, "delete from episode where seriesid not in (select json_extract(data, '$.SeriesID') from recordingrule)");
-
-		// Commit the transaction
-		execute_non_query(instance, "commit transaction");
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
 
-	// Rollback the entire transaction on any failure above
-	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
+	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
 	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");
@@ -765,6 +687,52 @@ void discover_episodes(sqlite3* instance, bool& changed)
 
 	// Drop the temporary table on any exception
 	catch(...) { execute_non_query(instance, "drop table discover_episode"); throw; }
+}
+
+//---------------------------------------------------------------------------
+// discover_episodes_seriesid (local)
+//
+// Reloads the information about episodes for a specific seriesid
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	seriesid	- Series identifier to be re-discovered
+
+void discover_episodes_seriesid(sqlite3* instance, char const* seriesid)
+{
+	if(instance == nullptr) throw std::invalid_argument("instance");
+	if(seriesid == nullptr) throw std::invalid_argument("seriesid");
+
+	execute_non_query(instance, "begin immediate transaction");
+
+	try {
+
+		// Delete any existing rows in the episode table for this series
+		execute_non_query(instance, "delete from episode where seriesid like ?1", seriesid);
+
+		// Rediscover the series episodes, filtering out entries that aren't associated with a recording rule
+		// and sort by both the start time and the channel number to ensure the proper ordering
+		execute_non_query(instance, "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
+			"replace into episode select "
+			"?1 as seriesid, "
+			"cast(strftime('%s', 'now') as integer) as discovered, "
+			"nullif(json_group_array(entry.value), '[]') as data "
+			"from deviceauth, "
+			"json_each(nullif(http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || deviceauth.code || '&SeriesID=' || ?1), 'null')) as entry "
+			"where json_extract(entry.value, '$.RecordingRule') = 1 "
+			"order by json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.ChannelNumber')",
+			seriesid);
+
+		// If no episodes were found or none had a recording rule, the previous query may have returned null
+		execute_non_query(instance, "delete from episode where data is null or data like '[]'");
+
+		// Commit the transaction
+		execute_non_query(instance, "commit transaction");
+	}
+
+	// Rollback the entire transaction on any failure above
+	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 }
 
 //---------------------------------------------------------------------------
@@ -1292,47 +1260,6 @@ void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback c
 			device_name.name = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			
 			callback(device_name);
-		}
-	
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
-}
-
-//---------------------------------------------------------------------------
-// enumerate_episode_channelids
-//
-// Enumerates all of the channel identifiers associated with any episodes
-//
-// Arguments:
-//
-//	instance	- Database instance
-//	callback	- Callback function
-
-void enumerate_episode_channelids(sqlite3* instance, enumerate_channelids_callback callback)
-{
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
-	if((instance == nullptr) || (callback == nullptr)) return;
-
-	// channelid
-	auto sql = "select distinct(encode_channel_id(json_extract(value, '$.ChannelNumber'))) as channelid "
-		"from episode, json_each(episode.data) where channelid <> 0";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Execute the query and iterate over all returned rows
-		while(sqlite3_step(statement) == SQLITE_ROW) {
-
-			union channelid channelid;
-			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
-			
-			callback(channelid);
 		}
 	
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
@@ -2401,6 +2328,50 @@ int get_recordingrule_count(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// get_recordingrule_seriesid
+//
+// Gets the series identifier for the specified recording rule
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	recordingruleid	- Recording rule to get the series identifier for
+
+std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recordingruleid)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	std::string					seriesid;				// Discovered series identifier
+	int							result;					// Result from SQLite function call
+
+	if(instance == nullptr) return seriesid;
+
+	// Prepare a scalar result query to acquire the series identifer for the recording rule
+	auto sql = "select json_extract(data, '$.SeriesID') as seriesid from recordingrule where recordingruleid = ?1 limit 1";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, static_cast<int>(recordingruleid));
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+		
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step or SQLITE_DONE if no rows
+		if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return seriesid;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_stream_url
 //
 // Generates a stream URL for the specified channel
@@ -2656,88 +2627,46 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 	
 	if(instance == nullptr) return;
 
-	execute_non_query(instance, "begin immediate transaction");
+	// Update the specific recording rule with the new information provided
+	auto sql = "replace into recordingrule "
+		"select json_extract(value, '$.RecordingRuleID') as recordingruleid, "
+		"cast(strftime('%s', 'now') as integer) as discovered, "
+		"json_extract(value, '$.SeriesID') as seriesid, "
+		"value as data "
+		"from "
+		"json_each((with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
+		"select http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=change&RecordingRuleID=' || ?1 || "
+		"'&RecentOnly=' || case when ?2 is null then '' else ?2 end || "
+		"'&ChannelOnly=' || case when ?3 is null then '' else decode_channel_id(?3) end || "
+		"'&AfterOriginalAirdateOnly=' || case when ?4 is null then '' else strftime('%s', date(?4, 'unixepoch')) end || "
+		"'&StartPadding=' || case when ?5 is null then '30' else ?5 end || "
+		"'&EndPadding=' || case when ?6 is null then '30' else ?6 end) as data "
+		"from deviceauth))";
+
+	// Prepare the query
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
 
-		// Update the specific recording rule with the new information provided
-		auto sql = "replace into recordingrule "
-			"select json_extract(value, '$.RecordingRuleID') as recordingruleid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, "
-			"json_extract(value, '$.SeriesID') as seriesid, "
-			"value as data "
-			"from "
-			"json_each((with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
-			"select http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || '&Cmd=change&RecordingRuleID=' || ?1 || "
-			"'&RecentOnly=' || case when ?2 is null then '' else ?2 end || "
-			"'&ChannelOnly=' || case when ?3 is null then '' else decode_channel_id(?3) end || "
-			"'&AfterOriginalAirdateOnly=' || case when ?4 is null then '' else strftime('%s', date(?4, 'unixepoch')) end || "
-			"'&StartPadding=' || case when ?5 is null then '30' else ?5 end || "
-			"'&EndPadding=' || case when ?6 is null then '30' else ?6 end) as data "
-			"from deviceauth))";
+		// Bind the non-null query parameter(s)
+		result = sqlite3_bind_int(statement, 1, recordingrule.recordingruleid);
+		if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
+		if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
+		if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
+		if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 5, recordingrule.startpadding);
+		if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 6, recordingrule.endpadding);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		// Prepare the query
-		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+		// Execute the query - no result set is expected
+		result = sqlite3_step(statement);
+		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
-		try {
-
-			// Bind the non-null query parameter(s)
-			result = sqlite3_bind_int(statement, 1, recordingrule.recordingruleid);
-			if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
-			if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
-			if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
-			if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 5, recordingrule.startpadding);
-			if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 6, recordingrule.endpadding);
-			if(result != SQLITE_OK) throw sqlite_exception(result);
-
-			// Execute the query - no result set is expected
-			result = sqlite3_step(statement);
-			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-			sqlite3_finalize(statement);			// Finalize the SQLite statement
-		}
-
-		catch(...) { sqlite3_finalize(statement); throw; }
-
-		// Update the episode data to take the modified recording rule(s) into account; watch out for the web
-		// services returning 'null' on the episode query -- this happens when there are no episodes
-		sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
-			"replace into episode "
-			"select recordingrule.seriesid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, "
-			"http_request('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || coalesce(deviceauth.code, '') || '&SeriesID=' || recordingrule.seriesid) as data "
-			"from recordingrule, deviceauth "
-			"where recordingrule.recordingruleid = ?1 "
-			"and cast(data as text) <> 'null'";
-
-		// Prepare the query
-		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		try {
-
-			// Bind the non-null query parameter(s)
-			result = sqlite3_bind_int(statement, 1, recordingrule.recordingruleid);
-			if(result != SQLITE_OK) throw sqlite_exception(result);
-
-			// Execute the query - no result set is expected
-			result = sqlite3_step(statement);
-			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-			sqlite3_finalize(statement);			// Finalize the SQLite statement
-		}
-
-		catch(...) { sqlite3_finalize(statement); throw; }
-
-		// Commit the transaction
-		execute_non_query(instance, "commit transaction");
+		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
 
-	// Rollback the entire transaction on any failure above
-	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
+	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
 	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");

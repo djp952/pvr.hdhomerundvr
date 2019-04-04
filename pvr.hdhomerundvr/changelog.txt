@@ -13,6 +13,7 @@ v1.4.0 (2019.03.xx)
   - Use separate HTTP connection and DNS lookup cache for Electronic Program Guide (EPG) requests
   - Fix bug preventing recording rule discovery from executing if "Delete expired date/time recording rules after" setting has changed
   - Fix bug causing unnecessary timer updates when series episodes are available via multiple channels
+  - Fix bug that allowed deleted timers to remain listed if mutliple timer rules were associated with a series
 
 v1.3.13 (2019.02.12)
   - Update SQLite database engine to version 3.27.1
