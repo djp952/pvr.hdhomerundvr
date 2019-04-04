@@ -172,7 +172,7 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly)) : sqlite3_bind_null(statement, 4);
 		if(result == SQLITE_OK) result = (recordingrule.datetimeonly != 0) ? sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.datetimeonly)) : sqlite3_bind_null(statement, 5);
 		if(result == SQLITE_OK) result = (recordingrule.startpadding != 30) ? sqlite3_bind_int(statement, 6, recordingrule.startpadding) : sqlite3_bind_null(statement, 6);
-		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? result = sqlite3_bind_int(statement, 7, recordingrule.endpadding) : sqlite3_bind_null(statement, 7);
+		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? sqlite3_bind_int(statement, 7, recordingrule.endpadding) : sqlite3_bind_null(statement, 7);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query - no result set is expected
@@ -2590,7 +2590,7 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 		if(result == SQLITE_OK) result = (recordingrule.channelid.value != 0) ? sqlite3_bind_int(statement, 3, recordingrule.channelid.value) : sqlite3_bind_null(statement, 3);
 		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly)) : sqlite3_bind_null(statement, 4);
 		if(result == SQLITE_OK) result = (recordingrule.startpadding != 30) ? sqlite3_bind_int(statement, 5, recordingrule.startpadding) : sqlite3_bind_null(statement, 5);
-		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? result = sqlite3_bind_int(statement, 6, recordingrule.endpadding) : sqlite3_bind_null(statement, 6);
+		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? sqlite3_bind_int(statement, 6, recordingrule.endpadding) : sqlite3_bind_null(statement, 6);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query - no result set is expected
