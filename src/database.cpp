@@ -167,12 +167,12 @@ void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingr
 
 		// Bind the non-null query parameter(s)
 		result = sqlite3_bind_text(statement, 1, recordingrule.seriesid, -1, SQLITE_STATIC);
-		if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
-		if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
-		if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
-		if((result == SQLITE_OK) && (recordingrule.datetimeonly != 0)) result = sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.datetimeonly));
-		if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 6, recordingrule.startpadding);
-		if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 7, recordingrule.endpadding);
+		if(result == SQLITE_OK) result = (recordingrule.recentonly) ? sqlite3_bind_int(statement, 2, 1) : sqlite3_bind_null(statement, 2);
+		if(result == SQLITE_OK) result = (recordingrule.channelid.value != 0) ? sqlite3_bind_int(statement, 3, recordingrule.channelid.value) : sqlite3_bind_null(statement, 3);
+		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly)) : sqlite3_bind_null(statement, 4);
+		if(result == SQLITE_OK) result = (recordingrule.datetimeonly != 0) ? sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.datetimeonly)) : sqlite3_bind_null(statement, 5);
+		if(result == SQLITE_OK) result = (recordingrule.startpadding != 30) ? sqlite3_bind_int(statement, 6, recordingrule.startpadding) : sqlite3_bind_null(statement, 6);
+		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? result = sqlite3_bind_int(statement, 7, recordingrule.endpadding) : sqlite3_bind_null(statement, 7);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query - no result set is expected
@@ -262,33 +262,11 @@ void clear_database(sqlite3* instance)
 
 void clear_authorization_strings(sqlite3* instance, int expiry)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
 	if((instance == nullptr) || (expiry <= 0)) return;
 
 	// Remove all stale 'DeviceAuth' JSON properties from the device discovery data
-	auto sql = "update device set data = json_remove(data, '$.DeviceAuth') "
-		"where coalesce(discovered, 0) < (cast(strftime('%s', 'now') as integer) - ?1)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameter(s)
-		result = sqlite3_bind_int(statement, 1, expiry);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the query; there shouldn't be any result set returned from it
-		result = sqlite3_step(statement);
-		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-	
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	execute_non_query(instance, "update device set data = json_remove(data, '$.DeviceAuth') "
+		"where coalesce(discovered, 0) < (cast(strftime('%s', 'now') as integer) - ?1)", expiry);
 }
 
 //---------------------------------------------------------------------------
@@ -318,37 +296,15 @@ void close_database(sqlite3* instance)
 
 void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
-	// Prepare a query that will delete the specified recording from the storage device and the database
-	auto sql = "with httprequest(response) as (select http_request(?1 || '&cmd=delete&rerecord=' || ?2)) "
+	// Delete the specified recording from the storage device and the database
+	execute_non_query(instance, "with httprequest(response) as (select http_request(?1 || '&cmd=delete&rerecord=' || ?2)) "
 		"replace into recording select deviceid, discovered, "
 		"(select case when fullkey is null then recording.data else json_remove(recording.data, fullkey) end) as data "
 		"from httprequest, recording, "
-		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameter(s)
-		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (rerecord) ? 1 : 0);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the query; there shouldn't be any result set returned from it
-		result = sqlite3_step(statement);
-		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)",
+		recordingid, (rerecord) ? 1 : 0);
 }
 
 //---------------------------------------------------------------------------
@@ -363,35 +319,13 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 
 void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
 	if(instance == nullptr) return;
 
 	// Delete the recording rule from the backend services and the local database
-	auto sql = "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
+	execute_non_query(instance, "with deviceauth(code) as (select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device) "
 		"delete from recordingrule where recordingruleid in "
 		"(select case when cast(http_request('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || coalesce(deviceauth.code, '') || "
-		"'&Cmd=delete&RecordingRuleID=' || ?1) as text) = 'null' then ?1 else null end from deviceauth)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameter(s)
-		result = sqlite3_bind_int(statement, 1, recordingruleid);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the query; there shouldn't be any result set returned from it
-		result = sqlite3_step(statement);
-		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
-		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"'&Cmd=delete&RecordingRuleID=' || ?1) as text) = 'null' then ?1 else null end from deviceauth)", recordingruleid);
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
 	try_execute_non_query(instance, "select http_request(json_extract(data, '$.BaseURL') || '/recording_events.post?sync') from device where type = 'storage'");
@@ -497,6 +431,7 @@ static bool discover_devices_broadcast(sqlite3* instance)
 
 	// deviceid | discovered | type | dvrauthorized | data
 	auto sql = "insert into discover_device values(printf('%08X', ?1), cast(strftime('%s', 'now') as integer), ?2, null, ?3)";
+
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
@@ -2651,11 +2586,11 @@ void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordi
 
 		// Bind the non-null query parameter(s)
 		result = sqlite3_bind_int(statement, 1, recordingrule.recordingruleid);
-		if((result == SQLITE_OK) && (recordingrule.recentonly)) result = sqlite3_bind_int(statement, 2, 1);
-		if((result == SQLITE_OK) && (recordingrule.channelid.value != 0)) result = sqlite3_bind_int(statement, 3, recordingrule.channelid.value);
-		if((result == SQLITE_OK) && (recordingrule.afteroriginalairdateonly != 0)) result = sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly));
-		if((result == SQLITE_OK) && (recordingrule.startpadding != 30)) result = sqlite3_bind_int(statement, 5, recordingrule.startpadding);
-		if((result == SQLITE_OK) && (recordingrule.endpadding != 30))  result = sqlite3_bind_int(statement, 6, recordingrule.endpadding);
+		if(result == SQLITE_OK) result = (recordingrule.recentonly) ? sqlite3_bind_int(statement, 2, 1) : sqlite3_bind_null(statement, 2);
+		if(result == SQLITE_OK) result = (recordingrule.channelid.value != 0) ? sqlite3_bind_int(statement, 3, recordingrule.channelid.value) : sqlite3_bind_null(statement, 3);
+		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int(statement, 4, static_cast<int>(recordingrule.afteroriginalairdateonly)) : sqlite3_bind_null(statement, 4);
+		if(result == SQLITE_OK) result = (recordingrule.startpadding != 30) ? sqlite3_bind_int(statement, 5, recordingrule.startpadding) : sqlite3_bind_null(statement, 5);
+		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? result = sqlite3_bind_int(statement, 6, recordingrule.endpadding) : sqlite3_bind_null(statement, 6);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query - no result set is expected
@@ -2802,9 +2737,7 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 void set_channel_visibility(sqlite3* instance, union channelid channelid, enum channel_visibility visibility)
 {
-	sqlite3_stmt*				statement;				// Database query statement
 	char						flag;					// Visibility flag to be set
-	int							result;					// Result from SQLite function call
 
 	if(instance == nullptr) throw std::invalid_argument("instance");
 
@@ -2814,37 +2747,16 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 		case channel_visibility::enabled: flag = '-'; break;
 		case channel_visibility::favorite: flag = '+'; break;
 		case channel_visibility::disabled: flag = 'x'; break;
+
 		default: throw std::invalid_argument("visibility");
 	}
 
-	// Prepate a query to generate the necessary URLs for each tuner that supports the channel
-	auto sql = "with deviceurls(url) as "
+	// Generate the necessary URLs for each tuner that supports the channel
+	execute_non_query(instance, "with deviceurls(url) as "
 		"(select distinct(json_extract(device.data, '$.BaseURL') || '/lineup.post?favorite=' || ?1 || decode_channel_id(?2)) "
 		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?2)) "
-		"select http_request(url) from deviceurls";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_text(statement, 1, &flag, 1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, channelid.value);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the query; ignore any rows that are returned
-		do result = sqlite3_step(statement);
-		while(result == SQLITE_ROW);
-
-		// The final result from sqlite3_step should be SQLITE_DONE
-		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"select http_request(url) from deviceurls", &flag, channelid.value);
 }
 
 //---------------------------------------------------------------------------
