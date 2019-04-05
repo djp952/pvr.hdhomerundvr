@@ -514,7 +514,7 @@ static bool discover_devices_http(sqlite3* instance)
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
 		"null as dvrauthorized, "
-		"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data from json_each(nullif(http_request('http://api.hdhomerun.com/discover')), 'null') as discovery");
+		"http_request(json_extract(discovery.value, '$.DiscoverURL'), null) as data from json_each(nullif(http_request('http://api.hdhomerun.com/discover'), 'null')) as discovery");
 	execute_non_query(instance, "insert into discover_device select deviceid, discovered, type, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
 	execute_non_query(instance, "drop table discover_device_http");
 
@@ -785,19 +785,9 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 	try {
 
-		//
-		// NOTE: This had to be broken up into a multi-step query involving a temp table to avoid a SQLite bug/feature
-		// wherein using a function (http_request in this case) as part of a column definition is reevaluated when
-		// that column is subsequently used as part of a WHERE clause:
-		//
-		// [http://mailinglists.sqlite.org/cgi-bin/mailman/private/sqlite-users/2015-August/061083.html]
-		//
-
-		// Discover the channel lineups for all available tuner devices; watch for results that return 'null'
-		execute_non_query(instance, "drop table if exists discover_lineup_temp");
-		execute_non_query(instance, "create temp table discover_lineup_temp as select deviceid, cast(strftime('%s', 'now') as integer) as discovered, http_request(json_extract(device.data, '$.LineupURL') || '?show=demo') as data from device where device.type = 'tuner'");
-		execute_non_query(instance, "insert into discover_lineup select deviceid, discovered, data from discover_lineup_temp where cast(data as text) <> 'null'");
-		execute_non_query(instance, "drop table discover_lineup_temp");
+		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
+		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
+			"nullif(http_request(json_extract(device.data, '$.LineupURL') || '?show=demo', null), '[]') as json from device where device.type = 'tuner'");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -810,6 +800,9 @@ void discover_lineups(sqlite3* instance, bool& changed)
 			// Insert/replace entries in the main lineup table that are new or different
 			if(execute_non_query(instance, "replace into lineup select discover_lineup.* from discover_lineup left outer join lineup using(deviceid) "
 				"where coalesce(lineup.data, '') <> coalesce(discover_lineup.data, '')") > 0) changed = true;
+
+			// Remove any lineup data that was nulled out by the previous operation
+			execute_non_query(instance, "delete from lineup where data is null or data like '[]'");
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
