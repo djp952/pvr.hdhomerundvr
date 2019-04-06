@@ -656,15 +656,22 @@ static void discover_episodes_task(scalar_condition<bool> const& /*cancel*/)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Discover the episode data from the backend service
-		discover_episodes(dbhandle, changed);
-		
-		if(changed) {
+		// This operation is only available when there is at least one DVR authorized tuner
+		std::string authorization = get_authorization_strings(dbhandle, true);
+		if(authorization.length() != 0) {
 
-			// Changes in the episode data affects the PVR timers
-			log_notice(__func__, ": recording rule episode discovery data changed -- trigger timer update");
-			g_pvr->TriggerTimerUpdate();
+			// Discover the episode data from the backend service
+			discover_episodes(dbhandle, authorization.c_str(), changed);
+		
+			if(changed) {
+
+				// Changes in the episode data affects the PVR timers
+				log_notice(__func__, ": recording rule episode discovery data changed -- trigger timer update");
+				g_pvr->TriggerTimerUpdate();
+			}
 		}
+
+		else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule episode discovery");
 	}
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
@@ -693,15 +700,22 @@ static void discover_guide_task(scalar_condition<bool> const& /*cancel*/)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Discover the updated electronic program guide data from the backend service
-		discover_guide(dbhandle, changed);
-		
-		if(changed) {
+		// Get the authorization code(s) for all available tuners
+		std::string authorization = get_authorization_strings(dbhandle, false);
+		if(authorization.length() != 0) {
 
-			// Trigger a channel update; the guide data is used to resolve channel names and icon image urls
-			log_notice(__func__, ": guide channel discovery data changed -- trigger channel update");
-			g_pvr->TriggerChannelUpdate();
+			// Discover the updated electronic program guide data from the backend service
+			discover_guide(dbhandle, authorization.c_str(), changed);
+		
+			if(changed) {
+
+				// Trigger a channel update; the guide data is used to resolve channel names and icon image urls
+				log_notice(__func__, ": guide channel discovery data changed -- trigger channel update");
+				g_pvr->TriggerChannelUpdate();
+			}
 		}
+
+		else log_notice(__func__, ": no tuners with valid authorization were discovered; skipping guide discovery");
 	}
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
@@ -775,35 +789,42 @@ static void discover_recordingrules_task(scalar_condition<bool> const& cancel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Discover the recording rules from the backend service
-		discover_recordingrules(dbhandle, changed);
+		// This operation is only available when there is at least one DVR authorized tuner
+		std::string authorization = get_authorization_strings(dbhandle, true);
+		if(authorization.length() != 0) {
 
-		// Generate a vector<> of all expired recording rules to be deleted from the backend
-		std::vector<unsigned int> expired;
-		enumerate_expired_recordingruleids(dbhandle, settings.delete_datetime_rules_after, [&](unsigned int const& recordingruleid) -> void 
-		{ 
-			expired.push_back(recordingruleid); 
-		});
+			// Discover the recording rules from the backend service
+			discover_recordingrules(dbhandle, authorization.c_str(), changed);
 
-		// Iterate over the vector<> and attempt to delete each expired rule from the backend
-		for(auto const& it : expired) {
+			// Generate a vector<> of all expired recording rules to be deleted from the backend
+			std::vector<unsigned int> expired;
+			enumerate_expired_recordingruleids(dbhandle, settings.delete_datetime_rules_after, [&](unsigned int const& recordingruleid) -> void 
+			{ 
+				expired.push_back(recordingruleid); 
+			});
 
-			try { delete_recordingrule(dbhandle, it); changed = true; }
-			catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-			catch(...) { handle_generalexception(__func__); }
-		}
+			// Iterate over the vector<> and attempt to delete each expired rule from the backend
+			for(auto const& it : expired) {
+
+				try { delete_recordingrule(dbhandle, authorization.c_str(), it); changed = true; }
+				catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+				catch(...) { handle_generalexception(__func__); }
+			}
 		
-		if(changed) {
+			if(changed) {
 
-			// Trigger a PVR timer update (if the subsequent episode discovery changes it may trigger again)
-			log_notice(__func__, ": recording rule discovery data changed -- trigger timer update");
-			g_pvr->TriggerTimerUpdate();
+				// Trigger a PVR timer update (if the subsequent episode discovery changes it may trigger again)
+				log_notice(__func__, ": recording rule discovery data changed -- trigger timer update");
+				g_pvr->TriggerTimerUpdate();
 
-			// Execute a recording rule episode discovery now; task will reschedule itself
-			log_notice(__func__, ": device discovery data changed -- execute recording rule episode discovery now");
-			g_scheduler.remove(discover_episodes_task);
-			discover_episodes_task(cancel);
+				// Execute a recording rule episode discovery now; task will reschedule itself
+				log_notice(__func__, ": device discovery data changed -- execute recording rule episode discovery now");
+				g_scheduler.remove(discover_episodes_task);
+				discover_episodes_task(cancel);
+			}
 		}
+
+		else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule discovery");
 	}
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
@@ -899,18 +920,38 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (recordings)").c_str(), ex); }
 		catch(...) { handle_generalexception(std::string(__func__, " (recordings)").c_str()); }
 
+		// Get the device authorization string(s) required for accessing the backend services after the
+		// local device discoveries have completed
+		std::string authorization = get_authorization_strings(dbhandle, false);
+		std::string dvrauthorization = get_authorization_strings(dbhandle, true);
+		
 		// DISCOVER: Guide Metadata
-		try { discover_guide(dbhandle, guide_changed); }
+		try { 
+			
+			if(authorization.length() != 0) discover_guide(dbhandle, authorization.c_str(), guide_changed);
+			else log_notice(__func__, ": no tuners with valid authorization were discovered; skipping guide discovery");
+		}
+
 		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (guide metadata)").c_str(), ex); }
 		catch(...) { handle_generalexception(std::string(__func__, " (guide metadata)").c_str()); }
 
 		// DISCOVER: Recording Rules
-		try { discover_recordingrules(dbhandle, recordingrules_changed); }
+		try { 
+			
+			if(dvrauthorization.length() != 0) discover_recordingrules(dbhandle, dvrauthorization.c_str(), recordingrules_changed); 
+			else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule discovery");
+		}
+
 		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (recording rules)").c_str(), ex); }
 		catch(...) { handle_generalexception(std::string(__func__, " (recording rules)").c_str()); }
 
 		// DISCOVER: Episodes
-		try { discover_episodes(dbhandle, episodes_changed); }
+		try { 
+		
+			if(dvrauthorization.length() != 0) discover_episodes(dbhandle, dvrauthorization.c_str(), episodes_changed); 
+			else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule episode discovery");
+		}
+
 		catch(std::exception& ex) { handle_stdexception(std::string(__func__, " (episodes)").c_str(), ex); }
 		catch(...) { handle_generalexception(std::string(__func__, " (episodes)").c_str()); }
 
@@ -1160,12 +1201,6 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 	union channelid channelid;
 	channelid.value = channel.iUniqueId;
 
-	//
-	// NOTE: This does not cache all of the enumerated guide data locally before
-	// transferring it over to Kodi, it's done realtime to reduce the heap footprint
-	// and allow Kodi to process the entries as they are generated
-	//
-
 	try {
 
 		// Create a copy of the current addon settings structure
@@ -1174,8 +1209,12 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
+		// Get the authorization code(s) for all available tuners
+		std::string authorization = get_authorization_strings(dbhandle, false);
+		if(authorization.length() == 0) throw string_exception("no valid tuner device authorization string(s) available");
+
 		// Enumerate all of the guide entries in the database for this channel and time frame
-		enumerate_guideentries(dbhandle, channelid, start, end, settings.prepend_episode_numbers_in_epg, [&](struct guideentry const& item) -> void {
+		enumerate_guideentries(dbhandle, authorization.c_str(), channelid, start, end, settings.prepend_episode_numbers_in_epg, [&](struct guideentry const& item) -> void {
 
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
@@ -2938,6 +2977,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 			// iDuration
 			recording.iDuration = item.duration;
+			assert(recording.iDuration > 0);
 
 			// iLastPlayedPosition
 			//
@@ -3399,7 +3439,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 				// Generate a vector of all series that are a title match with the requested EPG search string; the
 				// selection dialog will be displayed even if there is only one match in order to confirm the result
 				std::vector<std::tuple<std::string, std::string>> matches;
-				enumerate_series(dbhandle, timer.strEpgSearchString, [&](struct series const& item) -> void { matches.emplace_back(item.title, item.seriesid); });
+				enumerate_series(dbhandle, authorization.c_str(), timer.strEpgSearchString, [&](struct series const& item) -> void { matches.emplace_back(item.title, item.seriesid); });
 				
 				// No matches found; display an error message to the user and bail out
 				if(matches.size() == 0) {
@@ -3424,7 +3464,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			else {
 
 				// Perform an exact-match search against the backend to locate the seriesid
-				seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
+				seriesid = find_seriesid(dbhandle, authorization.c_str(), timer.strEpgSearchString);
 				if(seriesid.length() == 0) {
 					
 					g_gui->Dialog_OK_ShowAndGetInput("Series Search Failed", "Unable to locate a series with a title matching:", timer.strEpgSearchString, "");
@@ -3453,8 +3493,8 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
 
 			// Try to find the seriesid for the recording rule by the channel and starttime first, then do a title match
-			seriesid = find_seriesid(dbhandle, channelid, timer.startTime);
-			if(seriesid.length() == 0) seriesid = find_seriesid(dbhandle, timer.strEpgSearchString);
+			seriesid = find_seriesid(dbhandle, authorization.c_str(), channelid, timer.startTime);
+			if(seriesid.length() == 0) seriesid = find_seriesid(dbhandle, authorization.c_str(), timer.strEpgSearchString);
 
 			// If no match was found, the timer cannot be added; use a dialog box rather than returning an error
 			if(seriesid.length() == 0) {
@@ -3475,10 +3515,10 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		else return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
 		// Attempt to add the new recording rule to the database/backend service
-		add_recordingrule(dbhandle, recordingrule);
+		add_recordingrule(dbhandle, authorization.c_str(), recordingrule);
 
 		// Update the episode information for the specified series; issue a log warning if the operation fails
-		try { discover_episodes_seriesid(dbhandle, seriesid.c_str()); }
+		try { discover_episodes_seriesid(dbhandle, authorization.c_str(), seriesid.c_str()); }
 		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
 		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
 
@@ -3537,10 +3577,10 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 		if(seriesid.length() == 0) throw string_exception(__func__, ": could not determine seriesid for timer");
 
 		// Attempt to delete the recording rule from the backend and the database
-		delete_recordingrule(dbhandle, recordingruleid);
+		delete_recordingrule(dbhandle, authorization.c_str(), recordingruleid);
 
 		// Update the episode information for the specified series; issue a log warning if the operation fails
-		try { discover_episodes_seriesid(dbhandle, seriesid.c_str()); }
+		try { discover_episodes_seriesid(dbhandle, authorization.c_str(), seriesid.c_str()); }
 		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
 		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
 	}
@@ -3622,10 +3662,10 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 		if(seriesid.length() == 0) throw string_exception(__func__, ": could not determine seriesid for timer");
 
 		// Attempt to modify the recording rule on the backend and in the database
-		modify_recordingrule(dbhandle, recordingrule);
+		modify_recordingrule(dbhandle, authorization.c_str(), recordingrule);
 
 		// Update the episode information for the specified series; issue a log warning if the operation fails
-		try { discover_episodes_seriesid(dbhandle, seriesid.c_str()); }
+		try { discover_episodes_seriesid(dbhandle, authorization.c_str(), seriesid.c_str()); }
 		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
 		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
 	}
