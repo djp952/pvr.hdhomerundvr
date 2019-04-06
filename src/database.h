@@ -179,7 +179,7 @@ private:
 // add_recordingrule
 //
 // Adds a new recording rule to the database
-void add_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule);
+void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordingrule const& recordingrule);
 
 // clear_authorization_strings
 //
@@ -204,7 +204,7 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 // delete_recordingrule
 //
 // Deletes a recording rule from the database instance
-void delete_recordingrule(sqlite3* instance, unsigned int recordingruleid);
+void delete_recordingrule(sqlite3* instance, char const* deviceauth, unsigned int recordingruleid);
 
 // discover_devices
 //
@@ -215,17 +215,17 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed);
 // discover_episodes
 //
 // Reloads the information about all episodes associated with a recording rule
-void discover_episodes(sqlite3* instance);
-void discover_episodes(sqlite3* instance, bool& changed);
+void discover_episodes(sqlite3* instance, char const* deviceauth);
+void discover_episodes(sqlite3* instance, char const* deviceauth, bool& changed);
 
 // discovers the information about episodes associated with a specific series
-void discover_episodes_seriesid(sqlite3* instance, char const* seriesid);
+void discover_episodes_seriesid(sqlite3* instance, char const* deviceauth, char const* seriesid);
 
 // discover_guide
 //
 // Reloads the electronic program guide data
-void discover_guide(sqlite3* instance);
-void discover_guide(sqlite3* instance, bool& changed);
+void discover_guide(sqlite3* instance, char const* deviceauth);
+void discover_guide(sqlite3* instance, char const* deviceauth, bool& changed);
 
 // discover_lineups
 //
@@ -236,8 +236,8 @@ void discover_lineups(sqlite3* instance, bool& changed);
 // discover_recordingrules
 //
 // Reloads the information about the available recording rules
-void discover_recordingrules(sqlite3* instance);
-void discover_recordingrules(sqlite3* instance, bool& changed);
+void discover_recordingrules(sqlite3* instance, char const* deviceauth);
+void discover_recordingrules(sqlite3* instance, char const* deviceauth, bool& changed);
 
 // discover_recordings
 //
@@ -283,7 +283,7 @@ void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_ch
 // enumerate_guideentries
 //
 // Enumerates the available guide entries for a channel and time period
-void enumerate_guideentries(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_guideentries_callback callback);
+void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t starttime, time_t endtime, enumerate_guideentries_callback callback);
 
 // enumerate_hd_channelids
 //
@@ -309,7 +309,7 @@ void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 // enumerate_series
 //
 // Enumerates series based on a title matching search
-void enumerate_series(sqlite3* instance, char const* title, enumerate_series_callback callback);
+void enumerate_series(sqlite3* instance, char const* deviceauth, char const* title, enumerate_series_callback callback);
 
 // enumerate_timers
 //
@@ -319,12 +319,12 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 // find_seriesid
 //
 // Retrieves the series id associated with a specific channel/time combination
-std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t timestamp);
+std::string find_seriesid(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t timestamp);
 
 // find_seriesid
 //
 // Retrieves the series id associated with a title
-std::string find_seriesid(sqlite3* instance, char const* title);
+std::string find_seriesid(sqlite3* instance, char const* deviceauth, char const* title);
 
 // get_authorization_strings
 //
@@ -399,7 +399,7 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 // modify_recordingrule
 //
 // Modifies an existing recording rule
-void modify_recordingrule(sqlite3* instance, struct recordingrule const& recordingrule);
+void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct recordingrule const& recordingrule);
 
 // open_database
 //

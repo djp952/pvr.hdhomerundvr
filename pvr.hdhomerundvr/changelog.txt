@@ -12,9 +12,10 @@ v2.0.0 (2019.04.xx)
   - Prevent redundant rediscovery of devices and channel lineups during PVR startup task
   - Use separate HTTP connection and DNS lookup cache for Electronic Program Guide (EPG) requests
   - Block attempts to add/remove/update recording rules if no tuners with DVR authorization were discovered
+  - Prevent access to all backend services when no valid device authorization code(s) are available
   - Fix bug preventing recording rule discovery from executing if "Delete expired date/time recording rules after" setting has changed
   - Fix bug causing unnecessary timer updates when series episodes are available via multiple channels
-  - Fix bug that allowed deleted timers to remain listed if mutliple timer rules were associated with a series
+  - Fix bug that allowed deleted timers to remain listed if multiple timer rules were associated with a series
   - Fix bug that caused "Malformed JSON" errors during processing of EPG listings when no data was available
 
 v1.3.13 (2019.02.12)
