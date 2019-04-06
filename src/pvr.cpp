@@ -3126,7 +3126,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 {
 	std::string				seriesid;			// The seriesid for the timer
 
-	assert(g_pvr);
+	assert(g_pvr && g_gui);
 
 	// Get the current time as a unix timestamp, used to set up AfterOriginalAirdateOnly
 	time_t now = time(nullptr);
@@ -3139,6 +3139,15 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// This operation is only available when there is at least one DVR authorized tuner
+		std::string authorization = get_authorization_strings(dbhandle, true);
+		if(authorization.length() == 0) {
+
+			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "This operation requires at least one HDHomeRun tuner "
+				"associated with an active HDHomeRun DVR Service subscription.", "", "https://www.silicondust.com/dvr-service/");
+			return PVR_ERROR::PVR_ERROR_NO_ERROR;
+		}
 
 		// seriesrule / epgseriesrule --> recordingrule_type::series
 		//
@@ -3264,12 +3273,21 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 {
 	unsigned int			recordingruleid = 0;		// Backend recording rule identifier
 
-	assert(g_pvr);
+	assert(g_pvr && g_gui);
 
 	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// This operation is only available when there is at least one DVR authorized tuner
+		std::string authorization = get_authorization_strings(dbhandle, true);
+		if(authorization.length() == 0) {
+
+			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "This operation requires at least one HDHomeRun tuner "
+				"associated with an active HDHomeRun DVR Service subscription.", "", "https://www.silicondust.com/dvr-service/");
+			return PVR_ERROR::PVR_ERROR_NO_ERROR;
+		}
 
 		// Determine the recording rule identifier for this timer object
 		//
@@ -3314,7 +3332,7 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 
 PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 {
-	assert(g_pvr);
+	assert(g_pvr && g_gui);
 
 	// Get the current time as a unix timestamp, used to set up AfterOriginalAirdateOnly
 	time_t now = time(nullptr);
@@ -3327,6 +3345,15 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
+
+		// This operation is only available when there is at least one DVR authorized tuner
+		std::string authorization = get_authorization_strings(dbhandle, true);
+		if(authorization.length() == 0) {
+
+			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "This operation requires at least one HDHomeRun tuner "
+				"associated with an active HDHomeRun DVR Service subscription.", "", "https://www.silicondust.com/dvr-service/");
+			return PVR_ERROR::PVR_ERROR_NO_ERROR;
+		}
 
 		// seriesrule / epgseriesrule --> recordingrule_type::series
 		//
