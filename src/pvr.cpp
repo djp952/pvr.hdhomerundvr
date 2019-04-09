@@ -3183,8 +3183,8 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		std::string authorization = get_authorization_strings(dbhandle, true);
 		if(authorization.length() == 0) {
 
-			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "This operation requires at least one HDHomeRun tuner "
-				"associated with an active HDHomeRun DVR Service subscription.", "", "https://www.silicondust.com/dvr-service/");
+			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "Timer operations require an active HDHomeRun DVR Service subscription.",
+				"", "https://www.silicondust.com/dvr-service/");
 			return PVR_ERROR::PVR_ERROR_NO_ERROR;
 		}
 
@@ -3323,8 +3323,8 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 		std::string authorization = get_authorization_strings(dbhandle, true);
 		if(authorization.length() == 0) {
 
-			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "This operation requires at least one HDHomeRun tuner "
-				"associated with an active HDHomeRun DVR Service subscription.", "", "https://www.silicondust.com/dvr-service/");
+			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "Timer operations require an active HDHomeRun DVR Service subscription.",
+				"", "https://www.silicondust.com/dvr-service/");
 			return PVR_ERROR::PVR_ERROR_NO_ERROR;
 		}
 
@@ -3389,8 +3389,8 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 		std::string authorization = get_authorization_strings(dbhandle, true);
 		if(authorization.length() == 0) {
 
-			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "This operation requires at least one HDHomeRun tuner "
-				"associated with an active HDHomeRun DVR Service subscription.", "", "https://www.silicondust.com/dvr-service/");
+			g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", "Timer operations require an active HDHomeRun DVR Service subscription.",
+				"", "https://www.silicondust.com/dvr-service/");
 			return PVR_ERROR::PVR_ERROR_NO_ERROR;
 		}
 
