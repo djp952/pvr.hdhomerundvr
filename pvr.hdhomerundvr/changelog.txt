@@ -1,4 +1,4 @@
-v2.0.0 (2019.04.xx)
+v2.0.0 (2019.04.09)
   - Update SQLite database engine to version 3.27.2
   - Update cURL library to version 7.64.1
   - Add "Invalidate tuner device authorization codes after" advanced setting
