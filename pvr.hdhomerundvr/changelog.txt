@@ -1,3 +1,6 @@
+v2.0.1 (2019.04.12)
+  - Fix bug introduced in v2.0.0 preventing any EPG data from being processed
+
 v2.0.0 (2019.04.09)
   - Update SQLite database engine to version 3.27.2
   - Update cURL library to version 7.64.1
