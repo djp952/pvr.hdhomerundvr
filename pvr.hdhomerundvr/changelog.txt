@@ -1,3 +1,6 @@
+v2.0.2 (2019.xx.xx)
+  - Update SQLite database engine to version 3.28.0
+
 v2.0.1 (2019.04.12)
   - Fix bug introduced in v2.0.0 preventing any EPG data from being processed
 
