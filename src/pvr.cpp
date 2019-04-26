@@ -1219,6 +1219,8 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
+			assert((item.starttime <= end) && (item.endtime >= start));
+
 			// iUniqueBroadcastId (required)
 			assert(item.broadcastid > 0);
 			epgtag.iUniqueBroadcastId = item.broadcastid;
