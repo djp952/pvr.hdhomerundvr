@@ -1360,8 +1360,8 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 				else break;
 			}
 
-			// Process each row returned from the query (if any)
-			while(result == SQLITE_ROW) {
+			// Process each row returned from the query or until the specified end time has been reached
+			while((result == SQLITE_ROW) && (starttime < endtime)) {
 
 				struct guideentry item;
 				item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
