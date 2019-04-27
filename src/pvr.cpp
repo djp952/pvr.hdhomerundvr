@@ -2473,7 +2473,11 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end)
 {
-	bool		cancel = false;				// Unused cancellation flag for discover_devices_task
+	static std::mutex		sync;					// Synchronization object
+	bool					cancel = false;			// Unused cancellation flag for discover_devices_task
+
+	// Prevent concurrent access into this fuction by multiple threads
+	std::unique_lock<std::mutex> lock(sync);
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
