@@ -1211,13 +1211,22 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 		std::string authorization = get_authorization_strings(dbhandle, false);
 		if(authorization.length() == 0) throw string_exception("no valid tuner device authorization string(s) available");
 
+		// EPG_TAG uses pointers instead of string buffers, collect all of the string data returned 
+		// from the database in a list<> to keep them valid until transferred
+		std::list<std::string> epgstrings;
+
+		// Collect all of the EPG_TAG structures locally before transferring any of them to Kodi
+		std::vector<EPG_TAG> epgtags;
+
 		// Enumerate all of the guide entries in the database for this channel and time frame
 		enumerate_guideentries(dbhandle, authorization.c_str(), channelid, start, end, settings.prepend_episode_numbers_in_epg, [&](struct guideentry const& item) -> void {
 
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
+			// Don't sent EPG entries with start/end times outside the requested range
 			assert((item.starttime <= end) && (item.endtime >= start));
+			if((item.starttime > end) || (item.endtime < start)) return;
 
 			// iUniqueBroadcastId (required)
 			assert(item.broadcastid > EPG_TAG_INVALID_UID);
@@ -1225,7 +1234,7 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 
 			// strTitle (required)
 			if(item.title == nullptr) return;
-			epgtag.strTitle = item.title;
+			epgtag.strTitle = epgstrings.emplace(epgstrings.end(), item.title)->c_str();
 
 			// iChannelNumber (required)
 			epgtag.iChannelNumber = item.channelid;
@@ -1237,19 +1246,19 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			epgtag.endTime = item.endtime;
 
 			// strPlot
-			if(item.synopsis != nullptr) epgtag.strPlot = item.synopsis;
+			if(item.synopsis != nullptr) epgtag.strPlot = epgstrings.emplace(epgstrings.end(), item.synopsis)->c_str();
 
 			// iYear
 			epgtag.iYear = item.year;
 
 			// strIconPath
-			if(item.iconurl != nullptr) epgtag.strIconPath = item.iconurl;
+			if(item.iconurl != nullptr) epgtag.strIconPath = epgstrings.emplace(epgstrings.end(), item.iconurl)->c_str();
 
 			// iGenreType
 			epgtag.iGenreType = (settings.use_backend_genre_strings) ? EPG_GENRE_USE_STRING : item.genretype;
 
 			// strGenreDescription
-			if(settings.use_backend_genre_strings) epgtag.strGenreDescription = item.genres;
+			if((settings.use_backend_genre_strings) && (item.genres != nullptr)) epgtag.strGenreDescription = epgstrings.emplace(epgstrings.end(), item.genres)->c_str();
 
 			// firstAired
 			epgtag.firstAired = item.originalairdate;
@@ -1264,14 +1273,17 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			epgtag.iEpisodePartNumber = -1;
 
 			// strEpisodeName
-			if(item.episodename != nullptr) epgtag.strEpisodeName = item.episodename;
+			if(item.episodename != nullptr) epgtag.strEpisodeName = epgstrings.emplace(epgstrings.end(), item.episodename)->c_str();
 
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
 
-			// Transfer the EPG_TAG structure over to Kodi
-			g_pvr->TransferEpgEntry(handle, &epgtag);
+			// Move the EPG_TAG structure into the local vector<>
+			epgtags.emplace_back(std::move(epgtag));
 		});
+
+		// Transfer the generated EPG_TAG structures over to Kodi
+		for(auto const& it : epgtags) g_pvr->TransferEpgEntry(handle, &it);
 	}
 	
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
@@ -2610,11 +2622,11 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 			// iChannelUniqueId (required)
 			member.iChannelUniqueId = item.value;
 
-			// Copy the PVR_CHANNEL_GROUP_MEMBER into the local vector<>
-			members.push_back(std::move(member));
+			// Move the PVR_CHANNEL_GROUP_MEMBER into the local vector<>
+			members.emplace_back(std::move(member));
 		});
 
-		// Transfer the generated PVR_CHANNEL_GROUP_MEMBER structure over to Kodi
+		// Transfer the generated PVR_CHANNEL_GROUP_MEMBER structures over to Kodi
 		for(auto const& it : members) g_pvr->TransferChannelGroupMember(handle, &it);
 	}
 
@@ -2720,11 +2732,11 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 			// strIconPath
 			if(item.iconurl != nullptr) snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
 
-			// Copy the PVR_CHANNEL structure into the local vector<>
-			channels.push_back(channel);
+			// Move the PVR_CHANNEL structure into the local vector<>
+			channels.emplace_back(std::move(channel));
 		});
 
-		// Transfer the generated PVR_CHANNEL structure over to Kodi 
+		// Transfer the generated PVR_CHANNEL structures over to Kodi 
 		for(auto const& it : channels) g_pvr->TransferChannelEntry(handle, &it);
 	}
 	
@@ -2919,11 +2931,11 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// channelType
 			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
 
-			// Copy the PVR_RECORDING structure into the local vector<>
-			recordings.push_back(recording);
+			// Move the PVR_RECORDING structure into the local vector<>
+			recordings.emplace_back(std::move(recording));
 		});
 
-		// Transfer the generated PVR_RECORDING structure over to Kodi 
+		// Transfer the generated PVR_RECORDING structures over to Kodi 
 		for(auto const& it : recordings) g_pvr->TransferRecordingEntry(handle, &it);
 	}
 	
@@ -3314,11 +3326,11 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			// iEpgUid
 			timer.iEpgUid = static_cast<unsigned int>(item.starttime);
 
-			// Copy the PVR_TIMER structure into the local vector<>
-			timers.push_back(timer);
+			// Move the PVR_TIMER structure into the local vector<>
+			timers.emplace_back(std::move(timer));
 		});
 
-		// Transfer the generated PVR_TIMER structure over to Kodi
+		// Transfer the generated PVR_TIMER structures over to Kodi
 		for(auto const& it : timers) g_pvr->TransferTimerEntry(handle, &it);
 	}
 	
