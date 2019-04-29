@@ -59,40 +59,6 @@ long long const dvrstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::m
 size_t const dvrstream::MPEGTS_PACKET_LENGTH = 188;
 	
 //---------------------------------------------------------------------------
-// decode_pcr90khz
-//
-// Decodes a PCR (Program Clock Reference) value at the 90KHz clock
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be decoded
-
-inline uint64_t decode_pcr90khz(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	// The 90KHz clock is encoded as a single 33 bit value at the start of the data
-	return (static_cast<uint64_t>(ptr[0]) << 25) | (static_cast<uint32_t>(ptr[1]) << 17) | (static_cast<uint32_t>(ptr[2]) << 9) | (static_cast<uint16_t>(ptr[3]) << 1) | (ptr[4] >> 7);
-}
-
-//---------------------------------------------------------------------------
-// decode_pcr27mhz
-//
-// Decodes a PCR (Program Clock Reference) value at the 27MHz clock
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be decoded
-
-inline uint64_t decode_pcr27mhz(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	// The 27Mhz clock is decoded by multiplying the 33-bit 90KHz base clock by 300 and adding the 9-bit extension
-	return (decode_pcr90khz(ptr) * 300) + (static_cast<uint16_t>(ptr[4] & 0x01) << 8) + ptr[5];
-}
-
-//---------------------------------------------------------------------------
 // curl_multi_get_result
 //
 // Retrieves the result from a cURL easy handle assigned to a multi handle
@@ -300,30 +266,6 @@ void dvrstream::close(void)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::currenttime
-//
-// Gets the current playback time based on the presentation timestamps
-//
-// Arguments:
-//
-//	NONE
-
-time_t dvrstream::currenttime(void) const
-{
-	// If either of the presentation timestamps are missing, report zero
-	if((m_startpts == 0) || (m_currentpts == 0)) return 0;
-
-	// If the current presentation timestamp is before the start, report zero
-	if(m_currentpts < m_startpts) return 0;
-
-	// Calculate the current playback time via the delta between the current
-	// and starting presentation timestamp values (90KHz periods)
-	uint64_t delta = (m_currentpts - m_startpts) / 90000;
-	assert(delta <= static_cast<uint64_t>(std::numeric_limits<time_t>::max()));
-	return m_starttime + static_cast<time_t>(delta);
-}
-
-//---------------------------------------------------------------------------
 // dvrstream::create (static)
 //
 // Factory method, creates a new dvrstream instance
@@ -527,57 +469,11 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 
 		// If the sync byte isn't 0x47, this either isn't an MPEG-TS stream or the packets
 		// have become misaligned.  In either case the packet filter must be disabled.
-		if(sync != 0x47) { 
-			
-			m_enablefilter = m_enablepcrs = false;		// Stop filtering packets
-			m_startpts = m_currentpts = 0;				// Disable PCR reporting
+		if(sync != 0x47) { m_enablefilter = false; return; }
 
-			return;
-		}
-
-		// Move the pointer beyond the TS header
+		// Move the pointer beyond the TS header and any adaptation bytes
 		current += 4U;
-
-		// If the packet contains adaptation bytes check for and handle the PCR
-		if(adaptation) {
-
-			// Get the adapation field length, this needs to be at least 7 bytes for
-			// it to possibly include the PCR value
-			uint8_t adaptationlength = read_be8(current);
-			if((adaptationlength >= 7) && (m_enablepcrs)) {
-
-				// Only use the first PID on which a PCR has been detected, there may
-				// be multiple elementary streams that contain PCR values
-				if((m_pcrpid == 0) || (pid == m_pcrpid)) {
-
-					// Check the adaptation flags to see if a PCR is in this packet
-					uint8_t adaptationflags = read_be8(current + 1U);
-					if((adaptationflags & 0x10) == 0x10) {
-
-						// If the PCR PID hasn't been set, use this PID from now on
-						if(m_pcrpid == 0) m_pcrpid = pid;
-
-						// Decode the current PCR using the 90KHz period only, there is 
-						// no need to deal with the full 27MHz period
-						m_currentpts = decode_pcr90khz(current + 2U);
-						if(m_startpts == 0) m_startpts = m_currentpts;
-
-						assert(m_currentpts >= m_startpts);
-
-						// If the current PCR is less than the original PCR value something has
-						// gone wrong; disable all PCR detection and reporting on this stream
-						if(m_currentpts < m_startpts) {
-
-							m_enablepcrs = false;
-							m_startpts = m_currentpts = 0;
-						}
-					}
-				}
-			}
-
-			// Move the pointer beyond the adaptation data
-			current += adaptationlength;
-		}
+		if(adaptation) { current += read_be8(current); }
 
 		// >> PAT
 		if((pid == 0x0000) && (payload)) {
@@ -788,7 +684,6 @@ long long dvrstream::restart(long long position)
 	m_head = m_tail = 0;
 	m_startpos = m_readpos = m_writepos = 0;
 	m_length = MAX_STREAM_LENGTH;
-	m_currentpts = 0;
 
 	// Format the Range: header value to apply to the transfer object, do not use CURLOPT_RESUME_FROM_LARGE 
 	// as it will not insert the request header when the position is zero

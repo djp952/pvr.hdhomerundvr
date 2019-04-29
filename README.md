@@ -75,7 +75,7 @@ GCC_VERSION=4.9.3 osxcross/build_gcc.sh
 **INITIALIZE SOURCE TREE AND DEPENDENCIES**
 * Open "Developer Command Prompt for VS2017"   
 ```
-git clone https://github.com/djp952/pvr.hdhomerundvr -b Leia
+git clone https://github.com/djp952/pvr.hdhomerundvr -b Matrix
 cd pvr.hdhomerundvr
 git submodule update --init
 ```

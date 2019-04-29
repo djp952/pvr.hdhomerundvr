@@ -300,9 +300,9 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,			// bSupportsRecordingsRename
 	false,			// bSupportsRecordingsLifetimeChange
 	false,			// bSupportsDescrambleInfo
+	false,			// bSupportsAsyncEPGTransfer
 	0,				// iRecordingsLifetimesSize
 	{ { 0, "" } },	// recordingsLifetimeValues
-	false,			// bSupportsAsyncEPGTransfer
 };
 
 // g_connpool
@@ -1098,14 +1098,14 @@ static char const* const edltype_to_string(PVR_EDL_TYPE const& type)
 // try_getepgforchannel
 //
 // Request the EPG for a channel from the backend
-static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end)
+static bool try_getepgforchannel(ADDON_HANDLE handle, int channel, time_t start, time_t end)
 {
 	assert(g_pvr);
 	assert(handle != nullptr);
 
 	// Retrieve the channel identifier from the PVR_CHANNEL structure
 	union channelid channelid;
-	channelid.value = channel.iUniqueId;
+	channelid.value = channel;
 
 	try {
 
@@ -2240,7 +2240,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 //	start		- Get events after this time (UTC)
 //	end			- Get events before this time (UTC)
 
-PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end)
+PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_t end)
 {
 	static std::mutex		sync;					// Synchronization object
 	bool					cancel = false;			// Unused cancellation flag for discover_devices_task
@@ -4193,6 +4193,19 @@ void SetSpeed(int /*speed*/)
 }
 
 //---------------------------------------------------------------------------
+// FillBuffer
+//
+// Notify the pvr addon/demuxer that Kodi wishes to fill demux queue
+//
+// Arguments:
+//
+//	mode		- The requested filling mode
+
+void FillBuffer(bool /*mode*/)
+{
+}
+
+//---------------------------------------------------------------------------
 // GetBackendHostname
 //
 // Get the hostname of the pvr backend server
@@ -4204,32 +4217,6 @@ void SetSpeed(int /*speed*/)
 char const* GetBackendHostname(void)
 {
 	return "";
-}
-
-//---------------------------------------------------------------------------
-// IsTimeshifting
-//
-// Check if timeshift is active
-//
-// Arguments:
-//
-//	NONE
-
-bool IsTimeshifting(void)
-{
-	// Only realtime seekable streams are capable of timeshifting
-	if(!g_dvrstream || !g_dvrstream->realtime() || !g_dvrstream->canseek()) return false;
-
-	try {
-
-		// Get the calculated playback time of the stream.  If non-zero and is
-		// less than the current time (less one second for padding), it's timeshifting
-		time_t currenttime = g_dvrstream->currenttime();
-		return ((currenttime != 0) && (currenttime < (time(nullptr) - 1)));
-	}
-
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
-	catch(...) { return handle_generalexception(__func__, false); }
 }
 
 //---------------------------------------------------------------------------
