@@ -213,6 +213,23 @@ static void bind_parameter(sqlite3_stmt* statement, int& paramindex, char const*
 //---------------------------------------------------------------------------
 // bind_parameter (local)
 //
+// Used by execute_non_query to bind a character parameter
+//
+// Arguments:
+//
+//	statement		- SQL statement instance
+//	paramindex		- Index of the parameter to bind; will be incremented
+//	value			- Value to bind as the parameter
+
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, char& value)
+{
+	int result = sqlite3_bind_text(statement, paramindex++, &value, 1, SQLITE_STATIC);
+	if(result != SQLITE_OK) throw sqlite_exception(result);
+}
+
+//---------------------------------------------------------------------------
+// bind_parameter (local)
+//
 // Used by execute_non_query to bind an integer parameter
 //
 // Arguments:
@@ -2757,7 +2774,7 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 		"(select distinct(json_extract(device.data, '$.BaseURL') || '/lineup.post?favorite=' || ?1 || decode_channel_id(?2)) "
 		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?2)) "
-		"select http_request(url) from deviceurls", &flag, channelid.value);
+		"select http_request(url) from deviceurls", flag, channelid.value);
 }
 
 //---------------------------------------------------------------------------
