@@ -136,6 +136,10 @@ msgctxt "#30131"
 msgid "Invalidate device authorization codes after"
 msgstr ""
 
+msgctxt "#30132"
+msgid "Flag Recorded TV streams as real-time"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -422,5 +426,9 @@ msgstr ""
 
 msgctxt "#30526"
 msgid "Specifies the amount of time after which cached HDHomeRun tuner device authorization strings will be considered invalid."
+msgstr ""
+
+msgctxt "#30527"
+msgid "When set to ON Recorded TV streams will be reported as real-time.  This may reduce excessive buffering in limited network bandwidth scenarios."
 msgstr ""
 
