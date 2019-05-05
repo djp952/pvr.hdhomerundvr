@@ -1872,7 +1872,12 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, union chann
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) seriesid.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -1921,7 +1926,12 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, char const*
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) seriesid.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -1966,7 +1976,12 @@ std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized)
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) authstring.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) authstring.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -2142,7 +2157,12 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) filename.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) filename.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -2233,7 +2253,12 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) streamurl.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) streamurl.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -2315,7 +2340,12 @@ std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recording
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step or SQLITE_DONE if no rows
-		if(result == SQLITE_ROW) seriesid.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) seriesid.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -2360,7 +2390,12 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) streamurl.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) streamurl.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
@@ -2554,7 +2589,12 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step()
-		if(result == SQLITE_ROW) streamurl.assign(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
+		if(result == SQLITE_ROW) {
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(value != nullptr) streamurl.assign(value);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);

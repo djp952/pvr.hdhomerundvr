@@ -3,7 +3,8 @@ v2.0.2 (2019.xx.xx)
   - Add "Flag Recorded TV streams as real-time" advanced setting
   - Prevent multiple Kodi threads from simultaneously requesting EPG data
   - Fix bug that allowed extraneous EPG entries to be transferred to Kodi
-  - Fix bug introduced in v2.0.0 that prevented setting channel visibility flags
+  - Fix bug that prevented successfully setting channel visibility flags
+  - Fix bug in database layer that could cause unhandled exceptions processing NULL column values
 
 v2.0.1 (2019.04.12)
   - Version number consistency build; no changes
