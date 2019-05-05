@@ -1,5 +1,6 @@
 v2.0.2 (2019.xx.xx)
   - Update SQLite database engine to version 3.28.0
+  - Add "Flag Recorded TV streams as real-time" advanced setting
   - Prevent multiple Kodi threads from simultaneously requesting EPG data
   - Fix bug that allowed extraneous EPG entries to be transferred to Kodi
   - Fix bug introduced in v2.0.0 that prevented setting channel visibility flags

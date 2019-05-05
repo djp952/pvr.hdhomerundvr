@@ -140,6 +140,10 @@ msgctxt "#30131"
 msgid "Invalidate device authorization codes after"
 msgstr ""
 
+msgctxt "#30132"
+msgid "Flag Recorded TV streams as real-time"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

@@ -223,6 +223,11 @@ struct addon_settings {
 	// Flag indicating that Live TV will be handled directly from the tuner(s)
 	bool use_direct_tuning;
 
+	// flag_recorded_streams_as_realtime
+	//
+	// Flag indicating that Recorded TV streams will be reported as real-time
+	bool flag_recorded_streams_as_realtime;
+
 	// startup_discovery_task_delay
 	//
 	// Indicates the number of seconds to pause before initiating the startup discovery task
@@ -361,6 +366,7 @@ static addon_settings g_settings = {
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_direct_tuning
+	false,					// flag_recorded_streams_as_realtime
 	3,						// startup_discovery_task_delay
 	(4 KiB),				// stream_read_minimum_byte_count
 	(1 MiB),				// stream_ring_buffer_size
@@ -1376,6 +1382,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
+			if(g_addon->GetSetting("flag_recorded_streams_as_realtime", &bvalue)) g_settings.flag_recorded_streams_as_realtime = bvalue;
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
 			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
@@ -1928,6 +1935,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.use_direct_tuning = bvalue;
 			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// flag_recorded_streams_as_realtime
+	//
+	else if(strcmp(name, "flag_recorded_streams_as_realtime") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.flag_recorded_streams_as_realtime) {
+
+			g_settings.flag_recorded_streams_as_realtime = bvalue;
+			log_notice(__func__, ": setting flag_recorded_streams_as_realtime changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -3962,7 +3981,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			log_notice(__func__, ": mediatype = ", g_dvrstream->mediatype());
 			log_notice(__func__, ": canseek   = ", g_dvrstream->canseek() ? "true" : "false");
 			log_notice(__func__, ": length    = ", g_dvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_dvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": realtime  = ", (g_dvrstream->realtime() || settings.flag_recorded_streams_as_realtime) ? "true" : "false");
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -4355,7 +4374,15 @@ bool IsTimeshifting(void)
 
 bool IsRealTimeStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->realtime() : false; }
+	try { 
+	
+		// Live streams are always realtime, so if the settings say to report Recorded TV
+		// as realtime, arbitrarily return true without checking the stream properties
+		struct addon_settings settings = copy_settings();
+		if(settings.flag_recorded_streams_as_realtime) return true;
+		return (g_dvrstream) ? g_dvrstream->realtime() : false;
+	}
+	
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
 	catch(...) { return handle_generalexception(__func__, false); }
 }
