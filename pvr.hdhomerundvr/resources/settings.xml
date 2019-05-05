@@ -277,6 +277,12 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="flag_recorded_streams_as_realtime" type="boolean" label="30132" help="30527">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
         <setting id="startup_discovery_task_delay" type="integer" label="30113" help="30523">
           <level>0</level>
           <default>3</default>
