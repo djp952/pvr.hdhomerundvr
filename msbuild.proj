@@ -81,7 +81,7 @@
   <Target Name="linux-i686" DependsOnTargets="AddonVersion;AddonXml">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-i686/include -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-i686/include -Idepends/libuuid/linux-i686/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC -m32</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11 -m32</CXXFLAGS>
     </PropertyGroup>
@@ -117,7 +117,7 @@
   <Target Name="linux-x86_64" DependsOnTargets="AddonVersion;AddonXml">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-x86_64/include -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-x86_64/include -Idepends/libuuid/linux-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
     </PropertyGroup>
@@ -153,7 +153,7 @@
   <Target Name="linux-armel" DependsOnTargets="AddonVersion;AddonXml">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armel/include -Idepends/libuuid/linux-armel/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armel/include -Idepends/libuuid/linux-armel/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
     </PropertyGroup>
@@ -189,7 +189,7 @@
   <Target Name="linux-armhf" DependsOnTargets="AddonVersion;AddonXml">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armhf/include -Idepends/libuuid/linux-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armhf/include -Idepends/libuuid/linux-armhf/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
     </PropertyGroup>
@@ -225,7 +225,7 @@
   <Target Name="linux-aarch64" DependsOnTargets="AddonVersion;AddonXml">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-aarch64/include -Idepends/libuuid/linux-aarch64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-aarch64/include -Idepends/libuuid/linux-aarch64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
     </PropertyGroup>
@@ -262,7 +262,7 @@
 
     <PropertyGroup>
       <ENV>PATH=~/raspberrypi/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin</ENV>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/raspbian-armhf/include -Idepends/libuuid/raspbian-armhf/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/raspbian-armhf/include -Idepends/libuuid/raspbian-armhf/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11</CXXFLAGS>
     </PropertyGroup>
@@ -299,7 +299,7 @@
     
     <PropertyGroup>
       <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH=~/osxcross/target/bin</ENV>
-      <CPPFLAGS>-mmacosx-version-min=10.7 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/osx-x86_64/include -Idepends/libuuid/osx-x86_64/include -Idepends/libhdhomerun -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-mmacosx-version-min=10.7 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/osx-x86_64/include -Idepends/libuuid/osx-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -fPIC -stdlib=libc++</CFLAGS>
       <CXXFLAGS>-DNDEBUG -fPIC -std=c++11 -stdlib=libc++</CXXFLAGS>
     </PropertyGroup>
