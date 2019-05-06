@@ -49,6 +49,7 @@ LOCAL_C_INCLUDES += \
 	depends/libcurl/$(TARGET_ABI)/include \
 	depends/libuuid/$(TARGET_ABI)/include \
 	depends/libhdhomerun \
+	depends/rapidjson/include \
 	depends/sqlite \
 	tmp/version
 	
