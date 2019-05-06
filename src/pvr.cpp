@@ -1138,8 +1138,7 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, int channel, time_t start,
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
-			// Don't sent EPG entries with start/end times outside the requested range
-			assert((item.starttime <= end) && (item.endtime >= start));
+			// Don't send EPG entries with start/end times outside the requested range
 			if((item.starttime > end) || (item.endtime < start)) return;
 
 			// iUniqueBroadcastId (required)
