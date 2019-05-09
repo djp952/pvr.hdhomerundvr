@@ -62,7 +62,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -82,7 +82,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\depends\xbmc\xbmc\addons\include;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.addon;$(ProjectDir)..\depends\xbmc\addons\library.kodi.guilib;$(ProjectDir)..\depends\xbmc\addons\library.xbmc.pvr;$(ProjectDir)..\depends\curl\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\tmp\version;$(ProjectDir)compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
