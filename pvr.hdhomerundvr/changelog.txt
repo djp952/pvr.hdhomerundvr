@@ -1,6 +1,7 @@
-v2.0.2 (2019.xx.xx)
+v2.0.2 (2019.05.08)
   - Update SQLite database engine to version 3.28.0
   - Prevent multiple Kodi threads from simultaneously requesting EPG data
+  - Prevent individually malformed EPG data request results from aborting all remaining requests
   - Fix bug that allowed extraneous EPG entries to be transferred to Kodi
   - Fix bug that prevented successfully setting channel visibility flags
   - Fix bug in database layer that could cause unhandled exceptions processing NULL column values

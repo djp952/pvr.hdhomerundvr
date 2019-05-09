@@ -24,8 +24,10 @@
 
 #include <algorithm>
 #include <list>
+#include <rapidjson/document.h>
 #include <sqlite3ext.h>
 #include <string>
+#include <strings.h>
 #include <uuid/uuid.h>
 #include <xbmc_pvr_types.h>
 #include <vector>
@@ -559,8 +561,17 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					if(responsecode == 0) throw string_exception("no response from host");
 					else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 
-					// HTTP 200: OK was received, add the transferred data into the cursor object as a new row
-					epgcursor->rows.emplace_back(std::move(transfer.second));
+					// Ignore transfers that returned no data or begin with the string "null"
+					if((transfer.second.size() > 0) && (strcasecmp(reinterpret_cast<const char*>(transfer.second.c_str()), "null") != 0)) {
+
+						// Validate the JSON document returned from the query has no parse error(s)
+						rapidjson::Document json;
+						json.Parse(reinterpret_cast<const char*>(transfer.second.data()), transfer.second.size());
+
+						// Ignore any transfers that returned invalid JSON data (for now, ultimately I would like
+						// to add a retry operation here for the individual bad transfers)
+						if(!json.HasParseError()) epgcursor->rows.emplace_back(std::move(transfer.second));
+					}
 				}
 
 				// Clean up and destroy the generated cURL easy interface handles
