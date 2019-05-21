@@ -1,3 +1,7 @@
+v2.0.3 (2019.05.20)
+  - Adapt to HDHomeRun RECORD engine 20190516beta2 breaking changes
+  - Use HTTP POST method when setting tuner channel visibility flags
+
 v2.0.2 (2019.05.08)
   - Update SQLite database engine to version 3.28.0
   - Prevent multiple Kodi threads from simultaneously requesting EPG data
