@@ -57,6 +57,8 @@ int epg_next(sqlite3_vtab_cursor* cursor);
 int epg_open(sqlite3_vtab* vtab, sqlite3_vtab_cursor** cursor);
 int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
 
+static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqlite3_value* postvalue, sqlite3_value* defaultvalue);
+
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
@@ -835,9 +837,9 @@ void get_season_number(sqlite3_context* context, int argc, sqlite3_value** argv)
 }
 
 //---------------------------------------------------------------------------
-// http_request
+// http_get
 //
-// SQLite scalar function to load data from a URL as a blob
+// SQLite scalar function to execute an HTTP GET request
 //
 // Arguments:
 //
@@ -845,17 +847,69 @@ void get_season_number(sqlite3_context* context, int argc, sqlite3_value** argv)
 //	argc		- Number of supplied arguments
 //	argv		- Argument values
 
-void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
+void http_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
+	// http_get requires at least the URL argument to be specified, with an optional second parameter
+	// indicating a default value to return in the event of an HTTP error
+	if((argc < 1) || (argc > 2) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Invoke http_request without specifying anything for the POST data argument
+	return http_request(context, argv[0], nullptr, ((argc >= 2) && (argv[1] != nullptr)) ? argv[1] : nullptr);
+}
+
+//---------------------------------------------------------------------------
+// http_post
+//
+// SQLite scalar function to execute an HTTP POST request
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void http_post(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	// http_post requires at least the URL and post data arguments to be specified, with an optional third parameter
+	// indicating a default value to return in the event of an HTTP error
+	if((argc < 2) || (argc > 3) || (argv[0] == nullptr) || (argv[1] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Invoke http_request specifying the POST data argument and the optional default value
+	return http_request(context, argv[0], argv[1], ((argc >= 3) && (argv[2] != nullptr)) ? argv[2] : nullptr);
+}
+
+//---------------------------------------------------------------------------
+// http_request
+//
+// Helper function used by http_get and http_post to execute an HTTP request
+//
+// Arguments:
+//
+//	context			- SQLite context object
+//	urlvalue		- URL function argument
+//	postvalue		- POSTFIELDS function argument
+//	defaultvalue	- DEFAULTVALUE function argument
+
+static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqlite3_value* postvalue, sqlite3_value* defaultvalue)
+{
+	bool				post = false;			// Flag indicating an HTTP POST operation
+	std::string			postfields;				// HTTP post fields (optional)
 	long				responsecode = 200;		// HTTP response code
 	byte_string			blob;					// Dynamically allocated blob buffer
 	static curlshare	curlshare;				// Static curlshare instance used only with this function
 
-	if((argc < 1) || (argc > 2) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+	assert(urlvalue != nullptr);
 
 	// A null or zero-length URL results in a NULL result
-	const char* url = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
-	if((url == nullptr) || (*url == 0)) return sqlite3_result_null(context);
+	const char* url = reinterpret_cast<const char*>(sqlite3_value_text(urlvalue));
+	if((url == nullptr) || (*url == '\0')) return sqlite3_result_null(context);
+
+	// If a POST argument was specified, switch the operation into HTTP POST mode
+	if((post = (postvalue != nullptr))) {
+
+		const char* postdata = reinterpret_cast<const char*>(sqlite3_value_text(postvalue));
+		if(postdata != nullptr) postfields.assign(postdata);
+	}
 
 	// Create a write callback for libcurl to invoke to write the data
 	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
@@ -869,7 +923,7 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 #if defined(_WINDOWS) && defined(_DEBUG)
 	// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
 	char debugurl[256];
-	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s: %s\r\n", __func__, url);
+	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s\r\n", __func__, (post) ? "post" : "get", url);
 	OutputDebugStringA(debugurl);
 #endif
 
@@ -877,8 +931,9 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	CURL* curl = curl_easy_init();
 	if(curl == nullptr) return sqlite3_result_error(context, "cannot initialize libcurl object", -1);
 
-	// Set the CURL options and execute the web request to get the JSON string data
+	// Set the CURL options and execute the web request, switching to POST if indicated
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
+	if((post) && (curlresult == CURLE_OK)) curlresult = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -896,10 +951,10 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult != CURLE_OK) {
 
 		// If a default result was provided, use it rather than returning an error result
-		if(argc >= 2) return sqlite3_result_value(context, argv[1]);
+		if(defaultvalue != nullptr) return sqlite3_result_value(context, defaultvalue);
 	
 		// Use sqlite3_mprintf to generate the formatted error message
-		auto message = sqlite3_mprintf("http request on [%s] failed: %s", url, curl_easy_strerror(curlresult));
+		auto message = sqlite3_mprintf("http %s request on [%s] failed: %s", (post) ? "post" : "get", url, curl_easy_strerror(curlresult));
 		sqlite3_result_error(context, message, -1);
 		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
@@ -908,10 +963,10 @@ void http_request(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if((responsecode < 200) || (responsecode > 299)) {
 	
 		// If a default result was provided, use it rather than returning an error result
-		if(argc >= 2) return sqlite3_result_value(context, argv[1]);
+		if(defaultvalue != nullptr) return sqlite3_result_value(context, defaultvalue);
 	
 		// Use sqlite3_mprintf to generate the formatted error message
-		auto message = sqlite3_mprintf("http request on url [%s] failed with http response code %ld", url, responsecode);
+		auto message = sqlite3_mprintf("http %s request on url [%s] failed with http response code %ld", (post) ? "post" : "get", url, responsecode);
 		sqlite3_result_error(context, message, -1);
 		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
@@ -1019,10 +1074,15 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "get_season_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_season_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_season_number"); return result; }
 
-	// http_request (non-deterministic)
+	// http_get (non-deterministic)
 	//
-	result = sqlite3_create_function_v2(db, "http_request", -1, SQLITE_UTF8, nullptr, http_request, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_request"); return result; }
+	result = sqlite3_create_function_v2(db, "http_get", -1, SQLITE_UTF8, nullptr, http_get, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_get"); return result; }
+
+	// http_post (non-deterministic)
+	//
+	result = sqlite3_create_function_v2(db, "http_post", -1, SQLITE_UTF8, nullptr, http_post, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_post"); return result; }
 
 	// url_encode function
 	//
