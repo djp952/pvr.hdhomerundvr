@@ -5,12 +5,6 @@
     <category id="general" label="30000">
       <group id="1" label="-1">
 
-        <setting id="use_broadcast_device_discovery" type="boolean" label="30110" help="30501">
-          <level>0</level>
-          <default>false</default>
-          <control type="toggle"/>
-        </setting>
-
         <setting id="pause_discovery_while_streaming" type="boolean" label="30100" help="30502">
           <level>0</level>
           <default>false</default>
@@ -76,7 +70,7 @@
 
       <setting id="discover_devices_interval_v2" type="integer" label="30101" help="30510">
           <level>0</level>
-          <default>3600</default>
+          <default>600</default>
           <constraints>
             <options>
               <option label="30216">30</option>
@@ -270,6 +264,12 @@
 
     <category id="advanced" label="30002">
       <group id="1" label="-1">
+
+        <setting id="use_http_device_discovery" type="boolean" label="30132" help="30527">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
 
         <setting id="use_direct_tuning" type="boolean" label="30111" help="30522">
           <level>0</level>

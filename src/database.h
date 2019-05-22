@@ -209,8 +209,8 @@ void delete_recordingrule(sqlite3* instance, char const* deviceauth, unsigned in
 // discover_devices
 //
 // Reloads the information about the available devices
-void discover_devices(sqlite3* instance, bool usebroadcast);
-void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed);
+void discover_devices(sqlite3* instance, bool usehttp);
+void discover_devices(sqlite3* instance, bool usehttp, bool& changed);
 
 // discover_episodes
 //
