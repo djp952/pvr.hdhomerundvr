@@ -3,6 +3,7 @@ v2.1.0 (2019.06.xx)
   - Change default discovery interval from 1 hour to 10 minutes
   - Remove "Use network broadcast for device discovery" setting
   - Add "Use HTTP cloud-based device discovery" advanced setting
+  - Fix bug causing multi-homed HDHomeRun devices from being detected during broadcast device discovery
 
 v2.0.3 (2019.05.20)
   - Adapt to HDHomeRun RECORD engine 20190516beta2 breaking changes
