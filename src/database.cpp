@@ -409,7 +409,7 @@ void discover_devices(sqlite3* instance, bool usehttp, bool& changed)
 
 			// Insert any new devices detected on the network into the main device table separately from 
 			// the REPLACE INTO below to track changes on a new device being discovered
-			if(execute_non_query(instance, "insert into device select * from discover_device where deviceid not in (select deviceid from device)") > 0) changed = true;
+			if(execute_non_query(instance, "replace into device select * from discover_device where deviceid not in (select deviceid from device)") > 0) changed = true;
 
 			// Update the JSON for every device based on the discovery data; this is not considered a change as
 			// the device authorization string changes routinely.  (REPLACE INTO is easier than UPDATE in this case)
