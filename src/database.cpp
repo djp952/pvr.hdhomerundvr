@@ -357,12 +357,12 @@ void delete_recordingrule(sqlite3* instance, char const* deviceauth, unsigned in
 // Arguments:
 //
 //	instance		- SQLite database instance
-//	usebroadcast	- Flag to use broadcast rather than HTTP discovery
+//	usehttp			- Flag to use HTTP rather than broadcast discovery
 
-void discover_devices(sqlite3* instance, bool usebroadcast)
+void discover_devices(sqlite3* instance, bool usehttp)
 {
 	bool ignored;
-	return discover_devices(instance, usebroadcast, ignored);
+	return discover_devices(instance, usehttp, ignored);
 }
 
 //---------------------------------------------------------------------------
@@ -373,10 +373,10 @@ void discover_devices(sqlite3* instance, bool usebroadcast)
 // Arguments:
 //
 //	instance		- SQLite database instance
-//	usebroadcast	- Flag to use broadcast rather than HTTP discovery
+//	usehttp			- Flag to use HTTP rather than broadcast discovery
 //	changed			- Flag indicating if the data has changed
 
-void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
+void discover_devices(sqlite3* instance, bool usehttp, bool& changed)
 {
 	bool			hastuners = false;			// Flag indicating if any tuners were detected
 
@@ -392,7 +392,7 @@ void discover_devices(sqlite3* instance, bool usebroadcast, bool& changed)
 
 		// The logic required to load the temp table from broadcast differs greatly from the method
 		// used to load from the HTTP API; the specific mechanisms have been broken out into helpers
-		hastuners = (usebroadcast) ? discover_devices_broadcast(instance) : discover_devices_http(instance);
+		hastuners = (usehttp) ? discover_devices_http(instance) : discover_devices_broadcast(instance);
 
 		// If no tuner devices were found during discovery, throw an exception to abort the device discovery.
 		// The intention here is to prevent transient discovery problems from clearing out the existing devices

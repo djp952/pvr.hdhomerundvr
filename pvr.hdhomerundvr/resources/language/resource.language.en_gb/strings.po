@@ -68,10 +68,6 @@ msgctxt "#30108"
 msgid "Delete expired date/time recording rules after"
 msgstr ""
 
-msgctxt "#30110"
-msgid "Use network broadcast for device discovery"
-msgstr ""
-
 msgctxt "#30111"
 msgid "Stream Live TV channels directly from tuner device(s)"
 msgstr ""
@@ -138,6 +134,10 @@ msgstr ""
 
 msgctxt "#30131"
 msgid "Invalidate device authorization codes after"
+msgstr ""
+
+msgctxt "#30132"
+msgid "Use HTTP cloud-based device discovery"
 msgstr ""
 
 msgctxt "#30201"
