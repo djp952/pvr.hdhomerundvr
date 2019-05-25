@@ -184,11 +184,6 @@ struct addon_settings {
 	// Amount of time (seconds) after which an expired date/time rule is deleted
 	int delete_datetime_rules_after;
 
-	// use_broadcast_device_discovery
-	//
-	// Flag to discover devices via local network broadcast instead of HTTP
-	bool use_broadcast_device_discovery;
-
 	// discover_devices_interval
 	//
 	// Interval at which the local network device discovery will occur (seconds)
@@ -218,6 +213,11 @@ struct addon_settings {
 	//
 	// Interval at which the recording rule discovery will occur (seconds)
 	int discover_recordingrules_interval;
+
+	// use_http_device_discovery
+	//
+	// Flag to discover devices via HTTP instead of local network broadcast
+	bool use_http_device_discovery;
 
 	// use_direct_tuning
 	//
@@ -355,13 +355,13 @@ static addon_settings g_settings = {
 	false,					// show_drm_protected_channels
 	false,					// use_channel_names_from_lineup
 	86400,					// delete_datetime_rules_after			default = 1 day
-	false,					// use_broadcast_device_discovery
 	300, 					// discover_devices_interval;			default = 5 minutes
 	7200,					// discover_episodes_interval			default = 2 hours
 	3600,					// discover_guide_interval				default = 1 hour
 	600,					// discover_lineups_interval			default = 10 minutes
 	600,					// discover_recordings_interval			default = 10 minutes
 	7200,					// discover_recordingrules_interval		default = 2 hours
+	false,					// use_http_device_discovery
 	false,					// use_direct_tuning
 	3,						// startup_discovery_task_delay
 	(4 KiB),				// stream_read_minimum_byte_count
@@ -608,7 +608,7 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 
 		// Discover the devices on the local network and check for changes
 		auto caller = __func__;
-		discover_devices(dbhandle, settings.use_broadcast_device_discovery, changed);
+		discover_devices(dbhandle, settings.use_http_device_discovery, changed);
 		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 
 		if(changed) {
@@ -902,7 +902,7 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 			try { 
 				
 				auto caller = __func__;
-				discover_devices(dbhandle, settings.use_broadcast_device_discovery); 
+				discover_devices(dbhandle, settings.use_http_device_discovery); 
 				enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 			}
 
@@ -1424,7 +1424,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
-			if(g_addon->GetSetting("use_broadcast_device_discovery", &bvalue)) g_settings.use_broadcast_device_discovery = bvalue;
 			if(g_addon->GetSetting("discover_devices_interval", &nvalue)) g_settings.discover_devices_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_lineups_interval", &nvalue)) g_settings.discover_lineups_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_guide_interval", &nvalue)) g_settings.discover_guide_interval = interval_enum_to_seconds(nvalue);
@@ -1432,18 +1431,21 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("discover_recordingrules_interval", &nvalue)) g_settings.discover_recordingrules_interval = interval_enum_to_seconds(nvalue);
 			if(g_addon->GetSetting("discover_episodes_interval", &nvalue)) g_settings.discover_episodes_interval = interval_enum_to_seconds(nvalue);
 
-			// Load the advanced settings
-			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
-			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
-			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
-			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
-			if(g_addon->GetSetting("deviceauth_stale_after", &nvalue)) g_settings.deviceauth_stale_after = deviceauth_stale_enum_to_seconds(nvalue);
+			// Load the Edit Decision List (EDL) settings
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
 			if(g_addon->GetSetting("recording_edl_folder_is_flat", &bvalue)) g_settings.recording_edl_folder_is_flat = bvalue;
 			if(g_addon->GetSetting("recording_edl_cut_as_comskip", &bvalue)) g_settings.recording_edl_cut_as_comskip = bvalue;
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
 			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
+
+			// Load the advanced settings
+			if(g_addon->GetSetting("use_http_device_discovery", &bvalue)) g_settings.use_http_device_discovery = bvalue;
+			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
+			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
+			if(g_addon->GetSetting("stream_read_minimum_byte_count", &nvalue)) g_settings.stream_read_minimum_byte_count = mincount_enum_to_bytes(nvalue);
+			if(g_addon->GetSetting("stream_ring_buffer_size", &nvalue)) g_settings.stream_ring_buffer_size = ringbuffersize_enum_to_bytes(nvalue);
+			if(g_addon->GetSetting("deviceauth_stale_after", &nvalue)) g_settings.deviceauth_stale_after = deviceauth_stale_enum_to_seconds(nvalue);
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -1585,7 +1587,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 							// discovery so that the initial set of channels are immediately available to Kodi
 							log_notice(__func__, ": initiating local network resource discovery (startup)");
 							auto caller = __func__;
-							discover_devices(dbhandle, g_settings.use_broadcast_device_discovery);
+							discover_devices(dbhandle, g_settings.use_http_device_discovery);
 							enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 							discover_lineups(dbhandle);
 
@@ -1874,22 +1876,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// use_broadcast_device_discovery
-	//
-	else if(strcmp(name, "use_broadcast_device_discovery") == 0) {
-
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.use_broadcast_device_discovery) {
-
-			g_settings.use_broadcast_device_discovery = bvalue;
-			log_notice(__func__, ": setting use_broadcast_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device discovery");
-
-			// Reschedule the device discovery task to run as soon as possible
-			g_scheduler.remove(discover_devices_task);
-			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
-		}
-	}
-
 	// discover_devices_interval
 	//
 	else if(strcmp(name, "discover_devices_interval") == 0) {
@@ -1977,6 +1963,22 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_scheduler.remove(discover_recordingrules_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_recordingrules_task);
 			log_notice(__func__, ": setting discover_recordingrules_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
+		}
+	}
+
+	// use_http_device_discovery
+	//
+	else if(strcmp(name, "use_http_device_discovery") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_http_device_discovery) {
+
+			g_settings.use_http_device_discovery = bvalue;
+			log_notice(__func__, ": setting use_http_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device discovery");
+
+			// Reschedule the device discovery task to run as soon as possible
+			g_scheduler.remove(discover_devices_task);
+			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 		}
 	}
 
