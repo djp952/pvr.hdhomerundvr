@@ -593,10 +593,11 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 	bool		changed = false;			// Flag if the discovery data changed
 
 	assert(g_addon && g_pvr);
-	log_notice(__func__, ": initiated local network device discovery");
 
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
+
+	log_notice(__func__, ": initiated local network device discovery (method: ", settings.use_http_device_discovery ? "http" : "broadcast", ")");
 
 	try {
 
@@ -1585,7 +1586,8 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 							// Kodi currently has no means to create EPG entries in the database for channels that are
 							// added after the PVR manager has been started.  Synchronously execute a device and lineup
 							// discovery so that the initial set of channels are immediately available to Kodi
-							log_notice(__func__, ": initiating local network resource discovery (startup)");
+							log_notice(__func__, ": initiating local network resource discovery (startup; method: ", g_settings.use_http_device_discovery ? "http" : "broadcast", ")");
+
 							auto caller = __func__;
 							discover_devices(dbhandle, g_settings.use_http_device_discovery);
 							enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
