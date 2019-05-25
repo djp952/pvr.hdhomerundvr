@@ -149,13 +149,13 @@ void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordi
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"json_extract(value, '$.SeriesID') as seriesid, "
 		"value as data from "
-		"json_each(nullif(http_get('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1 || '&Cmd=add&SeriesID=' || ?2 || "
+		"json_each(nullif(http_post('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1 || '&Cmd=add&SeriesID=' || ?2 || "
 		"case when ?3 is null then '' else '&RecentOnly=' || ?3 end || "
 		"case when ?4 is null then '' else '&ChannelOnly=' || decode_channel_id(?4) end || "
 		"case when ?5 is null then '' else '&AfterOriginalAirdateOnly=' || strftime('%s', date(?5, 'unixepoch')) end || "
 		"case when ?6 is null then '' else '&DateTimeOnly=' || ?6 end || "
 		"case when ?7 is null then '' else '&StartPadding=' || ?7 end || "
-		"case when ?8 is null then '' else '&EndPadding=' || ?8 end), 'null'))";
+		"case when ?8 is null then '' else '&EndPadding=' || ?8 end, null), 'null'))";
 
 	// Prepare the query
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -339,7 +339,7 @@ void delete_recordingrule(sqlite3* instance, char const* deviceauth, unsigned in
 	if((instance == nullptr) || (deviceauth == nullptr)) return;
 
 	// Delete the recording rule from the backend
-	execute_non_query(instance, "select http_get('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1 || '&Cmd=delete&RecordingRuleID=' || ?2)",
+	execute_non_query(instance, "select http_post('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1 || '&Cmd=delete&RecordingRuleID=' || ?2, null)",
 		deviceauth, recordingruleid);
 
 	// Delete the recording rule from the database
@@ -2628,12 +2628,12 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"json_extract(value, '$.SeriesID') as seriesid, "
 		"value as data from "
-		"json_each(nullif(http_get('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1 || '&Cmd=change&RecordingRuleID=' || ?2 || "
+		"json_each(nullif(http_post('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1 || '&Cmd=change&RecordingRuleID=' || ?2 || "
 		"'&RecentOnly=' || case when ?3 is null then '' else ?3 end || "
 		"'&ChannelOnly=' || case when ?4 is null then '' else decode_channel_id(?4) end || "
 		"'&AfterOriginalAirdateOnly=' || case when ?5 is null then '' else strftime('%s', date(?5, 'unixepoch')) end || "
 		"'&StartPadding=' || case when ?6 is null then '30' else ?6 end || "
-		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end), 'null'))";
+		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end, null), 'null'))";
 
 	// Prepare the query
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
