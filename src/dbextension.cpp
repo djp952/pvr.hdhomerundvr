@@ -923,7 +923,7 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 #if defined(_WINDOWS) && defined(_DEBUG)
 	// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
 	char debugurl[256];
-	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s\r\n", __func__, (post) ? "post" : "get", url);
+	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s%s%s%s\r\n", __func__, (post) ? "post" : "get", url, (post) ? " [" : "", (post) ? postfields.c_str() : "", (post) ? "]" : "");
 	OutputDebugStringA(debugurl);
 #endif
 
