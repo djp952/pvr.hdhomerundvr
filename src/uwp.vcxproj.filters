@@ -371,9 +371,6 @@
     <ClInclude Include="..\depends\curl\lib\pingpong.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\pipeline.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\curl\lib\pop3.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
@@ -496,6 +493,9 @@
     </ClInclude>
     <ClInclude Include="dbtypes.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\curl_get_line.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -910,9 +910,6 @@
     <ClCompile Include="..\depends\curl\lib\pingpong.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\pipeline.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\curl\lib\pop3.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
@@ -962,6 +959,9 @@
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\urlapi.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\curl_get_line.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
