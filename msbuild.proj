@@ -21,15 +21,16 @@
 -->
 
 <Project DefaultTargets="windows" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  
+
   <PropertyGroup>
-    <AddonVersion></AddonVersion>           <!-- Set by AddonVersion Target -->
+    <AddonVersion></AddonVersion>             <!-- Set by AddonVersion Target; may override on the command line -->
+    <AddonShortVersion></AddonShortVersion>   <!-- Set by AddonVersion Target; may override on the command line -->
     <ApkSignerExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\apksigner</ApkSignerExe>     
     <ApkToolJar>depends\apktool\apktool_2.2.4.jar</ApkToolJar>
     <BashExe>$(WINDIR)\Sysnative\bash.exe</BashExe>
     <Configuration>Release</Configuration>
-    <Keystore></Keystore>                   <!-- Must be set on the command line -->
-    <KeystorePassword></KeystorePassword>   <!-- Must be set on the command line -->
+    <Keystore></Keystore>                     <!-- Must be set on the command line -->
+    <KeystorePassword></KeystorePassword>     <!-- Must be set on the command line -->
     <KodiBaseline>krypton</KodiBaseline>
     <ZipAlignExe>$(ANDROID_SDK_ROOT)\build-tools\25.0.2\zipalign</ZipAlignExe>
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
@@ -50,14 +51,20 @@
     </Task>
   </UsingTask>
 
-  <!-- Generates tmp\version\version.txt file and populates AddonVersion property -->
+  <!-- Generates tmp\version\version.txt file and populates AddonVersion and AddonShortVersion properties if not specified -->
   <Target Name="AddonVersion">
-    
+
     <MSBuild Projects="src\version.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
-    <CreateProperty Value="$([System.IO.File]::ReadAllText(tmp\version\version.txt))">
+    <CreateProperty Condition="'$(AddonVersion)'==''" Value="$([System.IO.File]::ReadAllText('tmp\version\version.txt'))">
       <Output TaskParameter="Value" PropertyName="AddonVersion" />
     </CreateProperty>
-    
+    <CreateProperty Condition="'$(AddonShortVersion)'==''" Value="$([System.Version]::Parse($(AddonVersion)).ToString(3))">
+      <Output TaskParameter="Value" PropertyName="AddonShortVersion" />
+    </CreateProperty>
+
+    <Message Importance="high" Text="AddonVerison = $(AddonVersion)"/>
+    <Message Importance="high" Text="AddonShortVerison = $(AddonShortVersion)"/>
+
   </Target>
 
   <!-- Generates tmp\addon-*.xml files -->
@@ -66,7 +73,7 @@
     <MSBuild Projects="src\addonxml.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Rebuild" ContinueOnError="false"/>
     
   </Target>
-  
+
   <!-- BUILD: WINDOWS-WIN32 -->
   <Target Name="windows-win32" DependsOnTargets="AddonVersion;AddonXml">
 
@@ -296,7 +303,7 @@
 
   <!-- BUILD: OSX-X86_64 -->
   <Target Name="osx-x86_64" DependsOnTargets="AddonVersion;AddonXml">
-    
+
     <PropertyGroup>
       <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH=~/osxcross/target/bin</ENV>
       <CPPFLAGS>-mmacosx-version-min=10.7 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi -Idepends/http-status-codes-cpp -Idepends/libcurl/osx-x86_64/include -Idepends/libuuid/osx-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
@@ -382,7 +389,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-	<Exec Condition="!Exists('tmp\$(KodiApk).apk')" Command="curl http://mirrors.kodi.tv/releases/android/arm/$(KodiApk).apk -L -o tmp\$(KodiApk).apk " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiApk).apk')" Command="curl http://mirrors.kodi.tv/releases/android/arm/$(KodiApk).apk -L -o tmp\$(KodiApk).apk " ContinueOnError="false" />
 
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
@@ -413,7 +420,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiApk).apk')" Importance="high" Text="Downloading $(KodiApk).apk ..."/>
-	<Exec Condition="!Exists('tmp\$(KodiApk).apk')" Command="curl http://mirrors.kodi.tv/releases/android/arm64-v8a/$(KodiApk).apk -L -o tmp\$(KodiApk).apk " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiApk).apk')" Command="curl http://mirrors.kodi.tv/releases/android/arm64-v8a/$(KodiApk).apk -L -o tmp\$(KodiApk).apk " ContinueOnError="false" />
 
     <Exec Command="(set ANDROID_AAPT_IGNORE=&quot;&quot;) &amp; &quot;$(JAVA_HOME)\bin\java&quot; -jar -Duser.language-en $(ApkToolJar) d -p out\$(KodiApk)-framework -s tmp\$(KodiApk).apk -o out\$(KodiApk) -f" ContinueOnError="false"/>
     <ReplaceInFile filename="out\$(KodiApk)\apktool.yml" match="versionCode:\s*'\d*'" replacewith="versionCode: '$(ApkVersionCode)'"/>
@@ -433,7 +440,7 @@
   <Target Name="osx" DependsOnTargets="osx-x86_64"/>
   <Target Name="android" DependsOnTargets="android-arm;android-aarch64;android-x86"/>
   <Target Name="androidapk" DependsOnTargets="androidapk-arm;androidapk-aarch64"/>
-  
+
   <!-- BUILD: ALL -->
   <Target Name="all" DependsOnTargets="windows;linux;raspbian;osx;android;androidapk"/>
 
