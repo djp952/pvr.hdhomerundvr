@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <zip>
-  <file path="pvr.hdhomerundvr\addon.xml" source="tmp\addon-linux.xml" normalize="unix"/>
+  <file path="pvr.hdhomerundvr\addon.xml" source="tmp\addon-linux-armel.xml" normalize="unix"/>
   <file path="pvr.hdhomerundvr\changelog.txt" source="pvr.hdhomerundvr\changelog.txt" normalize="unix"/>
   <file path="pvr.hdhomerundvr\icon.png" source="pvr.hdhomerundvr\icon.png"/>
   <file path="pvr.hdhomerundvr\LICENSE.txt" source="LICENSE" normalize="unix"/>
