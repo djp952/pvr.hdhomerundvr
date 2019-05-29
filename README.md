@@ -105,6 +105,9 @@ msbuild msbuild.proj [/t:target[;target...]] [/p:parameter=value[;parameter=valu
 **SUPPORTED TARGET PLATFORMS**   
 The MSBUILD script can be used to target one or more platforms by specifying the /t:target parameter.  Targets that produce Android APK packages also require specifying the path to the generated Keystore file (see above) and the keystore password.  The tables below list the available target platforms and the required command line argument(s) to pass to MSBUILD.   In the absence of the /t:target parameter, the default target selection is **windows**.
    
+**SETTING DISPLAY VERSION**   
+The display version of the addon that will appear in the addon.xml and to the user in Kodi may be overridden by specifying a /p:DisplayVerison={version} argument to any of the build targets.  By default, the display version will be the first three components of the full build number \[MAJOR.MINOR.REVISION\].  For example, to force the display version to the value '2.0.3a', specify /p:DisplayVersion=2.0.3a on the MSBUILD command line.
+   
 Examples:   
    
 > Build just the osx-x86\_64 platform:   
@@ -112,9 +115,9 @@ Examples:
 >msbuild /t:osx-x86_64
 > ```
    
-> Build all Linux platforms:   
+> Build all Linux platforms, force display version to '2.0.3a':   
 > ```
-> msbuild /t:linux
+> msbuild /t:linux /p:DisplayVersion=2.0.3a
 > ```
    
 > Build all Android APK platforms:   
