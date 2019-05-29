@@ -2,7 +2,7 @@
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.IO" #>
 <?xml version="1.0" encoding="utf-8"?>
-<addon id="pvr.hdhomerundvr" version="<#= new Version(File.ReadAllText(this.Host.ResolvePath(this.Host.ResolveParameterValue("", "", "versiontxt")))).ToString(3) #>" name="HDHomeRun DVR PVR Client" provider-name="Michael Brehm (djp952)">
+<addon id="pvr.hdhomerundvr" version="<#= this.Host.ResolveParameterValue("", "", "displayversion") #>" name="HDHomeRun DVR PVR Client" provider-name="Michael Brehm (djp952)">
 	<requires>
 		<import addon="kodi.binary.global.main" version="1.0.14"/>
 		<import addon="kodi.binary.global.gui" version="5.12.0"/>
