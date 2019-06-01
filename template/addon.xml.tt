@@ -9,9 +9,9 @@
 		<import addon="kodi.binary.instance.pvr" version="5.10.3"/>
 	</requires>
 	<extension point="xbmc.pvrclient" needs_configuration="false" library_<#= this.Host.ResolveParameterValue("", "", "libraryplatform") #>="<#= this.Host.ResolveParameterValue("", "", "libraryname") #>"/>
-<# if(Convert.ToBoolean(this.Host.ResolveParameterValue("", "", "addrepo")) == true) { #>	<extension point="xbmc.addon.repository">
-		<info>https://raw.githubusercontent.com/djp952/repository.hdhomerundvr/Leia/addons.xml.gz</info>
-		<checksum verify="sha256">https://raw.githubusercontent.com/djp952/repository.hdhomerundvr/Leia/addons.xml.gz.sha256</checksum>
+<# if(!String.IsNullOrEmpty(this.Host.ResolveParameterValue("", "", "repositoryurl"))) { #>	<extension point="xbmc.addon.repository">
+		<info><#= this.Host.ResolveParameterValue("", "", "repositoryurl") #></info>
+		<checksum verify="sha256"><#= this.Host.ResolveParameterValue("", "", "repositoryurl") #>.sha256</checksum>
 		<datadir>https://github.com/djp952/pvr.hdhomerundvr/releases/download</datadir>
 		<artdir>https://github.com/djp952/pvr.hdhomerundvr/releases/download</artdir>
 		<hashes>sha256</hashes>
