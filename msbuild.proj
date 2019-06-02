@@ -34,6 +34,20 @@
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
+  <!-- GetFileSize: Gets the size of a file -->
+  <UsingTask TaskName="GetFileSize" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <filename ParameterType="System.String" Required="true"/>
+      <size ParameterType="System.String" Output="true"/>
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core"/>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[FileInfo fi = new FileInfo(filename); size = fi.Length.ToString();]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
   <!-- ReadCertificateSubject: Reads the subject from an X.509 certificate file (.cer, .pfx) -->
   <UsingTask TaskName="ReadCertificateSubject" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -93,6 +107,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip manifest\windows-win32.manifest -sha256" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\windows-win32-$(DisplayVersion).xml&quot; -a !!platform!windows-i686 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: WINDOWS-X64 -->
@@ -107,6 +127,12 @@
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(AddonVersion).zip manifest\windows-x64.manifest -sha256" ContinueOnError="false"/>
+
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\windows-x64-$(DisplayVersion).xml&quot; -a !!platform!windows-x86_64 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
 
   </Target>
 
@@ -191,6 +217,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-i686.manifest" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-i686-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: LINUX-X86_64 -->
@@ -231,6 +263,12 @@
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-x86_64.manifest" ContinueOnError="false"/>
+
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-x86_64-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
 
   </Target>
 
@@ -273,6 +311,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armel.manifest" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-armel-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: LINUX-ARMHF -->
@@ -314,6 +358,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armhf.manifest" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-armhf-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: LINUX-AARCH64 -->
@@ -354,6 +404,12 @@
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-aarch64.manifest" ContinueOnError="false"/>
+
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-aarch64-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
 
   </Target>
 
@@ -397,6 +453,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\raspbian-armhf.manifest" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\raspbian-armhf-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: OSX-X86_64 -->
@@ -439,6 +501,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\osx-x86_64.manifest -sha256" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\osx-x86_64-$(DisplayVersion).xml&quot; -a !!platform!osx-x86_64 -a !!libraryplatform!osx -a !!libraryname!zuki.pvr.hdhomerundvr.dylib -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: ANDROID-ARM -->
@@ -454,6 +522,12 @@
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip manifest\android-arm.manifest -sha256" ContinueOnError="false"/>
+
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\android-arm-$(DisplayVersion).xml&quot; -a !!platform!android-armv7 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
 
   </Target>
 
@@ -471,6 +545,12 @@
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(AddonVersion).zip manifest\android-aarch64.manifest -sha256" ContinueOnError="false"/>
 
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\android-aarch64-$(DisplayVersion).xml&quot; -a !!platform!android-aarch64 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+
   </Target>
 
   <!-- BUILD: ANDROID-X86 -->
@@ -486,6 +566,12 @@
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
     <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip manifest\android-x86.manifest -sha256" ContinueOnError="false"/>
+
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\android-x86-$(DisplayVersion).xml&quot; -a !!platform!android-i686 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
 
   </Target>
 

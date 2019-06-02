@@ -77,6 +77,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "template", "template", "{4415EE2A-E557-49D4-973C-37C7278828CC}"
 	ProjectSection(SolutionItems) = preProject
 		template\addon.xml.tt = template\addon.xml.tt
+		template\addons.xml.tt = template\addons.xml.tt
 	EndProjectSection
 EndProject
 Global
