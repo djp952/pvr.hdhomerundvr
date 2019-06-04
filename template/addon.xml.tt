@@ -12,8 +12,8 @@
 <# if(!String.IsNullOrEmpty(this.Host.ResolveParameterValue("", "", "repositoryurl"))) { #>	<extension point="xbmc.addon.repository">
 		<info><#= this.Host.ResolveParameterValue("", "", "repositoryurl") #></info>
 		<checksum verify="sha256"><#= this.Host.ResolveParameterValue("", "", "repositoryurl") #>.sha256</checksum>
-		<datadir>https://github.com/djp952/pvr.hdhomerundvr/releases/download</datadir>
-		<artdir>https://github.com/djp952/pvr.hdhomerundvr/releases/download</artdir>
+		<datadir><#= this.Host.ResolveParameterValue("", "", "releaseurl") #></datadir>
+		<artdir><#= this.Host.ResolveParameterValue("", "", "releaseurl") #></artdir>
 		<hashes>sha256</hashes>
 	</extension>
 <# } #>	<extension point="xbmc.addon.metadata">
