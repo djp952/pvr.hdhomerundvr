@@ -215,7 +215,7 @@
       <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
-    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-i686.manifest" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-i686.manifest -sha256" ContinueOnError="false"/>
 
     <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip">
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
@@ -262,7 +262,7 @@
       <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
-    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-x86_64.manifest" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-x86_64.manifest -sha256" ContinueOnError="false"/>
 
     <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip">
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
@@ -309,7 +309,7 @@
       <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
-    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armel.manifest" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armel.manifest -sha256" ContinueOnError="false"/>
 
     <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip">
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
@@ -356,7 +356,7 @@
       <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
-    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armhf.manifest" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-armhf.manifest -sha256" ContinueOnError="false"/>
 
     <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip">
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
@@ -403,7 +403,7 @@
       <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
-    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-aarch64.manifest" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip manifest\linux-aarch64.manifest -sha256" ContinueOnError="false"/>
 
     <GetFileSize filename="out\zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip">
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
@@ -451,7 +451,7 @@
       <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
     </XmlPeek>
     <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
-    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\raspbian-armhf.manifest" ContinueOnError="false"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip manifest\raspbian-armhf.manifest -sha256" ContinueOnError="false"/>
 
     <GetFileSize filename="out\zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip">
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
