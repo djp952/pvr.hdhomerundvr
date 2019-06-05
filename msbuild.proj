@@ -30,8 +30,11 @@
     <Keystore></Keystore>                     <!-- Must be set on the command line -->
     <KeystorePassword></KeystorePassword>     <!-- Must be set on the command line -->
     <KodiBaseline>leia</KodiBaseline>
-    <ReleaseBaseUrl>https://github.com/djp952/pvr.hdhomerundvr/releases/download</ReleaseBaseUrl>
-    <RepositoryBaseUrl>https://raw.githubusercontent.com/djp952/repository.hdhomerundvr/Leia/</RepositoryBaseUrl>
+    <UpdateChannel>github</UpdateChannel>
+    <ReleaseBaseUrl Condition="'$(UpdateChannel)'=='github'">https://github.com/djp952/pvr.hdhomerundvr/releases/download</ReleaseBaseUrl>
+    <ReleaseBaseUrl Condition="'$(UpdateChannel)'=='local'">http://192.168.0.220:8080/pvr.hdhomerundvr/Leia/</ReleaseBaseUrl>
+    <RepositoryBaseUrl Condition="'$(UpdateChannel)'=='github'">https://raw.githubusercontent.com/djp952/repository.hdhomerundvr/Leia/</RepositoryBaseUrl>
+    <RepositoryBaseUrl Condition="'$(UpdateChannel)'=='local'">http://192.168.0.220:8080/pvr.hdhomerundvr/Leia/</RepositoryBaseUrl>
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
@@ -99,6 +102,7 @@
   <Target Name="windows-win32" DependsOnTargets="AddonVersion">
 
     <MakeDir Directories="out\windows-win32" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <MSBuild Projects="src\windows.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
     <MSBuild Projects="src\sqlite3.vcxproj" Properties="Configuration=$(Configuration);Platform=Win32" Targets="Build" ContinueOnError="false"/>
     <Exec Command="TextTransform.exe template\addon.xml.tt -out tmp\addon-windows-win32.xml -a !!platform!windows-i686 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a !!changelogtxt!pvr.hdhomerundvr\changelog.txt -a &quot;!!displayversion!$(DisplayVersion)&quot; -a &quot;!!repositoryurl!$(RepositoryBaseUrl)windows-win32.xml.gz&quot; -a &quot;!!releaseurl!$(ReleaseBaseUrl)&quot;" ContinueOnError="false"/>
@@ -112,7 +116,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\windows-win32-$(DisplayVersion).xml&quot; -a !!platform!windows-i686 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-windows-win32.xml&quot; -a !!platform!windows-i686 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-windows-win32-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-windows-win32.xml &gt; out/repository/windows-win32.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum windows-win32.xml.gz &gt; windows-win32.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -120,6 +126,7 @@
   <Target Name="windows-x64" DependsOnTargets="AddonVersion">
 
     <MakeDir Directories="out\windows-x64" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <MSBuild Projects="src\windows.vcxproj" Properties="Configuration=$(Configuration);Platform=x64" Targets="Build" ContinueOnError="false"/>
     <MSBuild Projects="src\sqlite3.vcxproj" Properties="Configuration=$(Configuration);Platform=x64" Targets="Build" ContinueOnError="false"/>
     <Exec Command="TextTransform.exe template\addon.xml.tt -out tmp\addon-windows-x64.xml -a !!platform!windows-x86_64 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a !!changelogtxt!pvr.hdhomerundvr\changelog.txt -a &quot;!!displayversion!$(DisplayVersion)&quot; -a &quot;!!repositoryurl!$(RepositoryBaseUrl)windows-x64.xml.gz&quot; -a &quot;!!releaseurl!$(ReleaseBaseUrl)&quot;" ContinueOnError="false"/>
@@ -133,7 +140,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\windows-x64-$(DisplayVersion).xml&quot; -a !!platform!windows-x86_64 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-windows-x64.xml&quot; -a !!platform!windows-x86_64 -a !!libraryplatform!windx -a !!libraryname!zuki.pvr.hdhomerundvr.dll -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-windows-x64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-windows-x64.xml &gt; out/repository/windows-x64.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum windows-x64.xml.gz &gt; windows-x64.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -189,6 +198,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-i686" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-i686/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-i686/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-i686/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -222,7 +232,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-i686-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-linux-i686.xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-i686-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-linux-i686.xml &gt; out/repository/linux-i686.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum linux-i686.xml.gz &gt; linux-i686.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -236,6 +248,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-x86_64" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-x86_64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-x86_64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-x86_64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -269,7 +282,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-x86_64-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-linux-x86_64.xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-linux-x86_64.xml &gt; out/repository/linux-x86_64.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum linux-x86_64.xml.gz &gt; linux-x86_64.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -283,6 +298,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-armel" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armel/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armel/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabi-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-armel/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -316,7 +332,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-armel-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-linux-armel.xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-armel-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-linux-armel.xml &gt; out/repository/linux-armel.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum linux-armel.xml.gz &gt; linux-armel.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -330,6 +348,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-armhf" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-armhf/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;arm-linux-gnueabihf-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-armhf/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -363,7 +382,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-armhf-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-linux-armhf.xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-armhf-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-linux-armhf.xml &gt; out/repository/linux-armhf.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum linux-armhf.xml.gz &gt; linux-armhf.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -377,6 +398,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-aarch64" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/linux-aarch64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/linux-aarch64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;aarch64-linux-gnu-gcc-4.9 $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/linux-aarch64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -410,7 +432,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\linux-aarch64-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-linux-aarch64.xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-linux-aarch64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-linux-aarch64.xml &gt; out/repository/linux-aarch64.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum linux-aarch64.xml.gz &gt; linux-aarch64.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -425,6 +449,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\raspbian-armhf" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/raspbian-armhf/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/raspbian-armhf/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;$(ENV) arm-linux-gnueabihf-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/raspbian-armhf/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -458,7 +483,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\raspbian-armhf-$(DisplayVersion).xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-raspbian-armhf.xml&quot; -a !!platform!linux -a !!libraryplatform!linux -a !!libraryname!zuki.pvr.hdhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-raspbian-armhf-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-raspbian-armhf.xml &gt; out/repository/raspbian-armhf.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum raspbian-armhf.xml.gz &gt; raspbian-armhf.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -473,6 +500,7 @@
     </PropertyGroup>
 
     <MakeDir Directories="out\osx-x86_64" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channels.c -o out/osx-x86_64/hdhomerun_channels.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_channelscan.c -o out/osx-x86_64/hdhomerun_channelscan.o&quot;" ContinueOnError="false"/>
     <Exec Command="$(BashExe) -c &quot;$(ENV) x86_64-apple-darwin15-gcc $(CPPFLAGS) $(CFLAGS) -c depends/libhdhomerun/hdhomerun_control.c -o out/osx-x86_64/hdhomerun_control.o&quot;" ContinueOnError="false"/>
@@ -506,7 +534,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\osx-x86_64-$(DisplayVersion).xml&quot; -a !!platform!osx-x86_64 -a !!libraryplatform!osx -a !!libraryname!zuki.pvr.hdhomerundvr.dylib -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-osx-x86_64.xml&quot; -a !!platform!osx-x86_64 -a !!libraryplatform!osx -a !!libraryname!zuki.pvr.hdhomerundvr.dylib -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-osx-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-osx-x86_64.xml &gt; out/repository/osx-x86_64.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum osx-x86_64.xml.gz &gt; osx-x86_64.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -516,6 +546,7 @@
     <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; APP_ABI=armeabi-v7a NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out\android-arm NDK_LIBS_OUT=out\android-arm" ContinueOnError="false"/>
     <Exec Command="TextTransform.exe template\addon.xml.tt -out tmp\addon-android-arm.xml -a !!platform!android-armv7 -a !!libraryplatform!android -a !!libraryname!libhdhomerundvr.so -a !!changelogtxt!pvr.hdhomerundvr\changelog.txt -a &quot;!!displayversion!$(DisplayVersion)&quot; -a &quot;!!repositoryurl!$(RepositoryBaseUrl)android-arm.xml.gz&quot; -a &quot;!!releaseurl!$(ReleaseBaseUrl)&quot;" ContinueOnError="false"/>
     <XmlPeek XmlInputPath="tmp\addon-android-arm.xml" Query="/addon/@version">
@@ -528,7 +559,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\android-arm-$(DisplayVersion).xml&quot; -a !!platform!android-armv7 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-android-arm.xml&quot; -a !!platform!android-armv7 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-arm-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-android-arm.xml &gt; out/repository/android-arm.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum android-arm.xml.gz &gt; android-arm.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -538,6 +571,7 @@
     <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; APP_ABI=arm64-v8a NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out\android-aarch64 NDK_LIBS_OUT=out\android-aarch64" ContinueOnError="false"/>
     <Exec Command="TextTransform.exe template\addon.xml.tt -out tmp\addon-android-aarch64.xml -a !!platform!android-aarch64 -a !!libraryplatform!android -a !!libraryname!libhdhomerundvr.so -a !!changelogtxt!pvr.hdhomerundvr\changelog.txt -a &quot;!!displayversion!$(DisplayVersion)&quot; -a &quot;!!repositoryurl!$(RepositoryBaseUrl)android-aarch64.xml.gz&quot; -a &quot;!!releaseurl!$(ReleaseBaseUrl)&quot;" ContinueOnError="false"/>
     <XmlPeek XmlInputPath="tmp\addon-android-aarch64.xml" Query="/addon/@version">
@@ -550,7 +584,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\android-aarch64-$(DisplayVersion).xml&quot; -a !!platform!android-aarch64 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-android-aarch64.xml&quot; -a !!platform!android-aarch64 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-aarch64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-android-aarch64.xml &gt; out/repository/android-aarch64.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum android-aarch64.xml.gz &gt; android-aarch64.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
@@ -560,6 +596,7 @@
     <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
 
     <MakeDir Directories="out" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
     <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; APP_ABI=x86 NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out\android-x86 NDK_LIBS_OUT=out\android-x86" ContinueOnError="false"/>
     <Exec Command="TextTransform.exe template\addon.xml.tt -out tmp\addon-android-x86.xml -a !!platform!android-i686 -a !!libraryplatform!android -a !!libraryname!libhdhomerundvr.so -a !!changelogtxt!pvr.hdhomerundvr\changelog.txt -a &quot;!!displayversion!$(DisplayVersion)&quot; -a &quot;!!repositoryurl!$(RepositoryBaseUrl)android-x86.xml.gz&quot; -a &quot;!!releaseurl!$(ReleaseBaseUrl)&quot;" ContinueOnError="false"/>
     <XmlPeek XmlInputPath="tmp\addon-android-x86.xml" Query="/addon/@version">
@@ -572,7 +609,9 @@
       <Output PropertyName="ZipFileSize" TaskParameter="size"/>
     </GetFileSize>
 
-    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;out\android-x86-$(DisplayVersion).xml&quot; -a !!platform!android-i686 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-android-x86.xml&quot; -a !!platform!android-i686 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-x86-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-android-x86.xml &gt; out/repository/android-x86.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum android-x86.xml.gz &gt; android-x86.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
 
   </Target>
 
