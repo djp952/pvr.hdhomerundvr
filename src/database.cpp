@@ -492,7 +492,7 @@ static bool discover_devices_broadcast(sqlite3* instance)
 
 	// Update the DVR service authorization flag for each discovered tuner device
 	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
-		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DVR') where type = 'tuner'");
+		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where type = 'tuner'");
 
 	// Indicate if any tuner devices were detected during discovery or not
 	return hastuners;
@@ -536,7 +536,7 @@ static bool discover_devices_http(sqlite3* instance)
 
 	// Update the DVR service authorization flag for each discovered tuner device
 	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
-		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DVR') where type = 'tuner'");
+		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where type = 'tuner'");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
 	auto sql = "select count(deviceid) as numtuners from discover_device where type = 'tuner'";
