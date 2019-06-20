@@ -7,6 +7,9 @@ v2.1.0 (2019.06.xx)
   - Fix bug causing multi-homed HDHomeRun devices from being detected during broadcast device discovery
   - Use HTTP POST method when modifying backend recording rules
 
+v2.0.4 (2019.06.19)
+  - Adapt to backend API breaking change that caused "DVR Service Subscription Required" errors
+
 v2.0.3 (2019.05.20)
   - Adapt to HDHomeRun RECORD engine 20190516beta2 breaking changes
   - Use HTTP POST method when setting tuner channel visibility flags
