@@ -964,5 +964,8 @@
     <ClCompile Include="..\depends\curl\lib\curl_get_line.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="compat\uwp.cpp">
+      <Filter>Source Files\compat</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -2240,6 +2240,7 @@
     </ClCompile>
     <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
+    <ClCompile Include="compat\uwp.cpp" />
     <ClCompile Include="curlshare.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp" />
