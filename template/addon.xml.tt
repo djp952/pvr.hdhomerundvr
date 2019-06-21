@@ -9,11 +9,11 @@
 		<import addon="kodi.binary.instance.pvr" version="6.0.0"/>
 	</requires>
 	<extension point="xbmc.pvrclient" needs_configuration="false" library_<#= this.Host.ResolveParameterValue("", "", "libraryplatform") #>="<#= this.Host.ResolveParameterValue("", "", "libraryname") #>"/>
-<# if(!String.IsNullOrEmpty(this.Host.ResolveParameterValue("", "", "repositoryurl"))) { #>	<extension point="xbmc.addon.repository">
-		<info><#= this.Host.ResolveParameterValue("", "", "repositoryurl") #></info>
-		<checksum verify="sha256"><#= this.Host.ResolveParameterValue("", "", "repositoryurl") #>.sha256</checksum>
-		<datadir><#= this.Host.ResolveParameterValue("", "", "releaseurl") #></datadir>
-		<artdir><#= this.Host.ResolveParameterValue("", "", "releaseurl") #></artdir>
+<# if(!String.IsNullOrEmpty(this.Host.ResolveParameterValue("", "", "repomanifest"))) { #>	<extension point="xbmc.addon.repository">
+		<info>https://raw.githubusercontent.com/djp952/repository.hdhomerundvr/Matrix/<#= this.Host.ResolveParameterValue("", "", "repomanifest") #></info>
+		<checksum verify="sha256">https://raw.githubusercontent.com/djp952/repository.hdhomerundvr/Matrix/<#= this.Host.ResolveParameterValue("", "", "repomanifest") #>.sha256</checksum>
+		<datadir>https://github.com/djp952/pvr.hdhomerundvr/releases/download</datadir>
+		<artdir>https://github.com/djp952/pvr.hdhomerundvr/releases/download</artdir>
 		<hashes>sha256</hashes>
 	</extension>
 <# } #>	<extension point="xbmc.addon.metadata">
