@@ -104,15 +104,6 @@
     <ClInclude Include="..\tmp\version\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hdhr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="compat\strings.h">
-      <Filter>Header Files\compat</Filter>
-    </ClInclude>
-    <ClInclude Include="dvrstream.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="align.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -494,6 +485,12 @@
     <ClInclude Include="..\depends\curl\lib\curl_get_line.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="httpstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pvrstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -515,15 +512,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sqlite_exception.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hdhr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compat\strings.cpp">
-      <Filter>Source Files\compat</Filter>
-    </ClCompile>
-    <ClCompile Include="dvrstream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compat\dlfcn.cpp">
@@ -963,6 +951,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\curl_get_line.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="httpstream.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -27,7 +27,6 @@
 #include <rapidjson/document.h>
 #include <sqlite3ext.h>
 #include <string>
-#include <strings.h>
 #include <uuid/uuid.h>
 #include <xbmc_pvr_types.h>
 #include <vector>

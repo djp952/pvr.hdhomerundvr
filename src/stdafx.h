@@ -39,6 +39,7 @@
 #define _USE_32BIT_TIME_T			// time_t has to be 32bit with 32bit Kodi
 #endif
 
+#include <WinSock2.h>				// Include Windows Sockets declarations
 #include <windows.h>				// Include main Windows declarations
 
 #endif // _WINDOWS
@@ -62,8 +63,13 @@
 //--------------------------------------------------------------------------
 // libcurl
 
-#define CURL_STATICLIB				// Using libcurl in a static library
+#define CURL_STATICLIB
 #include <curl/curl.h>				// Include CURL declarations
+
+//---------------------------------------------------------------------------
+// libhdhomerun
+
+#include <hdhomerun.h>				// Include HDHomeRun declarations
 
 //---------------------------------------------------------------------------
 
