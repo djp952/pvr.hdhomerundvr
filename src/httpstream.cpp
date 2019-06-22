@@ -21,7 +21,7 @@
 //---------------------------------------------------------------------------
 
 #include "stdafx.h"
-#include "dvrstream.h"
+#include "httpstream.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -33,30 +33,30 @@
 
 #pragma warning(push, 4)
 
-// dvrstream::DEFAULT_MEDIA_TYPE (static)
+// httpstream::DEFAULT_MEDIA_TYPE (static)
 //
 // Default media type to report for the stream
-char const* dvrstream::DEFAULT_MEDIA_TYPE = "video/mp2t";
+char const* httpstream::DEFAULT_MEDIA_TYPE = "video/mp2t";
 
-// dvrstream::DEFAULT_READ_MINCOUNT (static)
+// httpstream::DEFAULT_READ_MINCOUNT (static)
 //
 // Default minimum amount of data to return from a read request
-size_t const dvrstream::DEFAULT_READ_MINCOUNT = (4 KiB);
+size_t const httpstream::DEFAULT_READ_MINCOUNT = (4 KiB);
 
-// dvrstream::DEFAULT_RINGBUFFER_SIZE (static)
+// httpstream::DEFAULT_RINGBUFFER_SIZE (static)
 //
 // Default ring buffer size, in bytes
-size_t const dvrstream::DEFAULT_RINGBUFFER_SIZE = (1 MiB);
+size_t const httpstream::DEFAULT_RINGBUFFER_SIZE = (1 MiB);
 
-// dvrstream::MAX_STREAM_LENGTH (static)
+// httpstream::MAX_STREAM_LENGTH (static)
 //
 // Maximum allowable stream length; indicates a real-time stream
-long long const dvrstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::max();
+long long const httpstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::max();
 
-// dvrstream::MPEGTS_PACKET_LENGTH (static)
+// httpstream::MPEGTS_PACKET_LENGTH (static)
 //
 // Length of a single mpeg-ts data packet
-size_t const dvrstream::MPEGTS_PACKET_LENGTH = 188;
+size_t const httpstream::MPEGTS_PACKET_LENGTH = 188;
 	
 //---------------------------------------------------------------------------
 // decode_pcr90khz
@@ -183,7 +183,7 @@ inline uint32_t read_be32(uint8_t const* ptr)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream Constructor (private)
+// httpstream Constructor (private)
 //
 // Arguments:
 //
@@ -191,7 +191,7 @@ inline uint32_t read_be32(uint8_t const* ptr)
 //	buffersize		- Ring buffer size, in bytes
 //	readmincount	- Minimum bytes to return from a read operation
 
-dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
+httpstream::httpstream(char const* url, size_t buffersize, size_t readmincount) :
 	m_readmincount(std::max(align::down(readmincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
 	m_buffersize(align::up(buffersize, 65536))
 {
@@ -220,9 +220,9 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_TIME, 5L);
-			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, &dvrstream::curl_responseheaders);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, &httpstream::curl_responseheaders);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, this);
-			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &dvrstream::curl_write);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &httpstream::curl_write);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_RANGE, "0-");
 			if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
@@ -258,15 +258,15 @@ dvrstream::dvrstream(char const* url, size_t buffersize, size_t readmincount) :
 }
 
 //---------------------------------------------------------------------------
-// dvrstream Destructor
+// httpstream Destructor
 
-dvrstream::~dvrstream()
+httpstream::~httpstream()
 {
 	close();
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::canseek
+// httpstream::canseek
 //
 // Gets a flag indicating if the stream allows seek operations
 //
@@ -274,13 +274,13 @@ dvrstream::~dvrstream()
 //
 //	NONE
 
-bool dvrstream::canseek(void) const
+bool httpstream::canseek(void) const
 {
 	return m_canseek;
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::close
+// httpstream::close
 //
 // Closes the stream
 //
@@ -288,7 +288,7 @@ bool dvrstream::canseek(void) const
 //
 //	NONE
 
-void dvrstream::close(void)
+void httpstream::close(void)
 {
 	// Remove the easy handle from the multi handle and close them both out
 	if((m_curlm != nullptr) && (m_curl != nullptr)) curl_multi_remove_handle(m_curlm, m_curl);
@@ -300,7 +300,7 @@ void dvrstream::close(void)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::currentpts
+// httpstream::currentpts
 //
 // Gets the current presentation timestamp value
 //
@@ -308,13 +308,13 @@ void dvrstream::close(void)
 //
 //	NONE
 
-uint64_t dvrstream::currentpts(void) const
+uint64_t httpstream::currentpts(void) const
 {
 	return m_currentpts;
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::currenttime
+// httpstream::currenttime
 //
 // Gets the current playback time based on the presentation timestamps
 //
@@ -322,7 +322,7 @@ uint64_t dvrstream::currentpts(void) const
 //
 //	NONE
 
-time_t dvrstream::currenttime(void) const
+time_t httpstream::currenttime(void) const
 {
 	// If either of the presentation timestamps are missing, report zero
 	if((m_startpts == 0) || (m_currentpts == 0)) return 0;
@@ -338,38 +338,38 @@ time_t dvrstream::currenttime(void) const
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::create (static)
+// httpstream::create (static)
 //
-// Factory method, creates a new dvrstream instance
+// Factory method, creates a new httpstream instance
 //
 // Arguments:
 //
 //	url				- URL of the stream to be opened
 
-std::unique_ptr<dvrstream> dvrstream::create(char const* url)
+std::unique_ptr<httpstream> httpstream::create(char const* url)
 {
 	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_READ_MINCOUNT);
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::create (static)
+// httpstream::create (static)
 //
-// Factory method, creates a new dvrstream instance
+// Factory method, creates a new httpstream instance
 //
 // Arguments:
 //
 //	url				- URL of the stream to be opened
 //	buffersize		- Ring buffer size, in bytes
 
-std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize)
+std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize)
 {
 	return create(url, buffersize, DEFAULT_READ_MINCOUNT);
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::create (static)
+// httpstream::create (static)
 //
-// Factory method, creates a new dvrstream instance
+// Factory method, creates a new httpstream instance
 //
 // Arguments:
 //
@@ -377,13 +377,13 @@ std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize)
 //	buffersize		- Ring buffer size, in bytes
 //	readmincount	- Minimum bytes to return from a read operation
 
-std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize, size_t readmincount)
+std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize, size_t readmincount)
 {
-	return std::unique_ptr<dvrstream>(new dvrstream(url, buffersize, readmincount));
+	return std::unique_ptr<httpstream>(new httpstream(url, buffersize, readmincount));
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::curl_responseheaders (static, private)
+// httpstream::curl_responseheaders (static, private)
 //
 // libcurl callback to process response headers
 //
@@ -394,7 +394,7 @@ std::unique_ptr<dvrstream> dvrstream::create(char const* url, size_t buffersize,
 //	count		- Number of data elements
 //	context		- Caller-provided context pointer
 
-size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t count, void* context)
+size_t httpstream::curl_responseheaders(char const* data, size_t size, size_t count, void* context)
 {
 	static const char ACCEPT_RANGES_HEADER[]		= "Accept-Ranges: bytes";
 	static const char CONTENT_RANGE_HEADER[]		= "Content-Range: bytes";
@@ -408,8 +408,8 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 	size_t cb = size * count;						// Calculate the actual byte count
 	if(cb == 0) return 0;							// Nothing to do
 
-	// Cast the context pointer back into a dvrstream instance
-	dvrstream* instance = reinterpret_cast<dvrstream*>(context);
+	// Cast the context pointer back into a httpstream instance
+	httpstream* instance = reinterpret_cast<httpstream*>(context);
 
 	// Accept-Ranges: bytes
 	if((cb >= ACCEPT_RANGES_HEADER_LEN) && (strncmp(ACCEPT_RANGES_HEADER, data, ACCEPT_RANGES_HEADER_LEN) == 0)) {
@@ -458,7 +458,7 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::curl_write (static, private)
+// httpstream::curl_write (static, private)
 //
 // libcurl callback to write transferred data into the buffer
 //
@@ -469,15 +469,15 @@ size_t dvrstream::curl_responseheaders(char const* data, size_t size, size_t cou
 //	count		- Number of data elements
 //	context		- Caller-provided context pointer
 
-size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* context)
+size_t httpstream::curl_write(void const* data, size_t size, size_t count, void* context)
 {
 	size_t				cb = size * count;			// Calculate the actual byte count
 	size_t				byteswritten = 0;			// Total bytes actually written
 
 	if((data == nullptr) || (cb == 0) || (context == nullptr)) return 0;
 
-	// Cast the context pointer back into a dvrstream instance
-	dvrstream* instance = reinterpret_cast<dvrstream*>(context);
+	// Cast the context pointer back into a httpstream instance
+	httpstream* instance = reinterpret_cast<httpstream*>(context);
 
 	// This operation requires that all of the data be written, if it isn't going to fit in the
 	// available ring buffer space, the input stream has to be paused via CURL_WRITEFUNC_PAUSE
@@ -509,7 +509,7 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::filter_packets (private)
+// httpstream::filter_packets (private)
 //
 // Applies an mpeg-ts packet filter against the provided packets
 //
@@ -518,7 +518,7 @@ size_t dvrstream::curl_write(void const* data, size_t size, size_t count, void* 
 //	buffer		- Pointer to the mpeg-ts packets to filter
 //	count		- Number of mpeg-ts packets provided in the buffer
 
-void dvrstream::filter_packets(uint8_t* buffer, size_t count)
+void httpstream::filter_packets(uint8_t* buffer, size_t count)
 {
 	// The packet filter can be disabled completely for a stream if the
 	// MPEG-TS packets become misaligned; leaving it enabled might trash things
@@ -539,9 +539,8 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
 		bool payload = (ts_header & 0x00000010) == 0x00000010;
 
-		// Check the sync byte, should always be 0x47.  If the packets aren't in sync
-		// all kinds of bad things can happen
-		assert(sync == 0x47);
+		// If the sync byte isn't 0x47, this either isn't an MPEG-TS stream or the packets
+		// have become misaligned.  In either case the packet filter must be disabled.
 		if(sync != 0x47) { 
 			
 			m_enablefilter = m_enablepcrs = false;		// Stop filtering packets
@@ -652,7 +651,7 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::length
+// httpstream::length
 //
 // Gets the length of the stream; or -1 if stream is real-time
 //
@@ -660,13 +659,13 @@ void dvrstream::filter_packets(uint8_t* buffer, size_t count)
 //
 //	NONE
 
-long long dvrstream::length(void) const
+long long httpstream::length(void) const
 {
 	return (m_length == MAX_STREAM_LENGTH) ? -1 : m_length;
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::mediatype
+// httpstream::mediatype
 //
 // Gets the media type of the stream
 //
@@ -674,13 +673,13 @@ long long dvrstream::length(void) const
 //
 //	NONE
 
-char const* dvrstream::mediatype(void) const
+char const* httpstream::mediatype(void) const
 {
 	return m_mediatype.c_str();
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::position
+// httpstream::position
 //
 // Gets the current position of the stream
 //
@@ -688,13 +687,13 @@ char const* dvrstream::mediatype(void) const
 //
 //	NONE
 
-long long dvrstream::position(void) const
+long long httpstream::position(void) const
 {
 	return m_readpos;
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::read
+// httpstream::read
 //
 // Reads data from the live stream
 //
@@ -703,7 +702,7 @@ long long dvrstream::position(void) const
 //	buffer		- Buffer to receive the live stream data
 //	count		- Size of the destination buffer in bytes
 
-size_t dvrstream::read(uint8_t* buffer, size_t count)
+size_t httpstream::read(uint8_t* buffer, size_t count)
 {
 	size_t				bytesread = 0;			// Total bytes actually read
 	size_t				available = 0;			// Available bytes to read
@@ -764,7 +763,7 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::realtime
+// httpstream::realtime
 //
 // Gets a flag indicating if the stream is real-time
 //
@@ -772,13 +771,13 @@ size_t dvrstream::read(uint8_t* buffer, size_t count)
 //
 //	NONE
 
-bool dvrstream::realtime(void) const
+bool httpstream::realtime(void) const
 {
 	return (m_length == MAX_STREAM_LENGTH);
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::restart (private)
+// httpstream::restart (private)
 //
 // Restarts the stream at the specified position
 //
@@ -786,7 +785,7 @@ bool dvrstream::realtime(void) const
 //
 //	position		- Requested starting position for the transfer
 
-long long dvrstream::restart(long long position)
+long long httpstream::restart(long long position)
 {
 	size_t		available = 0;				// Amount of available ring buffer data
 
@@ -834,7 +833,7 @@ long long dvrstream::restart(long long position)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::seek
+// httpstream::seek
 //
 // Sets the stream pointer to a specific position
 //
@@ -843,7 +842,7 @@ long long dvrstream::restart(long long position)
 //	position	- Delta within the stream to seek, relative to whence
 //	whence		- Starting position from which to apply the delta
 
-long long dvrstream::seek(long long position, int whence)
+long long httpstream::seek(long long position, int whence)
 {
 	long long			newposition = 0;			// New stream position
 
@@ -894,7 +893,7 @@ long long dvrstream::seek(long long position, int whence)
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::startpts
+// httpstream::startpts
 //
 // Gets the initial presentation timestamp value
 //
@@ -902,13 +901,13 @@ long long dvrstream::seek(long long position, int whence)
 //
 //	NONE
 
-uint64_t dvrstream::startpts(void) const
+uint64_t httpstream::startpts(void) const
 {
 	return m_startpts;
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::starttime
+// httpstream::starttime
 //
 // Gets the time at which the stream started
 //
@@ -916,13 +915,13 @@ uint64_t dvrstream::startpts(void) const
 //
 //	NONE
 
-time_t dvrstream::starttime(void) const
+time_t httpstream::starttime(void) const
 {
 	return m_starttime;
 }
 
 //---------------------------------------------------------------------------
-// dvrstream::transfer_until (private)
+// httpstream::transfer_until (private)
 //
 // Executes the data transfer until the specified predicate has been satisfied
 // or the transfer has completed
@@ -931,7 +930,7 @@ time_t dvrstream::starttime(void) const
 //
 //	predicate		- Predicate to be satisfied by the transfer
 
-bool dvrstream::transfer_until(std::function<bool(void)> predicate)
+bool httpstream::transfer_until(std::function<bool(void)> predicate)
 {
 	int				numfds;				// Number of active file descriptors
 

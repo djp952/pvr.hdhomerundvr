@@ -28,7 +28,7 @@
 #include <sstream>
 #include <string>
 
-#include "vc2013.h"
+//#include "compat\vc2013.h"
 
 #pragma warning(push, 4)	
 

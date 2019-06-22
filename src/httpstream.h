@@ -20,8 +20,8 @@
 // SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef __DVRSTREAM_H_
-#define __DVRSTREAM_H_
+#ifndef __HTTPSTREAM_H_
+#define __HTTPSTREAM_H_
 #pragma once
 
 #pragma warning(push, 4)
@@ -31,18 +31,20 @@
 #include <set>
 #include <string>
 
-//---------------------------------------------------------------------------
-// Class dvrstream
-//
-// Implements an HTTP-based DVR stream ring buffer
+#include "pvrstream.h"
 
-class dvrstream
+//---------------------------------------------------------------------------
+// Class httpstream
+//
+// Implements an HTTP-based PVR stream ring buffer
+
+class httpstream : public pvrstream
 {
 public:
 
 	// Destructor
 	//
-	~dvrstream();
+	virtual ~httpstream();
 
 	//-----------------------------------------------------------------------
 	// Member Functions
@@ -59,10 +61,10 @@ public:
 
 	// create (static)
 	//
-	// Factory method, creates a new dvrstream instance
-	static std::unique_ptr<dvrstream> create(char const* url);
-	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize);
-	static std::unique_ptr<dvrstream> create(char const* url, size_t buffersize, size_t readmincount);
+	// Factory method, creates a new httpstream instance
+	static std::unique_ptr<httpstream> create(char const* url);
+	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize);
+	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize, size_t readmincount);
 
 	// currentpts
 	//
@@ -116,8 +118,8 @@ public:
 
 private:
 
-	dvrstream(dvrstream const&)=delete;
-	dvrstream& operator=(dvrstream const&)=delete;
+	httpstream(httpstream const&)=delete;
+	httpstream& operator=(httpstream const&)=delete;
 
 	// DEFAULT_MEDIA_TYPE
 	//
@@ -146,7 +148,7 @@ private:
 
 	// Instance Constructor
 	//
-	dvrstream(char const* url, size_t buffersize, size_t readmincount);
+	httpstream(char const* url, size_t buffersize, size_t readmincount);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -218,4 +220,4 @@ private:
 
 #pragma warning(pop)
 
-#endif	// __DVRSTREAM_H_`
+#endif	// __HTTPSTREAM_H_

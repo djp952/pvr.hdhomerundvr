@@ -30,7 +30,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <strings.h>
 #include <sstream>
 #include <vector>
 
@@ -49,8 +48,8 @@
 
 #include "database.h"
 #include "dbtypes.h"
-#include "dvrstream.h"
-#include "hdhr.h"
+#include "httpstream.h"
+#include "pvrstream.h"
 #include "scalar_condition.h"
 #include "scheduler.h"
 #include "sqlite_exception.h"
@@ -310,10 +309,10 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 // Global SQLite database connection pool instance
 static std::shared_ptr<connectionpool> g_connpool;
 
-// g_dvrstream
+// g_pvrstream
 //
 // DVR stream buffer instance
-static std::unique_ptr<dvrstream> g_dvrstream;
+static std::unique_ptr<pvrstream> g_pvrstream;
 
 // g_currentchannel
 //
@@ -1190,6 +1189,50 @@ static int ringbuffersize_enum_to_bytes(int nvalue)
 	return (1 MiB);					// 1 Megabyte = default
 }
 
+// select_tuner
+//
+// Selects an available tuner device from a list of possibilities
+static std::string select_tuner(std::vector<std::string> const& possibilities)
+{
+	std::string					tunerid;			// Selected tuner identifier
+
+	// Allocate and initialize the device selector
+	struct hdhomerun_device_selector_t* selector = hdhomerun_device_selector_create(nullptr);
+	if(selector == nullptr) throw string_exception("hdhomerun_device_selector_create() failed");
+
+	try {
+
+		// Add each of the possible device/tuner combinations to the selector
+		for(auto const& iterator : possibilities) {
+
+			struct hdhomerun_device_t* device = hdhomerun_device_create_from_str(iterator.c_str(), nullptr);
+			if(device == nullptr) throw string_exception("hdhomerun_device_create_from_str() failed");
+
+			hdhomerun_device_selector_add_device(selector, device);
+		}
+
+		// NOTE: There is an inherent race condition here with the tuner lock implementation.  When the tuner
+		// is selected here it will be locked, but it cannot remain locked since the ultimate purpose here is
+		// to generate an HTTP URL for the application to use.  The HTTP stream will attempt it's own lock
+		// and would fail if left locked after this function completes.  No way to tell it to use an existing lock.
+
+		// Let libhdhomerun pick a free tuner for us from the available possibilities
+		struct hdhomerun_device_t* selected = hdhomerun_device_selector_choose_and_lock(selector, nullptr);
+		if(selected) {
+
+			tunerid = hdhomerun_device_get_name(selected);			// DDDDDDDD-T; D=DeviceID, T=TunerID
+			hdhomerun_device_tuner_lockkey_release(selected);		// Release the acquired lock
+		}
+
+		// Release the selector along with all of the generated device structures
+		hdhomerun_device_selector_destroy(selector, true);
+	}
+
+	catch(...) { hdhomerun_device_selector_destroy(selector, true); }
+
+	return tunerid;
+}
+
 // try_getepgforchannel
 //
 // Request the EPG for a channel from the backend
@@ -1326,7 +1369,7 @@ void ADDON_Announce(char const* flag, char const* sender, char const* message, v
 
 		try {
 
-			g_dvrstream.reset();			// Destroy any active stream instance
+			g_pvrstream.reset();			// Destroy any active stream instance
 			g_scheduler.stop();				// Stop the task scheduler
 			g_scheduler.clear();			// Clear all tasks from the scheduler
 		}
@@ -1652,7 +1695,7 @@ void ADDON_Stop(void)
 	// Throw a message out to the Kodi log indicating that the add-on is being stopped
 	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " stopping");
 
-	g_dvrstream.reset();						// Destroy any active stream instance
+	g_pvrstream.reset();						// Destroy any active stream instance
 	g_scheduler.stop();							// Stop the task scheduler
 	g_scheduler.clear();						// Clear all tasks from the scheduler
 
@@ -1674,7 +1717,7 @@ void ADDON_Destroy(void)
 	// Throw a message out to the Kodi log indicating that the add-on is being unloaded
 	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
 
-	g_dvrstream.reset();					// Destroy any active stream instance
+	g_pvrstream.reset();					// Destroy any active stream instance
 	g_scheduler.stop();						// Stop the task scheduler
 	g_scheduler.clear();					// Clear all tasks from the scheduler
 	
@@ -3774,7 +3817,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		if(streamurl.length() == 0) throw string_exception("unable to generate a valid stream URL for channel ", channelstr);
 
 		// Stop and destroy any existing stream instance before opening the new one
-		g_dvrstream.reset();
+		g_pvrstream.reset();
 
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
@@ -3783,16 +3826,16 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 			// Start the new channel stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
+			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
 
 			// Set the current channel number
 			g_currentchannel.store(channel.iUniqueId);
 
 			// Log some additional information about the stream for diagnostic purposes
-			log_notice(__func__, ": mediatype = ", g_dvrstream->mediatype());
-			log_notice(__func__, ": canseek   = ", g_dvrstream->canseek() ? "true" : "false");
-			log_notice(__func__, ": length    = ", g_dvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_dvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": mediatype = ", g_pvrstream->mediatype());
+			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": length    = ", g_pvrstream->length());
+			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
 		}
 
 		catch(...) { g_scheduler.resume(); g_currentchannel.store(-1); throw; }
@@ -3839,8 +3882,8 @@ void CloseLiveStream(void)
 
 		// If the DVR stream is active, close it normally so exceptions are
 		// propagated before destroying it; destructor alone won't throw
-		if(g_dvrstream) g_dvrstream->close();
-		g_dvrstream.reset();
+		if(g_pvrstream) g_pvrstream->close();
+		g_pvrstream.reset();
 
 		g_currentchannel.store(-1);					// No longer streaming a channel
 	}
@@ -3863,7 +3906,7 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
 	assert(g_addon);
 
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+	try { return (g_pvrstream) ? static_cast<int>(g_pvrstream->read(buffer, size)) : -1; }
 
 	catch(std::exception& ex) {
 
@@ -3873,7 +3916,7 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 		// Kodi is going to continue to call this function until it thinks the stream has ended so
 		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
-		try { return static_cast<int>(g_dvrstream->read(buffer, size)); }
+		try { return static_cast<int>(g_pvrstream->read(buffer, size)); }
 		catch(...) { return 0; }
 	}
 
@@ -3894,7 +3937,7 @@ long long SeekLiveStream(long long position, int whence)
 {
 	assert(g_addon);
 
-	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
+	try { return (g_pvrstream) ? g_pvrstream->seek(position, whence) : -1; }
 
 	catch(std::exception& ex) {
 
@@ -3920,7 +3963,7 @@ long long SeekLiveStream(long long position, int whence)
 long long PositionLiveStream(void)
 {
 	// Don't report the position for a real-time stream
-	try { return (g_dvrstream && !g_dvrstream->realtime()) ? g_dvrstream->position() : -1; }
+	try { return (g_pvrstream && !g_pvrstream->realtime()) ? g_pvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -3936,7 +3979,7 @@ long long PositionLiveStream(void)
 
 long long LengthLiveStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->length() : -1; }
+	try { return (g_pvrstream) ? g_pvrstream->length() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -4025,7 +4068,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified recording");
 
 		// Stop and destroy any existing stream instance before opening the new one
-		g_dvrstream.reset();
+		g_pvrstream.reset();
 
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
@@ -4034,13 +4077,13 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
-			g_dvrstream = dvrstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
+			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_minimum_byte_count);
 
 			// Log some additional information about the stream for diagnostic purposes
-			log_notice(__func__, ": mediatype = ", g_dvrstream->mediatype());
-			log_notice(__func__, ": canseek   = ", g_dvrstream->canseek() ? "true" : "false");
-			log_notice(__func__, ": length    = ", g_dvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_dvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": mediatype = ", g_pvrstream->mediatype());
+			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": length    = ", g_pvrstream->length());
+			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
 		}
 
 		catch(...) { g_scheduler.resume(); throw; }
@@ -4087,8 +4130,8 @@ void CloseRecordedStream(void)
 
 		// If the DVR stream is active, close it normally so exceptions are
 		// propagated before destroying it; destructor alone won't throw
-		if(g_dvrstream) g_dvrstream->close();
-		g_dvrstream.reset();
+		if(g_pvrstream) g_pvrstream->close();
+		g_pvrstream.reset();
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -4109,7 +4152,7 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
 	assert(g_addon);
 
-	try { return (g_dvrstream) ? static_cast<int>(g_dvrstream->read(buffer, size)) : -1; }
+	try { return (g_pvrstream) ? static_cast<int>(g_pvrstream->read(buffer, size)) : -1; }
 
 	catch(std::exception& ex) {
 
@@ -4119,7 +4162,7 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 		// Kodi is going to continue to call this function until it thinks the stream has ended so
 		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
-		try { return static_cast<int>(g_dvrstream->read(buffer, size)); }
+		try { return static_cast<int>(g_pvrstream->read(buffer, size)); }
 		catch(...) { return 0; }
 	}
 
@@ -4140,7 +4183,7 @@ long long SeekRecordedStream(long long position, int whence)
 {
 	assert(g_addon);
 
-	try { return (g_dvrstream) ? g_dvrstream->seek(position, whence) : -1; }
+	try { return (g_pvrstream) ? g_pvrstream->seek(position, whence) : -1; }
 
 	catch(std::exception& ex) {
 
@@ -4164,7 +4207,7 @@ long long SeekRecordedStream(long long position, int whence)
 long long PositionRecordedStream(void)
 {
 	// Don't report the position for a real-time stream
-	try { return (g_dvrstream && !g_dvrstream->realtime()) ? g_dvrstream->position() : -1; }
+	try { return (g_pvrstream && !g_pvrstream->realtime()) ? g_pvrstream->position() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -4180,7 +4223,7 @@ long long PositionRecordedStream(void)
 
 long long LengthRecordedStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->length() : -1; }
+	try { return (g_pvrstream) ? g_pvrstream->length() : -1; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
@@ -4277,7 +4320,7 @@ bool CanPauseStream(void)
 
 bool CanSeekStream(void)
 {
-	try { return (g_dvrstream) ? g_dvrstream->canseek() : false; }
+	try { return (g_pvrstream) ? g_pvrstream->canseek() : false; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
 	catch(...) { return handle_generalexception(__func__, false); }
 }
@@ -4338,7 +4381,7 @@ void SetSpeed(int /*speed*/)
 time_t GetPlayingTime(void)
 {
 	// This is only reported for realtime streams
-	try { return (g_dvrstream && g_dvrstream->realtime()) ? g_dvrstream->currenttime() : 0; }
+	try { return (g_pvrstream && g_pvrstream->realtime()) ? g_pvrstream->currenttime() : 0; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
 	catch(...) { return handle_generalexception(__func__, 0); }
 }
@@ -4355,7 +4398,7 @@ time_t GetPlayingTime(void)
 time_t GetBufferTimeStart(void)
 {
 	// This is only reported for realtime streams
-	try { return (g_dvrstream && g_dvrstream->realtime()) ? g_dvrstream->starttime() : 0; }
+	try { return (g_pvrstream && g_pvrstream->realtime()) ? g_pvrstream->starttime() : 0; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
 	catch(...) { return handle_generalexception(__func__, 0); }
 }
@@ -4372,7 +4415,7 @@ time_t GetBufferTimeStart(void)
 time_t GetBufferTimeEnd(void)
 {
 	// This is only reported for realtime streams, and is always the actual clock time
-	try { return (g_dvrstream && g_dvrstream->realtime()) ? time(nullptr) : 0; }
+	try { return (g_pvrstream && g_pvrstream->realtime()) ? time(nullptr) : 0; }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, 0); }
 	catch(...) { return handle_generalexception(__func__, 0); }
 }
@@ -4403,13 +4446,13 @@ char const* GetBackendHostname(void)
 bool IsTimeshifting(void)
 {
 	// Only realtime seekable streams are capable of timeshifting
-	if(!g_dvrstream || !g_dvrstream->realtime() || !g_dvrstream->canseek()) return false;
+	if(!g_pvrstream || !g_pvrstream->realtime() || !g_pvrstream->canseek()) return false;
 
 	try {
 
 		// Get the calculated playback time of the stream.  If non-zero and is
 		// less than the current time (less one second for padding), it's timeshifting
-		time_t currenttime = g_dvrstream->currenttime();
+		time_t currenttime = g_pvrstream->currenttime();
 		return ((currenttime != 0) && (currenttime < (time(nullptr) - 1)));
 	}
 

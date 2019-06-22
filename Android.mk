@@ -95,8 +95,7 @@ LOCAL_SRC_FILES := \
 	src/curlshare.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
-	src/dvrstream.cpp \
-	src/hdhr.cpp \
+	src/httpstream.cpp \
 	src/pvr.cpp \
 	src/scheduler.cpp \
 	src/sqlite_exception.cpp \
