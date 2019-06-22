@@ -22,6 +22,8 @@
 
 #include "stdafx.h"
 
+#include <assert.h>
+
 #pragma warning(push, 4)
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -35,8 +37,9 @@
 //
 //	lpModuleName	- The name of the loaded module
 
-extern "C" HMODULE GetModuleHandle(LPCWSTR /*lpModuleName*/)
+extern "C" void* GetModuleHandle(void* /*lpModuleName*/)
 {
+	assert(false);
 	return nullptr;
 }
 
@@ -49,8 +52,9 @@ extern "C" HMODULE GetModuleHandle(LPCWSTR /*lpModuleName*/)
 //
 //	lpLibFileName	- The name of the module
 
-extern "C" HMODULE LoadLibrary(LPCWSTR /*lpLibFileName*/)
+extern "C" void* LoadLibrary(void* /*lpLibFileName*/)
 {
+	assert(false);
 	return nullptr;
 }
 

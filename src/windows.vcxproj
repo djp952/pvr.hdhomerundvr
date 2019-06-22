@@ -299,14 +299,13 @@
     <ClInclude Include="..\depends\sqlite\sqlite3ext.h" />
     <ClInclude Include="..\tmp\version\version.h" />
     <ClInclude Include="align.h" />
-    <ClInclude Include="compat\strings.h" />
     <ClInclude Include="compat\uuid\uuid.h" />
     <ClInclude Include="curlshare.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="dbtypes.h" />
-    <ClInclude Include="dvrstream.h" />
-    <ClInclude Include="hdhr.h" />
+    <ClInclude Include="httpstream.h" />
     <ClInclude Include="http_exception.h" />
+    <ClInclude Include="pvrstream.h" />
     <ClInclude Include="scalar_condition.h" />
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="sqlite_exception.h" />
@@ -515,14 +514,14 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\depends\curl;$(ProjectDir)..\depends\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;HAVE_GETSOCKNAME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;HAVE_GETSOCKNAME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;HAVE_GETSOCKNAME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;USE_WIN32_IDN;WANT_IDN_PROTOTYPES;USE_IPV6;USE_WINDOWS_SSPI;HAVE_GETSOCKNAME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\curl_gssapi.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -2238,19 +2237,11 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SQLITE_THREADSAFE=2;SQLITE_ENABLE_JSON1=1;SQLITE_TEMP_STORE=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="compat\strings.cpp" />
     <ClCompile Include="compat\uuid.cpp" />
-    <ClCompile Include="compat\uwp.cpp" />
     <ClCompile Include="curlshare.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp" />
-    <ClCompile Include="dvrstream.cpp" />
-    <ClCompile Include="hdhr.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="httpstream.cpp" />
     <ClCompile Include="pvr.cpp" />
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="sqlite_exception.cpp" />

@@ -39,6 +39,7 @@
 #define	_WIN32_IE		_WIN32_IE_IE80
 #define NOMINMAX
 
+#include <WinSock2.h>
 #include <Windows.h>
 #define TARGET_WINDOWS
 
@@ -71,6 +72,12 @@
 
 #define CURL_STATICLIB
 #include <curl/curl.h>				// Include CURL declarations
+
+//---------------------------------------------------------------------------
+// libhdhomerun
+//---------------------------------------------------------------------------
+
+#include <hdhomerun.h>				// Include HDHomeRun declarations
 
 //---------------------------------------------------------------------------
 

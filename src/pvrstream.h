@@ -20,36 +20,77 @@
 // SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef __STRINGS_H_
-#define __STRINGS_H_
+#ifndef __PVRSTREAM_H_
+#define __PVRSTREAM_H_
 #pragma once
-
-#if !defined(_WINDOWS) && !defined(WINAPI_FAMILY)
-#error this strings.h is intended for use on Windows only
-#endif
 
 #pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
-// TYPE DECLARATIONS
-//---------------------------------------------------------------------------
-
-//---------------------------------------------------------------------------
-// FUNCTION PROTOTYPES
-//---------------------------------------------------------------------------
-
-// strcasecmp
+// Class pvrstream
 //
-// Compares the two strings s1 and s2, ignoring the case of the characters
-int strcasecmp(char const* s1, char const* s2);
+// Defines the interface required for creating and manipulating PVR streams
 
-// strncasecmp
-//
-// Compares the two strings s1 and s2, ignoring the case of the characters
-int strncasecmp(char const* s1, char const* s2, size_t n);
+class pvrstream
+{
+public:
+
+	// Constructor / Destructor
+	//
+	pvrstream() {}
+	virtual ~pvrstream() {}
+
+	//-----------------------------------------------------------------------
+	// Member Functions
+
+	// canseek
+	//
+	// Flag indicating if the stream allows seek operations
+	virtual bool canseek(void) const = 0;
+
+	// close
+	//
+	// Closes the stream
+	virtual void close(void) = 0;
+
+	// length
+	//
+	// Gets the length of the stream
+	virtual long long length(void) const = 0;
+
+	// mediatype
+	//
+	// Gets the media type of the stream
+	virtual char const* mediatype(void) const = 0;
+
+	// position
+	//
+	// Gets the current position of the stream
+	virtual long long position(void) const = 0;
+
+	// read
+	//
+	// Reads available data from the stream
+	virtual size_t read(uint8_t* buffer, size_t count) = 0;
+
+	// realtime
+	//
+	// Gets a flag indicating if the stream is real-time
+	virtual bool realtime(void) const = 0;
+
+	// seek
+	//
+	// Sets the stream pointer to a specific position
+	virtual long long seek(long long position, int whence) = 0;
+
+private:
+
+	pvrstream(pvrstream const&) = delete;
+	pvrstream& operator=(pvrstream const&) = delete;
+};
 
 //-----------------------------------------------------------------------------
 
 #pragma warning(pop)
 
-#endif	// __STRINGS_H_
+#endif	// __PVRSTREAM_H_

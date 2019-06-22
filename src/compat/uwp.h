@@ -20,43 +20,40 @@
 // SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "stdafx.h"
-#include "strings.h"
-
-#include <string.h>
+#ifndef __UWP_H_
+#define __UWP_H_
+#pragma once
 
 #pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
-// strcasecmp
-//
-// Compares the two strings s1 and s2, ignoring the case of the characters
-//
-// Arguments:
-//
-//	s1		- Left-hand string to be compared
-//	s2		- Right-hand string to be compared
-
-int strcasecmp(char const* s1, char const* s2)
-{
-	return _stricmp(s1, s2);
-}
-
+// FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
-// strncasecmp
+
+//-----------------------------------------------------------------------------
+// GetModuleHandle
 //
-// Compares the two strings s1 and s2, ignoring the case of the characters
+// Retrieves a module handle for the specified module
 //
 // Arguments:
 //
-//	s1		- Left-hand string to be compared
-//	s2		- Right-hand string to be compared
+//	lpModuleName	- The name of the loaded module
 
-int strncasecmp(char const* s1, char const* s2, size_t n)
-{
-	return _strnicmp(s1, s2, n);
-}
+extern void* GetModuleHandle(void const* lpModuleName);
+
+//-----------------------------------------------------------------------------
+// LoadLibrary
+//
+// Loads the specified module into the address space of the calling process
+//
+// Arguments:
+//
+//	lpLibFileName	- The name of the module
+
+extern void* LoadLibrary(void const* lpLibFileName);
 
 //-----------------------------------------------------------------------------
 
 #pragma warning(pop)
+
+#endif	// __UWP_H_
