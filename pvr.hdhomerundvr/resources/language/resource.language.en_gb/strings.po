@@ -325,5 +325,9 @@ msgid "Movies"
 msgstr ""
 
 msgctxt "#30403"
-msgid "Sports"
+msgid "Sporting Events"
+msgstr ""
+
+msgctxt "#30404"
+msgid "Specials"
 msgstr ""
