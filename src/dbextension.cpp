@@ -452,7 +452,9 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 	// cURL write callback to append data to the provided byte_string instance
 	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
 
-		try { reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); }
+		assert((size * count) > 0);
+
+		try { if((size * count) > 0) reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); }
 		catch(...) { return 0; }
 		
 		return size * count;
@@ -464,11 +466,13 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 		if(argc != 4) throw string_exception(__func__, ": invalid argument count provided by xBestIndex");
 
 		// Assign the deviceauth string to the epg_vtab_cursor instance; must be present
-		epgcursor->deviceauth.assign(reinterpret_cast<char const*>(sqlite3_value_text(argv[0])));
+		char const* deviceauth = reinterpret_cast<char const*>(sqlite3_value_text(argv[0]));
+		if(deviceauth != nullptr) epgcursor->deviceauth.assign(deviceauth);
 		if(epgcursor->deviceauth.length() == 0) throw string_exception(__func__, ": null or zero-length deviceauth string");
 
 		// Assign the channel string to the epg_vtab_cursor instance; must be present
-		epgcursor->channel.assign(reinterpret_cast<char const*>(sqlite3_value_text(argv[1])));
+		char const* channel = reinterpret_cast<char const*>(sqlite3_value_text(argv[1]));
+		if(channel != nullptr) epgcursor->channel.assign(channel);
 		if(epgcursor->channel.length() == 0) throw string_exception(__func__, ": null or zero-length channel string");
 
 		// Assign the start and end time values to the cursor instance
@@ -913,7 +917,9 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 	// Create a write callback for libcurl to invoke to write the data
 	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
 
-		try { reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); }
+		assert((size * count) > 0);
+
+		try { if((size * count) > 0) reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); }
 		catch(...) { return 0; }
 		
 		return size * count;
