@@ -1,6 +1,6 @@
 v2.1.0 (2019.06.xx)
   - Update cURL library to version 7.65.1
-  - Update libhdhomerun library to version 2019.06.07
+  - Update libhdhomerun library to version 20190607
   - Switch default device discovery method to network broadcast from HTTP
   - Change default discovery interval from 1 hour to 10 minutes
   - Remove "Use network broadcast for device discovery" setting
@@ -8,6 +8,7 @@ v2.1.0 (2019.06.xx)
   - Fix bug causing multi-homed HDHomeRun devices from being detected during broadcast device discovery
   - Fix bug introduced in v2.0.0 preventing the "Delete episode" string from appearing in context menu(s)
   - Use HTTP POST method when modifying backend recording rules
+  - Adapt to HDHomeRun RECORD engine 20190621 breaking changes
 
 v2.0.4 (2019.06.19)
   - Adapt to backend API breaking change that caused "DVR Service Subscription Required" errors
