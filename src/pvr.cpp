@@ -2389,7 +2389,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			std::string names;
 			enumerate_device_names(connectionpool::handle(g_connpool), [&](struct device_name const& device_name) -> void { 
 
-				names.append(std::string(device_name.name) + "\r\n");
+				if(device_name.name != nullptr) names.append(std::string(device_name.name) + "\r\n");
 			});
 
 			g_gui->Dialog_TextViewer("Discovered Devices", names.c_str());
