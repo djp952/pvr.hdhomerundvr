@@ -2198,14 +2198,15 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 
 	if((instance == nullptr) || (recordingid == nullptr)) return filename;
 
-	// Prepare a scalar result query to generate the file name of the recording MPG file
+	// Prepare a scalar result query to generate the base file name of the recording MPG file; recordings with a 
+	// category of movie are in a subdirectory named "Movies" and recordings with a category of 'sport' are in a
+	// subdirectory named "Sporting Events".  All other categories use the series name for the subdirectory name
 	//
-	// STANDARD FORMAT  : {DisplayGroupTitle}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
+	// STANDARD FORMAT  : {"Movies"|"Sporting Events"|Title}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
 	// FLATTENED FORMAT : {Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
-	auto sql = "select case when ?1 then '' else rtrim(clean_filename(json_extract(value, '$.DisplayGroupTitle')), ' .') || '/' end || "
-		"clean_filename(json_extract(value, '$.Title')) || ' ' || "
-		"coalesce(json_extract(value, '$.EpisodeNumber') || ' ', '') || "
-		"coalesce(strftime('%Y%m%d', datetime(json_extract(value, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
+	auto sql = "select case when ?1 then '' else case lower(coalesce(json_extract(value, '$.Category'), 'series')) when 'movie' then 'Movies' when 'sport' then 'Sporting Events' "
+		"else rtrim(clean_filename(json_extract(value, '$.Title')), ' .') end || '/' end || clean_filename(json_extract(value, '$.Title')) || ' ' || "
+		"coalesce(json_extract(value, '$.EpisodeNumber') || ' ', '') || coalesce(strftime('%Y%m%d', datetime(json_extract(value, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
 		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(value, '$.StartTime'), 'unixepoch')) || ']' as filename "
 		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?2 limit 1";
 
