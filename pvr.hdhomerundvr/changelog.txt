@@ -1,4 +1,4 @@
-v2.1.0 (2019.06.xx)
+v2.1.0 (2019.06.27)
   - Update cURL library to version 7.65.1
   - Update libhdhomerun library to version 20190607
   - Switch default device discovery method to network broadcast from HTTP
