@@ -47,6 +47,12 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="generate_repeat_indicators" type="boolean" label="30133" help="30528">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
         <setting id="delete_datetime_rules_after_v2" type="integer" label="30108" help="30509">
           <level>0</level>
           <default>86400</default>

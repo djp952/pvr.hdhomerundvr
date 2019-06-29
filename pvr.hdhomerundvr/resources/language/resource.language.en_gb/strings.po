@@ -136,6 +136,10 @@ msgctxt "#30132"
 msgid "Use HTTP cloud-based device discovery"
 msgstr ""
 
+msgctxt "#30133"
+msgid "Append repeat indicators to applicable episode names"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -426,5 +430,9 @@ msgstr ""
 
 msgctxt "#30527"
 msgid "When set to ON the PVR will use the cloud-based backend to discover available HDHomeRun devices instead of a UDP broadcast on the local network."
+msgstr ""
+
+msgctxt "#30528"
+msgid "When set to ON repeat indicators will be appended to episode names for recordings and EPG listings if the episode aired more than 24 hours after its original air date."
 msgstr ""
 

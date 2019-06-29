@@ -1559,11 +1559,13 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// recordingid | title | episodename | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
+	// recordingid | title | episodename | firstairing | originalairdate | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
 	auto sql = "select "
 		"json_extract(value, '$.CmdURL') as recordingid, "
 		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber'), json_extract(value, '$.Title')) else json_extract(value, '$.Title') end as title, "
 		"json_extract(value, '$.EpisodeTitle') as episodename, "
+		"coalesce(json_extract(value, '$.FirstAiring'), 0) as firstairing, "
+		"coalesce(json_extract(value, '$.OriginalAirdate'), 0) as originalairdate, "
 		"get_season_number(json_extract(value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
 		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
@@ -1594,18 +1596,20 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 			item.recordingid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
-			item.seriesnumber = sqlite3_column_int(statement, 3);
-			item.episodenumber = sqlite3_column_int(statement, 4);
-			item.year = sqlite3_column_int(statement, 5);
-			item.streamurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
-			item.directory = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
-			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
-			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
-			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
-			item.recordingtime = sqlite3_column_int(statement, 11);
-			item.duration = sqlite3_column_int(statement, 12);
-			item.lastposition = sqlite3_column_int(statement, 13);
-			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 14));
+			item.firstairing = sqlite3_column_int(statement, 3);
+			item.originalairdate = sqlite3_column_int(statement, 4);
+			item.seriesnumber = sqlite3_column_int(statement, 5);
+			item.episodenumber = sqlite3_column_int(statement, 6);
+			item.year = sqlite3_column_int(statement, 7);
+			item.streamurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
+			item.directory = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
+			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
+			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
+			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
+			item.recordingtime = sqlite3_column_int(statement, 13);
+			item.duration = sqlite3_column_int(statement, 14);
+			item.lastposition = sqlite3_column_int(statement, 15);
+			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 16));
 
 			callback(item);						// Invoke caller-supplied callback
 		}
