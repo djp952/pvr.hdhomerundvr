@@ -140,6 +140,10 @@ msgctxt "#30132"
 msgid "Use HTTP cloud-based device discovery"
 msgstr ""
 
+msgctxt "#30133"
+msgid "Append repeat indicators to applicable episode names"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

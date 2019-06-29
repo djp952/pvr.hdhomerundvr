@@ -112,6 +112,8 @@ struct recording {
 	char const*			recordingid;
 	char const*			title;
 	char const*			episodename;
+	int					firstairing;
+	time_t				originalairdate;
 	int					seriesnumber;
 	int					episodenumber;
 	int					year;
