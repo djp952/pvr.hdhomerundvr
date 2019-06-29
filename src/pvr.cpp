@@ -178,6 +178,11 @@ struct addon_settings {
 	// Flag indicating that the channel names should come from the lineup not the EPG
 	bool use_channel_names_from_lineup;
 
+	// generate_repeat_indicators
+	//
+	// Flag indicating that a repeat indicator should be appended to episode names
+	bool generate_repeat_indicators;
+
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -353,6 +358,7 @@ static addon_settings g_settings = {
 	false,					// use_backend_genre_strings
 	false,					// show_drm_protected_channels
 	false,					// use_channel_names_from_lineup
+	false,					// generate_repeat_indicators
 	86400,					// delete_datetime_rules_after			default = 1 day
 	300, 					// discover_devices_interval;			default = 5 minutes
 	7200,					// discover_episodes_interval			default = 2 hours
@@ -1213,7 +1219,7 @@ static std::string select_tuner(std::vector<std::string> const& possibilities)
 
 		// NOTE: There is an inherent race condition here with the tuner lock implementation.  When the tuner
 		// is selected here it will be locked, but it cannot remain locked since the ultimate purpose here is
-		// to generate an HTTP URL for the application to use.  The HTTP stream will attempt it's own lock
+		// to generate an HTTP URL for the application to use.  The HTTP stream will attempt its own lock
 		// and would fail if left locked after this function completes.  No way to tell it to use an existing lock.
 
 		// Let libhdhomerun pick a free tuner for us from the available possibilities
@@ -1270,6 +1276,10 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			EPG_TAG	epgtag;										// EPG_TAG to be transferred to Kodi
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
+			// Determine if the episode is a repeat -- unlike recordings there is no firstairing field to key on, 
+			// so if the start time of the program is within 24 hours of the originalairdate, consider it as a first airing
+			bool isrepeat = !((item.originalairdate + 86400) >= item.starttime);
+
 			// Don't send EPG entries with start/end times outside the requested range
 			if((item.starttime > end) || (item.endtime < start)) return;
 
@@ -1318,7 +1328,8 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			epgtag.iEpisodePartNumber = -1;
 
 			// strEpisodeName
-			if(item.episodename != nullptr) epgtag.strEpisodeName = epgstrings.emplace(epgstrings.end(), item.episodename)->c_str();
+			if(item.episodename != nullptr) epgtag.strEpisodeName = epgstrings.emplace(epgstrings.end(), std::string(item.episodename) +
+				std::string(((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : ""))->c_str();
 
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
@@ -1431,7 +1442,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 #ifdef _WINDOWS
 		// On Windows, initialize winsock in case broadcast discovery is used; WSAStartup is
-		// reference-counted so if it's already been called this won't hurt anything
+		// reference-counted so if it has already been called this won't hurt anything
 		WSADATA wsaData;
 		WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
@@ -1465,6 +1476,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
+			if(g_addon->GetSetting("generate_repeat_indicators", &bvalue)) g_settings.generate_repeat_indicators = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
 			// Load the discovery interval settings
@@ -1646,7 +1658,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 						// To help reduce trigger 'chatter' at startup, a special optimized task was created that loads all discovery data and 
 						// only triggers the PVR update(s) once per category.  Delay the launch of this initial startup discovery task for a 
-						// reasonable amount of time to allow the PVR to finish it's start up processing -- failure to do so may trigger a race 
+						// reasonable amount of time to allow the PVR to finish its start up processing -- failure to do so may trigger a race 
 						// condition that leads to a deadlock in Kodi that can occur when channel information changes while the EPGs are created.
 						// Since the devices and lineups were synchronously discovered already, bind false as the first argument to skip those
 						log_notice(__func__, ": delaying startup discovery task for ", g_settings.startup_discovery_task_delay, " seconds");					
@@ -1902,6 +1914,19 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			log_notice(__func__, ": setting use_channel_names_from_lineup changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
+		}
+	}
+
+	// generate_repeat_indicators
+	//
+	else if(strcmp(name, "generate_repeat_indicators") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.generate_repeat_indicators) {
+
+			g_settings.generate_repeat_indicators = bvalue;
+			log_notice(__func__, ": setting generate_repeat_indicators changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			g_pvr->TriggerRecordingUpdate();
 		}
 	}
 
@@ -2993,6 +3018,10 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			PVR_RECORDING recording;							// PVR_RECORDING to be transferred to Kodi
 			memset(&recording, 0, sizeof(PVR_RECORDING));		// Initialize the structure
 
+			// Determine if the recording is a repeat -- items marked specifically as firstairing or have a recordstarttime 
+			// within 24 hours of the originalairdate can be considered as first airings
+			bool isrepeat = !((item.firstairing == 1) || ((item.originalairdate + 86400) >= item.recordingtime));
+
 			// strRecordingId (required)
 			if(item.recordingid == nullptr) return;
 			snprintf(recording.strRecordingId, std::extent<decltype(recording.strRecordingId)>::value, "%s", item.recordingid);
@@ -3002,7 +3031,8 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			snprintf(recording.strTitle, std::extent<decltype(recording.strTitle)>::value, "%s", item.title);
 
 			// strEpisodeName
-			if(item.episodename != nullptr) snprintf(recording.strEpisodeName, std::extent<decltype(recording.strEpisodeName)>::value, "%s", item.episodename);
+			if(item.episodename != nullptr) snprintf(recording.strEpisodeName, std::extent<decltype(recording.strEpisodeName)>::value, "%s%s", item.episodename, 
+				((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : "");
 
 			// iSeriesNumber
 			recording.iSeriesNumber = item.seriesnumber;
