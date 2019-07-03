@@ -2321,8 +2321,8 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	// Check if the EPG function has been disabled due to failure(s)
-	if(!g_epgenabled) return PVR_ERROR::PVR_ERROR_FAILED;
+	// Check if the EPG function has been disabled due to failure(s) and if so, return no data
+	if(!g_epgenabled) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
 	// Try to get the EPG data for the channel, if successful the operation is complete
 	bool result = try_getepgforchannel(handle, channel, start, end);
