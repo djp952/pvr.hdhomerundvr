@@ -1,5 +1,6 @@
 v2.1.1 (2019.07.xx)
   - Add "Append repeat indicators to applicable episode names" setting
+  - Prevent error logging of every channel when EPG has been temporarily disabled due to an error
 
 v2.1.0 (2019.06.27)
   - Update cURL library to version 7.65.1
