@@ -367,6 +367,7 @@
     <ClInclude Include="curlshare.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="dbtypes.h" />
+    <ClInclude Include="devicestream.h" />
     <ClInclude Include="httpstream.h" />
     <ClInclude Include="http_exception.h" />
     <ClInclude Include="pvrstream.h" />
@@ -5573,6 +5574,7 @@
     <ClCompile Include="curlshare.cpp" />
     <ClCompile Include="database.cpp" />
     <ClCompile Include="dbextension.cpp" />
+    <ClCompile Include="devicestream.cpp" />
     <ClCompile Include="httpstream.cpp" />
     <ClCompile Include="pvr.cpp" />
     <ClCompile Include="scheduler.cpp" />

@@ -47,6 +47,7 @@
 
 #include "database.h"
 #include "dbtypes.h"
+#include "devicestream.h"
 #include "httpstream.h"
 #include "pvrstream.h"
 #include "scalar_condition.h"
@@ -104,6 +105,10 @@ static void discover_recordingrules_task(scalar_condition<bool> const& cancel);
 static void discover_recordings_task(scalar_condition<bool> const& cancel);
 static void discover_startup_task(bool includedevices, scalar_condition<bool> const& cancel);
 
+// Helper Functions
+//
+static std::string select_tuner(std::vector<std::string> const& possibilities);
+
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
@@ -129,6 +134,15 @@ enum timer_type {
 	epgdatetimeonlyrule		= 4,
 	seriestimer				= 5,
 	datetimeonlytimer		= 6,
+};
+
+// tuning_protocol
+//
+// Defines the protocol to use when streaming directly from tuner(s)
+enum tuning_protocol {
+
+	http					= 0,
+	rtpudp					= 1,
 };
 
 // addon_settings
@@ -220,6 +234,11 @@ struct addon_settings {
 	//
 	// Flag indicating that Live TV will be handled directly from the tuner(s)
 	bool use_direct_tuning;
+
+	// direct_tuning_protocol
+	//
+	// Indicates the preferred protocol to use when streaming directly from the tuner(s)
+	enum tuning_protocol direct_tuning_protocol;
 
 	// startup_discovery_task_delay
 	//
@@ -366,6 +385,7 @@ static addon_settings g_settings = {
 	7200,					// discover_recordingrules_interval		default = 2 hours
 	false,					// use_http_device_discovery
 	false,					// use_direct_tuning
+	tuning_protocol::http,	// direct_tuning_protocol
 	3,						// startup_discovery_task_delay
 	(4 KiB),				// stream_read_chunk_size
 	(1 MiB),				// stream_ring_buffer_size
@@ -1101,6 +1121,99 @@ static char const* const edltype_to_string(PVR_EDL_TYPE const& type)
 	return "<UNKNOWN>";
 }
 
+// openlivestream_storage_http
+//
+// Attempts to open a live stream via HTTP from an available storage engine
+static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::handle const& dbhandle, struct addon_settings const& settings, union channelid channelid, char const* vchannel)
+{
+	assert(vchannel != nullptr);
+	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
+
+	// Generate the URL for the virtual channel by querying the database
+	std::string streamurl = get_stream_url(dbhandle, channelid);
+	if(streamurl.length() == 0) { log_notice(__func__, ": unable to generate storage engine stream url for channel ", vchannel); return nullptr; }
+
+	try {
+
+		// Start the new HTTP stream using the parameters currently specified by the settings
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+		log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
+
+		return stream;
+	}
+
+	// If the stream creation failed, log a notice and return a null unique_ptr<> back to the caller, do not throw an exception
+	catch(std::exception& ex) { log_notice(__func__, ": unable to stream channel ", vchannel, " via storage engine url ", streamurl.c_str(), ": ", ex.what()); }
+
+	return nullptr;
+}
+
+// openlivestream_tuner_device
+//
+// Attempts to open a live stream via RTP/UDP from an available tuner device
+static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::handle const& dbhandle, struct addon_settings const& /*settings*/, union channelid channelid, char const* vchannel)
+{
+	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
+
+	assert(vchannel != nullptr);
+	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
+
+	// Create a collection of all the tuners that can possibly stream the requested channel
+	enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { devices.emplace_back(item); });
+	if(devices.size() == 0) { log_notice(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
+
+	try {
+
+		// Start the new RTP/UDP stream -- devicestream performs its own tuner selection based on the provided collection
+		std::unique_ptr<pvrstream> stream = devicestream::create(devices, vchannel);
+		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device rtp/udp broadcast");
+
+		return stream;
+	}
+
+	// If the stream creation failed, log a notice and return a null unique_ptr<> back to the caller, do not throw an exception
+	catch(std::exception& ex) { log_notice(__func__, ": unable to stream channel ", vchannel, " via tuner device rtp/udp broadcast: ", ex.what()); }
+
+	return nullptr;
+}
+
+// openlivestream_tuner_http
+//
+// Attempts to open a live stream via HTTP from an available tuner device
+static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::handle const& dbhandle, struct addon_settings const& settings, union channelid channelid, char const* vchannel)
+{
+	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
+
+	assert(vchannel != nullptr);
+	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
+
+	// Create a collection of all the tuners that can possibly stream the requested channel
+	enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { devices.emplace_back(item); });
+	if(devices.size() == 0) { log_notice(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
+
+	// A valid tuner device has to be selected from the available options
+	std::string selected = select_tuner(devices);
+	if(selected.length() == 0) { log_notice(__func__, ": no tuner devices are available to create the requested stream"); return nullptr; }
+
+	// Generate the URL required to stream the channel via the tuner over HTTP
+	std::string streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
+	if(streamurl.length() == 0) { log_notice(__func__, ": unable to generate tuner device stream url for channel ", vchannel); return nullptr; }
+
+	try {
+
+		// Start the new HTTP stream using the parameters currently specified by the settings
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
+
+		return stream;
+	}
+
+	// If the stream creation failed, log a notice and return a null unique_ptr<> back to the caller, do not throw an exception
+	catch(std::exception& ex) { log_notice(__func__, ": unable to stream channel ", vchannel, "via tuner device url ", streamurl.c_str(), ": ", ex.what()); }
+
+	return nullptr;
+}
+
 // select_tuner
 //
 // Selects an available tuner device from a list of possibilities
@@ -1349,6 +1462,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_http_device_discovery", &bvalue)) g_settings.use_http_device_discovery = bvalue;
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
+			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("startup_discovery_task_delay", &nvalue)) g_settings.startup_discovery_task_delay = nvalue;
 			if(g_addon->GetSetting("stream_read_chunk_size_v2", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
 			if(g_addon->GetSetting("stream_ring_buffer_size_v2", &nvalue)) g_settings.stream_ring_buffer_size = nvalue;
@@ -1839,6 +1953,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.use_direct_tuning = bvalue;
 			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
+		}
+	}
+
+	// direct_tuning_protocol
+	//
+	else if(strcmp(name, "direct_tuning_protocol") == 0) {
+
+		int nvalue = *reinterpret_cast<int const*>(value);
+		if(nvalue != static_cast<int>(g_settings.direct_tuning_protocol)) {
+
+			g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
+			log_notice(__func__, ": setting direct_tuning_protocol changed to ", (g_settings.direct_tuning_protocol == tuning_protocol::http) ? "HTTP" : "RTP/UDP");
 		}
 	}
 
@@ -3554,8 +3680,7 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 
 bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
-	char			channelstr[64];			// Channel number as a string
-	std::string		streamurl;				// Generated stream URL
+	char						vchannel[64];		// Virtual channel number
 
 	assert(g_addon);
 
@@ -3577,56 +3702,31 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	union channelid channelid;
 	channelid.value = channel.iUniqueId;
 
-	// Generate a string version of the channel number for logging purposes
-	if(channelid.parts.subchannel == 0) snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d", channelid.parts.channel);
-	else snprintf(channelstr, std::extent<decltype(channelstr)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
+	// Generate a string version of the channel number to represent the virtual channel number
+	if(channelid.parts.subchannel == 0) snprintf(vchannel, std::extent<decltype(vchannel)>::value, "%d", channelid.parts.channel);
+	else snprintf(vchannel, std::extent<decltype(vchannel)>::value, "%d.%d", channelid.parts.channel, channelid.parts.subchannel);
 
 	try {
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Generate a log message for tuner-direct channels indicating that the storage engine will not be used;
-		// streamurl will be left as a zero-length string triggering the tuner-direct action below
-		if(get_tuner_direct_channel_flag(dbhandle, channelid))
-			log_notice(__func__, ": channel ", channelstr, " is flagged as tuner-direct only; an available storage engine will not be used for this stream");
+		// Default to accessing the stream via the storage engine if not prohibited by the settings or the channel itself
+		if((settings.use_direct_tuning == false) && (get_tuner_direct_channel_flag(dbhandle, channelid) == false)) g_pvrstream = openlivestream_storage_http(dbhandle, settings, channelid, vchannel);
 
-		// If direct tuning is disabled, first attempt to generate the stream URL for the specified 
-		// channel from the storage engine; if that fails we can fall back to using a tuner directly
-		else if(settings.use_direct_tuning == false) {
-			
-			streamurl = get_stream_url(dbhandle, channelid);
-			if(streamurl.length() == 0) log_notice(__func__, ": unable to generate storage engine stream URL for channel ", 
-				channelstr, " - falling back to a tuner-direct stream");
-		}
+		// Fall back to accessing the stream via the tuner over HTTP if not prohibited by the settings
+		if((!g_pvrstream) && (settings.direct_tuning_protocol == tuning_protocol::http)) g_pvrstream = openlivestream_tuner_http(dbhandle, settings, channelid, vchannel);
 
-		// In direct-tuning mode or upon a failure to generate the stream URL for the storage engine
-		// a tuner device must be instead be selected to stream the content
-		if((settings.use_direct_tuning == true) || (streamurl.length() == 0)) {
+		// Fall back to accessing the stream via the tuner over RTP/UDP
+		if(!g_pvrstream) g_pvrstream = openlivestream_tuner_device(dbhandle, settings, channelid, vchannel);
 
-			// The available tuners for the channel are captured into a vector<>
-			std::vector<std::string> tuners;
-
-			// Create a collection of all the tuners that can possibly stream the requested channel
-			enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { tuners.emplace_back(item); });
-			if(tuners.size() == 0) throw string_exception("unable to find any possible tuners for channel ", channelstr);
-		
-			// Select an available tuner from the possibilities and generate the stream URL
-			std::string selected = select_tuner(tuners);
-			streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
-		}
-
-		// If none of the above methods yielded a valid URL, we're done here
-		if(streamurl.length() == 0) throw string_exception("unable to generate a valid stream URL for channel ", channelstr);
+		// If none of the above methods generated a valid stream, there is nothing left to try
+		if(!g_pvrstream) throw string_exception(__func__, ": unable to create a valid stream instance for channel ", vchannel);
 
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
 
 		try {
-
-			// Start the new channel stream using the tuning parameters currently specified by the settings
-			log_notice(__func__, ": streaming channel ", channelstr, " via url ", streamurl.c_str());
-			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
 
 			// For live streams, set the start time to now and set the end time to time_t::max()
 			g_stream_starttime = time(nullptr);

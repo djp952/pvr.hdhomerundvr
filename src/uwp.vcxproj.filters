@@ -497,6 +497,9 @@
     <ClInclude Include="compat\uwp.h">
       <Filter>Header Files\compat</Filter>
     </ClInclude>
+    <ClInclude Include="devicestream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -959,6 +962,9 @@
       <Filter>Source Files\compat</Filter>
     </ClCompile>
     <ClCompile Include="httpstream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="devicestream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -283,6 +283,21 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="direct_tuning_protocol" type="integer" parent="use_direct_tuning" label="30134" help="30529">
+          <level>0</level>
+          <default>0</default>
+          <constraints>
+            <options>
+              <option label="30233">0</option>
+              <option label="30234">1</option>
+            </options>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="use_direct_tuning">true</dependency>
+          </dependencies>
+          <control type="spinner" format="integer"/>
+        </setting>
+
         <setting id="startup_discovery_task_delay" type="integer" label="30113" help="30523">
           <level>0</level>
           <default>3</default>
