@@ -140,6 +140,10 @@ msgctxt "#30133"
 msgid "Append repeat indicators to applicable episode names"
 msgstr ""
 
+msgctxt "#30134"
+msgid "Preferred tuner streaming protocol"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -266,6 +270,14 @@ msgstr ""
 
 msgctxt "#30232"
 msgid "20 Hours"
+msgstr ""
+
+msgctxt "#30233"
+msgid "HTTP"
+msgstr ""
+
+msgctxt "#30234"
+msgid "RTP/UDP"
 msgstr ""
 
 msgctxt "#30302"
@@ -434,5 +446,9 @@ msgstr ""
 
 msgctxt "#30528"
 msgid "When set to ON repeat indicators will be appended to episode names for recordings and EPG listings if the episode aired more than 24 hours after its original air date."
+msgstr ""
+
+msgctxt "#30529"
+msgid "Specifies the preferred network protocol to use when streaming directly from HDHomeRun tuner device(s). When set to HTTP the modern HDHomeRun streaming protocol will be used. When set to RTP/UDP the legacy HDHomeRun streaming protocol will be used."
 msgstr ""
 
