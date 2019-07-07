@@ -1,5 +1,7 @@
-v2.1.1 (2019.07.xx)
+v2.2.0 (2019.07.xx)
+  - Add support for legacy RTP/UDP streaming directly from tuner devices
   - Add "Append repeat indicators to applicable episode names" setting
+  - Add "Preferred tuner streaming protocol" advanced setting
   - Prevent error logging of every channel when EPG has been temporarily disabled due to an error
 
 v2.1.0 (2019.06.27)

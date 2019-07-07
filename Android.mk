@@ -94,6 +94,7 @@ LOCAL_SRC_FILES := \
 	src/curlshare.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
+	src/devicestream.cpp \
 	src/httpstream.cpp \
 	src/pvr.cpp \
 	src/scheduler.cpp \
