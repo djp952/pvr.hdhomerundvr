@@ -485,7 +485,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 
 		// Initialize a cURL multiple interface session to handle the pipelined/multiplexed data transfers
 		CURLM* curlm = curl_multi_init();
-		if(curlm == nullptr) throw string_exception(__func__, "curl_multi_init() failed");
+		if(curlm == nullptr) throw string_exception(__func__, ": curl_multi_init() failed");
 
 		try {
 
@@ -500,7 +500,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 
 					// Create and initialize the cURL easy interface handle for this transfer operation
 					CURL* curl = curl_easy_init();
-					if(curl == nullptr) throw string_exception(__func__, "curl_easy_init() failed");
+					if(curl == nullptr) throw string_exception(__func__, ": curl_easy_init() failed");
 
 					// Generate the URL required to execute this transfer operation
 					auto url = sqlite3_mprintf("http://api.hdhomerun.com/api/guide?DeviceAuth=%s&Channel=%s&Start=%d", epgcursor->deviceauth.c_str(), epgcursor->channel.c_str(), starttime);
@@ -563,7 +563,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					// otherwise it should be a standard HTTP response code
 					curl_easy_getinfo(transfer.first, CURLINFO_RESPONSE_CODE, &responsecode);
 
-					if(responsecode == 0) throw string_exception("no response from host");
+					if(responsecode == 0) throw string_exception(__func__, ": no response from host");
 					else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 
 					// Ignore transfers that returned no data or begin with the string "null"
