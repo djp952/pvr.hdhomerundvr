@@ -1223,7 +1223,7 @@ static std::string select_tuner(std::vector<std::string> const& possibilities)
 
 	// Allocate and initialize the device selector
 	struct hdhomerun_device_selector_t* selector = hdhomerun_device_selector_create(nullptr);
-	if(selector == nullptr) throw string_exception("hdhomerun_device_selector_create() failed");
+	if(selector == nullptr) throw string_exception(__func__, ": hdhomerun_device_selector_create() failed");
 
 	try {
 
@@ -1231,7 +1231,7 @@ static std::string select_tuner(std::vector<std::string> const& possibilities)
 		for(auto const& iterator : possibilities) {
 
 			struct hdhomerun_device_t* device = hdhomerun_device_create_from_str(iterator.c_str(), nullptr);
-			if(device == nullptr) throw string_exception("hdhomerun_device_create_from_str() failed");
+			if(device == nullptr) throw string_exception(__func__, ": hdhomerun_device_create_from_str() failed");
 
 			hdhomerun_device_selector_add_device(selector, device);
 		}
@@ -1280,7 +1280,7 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 
 		// Get the authorization code(s) for all available tuners
 		std::string authorization = get_authorization_strings(dbhandle, false);
-		if(authorization.length() == 0) throw string_exception("no valid tuner device authorization string(s) available");
+		if(authorization.length() == 0) throw string_exception(__func__, ": no valid tuner device authorization string(s) available");
 
 		// EPG_TAG uses pointers instead of string buffers, collect all of the string data returned 
 		// from the database in a list<> to keep them valid until transferred
@@ -1413,11 +1413,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 #endif
 
 		// Initialize libcurl using the standard default options
-		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception("curl_global_init(CURL_GLOBAL_DEFAULT) failed");
+		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception(__func__, ": curl_global_init(CURL_GLOBAL_DEFAULT) failed");
 
 		// Create the global addon callbacks instance
 		g_addon.reset(new ADDON::CHelper_libXBMC_addon());
-		if(!g_addon->RegisterMe(handle)) throw string_exception("Failed to register addon handle (CHelper_libXBMC_addon::RegisterMe)");
+		if(!g_addon->RegisterMe(handle)) throw string_exception(__func__, ": failed to register addon handle (CHelper_libXBMC_addon::RegisterMe)");
 
 		// Throw a banner out to the Kodi log indicating that the add-on is being loaded
 		log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
@@ -1428,7 +1428,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(!g_addon->DirectoryExists(pvrprops->strUserPath)) {
 
 				log_notice(__func__, ": user data directory ", pvrprops->strUserPath, " does not exist");
-				if(!g_addon->CreateDirectory(pvrprops->strUserPath)) throw string_exception("unable to create addon user data directory");
+				if(!g_addon->CreateDirectory(pvrprops->strUserPath)) throw string_exception(__func__, ": unable to create addon user data directory");
 				log_notice(__func__, ": user data directory ", pvrprops->strUserPath, " created");
 			}
 
@@ -1470,13 +1470,13 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
-			if(!g_gui->RegisterMe(handle)) throw string_exception("Failed to register gui addon handle (CHelper_libKODI_guilib::RegisterMe)");
+			if(!g_gui->RegisterMe(handle)) throw string_exception(__func__, ": failed to register gui addon handle (CHelper_libKODI_guilib::RegisterMe)");
 
 			try {
 
 				// Create the global pvrcallbacks instance
 				g_pvr.reset(new CHelper_libXBMC_pvr());
-				if(!g_pvr->RegisterMe(handle)) throw string_exception("Failed to register pvr addon handle (CHelper_libXBMC_pvr::RegisterMe)");
+				if(!g_pvr->RegisterMe(handle)) throw string_exception(__func__, ": failed to register pvr addon handle (CHelper_libXBMC_pvr::RegisterMe)");
 		
 				try {
 
@@ -3117,14 +3117,14 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 
 		// Verify that the specified directory for the EDL files exists
 		if(!g_addon->DirectoryExists(settings.recording_edl_folder.c_str()))
-			throw string_exception(std::string("specified edit decision list file directory '") + settings.recording_edl_folder + "' cannot be accessed");
+			throw string_exception(__func__, ": ", std::string("specified edit decision list file directory '") + settings.recording_edl_folder + "' cannot be accessed");
 
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Generate the base file name for the recording by combining the folder with the recording metadata
 		std::string basename = get_recording_filename(dbhandle, recording.strRecordingId, settings.recording_edl_folder_is_flat);
-		if(basename.length() == 0) throw string_exception("unable to determine the base file name of the specified recording");
+		if(basename.length() == 0) throw string_exception(__func__, ": unable to determine the base file name of the specified recording");
 
 		// Generate the full name of the .EDL file and if it exists, attempt to process it
 		std::string filename = settings.recording_edl_folder.append(basename).append(".edl");
@@ -4069,7 +4069,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 		// Generate the stream URL for the specified channel
 		std::string streamurl = get_recording_stream_url(dbhandle, recording.strRecordingId);
-		if(streamurl.length() == 0) throw string_exception("unable to determine the URL for specified recording");
+		if(streamurl.length() == 0) throw string_exception(__func__, ": unable to determine the URL for specified recording");
 
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();

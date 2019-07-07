@@ -953,7 +953,7 @@ bool httpstream::transfer_until(std::function<bool(void)> predicate)
 		// The response code will come back as zero if there was no response from the host,
 		// otherwise it should be a standard HTTP response code
 		curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responsecode);
-		if(responsecode == 0) throw string_exception("no response from host");
+		if(responsecode == 0) throw string_exception(__func__, ": no response from host");
 		else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 	}
 
