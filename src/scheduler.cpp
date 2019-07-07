@@ -189,7 +189,7 @@ void scheduler::start(void)
 				// Invoke the task and dispatch any exceptions that leak out to the handler
 				try { functor(m_stop); }
 				catch(std::exception& ex) { if(m_handler) m_handler(ex); }
-				catch(...) { if(m_handler) m_handler(string_exception("unhandled exception during task execution")); }
+				catch(...) { if(m_handler) m_handler(string_exception(__func__, ": unhandled exception during task execution")); }
 			}
 		}
 	});
