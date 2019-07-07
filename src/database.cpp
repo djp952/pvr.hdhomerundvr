@@ -39,8 +39,8 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 // Type of a discovered HDHomeRun device
 enum device_type {
 
-	tuner = 0,
-	storage = 1,
+	tuner				= 0,
+	storage				= 1,
 };
 
 // discover_device
@@ -50,7 +50,8 @@ struct discover_device {
 
 	enum device_type	devicetype;
 	uint32_t			deviceid;
-	char const* baseurl;
+	char const*			storageid;
+	char const*			baseurl;
 };
 
 // enumerate_devices_callback
@@ -472,7 +473,7 @@ static bool discover_devices_broadcast(sqlite3* instance)
 	assert(instance != nullptr);
 
 	// deviceid | discovered | type | dvrauthorized | data
-	auto sql = "insert into discover_device values(printf('%08X', ?1), cast(strftime('%s', 'now') as integer), ?2, null, ?3)";
+	auto sql = "insert into discover_device values(?1, cast(strftime('%s', 'now') as integer), ?2, null, ?3)";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -483,11 +484,16 @@ static bool discover_devices_broadcast(sqlite3* instance)
 		// into the temp table using the baseurl as 'data' rather than the discovery JSON
 		enumerate_devices_broadcast([&](struct discover_device const& device) -> void { 
 
+			char			deviceid[9];			// Converted device id string
+
+			// Convert the device identifier into a hexadecimal string
+			snprintf(deviceid, std::extent<decltype(deviceid)>::value, "%08X", device.deviceid);
+
 			// The presence or lack of tuner devices is used as the function return value
 			if(device.devicetype == device_type::tuner) hastuners = true;
 
 			// Bind the query parameter(s)
-			result = sqlite3_bind_int(statement, 1, device.deviceid);
+			result = sqlite3_bind_text(statement, 1, (device.devicetype == device_type::tuner) ? deviceid : device.storageid, -1, SQLITE_STATIC);
 			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, (device.devicetype == device_type::tuner) ? "tuner" : "storage", -1, SQLITE_STATIC);
 			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 3, device.baseurl, -1, SQLITE_STATIC);
 			if(result != SQLITE_OK) throw sqlite_exception(result);
@@ -511,8 +517,8 @@ static bool discover_devices_broadcast(sqlite3* instance)
 	// Replace the base URL temporarily stored in the data column with the full discovery JSON
 	execute_non_query(instance, "update discover_device set data = http_get(data || '/discover.json', null)");
 
-	// Update the deviceid column for storage devices, the broadcast mechanism has no means to return the StorageID
-	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where type = 'storage'");
+	// Update the deviceid column for legacy storage devices, older versions did not return the storageid attribute during broadcast discovery
+	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where type = 'storage' and deviceid is null");
 
 	// Update the DVR service authorization flag for each discovered tuner device
 	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
@@ -1216,14 +1222,17 @@ void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channe
 static void enumerate_devices_broadcast(enumerate_devices_callback callback)
 {
 	// Allocate enough heap storage to hold up to 64 enumerated devices on the network
-	std::unique_ptr<struct hdhomerun_discover_device_t[]> devices(new struct hdhomerun_discover_device_t[64]);
+	std::unique_ptr<struct hdhomerun_discover_device_v3_t[]> devices(new struct hdhomerun_discover_device_v3_t[64]);
 
 	// Use the libhdhomerun broadcast discovery mechanism to find all devices on the local network
-	int result = hdhomerun_discover_find_devices_custom_v2(0, HDHOMERUN_DEVICE_TYPE_WILDCARD,
+	int result = hdhomerun_discover_find_devices_custom_v3(0, HDHOMERUN_DEVICE_TYPE_WILDCARD,
 		HDHOMERUN_DEVICE_ID_WILDCARD, &devices[0], 64);
 	if(result == -1) throw string_exception(__func__, ": hdhomerun_discover_find_devices_custom_v2 failed");
 
 	for(int index = 0; index < result; index++) {
+
+		struct discover_device device;
+		memset(&device, 0, sizeof(struct discover_device));
 
 		// Only tuner and storage devices are supported
 		if((devices[index].device_type != HDHOMERUN_DEVICE_TYPE_TUNER) && (devices[index].device_type != HDHOMERUN_DEVICE_TYPE_STORAGE)) continue;
@@ -1235,9 +1244,9 @@ static void enumerate_devices_broadcast(enumerate_devices_callback callback)
 		if(strlen(devices[index].base_url) == 0) continue;
 
 		// Convert the hdhomerun_discover_device_t structure into a discover_device for the caller
-		struct discover_device device;
 		device.devicetype = (devices[index].device_type == HDHOMERUN_DEVICE_TYPE_STORAGE) ? device_type::storage : device_type::tuner;
 		device.deviceid = devices[index].device_id;
+		device.storageid = devices[index].storage_id;
 		device.baseurl = devices[index].base_url;
 
 		callback(device);
