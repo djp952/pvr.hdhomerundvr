@@ -200,7 +200,7 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="recording_edl_folder" type="path" label="30120" help="30517">
+        <setting id="recording_edl_folder" type="path" parent="enable_recording_edl" label="30120" help="30517">
           <level>0</level>
           <default></default>
           <constraints>
@@ -215,7 +215,7 @@
           </control>
         </setting>
 
-        <setting id="recording_edl_folder_is_flat" type="boolean" label="30129" help="30518">
+        <setting id="recording_edl_folder_is_flat" type="boolean" parent="enable_recording_edl" label="30129" help="30518">
           <level>0</level>
           <default>false</default>
           <dependencies>
@@ -224,7 +224,7 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="recording_edl_cut_as_comskip" type="boolean" label="30130" help="30519">
+        <setting id="recording_edl_cut_as_comskip" type="boolean" parent="enable_recording_edl" label="30130" help="30519">
           <level>0</level>
           <default>false</default>
           <dependencies>
@@ -233,7 +233,7 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="recording_edl_start_padding" type="integer" label="30121" help="30520">
+        <setting id="recording_edl_start_padding" type="integer" parent="enable_recording_edl" label="30121" help="30520">
           <level>0</level>
           <default>0</default>
           <constraints>
@@ -249,7 +249,7 @@
           </control>
         </setting>
 
-        <setting id="recording_edl_end_padding" type="integer" label="30122" help="30521">
+        <setting id="recording_edl_end_padding" type="integer" parent="enable_recording_edl" label="30122" help="30521">
           <level>0</level>
           <default>0</default>
           <constraints>
