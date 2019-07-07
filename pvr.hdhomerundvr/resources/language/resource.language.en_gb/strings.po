@@ -144,6 +144,10 @@ msgctxt "#30133"
 msgid "Append repeat indicators to applicable episode names"
 msgstr ""
 
+msgctxt "#30134"
+msgid "Preferred tuner streaming protocol"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -270,6 +274,14 @@ msgstr ""
 
 msgctxt "#30232"
 msgid "20 Hours"
+msgstr ""
+
+msgctxt "#30233"
+msgid "HTTP"
+msgstr ""
+
+msgctxt "#30234"
+msgid "RTP/UDP"
 msgstr ""
 
 msgctxt "#30301"
