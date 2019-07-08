@@ -1498,7 +1498,8 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		// On Windows, initialize winsock in case broadcast discovery is used; WSAStartup is
 		// reference-counted so if it has already been called this won't hurt anything
 		WSADATA wsaData;
-		WSAStartup(MAKEWORD(2, 2), &wsaData);
+		int wsaresult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if(wsaresult != 0) throw string_exception(__func__, ": WSAStartup failed with error code ", wsaresult);
 #endif
 
 		// Initialize libcurl using the standard default options
@@ -3348,7 +3349,7 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 
 						// Log the adjusted values for the entry and add a PVR_EDL_ENTRY to the vector<>
 						log_notice(__func__, ": adding edit decision list entry (start=", start, "s, end=", end, "s, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
-						entries.emplace_back(PVR_EDL_ENTRY { static_cast<int64_t>(start * 1000.0F), static_cast<int64_t>(end * 1000.0F), static_cast<PVR_EDL_TYPE>(type)});
+						entries.emplace_back(PVR_EDL_ENTRY { static_cast<int64_t>(static_cast<double>(start) * 1000.0), static_cast<int64_t>(static_cast<double>(end) * 1000.0), static_cast<PVR_EDL_TYPE>(type)});
 					}
 
 					else log_error(__func__, ": invalid edit decision list entry detected at line #", linenumber);
