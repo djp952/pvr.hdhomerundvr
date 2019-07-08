@@ -1415,6 +1415,10 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		// Initialize libcurl using the standard default options
 		if(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) throw string_exception(__func__, ": curl_global_init(CURL_GLOBAL_DEFAULT) failed");
 
+		// Initialize SQLite
+		int result = sqlite3_initialize();
+		if(result != SQLITE_OK) throw sqlite_exception(result, "sqlite3_initialize() failed");
+
 		// Create the global addon callbacks instance
 		g_addon.reset(new ADDON::CHelper_libXBMC_addon());
 		if(!g_addon->RegisterMe(handle)) throw string_exception(__func__, ": failed to register addon handle (CHelper_libXBMC_addon::RegisterMe)");
@@ -1684,6 +1688,9 @@ void ADDON_Destroy(void)
 
 	// Clean up libcurl
 	curl_global_cleanup();
+
+	// Clean up SQLite
+	sqlite3_shutdown();
 
 #ifdef _WINDOWS
 	WSACleanup();			// Release winsock reference added in ADDON_Create
