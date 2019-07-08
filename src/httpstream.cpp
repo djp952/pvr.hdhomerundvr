@@ -209,6 +209,10 @@ httpstream::httpstream(char const* url, size_t buffersize, size_t readmincount) 
 
 	try {
 
+		// Disable pipelining/multiplexing on the multi interface object
+		CURLMcode curlmresult = curl_multi_setopt(m_curlm, CURLMOPT_PIPELINING, CURLPIPE_NOTHING);
+		if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_setopt(CURLMOPT_PIPELINING) failed: ", curl_multi_strerror(curlmresult));
+
 		// Create and initialize the curl easy interface object
 		m_curl = curl_easy_init();
 		if(m_curl == nullptr) throw string_exception(__func__, ": curl_easy_init() failed");
@@ -228,7 +232,7 @@ httpstream::httpstream(char const* url, size_t buffersize, size_t readmincount) 
 			if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
 
 			// Attempt to add the easy handle to the multi handle
-			CURLMcode curlmresult = curl_multi_add_handle(m_curlm, m_curl);
+			curlmresult = curl_multi_add_handle(m_curlm, m_curl);
 			if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_add_handle() failed: ", curl_multi_strerror(curlmresult));
 
 			try {

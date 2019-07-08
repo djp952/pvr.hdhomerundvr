@@ -489,6 +489,11 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 
 		try {
 
+			// Disable pipelining/multiplexing on the multi interface object. It doesn't make an appreciable
+			// performance difference here and may have been the root cause of a lot of weird problems
+			CURLMcode curlmresult = curl_multi_setopt(curlm, CURLMOPT_PIPELINING, CURLPIPE_NOTHING);
+			if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_setopt(CURLMOPT_PIPELINING) failed: ", curl_multi_strerror(curlmresult));
+
 			// Create a list<> to hold the individual transfer information (no iterator invalidation)
 			std::list<std::pair<CURL*, byte_string>> transfers;
 
@@ -540,13 +545,13 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 				// Add all of the generated cURL easy interface objects to the cURL multi interface object
 				for(auto const& transfer : transfers) {
 
-					CURLMcode curlmresult = curl_multi_add_handle(curlm, transfer.first);
+					curlmresult = curl_multi_add_handle(curlm, transfer.first);
 					if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_add_handle() failed: ", curl_multi_strerror(curlmresult));
 				}
 
 				// Execute the transfer operation(s) until they have all completed
 				int numfds = 0;
-				CURLMcode curlmresult = curl_multi_perform(curlm, &numfds);
+				curlmresult = curl_multi_perform(curlm, &numfds);
 				while((curlmresult == CURLM_OK) && (numfds > 0)) {
 
 					curlmresult = curl_multi_wait(curlm, nullptr, 0, 500, &numfds);
