@@ -3880,13 +3880,18 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
-		// Default to accessing the stream via the storage engine if not prohibited by the settings or the channel itself
-		if((settings.use_direct_tuning == false) && (get_tuner_direct_channel_flag(dbhandle, channelid) == false)) g_pvrstream = openlivestream_storage_http(dbhandle, settings, channelid, vchannel);
+		// Determine if HTTP can be used from the storage engine and/or the tuner directly. Tuner HTTP can be used as a fallback
+		// for a failed storage stream or if use_direct_tuning is enabled and HTTP is the preferred protocol
+		bool use_storage_http = ((settings.use_direct_tuning == false) && (get_tuner_direct_channel_flag(dbhandle, channelid) == false));
+		bool use_tuner_http = (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http);
 
-		// Fall back to accessing the stream via the tuner over HTTP if not prohibited by the settings
-		if((!g_pvrstream) && (settings.direct_tuning_protocol == tuning_protocol::http)) g_pvrstream = openlivestream_tuner_http(dbhandle, settings, channelid, vchannel);
-
-		// Fall back to accessing the stream via the tuner over RTP/UDP
+		// Attempt to create the stream from the storage engine via HTTP if available
+		if(use_storage_http) g_pvrstream = openlivestream_storage_http(dbhandle, settings, channelid, vchannel);
+		
+		// Attempt to create the stream from the tuner via HTTP if available
+		if((!g_pvrstream) && (use_tuner_http)) g_pvrstream = openlivestream_tuner_http(dbhandle, settings, channelid, vchannel);
+		
+		// Attempt to create the stream from the tuner via RTP/UDP (always available)
 		if(!g_pvrstream) g_pvrstream = openlivestream_tuner_device(dbhandle, settings, channelid, vchannel);
 
 		// If none of the above methods generated a valid stream, there is nothing left to try
