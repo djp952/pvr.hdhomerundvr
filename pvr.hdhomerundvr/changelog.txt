@@ -1,5 +1,6 @@
 v2.2.0 (2019.07.xx)
   - Update libhdhomerun library to version 20190625
+  - Update SQLite database engine to version 3.29.0
   - Add support for legacy RTP/UDP streaming directly from tuner devices
   - Add "Append repeat indicators to applicable episode names" setting
   - Add "Preferred tuner streaming protocol" advanced setting
