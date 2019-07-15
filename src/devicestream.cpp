@@ -100,8 +100,9 @@ void devicestream::close(void)
 {
 	if(m_device) {
 
-		// Stop the stream from the device and release the lockkey being held
+		// Stop the stream, clear the vchannel, and release the lockkey being held
 		hdhomerun_device_stream_stop(m_device);
+		hdhomerun_device_set_tuner_vchannel(m_device, "none");
 		hdhomerun_device_tuner_lockkey_release(m_device);
 
 		m_device = nullptr;			// Device is no longer active
