@@ -158,9 +158,6 @@
     <ClInclude Include="..\depends\curl\lib\vauth\vauth.h">
       <Filter>External Libraries\curl\Header Files\vauth</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\cyassl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\curl\lib\vtls\gskit.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
@@ -494,11 +491,11 @@
     <ClInclude Include="httpstream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="compat\uwp.h">
-      <Filter>Header Files\compat</Filter>
-    </ClInclude>
     <ClInclude Include="devicestream.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\vtls\wolfssl.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -558,9 +555,6 @@
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
       <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\cyassl.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\gskit.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
@@ -958,14 +952,14 @@
     <ClCompile Include="..\depends\curl\lib\curl_get_line.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="compat\uwp.cpp">
-      <Filter>Source Files\compat</Filter>
-    </ClCompile>
     <ClCompile Include="httpstream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="devicestream.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\vtls\wolfssl.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
