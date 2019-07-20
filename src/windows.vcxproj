@@ -292,6 +292,7 @@
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device_selector.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_discover.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h" />
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os_windows.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_pkt.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_sock.h" />
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_video.h" />

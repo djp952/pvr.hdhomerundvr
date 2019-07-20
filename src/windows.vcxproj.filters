@@ -492,6 +492,9 @@
     <ClInclude Include="..\depends\curl\lib\vtls\wolfssl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os_windows.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
