@@ -1,6 +1,7 @@
 v2.2.1 (2019.07.xx)
   - Add Recorded TV category mapping for "News"
-  
+  - Report available DVR drive space to Kodi when available form detected RECORD engines
+
 v2.2.0 (2019.07.20)
   - Update cURL library to version 7.65.3
   - Update libhdhomerun library to version 20190625

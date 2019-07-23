@@ -164,6 +164,15 @@ struct series {
 	char const*					seriesid;
 };
 
+// storage_space
+//
+// Information about the available storage space
+struct storage_space {
+
+	long long					total;
+	long long					available;
+};
+
 // timer
 //
 // Information about a timer

@@ -2404,18 +2404,26 @@ char const* GetConnectionString(void)
 //	total		- The total disk space in bytes
 //	used		- The used disk space in bytes
 
-PVR_ERROR GetDriveSpace(long long* /*total*/, long long* /*used*/)
+PVR_ERROR GetDriveSpace(long long* total, long long* used)
 {
-	// The HDHomeRun Storage engine reports free space, but not total space which isn't
-	// handled well by Kodi.  Disable this for now, but there is a routine available in
-	// the database layer already to get the free space -- get_available_storage_space()
-	//
-	// Prior implementation:
-	//
-	// *used = 0;
-	// *total = (get_available_storage_space(g_db) >> 10);
+	struct storage_space		space { 0, 0 };		// Disk space returned from database layer
 
-	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	try { 
+		
+		// Attempt to get the available total and available space for the system, but return NOT_IMPLEMENTED
+		// instead of an error code if the total value isn't available - this info wasn't always available
+		space = get_available_storage_space(connectionpool::handle(g_connpool));
+		if(space.total == 0) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+
+		// The reported values are multiplied by 1024 for some reason; accomodate the delta here
+		*total = space.total / 1024;
+		*used = (space.total - space.available) / 1024;	
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR_NOT_IMPLEMENTED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR_NOT_IMPLEMENTED); }
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------
