@@ -3116,6 +3116,10 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 				else if(strcasecmp(item.directory, "special") == 0)
 					snprintf(recording.strDirectory, std::extent<decltype(recording.strDirectory)>::value, "%s", g_addon->GetLocalizedString(30404));
 
+				// Special case: "news" --> #30405
+				else if(strcasecmp(item.directory, "news") == 0)
+					snprintf(recording.strDirectory, std::extent<decltype(recording.strDirectory)>::value, "%s", g_addon->GetLocalizedString(30405));
+
 				else snprintf(recording.strDirectory, std::extent<decltype(recording.strDirectory)>::value, "%s", item.directory);
 			}
 

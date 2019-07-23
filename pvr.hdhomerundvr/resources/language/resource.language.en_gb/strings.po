@@ -347,3 +347,8 @@ msgstr ""
 msgctxt "#30404"
 msgid "Specials"
 msgstr ""
+
+msgctxt "#30405"
+msgid "News"
+msgstr ""
+
