@@ -334,7 +334,7 @@ std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized);
 // get_available_storage_space
 //
 // Gets the total amount of free space on the backend
-long long get_available_storage_space(sqlite3* instance);
+struct storage_space get_available_storage_space(sqlite3* instance);
 
 // get_channel_count
 //
