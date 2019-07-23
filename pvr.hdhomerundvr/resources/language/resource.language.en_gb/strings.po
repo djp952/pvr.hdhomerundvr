@@ -340,6 +340,10 @@ msgctxt "#30404"
 msgid "Specials"
 msgstr ""
 
+msgctxt "#30405"
+msgid "News"
+msgstr ""
+
 msgctxt "#30502"
 msgid "When set to ON the PVR will disable all discovery tasks while a Live TV or Recorded TV stream is in progress."
 msgstr ""
