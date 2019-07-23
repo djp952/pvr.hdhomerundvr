@@ -2077,16 +2077,18 @@ std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized)
 //
 //	instance	- SQLite database instance
 
-long long get_available_storage_space(sqlite3* instance)
+struct storage_space get_available_storage_space(sqlite3* instance)
 {
 	sqlite3_stmt*				statement;				// Database query statement
-	long long					space = 0;				// Returned amount of free space
+	struct storage_space		space { 0, 0 };			// Returned amount of total/free space
 	int							result;					// Result from SQLite function call
 
-	if(instance == nullptr) return 0;
+	if(instance == nullptr) return space;
 
-	// Prepare a query to get the sum of all available storage space
-	auto sql = "select sum(coalesce(json_extract(device.data, '$.FreeSpace'), 0)) from device where device.type = 'storage'";
+	// Prepare a query to get the sum of all total and available storage space
+	auto sql = "select sum(coalesce(json_extract(device.data, '$.TotalSpace'), 0)) as total, "
+		"sum(coalesce(json_extract(device.data, '$.FreeSpace'), 0)) as available "
+		"from device where device.type = 'storage'";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2097,7 +2099,12 @@ long long get_available_storage_space(sqlite3* instance)
 		result = sqlite3_step(statement);
 
 		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) space = sqlite3_column_int64(statement, 0);
+		if(result == SQLITE_ROW) {
+
+			space.total = sqlite3_column_int64(statement, 0);
+			space.available = sqlite3_column_int64(statement, 1);
+		}
+
 		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 		sqlite3_finalize(statement);
