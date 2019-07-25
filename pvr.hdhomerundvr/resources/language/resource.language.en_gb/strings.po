@@ -144,6 +144,10 @@ msgctxt "#30134"
 msgid "Preferred tuner streaming protocol"
 msgstr ""
 
+msgctxt "#30135"
+msgid "Disable specialized Recorded TV category folders"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -456,3 +460,6 @@ msgctxt "#30529"
 msgid "Specifies the preferred network protocol to use when streaming directly from HDHomeRun tuner device(s). When set to HTTP the modern HDHomeRun streaming protocol will be used. When set to RTP/UDP the legacy HDHomeRun streaming protocol will be used."
 msgstr ""
 
+msgctxt "#30530"
+msgid "When set to ON Recorded TV episodes with specialized category names (Movies, News, Specials, Sporting Events, etc.) will not be grouped into folders corresponding to those specialized category names."
+msgstr ""

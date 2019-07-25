@@ -294,7 +294,7 @@ void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 //
 // Enumerates the available recordings
 void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callback);
-void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_recordings_callback callback);
+void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecategories, enumerate_recordings_callback callback);
 
 // enumerate_recordingrules
 //
