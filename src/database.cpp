@@ -1549,7 +1549,7 @@ void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 
 void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callback)
 {
-	return enumerate_recordings(instance, false, callback);
+	return enumerate_recordings(instance, false, false, callback);
 }
 
 //---------------------------------------------------------------------------
@@ -1559,11 +1559,12 @@ void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callb
 //
 // Arguments:
 //
-//	instance		- Database instance
-//	episodeastitle	- Flag to use the episode number in place of the recording title
-//	callback		- Callback function
+//	instance			- Database instance
+//	episodeastitle		- Flag to use the episode number in place of the recording title
+//	ignorecategories	- Flag to ignore the Category attribute of the recording
+//	callback			- Callback function
 
-void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_recordings_callback callback)
+void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecategories, enumerate_recordings_callback callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1581,7 +1582,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
 		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
 		"json_extract(value, '$.PlayURL') as streamurl, "
-		"case when coalesce(json_extract(value, '$.Category'), 'series') like 'series' then json_extract(value, '$.Title') else json_extract(value, '$.Category') end as directory, "
+		"case when coalesce(json_extract(value, '$.Category'), 'series') like 'series' or ?2 then json_extract(value, '$.Title') else json_extract(value, '$.Category') end as directory, "
 		"json_extract(value, '$.Synopsis') as plot, "
 		"json_extract(value, '$.ChannelName') as channelname, "
 		"json_extract(value, '$.ImageURL') as thumbnailpath, "
@@ -1598,6 +1599,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, enumerate_reco
 
 		// Bind the query parameters
 		result = sqlite3_bind_int(statement, 1, (episodeastitle) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (ignorecategories) ? 1 : 0);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows

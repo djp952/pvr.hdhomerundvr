@@ -191,6 +191,11 @@ struct addon_settings {
 	// Flag indicating that the channel names should come from the lineup not the EPG
 	bool use_channel_names_from_lineup;
 
+	// disable_recording_categories
+	//
+	// Flag indicating that the category of a recording should be ignored
+	bool disable_recording_categories;
+
 	// generate_repeat_indicators
 	//
 	// Flag indicating that a repeat indicator should be appended to episode names
@@ -375,6 +380,7 @@ static addon_settings g_settings = {
 	false,					// use_backend_genre_strings
 	false,					// show_drm_protected_channels
 	false,					// use_channel_names_from_lineup
+	false,					// disable_recording_categories
 	false,					// generate_repeat_indicators
 	86400,					// delete_datetime_rules_after			default = 1 day
 	300, 					// discover_devices_interval;			default = 5 minutes
@@ -1535,6 +1541,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
+			if(g_addon->GetSetting("disable_recording_categories", &bvalue)) g_settings.disable_recording_categories = bvalue;
 			if(g_addon->GetSetting("generate_repeat_indicators", &bvalue)) g_settings.generate_repeat_indicators = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after", &nvalue)) g_settings.delete_datetime_rules_after = delete_expired_enum_to_seconds(nvalue);
 
@@ -1974,6 +1981,19 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			log_notice(__func__, ": setting use_channel_names_from_lineup changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
+		}
+	}
+
+	// disable_recording_categories
+	//
+	else if(strcmp(name, "disable_recording_categories") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.disable_recording_categories) {
+
+			g_settings.disable_recording_categories = bvalue;
+			log_notice(__func__, ": setting disable_recording_categories changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			g_pvr->TriggerRecordingUpdate();
 		}
 	}
 
@@ -3079,7 +3099,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the recordings in the database
-		enumerate_recordings(dbhandle, settings.use_episode_number_as_title, [&](struct recording const& item) -> void {
+		enumerate_recordings(dbhandle, settings.use_episode_number_as_title, settings.disable_recording_categories, [&](struct recording const& item) -> void {
 
 			PVR_RECORDING recording;							// PVR_RECORDING to be transferred to Kodi
 			memset(&recording, 0, sizeof(PVR_RECORDING));		// Initialize the structure
