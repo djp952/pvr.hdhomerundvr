@@ -2,6 +2,7 @@ v2.2.1 (2019.07.xx)
   - Add Recorded TV category mapping for "News"
   - Report available DVR drive space to Kodi when available from detected RECORD engines
   - Add "Disable specialized Recorded TV category folders" setting
+  - Use more verbose channel group names -- "High Definition channels" vs. "HD Channels", for example
 
 v2.2.0 (2019.07.20)
   - Update cURL library to version 7.65.3
