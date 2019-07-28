@@ -2786,19 +2786,19 @@ PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool radio)
 	memset(&group, 0, sizeof(PVR_CHANNEL_GROUP));
 
 	// Favorite Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Favorite Channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Favorite channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// HD Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "HD Channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "High Definition channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// SD Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "SD Channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Standard Definition channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// Demo Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Demo Channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Demonstration channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -2823,10 +2823,10 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	// Determine which group enumerator to use for the operation, there are only four to
 	// choose from: "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
-	if(strcmp(group.strGroupName, "Favorite Channels") == 0) enumerator = enumerate_favorite_channelids;
-	else if(strcmp(group.strGroupName, "HD Channels") == 0) enumerator = enumerate_hd_channelids;
-	else if(strcmp(group.strGroupName, "SD Channels") == 0) enumerator = enumerate_sd_channelids;
-	else if(strcmp(group.strGroupName, "Demo Channels") == 0) enumerator = enumerate_demo_channelids;
+	if(strcmp(group.strGroupName, "Favorite channels") == 0) enumerator = enumerate_favorite_channelids;
+	else if(strcmp(group.strGroupName, "High Definition channels") == 0) enumerator = enumerate_hd_channelids;
+	else if(strcmp(group.strGroupName, "Standard Definition channels") == 0) enumerator = enumerate_sd_channelids;
+	else if(strcmp(group.strGroupName, "Demonstration channels") == 0) enumerator = enumerate_demo_channelids;
 
 	// If neither enumerator was selected, there isn't any work to do here
 	if(enumerator == nullptr) return PVR_ERROR::PVR_ERROR_NO_ERROR;
