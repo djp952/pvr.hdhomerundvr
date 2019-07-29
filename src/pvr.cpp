@@ -23,6 +23,7 @@
 #include "stdafx.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <list>
@@ -346,7 +347,7 @@ static std::unique_ptr<pvrstream> g_pvrstream;
 // g_epgenabled
 //
 // Flag indicating if EPG access is enabled for the process
-static bool g_epgenabled = true;
+static std::atomic<bool> g_epgenabled{ true };
 
 // g_epgmaxtime
 //
@@ -624,11 +625,6 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 			g_scheduler.remove(discover_recordings_task);
 			discover_recordings_task(cancel);
 		}
-
-		// Re-enable access to the EPG if it had been disabled due to multiple failure(s) accessing
-		// a channel EPG.  The idea here is to prevent unauthorized clients from slamming the backend
-		// services for no reason -- see the GetEPGForChannel() function.
-		g_epgenabled = true;
 	}
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
@@ -1010,6 +1006,18 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
 	catch(...) { handle_generalexception(__func__); }
+}
+
+// enable_epg_task
+//
+// Scheduled task implementation to re-enable access to the EPG functionality after an error
+static void enable_epg_task(scalar_condition<bool> const& /*cancel*/)
+{
+	// Re-enable access to the EPG if it had been disabled due to multiple failure(s) accessing
+	// a channel EPG.  The idea here is to prevent unauthorized clients from slamming the backend
+	// services for no reason -- see the GetEPGForChannel() function
+	log_notice(__func__, ": EPG functionality restored -- grace period has expired");
+	g_epgenabled.store(true);
 }
 
 // handle_generalexception
@@ -2484,7 +2492,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
 	// Check if the EPG function has been disabled due to failure(s) and if so, return no data
-	if(!g_epgenabled) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	if(!g_epgenabled.load()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
 	// Try to get the EPG data for the channel, if successful the operation is complete
 	bool result = try_getepgforchannel(handle, channel, start, end);
@@ -2499,10 +2507,16 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	result = try_getepgforchannel(handle, channel, start, end);
 	if(result == true) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
+
 	// If the operation failed a second time, temporarily disable the EPG functionality.  This flag
 	// will be cleared after the next successful device discovery completes.
 	log_error(__func__, ": Multiple failures were encountered accessing EPG data; EPG functionality is temporarily disabled");
-	g_epgenabled = false;
+	g_epgenabled.store(false);
+
+	// Set a scheduled task to automatically re-enable the EPG functionality in 10 minutes
+	log_notice(__func__, ": EPG functionality will be restored after a grace period of 10 minutes");
+	g_scheduler.add(std::chrono::system_clock::now() + std::chrono::minutes(10), enable_epg_task);
+
 	return PVR_ERROR::PVR_ERROR_FAILED;
 }
 
