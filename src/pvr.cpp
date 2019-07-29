@@ -4499,17 +4499,6 @@ PVR_ERROR SetEPGTimeFrame(int days)
 
 void OnSystemSleep()
 {
-	// CAUTION: This function will be called on a different thread than the main PVR
-	// callback functions -- do not attempt to manipulate any in-progress streams
-
-	try {
-
-		g_scheduler.stop();				// Stop the scheduler
-		g_scheduler.clear();			// Clear out any pending tasks
-	}
-
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
-	catch(...) { return handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
@@ -4523,28 +4512,6 @@ void OnSystemSleep()
 
 void OnSystemWake()
 {
-	// CAUTION: This function will be called on a different thread than the main PVR
-	// callback functions -- do not attempt to manipulate any in-progress streams
-
-	// Create a copy of the current addon settings structure
-	struct addon_settings settings = copy_settings();
-
-	try {
-
-		g_scheduler.stop();					// Ensure scheduler was stopped
-		g_scheduler.clear();				// Ensure there are no pending tasks
-
-		// The special discover_startup_task takes care of all discoveries in a more optimized fashion than invoking the 
-		// periodic ones; use that on wakeup too.  Bind true as the first argument to discover_startup_task to indicate 
-		// that devices and lineups should be discovered as well as everything else
-		log_notice(__func__, ": scheduling startup discovery task (delayed ", settings.startup_discovery_task_delay, " seconds)");
-		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.startup_discovery_task_delay), std::bind(discover_startup_task, true, std::placeholders::_1));
-	
-		g_scheduler.start();				// Restart the scheduler
-	}
-
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
-	catch(...) { return handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
