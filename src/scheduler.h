@@ -121,6 +121,14 @@ private:
 	using queue_t = std::priority_queue<queueitem_t, std::vector<queueitem_t>, queueitem_greater_t>;
 
 	//-----------------------------------------------------------------------
+	// Private Member Functions
+
+	// remove
+	//
+	// Removes all instances of a single task from the queue
+	void remove(std::unique_lock<std::mutex> const& lock, std::function<void(scalar_condition<bool> const&)> task);
+
+	//-----------------------------------------------------------------------
 	// Member Variables
 
 	exception_handler_t	const	m_handler;				// Exception handler

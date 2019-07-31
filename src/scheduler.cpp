@@ -71,6 +71,10 @@ void scheduler::add(std::chrono::time_point<std::chrono::system_clock> due, std:
 {
 	std::unique_lock<std::mutex> lock(m_queue_lock);
 
+	// Remove any existing instances of the specified task from the scheduler
+	remove(lock, task);
+
+	// Add the new task to the scheduler priority queue
 	m_queue.emplace(queueitem_t{ due, task });
 }
 
@@ -116,14 +120,30 @@ void scheduler::pause(void)
 
 void scheduler::remove(std::function<void(scalar_condition<bool> const&)> task)
 {
+	std::unique_lock<std::mutex> lock(m_queue_lock);
+	remove(lock, task);
+}
+
+//---------------------------------------------------------------------------
+// scheduler::remove (private)
+//
+// Removes all tasks from the scheduler queue with a specific tag
+//
+// Arguments:
+//
+//	lock		- Held lock instance
+//	task		- Task to be removed from the queue
+
+void scheduler::remove(std::unique_lock<std::mutex> const& lock, std::function<void(scalar_condition<bool> const&)> task)
+{
 	queue_t			newqueue;			// The new queue_t instance
+
+	assert(lock.owns_lock());
 
 	// targetptr_t
 	//
 	// Type returned by std::function::target<> below
 	using targetptr_t = void(*const*)(scalar_condition<bool> const&);
-
-	std::unique_lock<std::mutex> lock(m_queue_lock);
 
 	// priority_queue<> doesn't actually allow elements to be removed, create
 	// a new queue with all the elements that don't have the same target
