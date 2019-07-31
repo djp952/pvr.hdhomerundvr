@@ -2029,7 +2029,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			log_notice(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds -- schedule recording rule discovery");
 
 			// Reschedule the recording rule discovery task to run as soon as possible
-			g_scheduler.remove(discover_recordingrules_task);
 			g_scheduler.add(now + std::chrono::seconds(1), discover_recordingrules_task);
 		}
 	}
@@ -2043,7 +2042,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the discover_devices_task to execute at the specified interval from now
 			g_settings.discover_devices_interval = nvalue;
-			g_scheduler.remove(discover_devices_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_devices_task);
 			log_notice(__func__, ": setting discover_devices_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
@@ -2058,7 +2056,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the discover_episodes_task to execute at the specified interval from now
 			g_settings.discover_episodes_interval = nvalue;
-			g_scheduler.remove(discover_episodes_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_episodes_task);
 			log_notice(__func__, ": setting discover_episodes_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
@@ -2073,7 +2070,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the discover_guide_task to execute at the specified interval from now
 			g_settings.discover_guide_interval = nvalue;
-			g_scheduler.remove(discover_guide_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_guide_task);
 			log_notice(__func__, ": setting discover_guide_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
@@ -2088,7 +2084,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the discover_lineups_task to execute at the specified interval from now
 			g_settings.discover_lineups_interval = nvalue;
-			g_scheduler.remove(discover_lineups_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_lineups_task);
 			log_notice(__func__, ": setting discover_lineups_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
@@ -2103,7 +2098,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the discover_recordings_task to execute at the specified interval from now
 			g_settings.discover_recordings_interval = nvalue;
-			g_scheduler.remove(discover_recordings_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_recordings_task);
 			log_notice(__func__, ": setting discover_recordings_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
@@ -2118,7 +2112,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the discover_recordingrules_task to execute at the specified interval from now
 			g_settings.discover_recordingrules_interval = nvalue;
-			g_scheduler.remove(discover_recordingrules_task);
 			g_scheduler.add(now + std::chrono::seconds(nvalue), discover_recordingrules_task);
 			log_notice(__func__, ": setting discover_recordingrules_interval changed -- rescheduling task to initiate in ", nvalue, " seconds");
 		}
@@ -2135,7 +2128,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			log_notice(__func__, ": setting use_http_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device discovery");
 
 			// Reschedule the device discovery task to run as soon as possible
-			g_scheduler.remove(discover_devices_task);
 			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 		}
 	}
@@ -2211,7 +2203,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			log_notice(__func__, ": setting deviceauth_stale_after changed to ", nvalue, " seconds -- schedule device discovery");
 
 			// Reschedule the device discovery task to run as soon as possible
-			g_scheduler.remove(discover_devices_task);
 			g_scheduler.add(now + std::chrono::seconds(1), discover_devices_task);
 		}
 	}
@@ -2527,7 +2518,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		try {
 
 			log_notice(__func__, ": scheduling device discovery task");
-			g_scheduler.remove(discover_devices_task);
 			g_scheduler.add(now, discover_devices_task);
 		}
 
@@ -2544,7 +2534,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		try {
 
 			log_notice(__func__, ": scheduling lineup discovery task");
-			g_scheduler.remove(discover_lineups_task);
 			g_scheduler.add(now, discover_lineups_task);
 		}
 
@@ -2561,7 +2550,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		try {
 
 			log_notice(__func__, ": scheduling guide discovery task");
-			g_scheduler.remove(discover_guide_task);
 			g_scheduler.add(now, discover_guide_task);
 		}
 
@@ -2578,7 +2566,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		try {
 
 			log_notice(__func__, ": scheduling recording discovery task");
-			g_scheduler.remove(discover_recordings_task);
 			g_scheduler.add(now, discover_recordings_task);
 		}
 
@@ -2595,7 +2582,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		try {
 
 			log_notice(__func__, ": scheduling recording rule discovery task");
-			g_scheduler.remove(discover_recordingrules_task);
 			g_scheduler.add(now, discover_recordingrules_task);
 		}
 
@@ -2648,7 +2634,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::disabled);
 		
 			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " disabled; scheduling lineup discovery task");
-			g_scheduler.remove(discover_lineups_task);
 			g_scheduler.add(now, discover_lineups_task);
 		}
 
@@ -2671,7 +2656,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::favorite);
 		
 			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " added as favorite; scheduling lineup discovery task");
-			g_scheduler.remove(discover_lineups_task);
 			g_scheduler.add(now, discover_lineups_task);
 		}
 
@@ -2694,7 +2678,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::enabled);
 		
 			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " removed from favorites; scheduling lineup discovery task");
-			g_scheduler.remove(discover_lineups_task);
 			g_scheduler.add(now, discover_lineups_task);
 		}
 
@@ -3990,7 +3973,6 @@ void CloseLiveStream(void)
 		if(settings.discover_recordings_after_playback) {
 
 			log_notice(__func__, ": triggering periodic recording discovery");
-			g_scheduler.remove(discover_recordings_task);
 			g_scheduler.add(std::chrono::system_clock::now(), discover_recordings_task);
 		}
 			
@@ -4236,7 +4218,6 @@ void CloseRecordedStream(void)
 		if(settings.discover_recordings_after_playback) {
 
 			log_notice(__func__, ": triggering periodic recording discovery");
-			g_scheduler.remove(discover_recordings_task);
 			g_scheduler.add(std::chrono::system_clock::now(), discover_recordings_task);
 		}
 			
