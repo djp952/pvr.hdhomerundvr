@@ -139,6 +139,7 @@ void scheduler::remove(std::unique_lock<std::mutex> const& lock, std::function<v
 	queue_t			newqueue;			// The new queue_t instance
 
 	assert(lock.owns_lock());
+	(lock);
 
 	// targetptr_t
 	//
