@@ -1,4 +1,4 @@
-v2.2.1 (2019.07.xx)
+v2.2.1 (2019.08.02)
   - Add Recorded TV category mapping for "News"
   - Report available DVR drive space to Kodi when available from detected RECORD engines
   - Add "Disable specialized Recorded TV category folders" setting
