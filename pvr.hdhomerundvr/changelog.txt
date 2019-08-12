@@ -1,3 +1,6 @@
+v2.2.2 (2019.08.xx)
+  - Restore shortened channel group names "HD channels, "SD channels", "Favorite channels", and "Demo channels"
+
 v2.2.1 (2019.08.02)
   - Add Recorded TV category mapping for "News"
   - Report available DVR drive space to Kodi when available from detected RECORD engines

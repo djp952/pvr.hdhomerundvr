@@ -2606,15 +2606,15 @@ PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool radio)
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// HD Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "High Definition channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "HD channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// SD Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Standard Definition channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "SD channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// Demo Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Demonstration channels");
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Demo channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -2640,9 +2640,9 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	// choose from: "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.strGroupName, "Favorite channels") == 0) enumerator = enumerate_favorite_channelids;
-	else if(strcmp(group.strGroupName, "High Definition channels") == 0) enumerator = enumerate_hd_channelids;
-	else if(strcmp(group.strGroupName, "Standard Definition channels") == 0) enumerator = enumerate_sd_channelids;
-	else if(strcmp(group.strGroupName, "Demonstration channels") == 0) enumerator = enumerate_demo_channelids;
+	else if(strcmp(group.strGroupName, "HD channels") == 0) enumerator = enumerate_hd_channelids;
+	else if(strcmp(group.strGroupName, "SD channels") == 0) enumerator = enumerate_sd_channelids;
+	else if(strcmp(group.strGroupName, "Demo channels") == 0) enumerator = enumerate_demo_channelids;
 
 	// If neither enumerator was selected, there isn't any work to do here
 	if(enumerator == nullptr) return PVR_ERROR::PVR_ERROR_NO_ERROR;
