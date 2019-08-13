@@ -1582,7 +1582,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
 		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
 		"json_extract(value, '$.PlayURL') as streamurl, "
-		"case when coalesce(json_extract(value, '$.Category'), 'series') like 'series' or ?2 then json_extract(value, '$.Title') else json_extract(value, '$.Category') end as directory, "
+		"case when ?2 or lower(coalesce(json_extract(value, '$.Category'), 'series')) in ('series', 'news') then json_extract(value, '$.Title') else json_extract(value, '$.Category') end as directory, "
 		"json_extract(value, '$.Synopsis') as plot, "
 		"json_extract(value, '$.ChannelName') as channelname, "
 		"json_extract(value, '$.ImageURL') as thumbnailpath, "
