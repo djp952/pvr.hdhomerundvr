@@ -344,7 +344,7 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 		"replace into recording select deviceid, discovered, "
 		"(select case when fullkey is null then recording.data else json_remove(recording.data, fullkey) end) as data "
 		"from httprequest, recording, "
-		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)",
+		"(select fullkey from recording, json_each(recording.data) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1)",
 		recordingid, (rerecord) ? 1 : 0);
 }
 
@@ -1571,7 +1571,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 
 	// recordingid | title | episodename | firstairing | originalairdate | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
 	auto sql = "select "
-		"json_extract(value, '$.CmdURL') as recordingid, "
+		"get_recording_id(json_extract(value, '$.CmdURL')) as recordingid, "
 		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber'), json_extract(value, '$.Title')) else json_extract(value, '$.Title') end as title, "
 		"json_extract(value, '$.EpisodeTitle') as episodename, "
 		"coalesce(json_extract(value, '$.FirstAiring'), 0) as firstairing, "
@@ -1601,7 +1601,8 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
-		while(sqlite3_step(statement) == SQLITE_ROW) {
+		result = sqlite3_step(statement);
+		while(result == SQLITE_ROW) {
 
 			struct recording item;
 			item.recordingid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
@@ -1622,9 +1623,13 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.lastposition = sqlite3_column_int(statement, 15);
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 16));
 
-			callback(item);						// Invoke caller-supplied callback
+			callback(item);							// Invoke caller-supplied callback
+			result = sqlite3_step(statement);		// Move to the next row in the result set
 		}
 	
+		// If the final result of the query was not SQLITE_DONE, something bad happened
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+			
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
 
@@ -2228,7 +2233,7 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 		"else rtrim(clean_filename(json_extract(value, '$.Title')), ' .') end || '/' end || clean_filename(json_extract(value, '$.Title')) || ' ' || "
 		"coalesce(json_extract(value, '$.EpisodeNumber') || ' ', '') || coalesce(strftime('%Y%m%d', datetime(json_extract(value, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
 		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(value, '$.StartTime'), 'unixepoch')) || ']' as filename "
-		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?2 limit 1";
+		"from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?2 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2280,8 +2285,8 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 	// Prepare a scalar result query to get the last played position of the recording from the storage engine. Limit the amount 
 	// of JSON that needs to be sifted through by specifically asking for the series that this recording belongs to
 	auto sql = "with httprequest(response) as (select http_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
-		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?1)) from device where device.type = 'storage') "
-		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1";
+		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1)) from device where device.type = 'storage') "
+		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2325,7 +2330,7 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 
 	// Prepare a scalar result query to generate a stream URL for the specified recording
 	auto sql = "select json_extract(value, '$.PlayURL') as streamurl "
-		"from recording, json_each(recording.data) where json_extract(value, '$.CmdURL') like ?1";
+		"from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2919,12 +2924,14 @@ void set_recording_lastposition(sqlite3* instance, char const* recordingid, int 
 {
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
-	// Update the specified recording on the storage device and in the local database
-	execute_non_query(instance, "with httprequest(response) as (select http_post(?1 || '&cmd=set&Resume=' || ?2, null)) "
-		"replace into recording select deviceid, discovered, "
+	// Update the specified recording on the storage device
+	execute_non_query(instance, "select http_post(json_extract(entry.value, '$.CmdURL') || '&cmd=set&Resume=' || ?2, null) from recording, json_each(recording.data) as entry "
+		"where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1", recordingid, lastposition);
+
+	// Update the specified recording in the local database
+	execute_non_query(instance, "replace into recording select deviceid, discovered, "
 		"(select case when fullkey is null then recording.data else json_set(recording.data, fullkey || '.Resume', ?2) end) as data "
-		"from httprequest, recording, "
-		"(select fullkey from recording, json_each(recording.data) as entry where json_extract(entry.value, '$.CmdURL') like ?1 limit 1)",
+		"from recording, (select fullkey from recording, json_each(recording.data) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1)",
 		recordingid, lastposition);
 }
 
