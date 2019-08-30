@@ -339,13 +339,14 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 {
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
-	// Delete the specified recording from the storage device and the database
-	execute_non_query(instance, "with httprequest(response) as (select http_post(?1 || '&cmd=delete&rerecord=' || ?2, null)) "
-		"replace into recording select deviceid, discovered, "
+	// Delete the specified recording from the storage device
+	execute_non_query(instance, "select http_post(json_extract(entry.value, '$.CmdURL') || '&cmd=delete&rerecord=' || ?2, null) from recording, json_each(recording.data) as entry "
+		"where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1", recordingid, (rerecord) ? 1 : 0);
+
+	// Delete the specified recording from the local database
+	execute_non_query(instance, "replace into recording select deviceid, discovered, "
 		"(select case when fullkey is null then recording.data else json_remove(recording.data, fullkey) end) as data "
-		"from httprequest, recording, "
-		"(select fullkey from recording, json_each(recording.data) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1)",
-		recordingid, (rerecord) ? 1 : 0);
+		"from recording, (select fullkey from recording, json_each(recording.data) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1)", recordingid);
 }
 
 //---------------------------------------------------------------------------
