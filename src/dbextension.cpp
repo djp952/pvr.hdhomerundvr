@@ -817,6 +817,54 @@ void get_episode_number(sqlite3_context* context, int argc, sqlite3_value** argv
 }
 
 //---------------------------------------------------------------------------
+// get_recording_id
+//
+// SQLite scalar function to read the recording ID from a command URL
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void get_recording_id(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// This function accepts the command URL for the recording so that the identifier can be extracted
+	const char* url = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((url == nullptr) || (*url == 0)) return sqlite3_result_error(context, "url argument is null or zero-length", -1);
+
+	// Allocate a CURLU instance to parse the command URL components
+	CURLU* curlu = curl_url();
+	if(curlu == nullptr) return sqlite3_result_error(context, "insufficient memory to allocate CURLU instance", -1);
+
+	// Apply the command URL to the CURLU instance
+	CURLUcode curluresult = curl_url_set(curlu, CURLUPart::CURLUPART_URL, url, 0);
+	if(curluresult == CURLUE_OK) {
+
+		// We are interested in the query string portion of the CmdURL
+		char* querystring = nullptr;
+		curluresult = curl_url_get(curlu, CURLUPART_QUERY, &querystring, 0);
+		if(curluresult == CURLUE_OK) {
+
+			// The query string must start with "id=", use the rest as-is.  This will be OK for now, but
+			// a more robust solution would be parsing the entire query string and selecting just the id key/value
+			if(strncasecmp(querystring, "id=", 3) == 0) sqlite3_result_text(context, &querystring[3], -1, SQLITE_TRANSIENT);
+			else sqlite3_result_error(context, "unable to extract recording id from specified url", -1);
+
+			curl_free(querystring);			// Release the allocated query string
+		}
+
+		else sqlite3_result_error(context, "unable to extract query string from specified url", -1);
+	}
+
+	else sqlite3_result_error(context, "unable to parse supplied url", -1);
+
+	curl_url_cleanup(curlu);				// Release the CURLU instance
+}
+
+//---------------------------------------------------------------------------
 // get_season_number
 //
 // SQLite scalar function to read the season number from a string
@@ -1078,6 +1126,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_episode_number"); return result; }
+
+	// get_recording_id function
+	//
+	result = sqlite3_create_function_v2(db, "get_recording_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_recording_id, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_recording_id"); return result; }
 
 	// get_season_number function
 	//
