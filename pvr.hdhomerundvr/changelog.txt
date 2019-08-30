@@ -1,5 +1,7 @@
-v2.2.2 (2019.08.xx)
+v2.2.2 (2019.08.30)
   - Restore shortened channel group names "HD channels, "SD channels", "Favorite channels", and "Demo channels"
+  - Treat "News" Recorded TV category mapping as "Series"; avoids creation of "News" folder in Recorded TV
+  - Change recording identifier values to work around Kodi issue where attempting to play a recording multiple times may fail
 
 v2.2.1 (2019.08.02)
   - Add Recorded TV category mapping for "News"
