@@ -619,10 +619,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>18.3.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>18.4.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20190619-89472b7d-Leia-x86</KodiAppx>
-      <ZukiAppx>kodi-18.3-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20190829-c661c365-Leia-x86</KodiAppx>
+      <ZukiAppx>kodi-18.4-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -660,10 +660,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>18.3.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>18.4.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20190619-89472b7d-Leia-x64</KodiAppx>
-      <ZukiAppx>kodi-18.3-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20190831-3ade758c-Leia-x64</KodiAppx>
+      <ZukiAppx>kodi-18.4-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
