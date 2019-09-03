@@ -617,13 +617,11 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 
 			// Execute a lineup discovery now; task will reschedule itself
 			log_notice(__func__, ": device discovery data changed -- execute lineup discovery now");
-			g_scheduler.remove(discover_lineups_task);
-			discover_lineups_task(cancel);
+			g_scheduler.now(discover_lineups_task);
 
 			// Execute a recording discovery now; task will reschedule itself
 			log_notice(__func__, ": device discovery data changed -- execute recording discovery now");
-			g_scheduler.remove(discover_recordings_task);
-			discover_recordings_task(cancel);
+			g_scheduler.now(discover_recordings_task);
 		}
 	}
 
@@ -816,8 +814,7 @@ static void discover_recordingrules_task(scalar_condition<bool> const& cancel)
 
 				// Execute a recording rule episode discovery now; task will reschedule itself
 				log_notice(__func__, ": device discovery data changed -- execute recording rule episode discovery now");
-				g_scheduler.remove(discover_episodes_task);
-				discover_episodes_task(cancel);
+				g_scheduler.now(discover_episodes_task);
 			}
 		}
 
@@ -2483,8 +2480,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 
 	// If the operation failed, re-execute a device discovery in case the deviceauth code(s) are stale
 	log_notice(__func__, ": failed to retrieve EPG data for channel -- execute device discovery now");
-	g_scheduler.remove(discover_devices_task);
-	discover_devices_task(cancel);
+	g_scheduler.now(discover_devices_task);
 
 	// Try the operation again after the device discovery task has completed
 	result = try_getepgforchannel(handle, channel, start, end);
