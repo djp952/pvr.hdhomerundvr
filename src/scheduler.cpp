@@ -60,7 +60,7 @@ scheduler::~scheduler()
 //---------------------------------------------------------------------------
 // scheduler::add
 //
-// Adds a task to the scheduler queue
+// Adds a task to the scheduler queue; removes any matching tasks
 //
 // Arguments:
 //
@@ -92,6 +92,25 @@ void scheduler::clear(void)
 	std::unique_lock<std::mutex> lock(m_queue_lock);
 
 	while(!m_queue.empty()) m_queue.pop();
+}
+
+//---------------------------------------------------------------------------
+// scheduler::now
+//
+// Executes the specified task synchronously; removes any matching tasks
+//
+// Arguments:
+//
+//	task		- Task to be executed synchronously
+
+void scheduler::now(std::function<void(scalar_condition<bool> const&)> task)
+{
+	scalar_condition<bool>			cancel{ false };
+	std::unique_lock<std::mutex>	lock(m_queue_lock);
+
+	// Remove existing instances of the specified task and execute it synchronously
+	remove(lock, task);
+	task(cancel);
 }
 
 //---------------------------------------------------------------------------
