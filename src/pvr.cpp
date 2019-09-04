@@ -646,11 +646,11 @@ static void discover_devices_task(scalar_condition<bool> const& cancel)
 
 			// Execute a lineup discovery now; task will reschedule itself
 			log_notice(__func__, ": device discovery data changed -- execute lineup discovery now");
-			g_scheduler.now(discover_lineups_task);
+			g_scheduler.now(discover_lineups_task, cancel);
 
 			// Execute a recording discovery now; task will reschedule itself
 			log_notice(__func__, ": device discovery data changed -- execute recording discovery now");
-			g_scheduler.now(discover_recordings_task);
+			g_scheduler.now(discover_recordings_task, cancel);
 		}
 	}
 
@@ -843,7 +843,7 @@ static void discover_recordingrules_task(scalar_condition<bool> const& cancel)
 
 				// Execute a recording rule episode discovery now; task will reschedule itself
 				log_notice(__func__, ": device discovery data changed -- execute recording rule episode discovery now");
-				g_scheduler.now(discover_episodes_task);
+				g_scheduler.now(discover_episodes_task, cancel);
 			}
 		}
 
@@ -2707,7 +2707,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end)
 {
 	static std::mutex		sync;					// Synchronization object
-	bool					cancel = false;			// Unused cancellation flag for discover_devices_task
 
 	// Prevent concurrent access into this fuction by multiple threads
 	std::unique_lock<std::mutex> lock(sync);
@@ -2728,7 +2727,6 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	// Try the operation again after the device discovery task has completed
 	result = try_getepgforchannel(handle, channel, start, end);
 	if(result == true) return PVR_ERROR::PVR_ERROR_NO_ERROR;
-
 
 	// If the operation failed a second time, temporarily disable the EPG functionality.  This flag
 	// will be cleared after the next successful device discovery completes.

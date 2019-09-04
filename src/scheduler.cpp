@@ -105,11 +105,29 @@ void scheduler::clear(void)
 
 void scheduler::now(std::function<void(scalar_condition<bool> const&)> task)
 {
-	scalar_condition<bool>			cancel{ false };
+	now(task, scalar_condition<bool>{ false });
+}
+
+//---------------------------------------------------------------------------
+// scheduler::now
+//
+// Executes the specified task synchronously; removes any matching tasks
+//
+// Arguments:
+//
+//	task		- Task to be executed synchronously
+//	cancel		- Task cancellation condition variable 
+
+void scheduler::now(std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel)
+{
 	std::unique_lock<std::mutex>	lock(m_queue_lock);
 
-	// Remove existing instances of the specified task and execute it synchronously
+	// Remove any existing instances of the task from the queue
 	remove(lock, task);
+
+	// Release the unique_lock (the task may call into add() or do something 
+	// similar) and execute the specified task synchronously
+	lock.unlock();
 	task(cancel);
 }
 
