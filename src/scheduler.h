@@ -73,6 +73,7 @@ public:
 	//
 	// Executes the specified task synchronously; removes any matching tasks
 	void now(std::function<void(scalar_condition<bool> const&)> task);
+	void now(std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel);
 
 	// pause
 	//
