@@ -523,7 +523,7 @@ static bool discover_devices_broadcast(sqlite3* instance)
 
 	// Update the DVR service authorization flag for each discovered tuner device
 	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
-		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where type = 'tuner'");
+		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Indicate if any tuner devices were detected during discovery or not
 	return hastuners;
@@ -567,7 +567,7 @@ static bool discover_devices_http(sqlite3* instance)
 
 	// Update the DVR service authorization flag for each discovered tuner device
 	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
-		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where type = 'tuner'");
+		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
 	auto sql = "select count(deviceid) as numtuners from discover_device where type = 'tuner'";
@@ -2048,7 +2048,7 @@ std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized)
 
 	// Prepare a scalar query to generate the requested combined device authorization string
 	auto sql = "select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device "
-		"where type = 'tuner' and coalesce(dvrauthorized, 0) in (1, ?1)";
+		"where json_extract(data, '$.DeviceAuth') is not null and coalesce(dvrauthorized, 0) in (1, ?1)";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
