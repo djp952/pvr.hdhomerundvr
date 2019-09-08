@@ -1,3 +1,6 @@
+v2.2.3 (2019.09.08)
+  - Fix bug that caused "DVR Service Subscription Required" errors when only storage engines are DVR authorized
+
 v2.2.2 (2019.08.30)
   - Restore shortened channel group names "HD channels, "SD channels", "Favorite channels", and "Demo channels"
   - Treat "News" Recorded TV category mapping as "Series"; avoids creation of "News" folder in Recorded TV
