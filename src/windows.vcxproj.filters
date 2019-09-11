@@ -78,6 +78,15 @@
     <Filter Include="External Libraries\curl\Source Files\vauth">
       <UniqueIdentifier>{a054928c-a317-4c82-b196-972251c7f415}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External Libraries\curl\Header Files\vquic">
+      <UniqueIdentifier>{6bbe84d9-6fdd-4e33-9f46-1bb270a5c316}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\curl\Source Files\vquic">
+      <UniqueIdentifier>{8a343a80-63d8-4c2b-821e-cffb788cd24a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\curl\Source Files\vssh">
+      <UniqueIdentifier>{b760a9db-41fa-441a-88e3-5c1a49e3945d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -497,6 +506,12 @@
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os_windows.h">
       <Filter>External Libraries\libhdhomerun\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\vquic\ngtcp2.h">
+      <Filter>External Libraries\curl\Header Files\vquic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\vquic\quiche.h">
+      <Filter>External Libraries\curl\Header Files\vquic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -805,9 +820,6 @@
     <ClCompile Include="..\depends\curl\lib\splay.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\ssh.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\curl\lib\strdup.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
@@ -963,6 +975,18 @@
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vtls\wolfssl.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\vquic\ngtcp2.c">
+      <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\vquic\quiche.c">
+      <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\vssh\libssh.c">
+      <Filter>External Libraries\curl\Source Files\vssh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\vssh\libssh2.c">
+      <Filter>External Libraries\curl\Source Files\vssh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
