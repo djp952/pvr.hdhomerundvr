@@ -34,21 +34,11 @@
 //
 extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_api_routines* api);
 
-// device_type
-//
-// Type of a discovered HDHomeRun device
-enum device_type {
-
-	tuner				= 0,
-	storage				= 1,
-};
-
 // discover_device
 //
 // Information about a single HDHomeRun device discovered via broadcast
 struct discover_device {
 
-	enum device_type	devicetype;
 	uint32_t			deviceid;
 	char const*			storageid;
 	char const*			baseurl;
@@ -210,7 +200,8 @@ void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordi
 	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device where type = 'storage'");
+	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device "
+		"where json_extract(data, '$.StorageURL') is not null");
 }
 
 //---------------------------------------------------------------------------
@@ -372,7 +363,8 @@ void delete_recordingrule(sqlite3* instance, char const* deviceauth, unsigned in
 	execute_non_query(instance, "delete from recordingrule where recordingruleid = ?1", recordingruleid);
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device where type = 'storage'");
+	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device "
+		"where json_extract(data, '$.StorageURL') is not null");
 }
 
 //---------------------------------------------------------------------------
@@ -473,8 +465,12 @@ static bool discover_devices_broadcast(sqlite3* instance)
 
 	assert(instance != nullptr);
 
-	// deviceid | discovered | type | dvrauthorized | data
-	auto sql = "insert into discover_device values(?1, cast(strftime('%s', 'now') as integer), ?2, null, ?3)";
+	// deviceid | discovered | dvrauthorized | data
+	//
+	// NOTE: Some devices (HDHomeRun SCRIBE) are both tuners and storage engines; UDP broadcast discovery
+	// will generate two entries for those.  Avoid inserting the same DeviceID into the temp table more than once
+	auto sql = "insert into discover_device select ?1, cast(strftime('%s', 'now') as integer), null, ?2 "
+		"where not exists(select 1 from discover_device where deviceid like ?1)";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -490,13 +486,12 @@ static bool discover_devices_broadcast(sqlite3* instance)
 			// Convert the device identifier into a hexadecimal string
 			snprintf(deviceid, std::extent<decltype(deviceid)>::value, "%08X", device.deviceid);
 
-			// The presence or lack of tuner devices is used as the function return value
-			if(device.devicetype == device_type::tuner) hastuners = true;
+			// The presence or lack of a tuner device id is used as the function return value
+			if(device.deviceid != 0) hastuners = true;
 
 			// Bind the query parameter(s)
-			result = sqlite3_bind_text(statement, 1, (device.devicetype == device_type::tuner) ? deviceid : device.storageid, -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, (device.devicetype == device_type::tuner) ? "tuner" : "storage", -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 3, device.baseurl, -1, SQLITE_STATIC);
+			result = sqlite3_bind_text(statement, 1, (device.deviceid != 0) ? deviceid : device.storageid, -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, device.baseurl, -1, SQLITE_STATIC);
 			if(result != SQLITE_OK) throw sqlite_exception(result);
 
 			// This is a non-query, it's not expected to return any rows
@@ -519,7 +514,7 @@ static bool discover_devices_broadcast(sqlite3* instance)
 	execute_non_query(instance, "update discover_device set data = http_get(data || '/discover.json', null)");
 
 	// Update the deviceid column for legacy storage devices, older versions did not return the storageid attribute during broadcast discovery
-	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where type = 'storage' and deviceid is null");
+	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where deviceid is null");
 
 	// Update the DVR service authorization flag for each discovered tuner device
 	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
@@ -557,12 +552,11 @@ static bool discover_devices_http(sqlite3* instance)
 	// Discover the devices from the HTTP API and insert them into the discover_device temp table
 	execute_non_query(instance, "drop table if exists discover_device_http");
 	execute_non_query(instance, "create temp table discover_device_http as select "
-		"coalesce(json_extract(discovery.value, '$.DeviceID'), json_extract(discovery.value, '$.StorageID')) as deviceid, "
+		"coalesce(json_extract(discovery.value, '$.DeviceID'), coalesce(json_extract(discovery.value, '$.StorageID'), '00000000')) as deviceid, "
 		"cast(strftime('%s', 'now') as integer) as discovered, "
-		"case when json_type(discovery.value, '$.DeviceID') is not null then 'tuner' when json_type(discovery.value, '$.StorageID') is not null then 'storage' else 'unknown' end as type, "
 		"null as dvrauthorized, "
 		"http_get(json_extract(discovery.value, '$.DiscoverURL'), null) as data from json_each(nullif(http_get('http://api.hdhomerun.com/discover'), 'null')) as discovery");
-	execute_non_query(instance, "insert into discover_device select deviceid, discovered, type, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
+	execute_non_query(instance, "insert into discover_device select deviceid, discovered, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
 	execute_non_query(instance, "drop table discover_device_http");
 
 	// Update the DVR service authorization flag for each discovered tuner device
@@ -570,7 +564,7 @@ static bool discover_devices_http(sqlite3* instance)
 		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
-	auto sql = "select count(deviceid) as numtuners from discover_device where type = 'tuner'";
+	auto sql = "select count(deviceid) as numtuners from discover_device where json_extract(data, '$.LineupURL') is not null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -838,7 +832,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
 		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
-			"nullif(http_get(json_extract(device.data, '$.LineupURL') || '?show=demo', null), '[]') as json from device where device.type = 'tuner'");
+			"nullif(http_get(json_extract(device.data, '$.LineupURL') || '?show=demo', null), '[]') as json from device where json_extract(device.data, '$.LineupURL') is not null");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -985,7 +979,7 @@ void discover_recordings(sqlite3* instance, bool& changed)
 
 		// Discover the recording information for all available storage devices
 		execute_non_query(instance, "insert into discover_recording select deviceid, cast(strftime('%s', 'now') as integer), http_get(json_extract(device.data, '$.StorageURL')) "
-			"from device where device.type = 'storage'");
+			"from device where json_extract(device.data, '$.StorageURL') is not null");
 
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -1140,7 +1134,7 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 	
 	// tunerid
 	auto sql = "with recursive tuners(deviceid, tunerid) as "
-		"(select deviceid, json_extract(device.data, '$.TunerCount') - 1 from device where type = 'tuner' "
+		"(select deviceid, json_extract(device.data, '$.TunerCount') - 1 from device where json_extract(device.data, '$.LineupURL') is not null "
 		"union all select deviceid, tunerid - 1 from tuners where tunerid > 0) "
 		"select tuners.deviceid || '-' || tuners.tunerid as tunerid "
 		"from tuners inner join lineup using(deviceid), json_each(lineup.data) as lineupdata "
@@ -1245,7 +1239,6 @@ static void enumerate_devices_broadcast(enumerate_devices_callback callback)
 		if(strlen(devices[index].base_url) == 0) continue;
 
 		// Convert the hdhomerun_discover_device_t structure into a discover_device for the caller
-		device.devicetype = (devices[index].device_type == HDHOMERUN_DEVICE_TYPE_STORAGE) ? device_type::storage : device_type::tuner;
 		device.deviceid = devices[index].device_id;
 		device.storageid = devices[index].storage_id;
 		device.baseurl = devices[index].base_url;
@@ -2098,7 +2091,7 @@ struct storage_space get_available_storage_space(sqlite3* instance)
 	// Prepare a query to get the sum of all total and available storage space
 	auto sql = "select sum(coalesce(json_extract(device.data, '$.TotalSpace'), 0)) as total, "
 		"sum(coalesce(json_extract(device.data, '$.FreeSpace'), 0)) as available "
-		"from device where device.type = 'storage'";
+		"from device where json_extract(device.data, '$.StorageURL') is not null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2288,7 +2281,7 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 	// Prepare a scalar result query to get the last played position of the recording from the storage engine. Limit the amount 
 	// of JSON that needs to be sifted through by specifically asking for the series that this recording belongs to
 	auto sql = "with httprequest(response) as (select http_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
-		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1)) from device where device.type = 'storage') "
+		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1)) from device where json_extract(device.data, '$.StorageURL') is not null) "
 		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -2470,7 +2463,8 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 
 	// Prepare a scalar result query to generate a stream URL for the specified channel
 	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
-		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=0x' || hex(randomblob(4)) from device where type = 'storage' limit 1";
+		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=0x' || hex(randomblob(4)) from device "
+		"where json_extract(device.data, '$.StorageURL') is not null limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2522,7 +2516,7 @@ int get_timer_count(sqlite3* instance, int maxdays)
 	if(maxdays < 0) maxdays = 31;
 
 	// Select the number of episodes set to record in the specified timeframe
-	auto sql = "select count(*) from episode, json_each(episode.data) "
+	auto sql = "select count(seriesid) from episode, json_each(episode.data) "
 		"where (json_extract(value, '$.StartTime') < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -2566,7 +2560,7 @@ int get_tuner_count(sqlite3* instance)
 	if(instance == nullptr) return 0;
 
 	// Select the number of tuner devices listed in the device table
-	auto sql = "select count(*) from device where type = 'tuner'";
+	auto sql = "select count(deviceid) from device where json_extract(device.data, '$.LineupURL') is not null";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2757,7 +2751,8 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device where type = 'storage'");
+	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device "
+		"where json_extract(data, '$.StorageURL') is not null");
 }
 
 //---------------------------------------------------------------------------
@@ -2819,8 +2814,8 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: device
 			// 
-			// deviceid(pk) | discovered | type | dvrauthorized | data
-			execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, discovered integer not null, type text, dvrauthorized integer, data text)");
+			// deviceid(pk) | discovered | dvrauthorized | data
+			execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, discovered integer not null, dvrauthorized integer, data text)");
 
 			// table: lineup
 			//
