@@ -1222,7 +1222,7 @@ static void enumerate_devices_broadcast(enumerate_devices_callback callback)
 	// Use the libhdhomerun broadcast discovery mechanism to find all devices on the local network
 	int result = hdhomerun_discover_find_devices_custom_v3(0, HDHOMERUN_DEVICE_TYPE_WILDCARD,
 		HDHOMERUN_DEVICE_ID_WILDCARD, &devices[0], 64);
-	if(result == -1) throw string_exception(__func__, ": hdhomerun_discover_find_devices_custom_v2 failed");
+	if(result == -1) throw string_exception(__func__, ": hdhomerun_discover_find_devices_custom_v3 failed");
 
 	for(int index = 0; index < result; index++) {
 
