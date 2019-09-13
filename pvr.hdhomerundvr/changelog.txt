@@ -1,4 +1,4 @@
-v2.3.0 (2019.09.xx)
+v2.3.0 (2019.09.12)
   - Update cURL library to version 7.66.0
   - Fix bug that caused "DVR Service Subscription Required" errors when a storage engine (HDHomeRun SERVIO) is the only DVR authorized device
   - Remove specific tuner/storage distinction from device discovery to allow for devices that are both types (HDHomeRun SCRIBE)
