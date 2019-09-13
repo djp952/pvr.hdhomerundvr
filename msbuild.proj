@@ -610,7 +610,7 @@
 
   </Target>
 
-  <!-- BUILD: UWPAPPX-WIN32 -->
+  <!-- BUILD: UWPAPPX-WIN32 (BROKEN - DO NOT BUILD) -->
   <Target Name="uwpappx-win32" DependsOnTargets="AddonVersion;uwp-win32">
 
     <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
@@ -651,7 +651,7 @@
 
   </Target>
 
-  <!-- BUILD: UWPAPPX-X64 -->
+  <!-- BUILD: UWPAPPX-X64 (BROKEN - DO NOT BUILD) -->
   <Target Name="uwpappx-x64" DependsOnTargets="AddonVersion;uwp-x64">
 
     <Error Condition="'$(JAVA_HOME)' == ''" Text="Environment variable JAVA_HOME has not been set"/>
@@ -695,13 +695,13 @@
   <!-- BUILD: PLATFORMS -->
   <Target Name="windows" DependsOnTargets="windows-win32;windows-x64"/>
   <Target Name="uwp" DependsOnTargets="uwp-win32;uwp-x64;uwp-arm"/>
-  <Target Name="uwpappx" DependsOnTargets="uwpappx-win32;uwpappx-x64"/>
+  <!-- <Target Name="uwpappx" DependsOnTargets="uwpappx-win32;uwpappx-x64"/> -->
   <Target Name="linux" DependsOnTargets="linux-i686;linux-x86_64;linux-armel;linux-armhf;linux-aarch64"/>
   <Target Name="raspbian" DependsOnTargets="raspbian-armhf"/>
   <Target Name="osx" DependsOnTargets="osx-x86_64"/>
   <Target Name="android" DependsOnTargets="android-arm;android-aarch64;android-x86"/>
 
   <!-- BUILD: ALL -->
-  <Target Name="all" DependsOnTargets="windows;uwp;uwpappx;linux;raspbian;osx;android"/>
+  <Target Name="all" DependsOnTargets="windows;uwp;linux;raspbian;osx;android"/>
 
 </Project>
