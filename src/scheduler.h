@@ -144,6 +144,7 @@ private:
 	std::thread					m_worker;				// Scheduler thread
 	std::mutex					m_worker_lock;			// Synchronization object
 	scalar_condition<bool>		m_stop{false};			// Condition to stop the thread
+	std::mutex					m_task_lock;			// Synchronization object
 };
 
 //-----------------------------------------------------------------------------

@@ -69,10 +69,10 @@ scheduler::~scheduler()
 
 void scheduler::add(std::chrono::time_point<std::chrono::system_clock> due, std::function<void(scalar_condition<bool> const&)> task)
 {
-	std::unique_lock<std::mutex> lock(m_queue_lock);
+	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 
 	// Remove any existing instances of the specified task from the scheduler
-	remove(lock, task);
+	remove(queuelock, task);
 
 	// Add the new task to the scheduler priority queue
 	m_queue.emplace(queueitem_t{ due, task });
@@ -89,7 +89,7 @@ void scheduler::add(std::chrono::time_point<std::chrono::system_clock> due, std:
 
 void scheduler::clear(void)
 {
-	std::unique_lock<std::mutex> lock(m_queue_lock);
+	std::unique_lock<std::mutex> queueulock(m_queue_lock);
 
 	while(!m_queue.empty()) m_queue.pop();
 }
@@ -120,14 +120,16 @@ void scheduler::now(std::function<void(scalar_condition<bool> const&)> task)
 
 void scheduler::now(std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel)
 {
-	std::unique_lock<std::mutex>	lock(m_queue_lock);
+	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 
 	// Remove any existing instances of the task from the queue
-	remove(lock, task);
+	remove(queuelock, task);
 
-	// Release the unique_lock (the task may call into add() or do something 
-	// similar) and execute the specified task synchronously
-	lock.unlock();
+	// Acquire the task mutex to prevent race condition with main worker thread
+	std::unique_lock<std::mutex> tasklock(m_task_lock);
+
+	// Release the queue lock and execute the task synchronously
+	queuelock.unlock();
 	task(cancel);
 }
 
@@ -142,7 +144,7 @@ void scheduler::now(std::function<void(scalar_condition<bool> const&)> task, sca
 
 void scheduler::pause(void)
 {
-	std::unique_lock<std::mutex> lock(m_queue_lock);
+	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 	m_paused = true;
 }
 
@@ -157,8 +159,8 @@ void scheduler::pause(void)
 
 void scheduler::remove(std::function<void(scalar_condition<bool> const&)> task)
 {
-	std::unique_lock<std::mutex> lock(m_queue_lock);
-	remove(lock, task);
+	std::unique_lock<std::mutex> queuelock(m_queue_lock);
+	remove(queuelock, task);
 }
 
 //---------------------------------------------------------------------------
@@ -213,7 +215,7 @@ void scheduler::remove(std::unique_lock<std::mutex> const& lock, std::function<v
 
 void scheduler::start(void)
 {
-	std::unique_lock<std::mutex> lock(m_worker_lock);
+	std::unique_lock<std::mutex> workerlock(m_worker_lock);
 
 	if(m_worker.joinable()) return;		// Already running
 	m_stop = false;						// Reset the stop signal
@@ -230,7 +232,7 @@ void scheduler::start(void)
 		// break when the stop signal has been set
 		while(!m_stop.wait_until_equals(true, 500)) {
 
-			std::unique_lock<std::mutex> lock(m_queue_lock);
+			std::unique_lock<std::mutex> queuelock(m_queue_lock);
 			if(m_queue.empty() || m_paused) continue;
 
 			// Check if the topmost task in the queue has become due
@@ -241,8 +243,11 @@ void scheduler::start(void)
 				auto functor = task.second;
 				m_queue.pop();
 
+				// Acquire the task mutex to prevent race condition with now()
+				std::unique_lock<std::mutex> tasklock(m_task_lock);
+
 				// Allow other threads to manipulate the queue while the task runs
-				lock.unlock();
+				queuelock.unlock();
 
 				// Invoke the task and dispatch any exceptions that leak out to the handler
 				try { functor(m_stop); }
@@ -267,7 +272,7 @@ void scheduler::start(void)
 
 void scheduler::resume(void)
 {
-	std::unique_lock<std::mutex> lock(m_queue_lock);
+	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 	m_paused = false;
 }
 
@@ -282,7 +287,7 @@ void scheduler::resume(void)
 
 void scheduler::stop(void)
 {
-	std::unique_lock<std::mutex> lock(m_worker_lock);
+	std::unique_lock<std::mutex> workerlock(m_worker_lock);
 
 	if(!m_worker.joinable()) return;		// Already stopped
 
