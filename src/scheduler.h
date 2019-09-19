@@ -62,6 +62,7 @@ public:
 	// add
 	//
 	// Adds a task to the scheduler queue; removes any matching tasks
+	void add(std::function<void(scalar_condition<bool> const&)> task);
 	void add(std::chrono::time_point<std::chrono::system_clock> due, std::function<void(scalar_condition<bool> const&)> task);
 
 	// clear

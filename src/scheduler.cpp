@@ -64,6 +64,20 @@ scheduler::~scheduler()
 //
 // Arguments:
 //
+//	task	- task to be executed
+
+void scheduler::add(std::function<void(scalar_condition<bool> const&)> task)
+{
+	add(std::chrono::system_clock::now(), task);
+}
+
+//---------------------------------------------------------------------------
+// scheduler::add
+//
+// Adds a task to the scheduler queue; removes any matching tasks
+//
+// Arguments:
+//
 //	due		- system_time at which the task should be executed
 //	task	- task to be executed
 
@@ -193,8 +207,9 @@ void scheduler::remove(std::unique_lock<std::mutex> const& lock, std::function<v
 		targetptr_t left = m_queue.top().second.target<void(*)(scalar_condition<bool> const&)>();
 		targetptr_t right = task.target<void(*)(scalar_condition<bool> const&)>();
 
-		// If the current item does not match the task being removed, move it into the new queue<>
-		if((left != nullptr) && (right != nullptr) && (*left != *right)) newqueue.push(m_queue.top());
+		// If the current item does not match the task being removed, move it into the new queue<>.
+		// (nullptr targets are going to be one-time lambdas, always move those over)
+		if((left == nullptr) || (right == nullptr) || (*left != *right)) newqueue.push(m_queue.top());
 
 		// Always remove the current item from the old queue<>
 		m_queue.pop();
