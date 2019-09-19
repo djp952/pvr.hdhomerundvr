@@ -243,9 +243,9 @@ void scheduler::start(void)
 	
 		started = true;			// Indicate that the thread started
 
-		// Poll the priority queue once per 500ms to acquire a new task or
+		// Poll the priority queue once per 250ms to acquire a new task or
 		// break when the stop signal has been set
-		while(!m_stop.wait_until_equals(true, 500)) {
+		while(!m_stop.wait_until_equals(true, 250)) {
 
 			std::unique_lock<std::mutex> queuelock(m_queue_lock);
 			if(m_queue.empty() || m_paused) continue;
