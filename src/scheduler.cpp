@@ -243,19 +243,15 @@ void scheduler::start(void)
 	
 		started = true;			// Indicate that the thread started
 
-		// Poll the priority queue once per 250ms to acquire a new task or
-		// break when the stop signal has been set
-		while(!m_stop.wait_until_equals(true, 250)) {
+		// Poll the priority queue once per 250ms to check for new tasks
+		while(m_stop.wait_until_equals(true, 250) == false) {
 
+			// Process all tasks from the top of the queue that have become due before waiting again
 			std::unique_lock<std::mutex> queuelock(m_queue_lock);
-			if(m_queue.empty() || m_paused) continue;
-
-			// Check if the topmost task in the queue has become due
-			queueitem_t const& task = m_queue.top();
-			if(task.first <= std::chrono::system_clock::now()) {
+			while((!m_queue.empty()) && (!m_paused) && (m_queue.top().first <= std::chrono::system_clock::now())) {
 
 				// Make a copy of the functor and remove the task from the queue
-				auto functor = task.second;
+				auto functor = m_queue.top().second;
 				m_queue.pop();
 
 				// Acquire the task mutex to prevent race condition with now()
@@ -265,9 +261,12 @@ void scheduler::start(void)
 				queuelock.unlock();
 
 				// Invoke the task and dispatch any exceptions that leak out to the handler
-				try { functor(m_stop); }
-				catch(std::exception& ex) { if(m_handler) m_handler(ex); }
+				try { functor(m_stop); } 
+				catch(std::exception& ex) { if(m_handler) m_handler(ex); } 
 				catch(...) { if(m_handler) m_handler(string_exception(__func__, ": unhandled exception during task execution")); }
+
+				// Reacquire the queue lock after the task has completed
+				queuelock.lock();
 			}
 		}
 	});
