@@ -24,7 +24,10 @@
 
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <sqlite3ext.h>
 #include <string>
 #include <uuid/uuid.h>
@@ -113,6 +116,11 @@ struct epg_vtab_cursor : public sqlite3_vtab_cursor
 
 	std::vector<byte_string> rows;			// returned rows
 };
+
+// json_get_aggregate_state
+//
+// Used as the state object for the json_get_aggregate function
+typedef std::vector<std::tuple<std::string, std::string>> json_get_aggregate_state;
 
 //---------------------------------------------------------------------------
 // GLOBAL VARIABLES
@@ -210,7 +218,7 @@ void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid arguments", -1);
 	
 	// Null input results in "0"
-	if(sqlite3_value_type(argv[0]) == SQLITE_NULL) return sqlite3_result_text(context, "0", -1, nullptr);
+	if(sqlite3_value_type(argv[0]) == SQLITE_NULL) return sqlite3_result_text(context, "0", -1, SQLITE_STATIC);
 
 	// Convert the input encoded channelid back into a string
 	channelid.value = static_cast<unsigned int>(sqlite3_value_int(argv[0]));
@@ -483,7 +491,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 		time_t starttime = epgcursor->starttime;
 		time_t endtime = epgcursor->endtime;
 
-		// Initialize a cURL multiple interface session to handle the pipelined/multiplexed data transfers
+		// Initialize a cURL multiple interface session to handle the data transfers
 		CURLM* curlm = curl_multi_init();
 		if(curlm == nullptr) throw string_exception(__func__, ": curl_multi_init() failed");
 
@@ -1039,6 +1047,209 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 }
 
 //---------------------------------------------------------------------------
+// json_get_aggregate_final
+//
+// SQLite aggregate function to generate a JSON array of multiple JSON documents
+//
+// Arguments:
+//
+//	context		- SQLite context object
+
+void json_get_aggregate_final(sqlite3_context* context)
+{
+	static curlshare			curlshare;			// Static curlshare instance used only with this function
+	rapidjson::Document			document;			// Resultant JSON document
+
+	// Retrieve the json_get_aggregate_state pointer from the aggregate context; if it does not exist return NULL
+	json_get_aggregate_state** statepp = reinterpret_cast<json_get_aggregate_state**>(sqlite3_aggregate_context(context, sizeof(json_get_aggregate_state*)));
+	json_get_aggregate_state* statep = (statepp == nullptr) ? nullptr : *statepp;
+	if(statep == nullptr) { sqlite3_aggregate_context(context, 0); return sqlite3_result_null(context); }
+
+	// write_function (local)
+	//
+	// cURL write callback to append data to the provided byte_string instance
+	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
+
+		assert((size * count) > 0);
+
+		try { if((size * count) > 0) reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); } 
+		catch(...) { return 0; }
+
+		return size * count;
+	};
+
+	// Wrap the json_get_aggregate_state pointer in a unique_ptr to automatically release it when it falls out of scope
+	std::unique_ptr<json_get_aggregate_state, std::function<void(json_get_aggregate_state*)>> state(statep, [&](json_get_aggregate_state* statep) -> void {
+
+		if(statep) delete statep;					// Release the json_get_aggregate_state
+		sqlite3_aggregate_context(context, 0);		// Clear the aggregate context
+	});
+
+	// Initialize a cURL multiple interface session to handle the data transfers
+	std::unique_ptr<CURLM, std::function<void(CURLM*)>> curlm(curl_multi_init(), [](CURLM* curlm) -> void { curl_multi_cleanup(curlm); });
+	if(!curlm) throw string_exception(__func__, ": curl_multi_init() failed");
+
+	document.SetObject();
+
+	try {
+
+		// Disable pipelining/multiplexing on the multi interface object. It doesn't make an appreciable
+		// performance difference here and may have been the root cause of a lot of weird problems
+		CURLMcode curlmresult = curl_multi_setopt(curlm.get(), CURLMOPT_PIPELINING, CURLPIPE_NOTHING);
+		if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_setopt(CURLMOPT_PIPELINING) failed: ", curl_multi_strerror(curlmresult));
+
+		// Create a list<> to hold the individual transfer information (no iterator invalidation)
+		std::list<std::tuple<CURL*, byte_string, std::string>> transfers;
+
+		try {
+
+			for(auto const& iterator : *state) {
+
+				// Create and initialize the cURL easy interface handle for this transfer operation
+				CURL* curl = curl_easy_init();
+				if(curl == nullptr) throw string_exception(__func__, ": curl_easy_init() failed");
+
+			#if defined(_WINDOWS) && defined(_DEBUG)
+				// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
+				char debugurl[256];
+				snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s: %s\r\n", __func__, std::get<0>(iterator).c_str());
+				OutputDebugStringA(debugurl);
+			#endif
+
+				// Create the transfer instance to track this operation in the list<>
+				auto transfer = transfers.emplace(transfers.end(), std::make_tuple(curl, byte_string(), std::get<1>(iterator)));
+
+				// Set the CURL options and execute the web request to get the JSON string data
+				CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, std::get<0>(iterator).c_str());
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&std::get<1>(*transfer)));
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(curlshare));
+
+				// Verify that initialization of the cURL easy interface handle was completed successfully
+				if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
+			}
+
+			// Add all of the generated cURL easy interface objects to the cURL multi interface object
+			for(auto const& transfer : transfers) {
+
+				curlmresult = curl_multi_add_handle(curlm.get(), std::get<0>(transfer));
+				if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_add_handle() failed: ", curl_multi_strerror(curlmresult));
+			}
+
+			// Execute the transfer operation(s) until they have all completed
+			int numfds = 0;
+			curlmresult = curl_multi_perform(curlm.get(), &numfds);
+			while((curlmresult == CURLM_OK) && (numfds > 0)) {
+
+				curlmresult = curl_multi_wait(curlm.get(), nullptr, 0, 500, &numfds);
+				if(curlmresult == CURLM_OK) curlmresult = curl_multi_perform(curlm.get(), &numfds);
+			}
+
+			// After the transfer operation(s) have completed, verify the HTTP status of each one
+			// and abort the operation if any of them did not return HTTP 200: OK
+			for(auto& transfer : transfers) {
+
+				long responsecode = 200;			// Assume HTTP 200: OK
+
+				// The response code will come back as zero if there was no response from the host,
+				// otherwise it should be a standard HTTP response code
+				curl_easy_getinfo(std::get<0>(transfer), CURLINFO_RESPONSE_CODE, &responsecode);
+
+				if(responsecode == 0) throw string_exception(__func__, ": no response from host");
+				else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
+
+				// Ignore transfers that returned no data or begin with the string "null"
+				if((std::get<1>(transfer).size() > 0) && (strcasecmp(reinterpret_cast<const char*>(std::get<1>(transfer).c_str()), "null") != 0)) {
+
+					// Convert the data returned from the query into a JSON document object
+					rapidjson::Document json;
+					json.Parse(reinterpret_cast<const char*>(std::get<1>(transfer).data()), std::get<1>(transfer).size());
+
+					// If the JSON parsed successfully, add the entire document as a new array element in the final document
+					if(!json.HasParseError()) document.AddMember(rapidjson::GenericStringRef<char>(std::get<2>(transfer).c_str()), 
+						rapidjson::Value(json, document.GetAllocator()), document.GetAllocator());
+				}
+			}
+
+			// Clean up and destroy the generated cURL easy interface handles
+			for(auto& transfer : transfers) {
+
+				curl_multi_remove_handle(curlm.get(), std::get<0>(transfer));
+				curl_easy_cleanup(std::get<0>(transfer));
+			}
+		}
+
+		// Clean up any destroy any created cURL easy interface handles on exception
+		catch(...) {
+
+			for(auto& transfer : transfers) {
+
+				curl_multi_remove_handle(curlm.get(), std::get<0>(transfer));
+				curl_easy_cleanup(std::get<0>(transfer));
+			}
+
+			throw;
+		}
+
+		//
+		// TODO: This can be more efficient by providing a custom rapidjson output stream that uses 
+		// sqlite3_malloc() internally and detaches that pointer for sqlite3_result_text, using 
+		// sqlite3_free as the destructor function instead of SQLITE_TRANSIENT
+		//
+
+		// Convert the final document back into JSON and return it to the caller
+		rapidjson::StringBuffer sb;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+		document.Accept(writer);
+		sqlite3_result_text(context, sb.GetString(), -1, SQLITE_TRANSIENT);
+	}
+
+	catch(std::exception const& ex) { return sqlite3_result_error(context, ex.what(), -1); }
+	catch(...) { return sqlite3_result_error_code(context, SQLITE_ERROR); }
+}
+
+//---------------------------------------------------------------------------
+// json_get_aggregate_step
+//
+// SQLite aggregate function to generate a JSON array of multiple JSON documents
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void json_get_aggregate_step(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	if(argc != 2) return sqlite3_result_error(context, "invalid argument", -1);
+	if(argv[0] == nullptr) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Use a json_get_aggregate_state to hold the aggregate state as it's calculated
+	json_get_aggregate_state** statepp = reinterpret_cast<json_get_aggregate_state**>(sqlite3_aggregate_context(context, sizeof(json_get_aggregate_state*)));
+	if(statepp == nullptr) return sqlite3_result_error_nomem(context);
+	
+	// If the string_vector hasn't been allocated yet, allocate it now
+	json_get_aggregate_state* statep = *statepp;
+	if(statep == nullptr) *statepp = statep = new json_get_aggregate_state();
+	if(statep == nullptr) return sqlite3_result_error_nomem(context);
+
+	// There are two arguments to this function, the first is the URL to query for the JSON
+	// and the second is the key name to assign to the resultant JSON array element
+	char const* url = reinterpret_cast<char const*>(sqlite3_value_text(argv[0]));
+	char const* key = reinterpret_cast<char const*>(sqlite3_value_text(argv[1]));
+
+	// The URL string must be non-null, but the key can be null or blank if the caller doesn't care
+	if(url != nullptr) statep->emplace_back(std::make_tuple(url, (key != nullptr) ? key : ""));
+	else return sqlite3_result_error(context, "invalid argument", -1);
+}
+
+//---------------------------------------------------------------------------
 // url_encode
 //
 // SQLite scalar function to encode a string with URL escape sequences
@@ -1146,6 +1357,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "http_post", -1, SQLITE_UTF8, nullptr, http_post, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_post"); return result; }
+
+	// json_get_aggregate (non-deterministic)
+	//
+	result = sqlite3_create_function_v2(db, "json_get_aggregate", 2, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
 
 	// url_encode function
 	//
