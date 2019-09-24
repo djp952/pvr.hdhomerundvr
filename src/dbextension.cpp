@@ -126,6 +126,11 @@ typedef std::vector<std::tuple<std::string, std::string>> json_get_aggregate_sta
 // GLOBAL VARIABLES
 //---------------------------------------------------------------------------
 
+// g_curlshare
+//
+// Global curlshare instance to share resources among all cURL connections
+static curlshare g_curlshare;
+
 // g_epg_module
 //
 // Defines the entry points for the epg virtual table
@@ -449,8 +454,6 @@ int epg_eof(sqlite3_vtab_cursor* cursor)
 
 int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*indexstr*/, int argc, sqlite3_value** argv)
 {
-	static curlshare curlshare;				// Static curlshare instance used only with this function
-
 	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
 	epg_vtab_cursor* epgcursor = reinterpret_cast<epg_vtab_cursor*>(cursor);
 	assert(epgcursor != nullptr);
@@ -538,7 +541,7 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&transfer->second));
-					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(curlshare));
+					if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 
 					// Release the URL string after cURL initializations are complete
 					sqlite3_free(url);
@@ -616,9 +619,8 @@ int epg_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*inde
 			curl_multi_cleanup(curlm);
 		}
 
-		// Clean up and destroy the multi handle on exception.  Also reset the cURL
-		// share interface to ensure a new DNS lookup and connection next time through
-		catch(...) { curl_multi_cleanup(curlm); curlshare.reset(); throw; }
+		// Clean up and destroy the multi handle on exception
+		catch(...) { curl_multi_cleanup(curlm); throw; }
 	}
 	
 	catch(std::exception const& ex) { epgcursor->pVtab->zErrMsg = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; }
@@ -960,7 +962,6 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 	std::string			postfields;				// HTTP post fields (optional)
 	long				responsecode = 200;		// HTTP response code
 	byte_string			blob;					// Dynamically allocated blob buffer
-	static curlshare	curlshare;				// Static curlshare instance used only with this function
 
 	assert(urlvalue != nullptr);
 
@@ -1008,7 +1009,7 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(curlshare));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
 	curl_easy_cleanup(curl);
@@ -1057,7 +1058,6 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 
 void json_get_aggregate_final(sqlite3_context* context)
 {
-	static curlshare			curlshare;			// Static curlshare instance used only with this function
 	rapidjson::Document			document;			// Resultant JSON document
 
 	// Retrieve the json_get_aggregate_state pointer from the aggregate context; if it does not exist return NULL
@@ -1129,7 +1129,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&std::get<1>(*transfer)));
-				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(curlshare));
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 
 				// Verify that initialization of the cURL easy interface handle was completed successfully
 				if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
