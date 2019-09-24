@@ -103,7 +103,7 @@ void scheduler::add(std::chrono::time_point<std::chrono::system_clock> due, std:
 
 void scheduler::clear(void)
 {
-	std::unique_lock<std::mutex> queueulock(m_queue_lock);
+	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 
 	while(!m_queue.empty()) m_queue.pop();
 }
@@ -140,7 +140,7 @@ void scheduler::now(std::function<void(scalar_condition<bool> const&)> task, sca
 	remove(queuelock, task);
 
 	// Acquire the task mutex to prevent race condition with main worker thread
-	std::unique_lock<std::mutex> tasklock(m_task_lock);
+	std::unique_lock<std::recursive_mutex> tasklock(m_task_lock);
 
 	// Release the queue lock and execute the task synchronously
 	queuelock.unlock();
@@ -255,7 +255,7 @@ void scheduler::start(void)
 				m_queue.pop();
 
 				// Acquire the task mutex to prevent race condition with now()
-				std::unique_lock<std::mutex> tasklock(m_task_lock);
+				std::unique_lock<std::recursive_mutex> tasklock(m_task_lock);
 
 				// Allow other threads to manipulate the queue while the task runs
 				queuelock.unlock();

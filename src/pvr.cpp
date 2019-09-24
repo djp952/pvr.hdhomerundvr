@@ -38,6 +38,10 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef _WINDOWS
+#include <netlistmgr.h>
+#endif 
+
 #include <xbmc_addon_dll.h>
 #include <xbmc_pvr_dll.h>
 #include <version.h>
@@ -105,6 +109,7 @@ static void discover_lineups_task(scalar_condition<bool> const& cancel);
 static void discover_recordingrules_task(scalar_condition<bool> const& cancel);
 static void discover_recordings_task(scalar_condition<bool> const& cancel);
 static void discover_startup_task(bool includedevices, scalar_condition<bool> const& cancel);
+static void discover_wakeup_task(scalar_condition<bool> const& cancel);
 
 // Helper Functions
 //
@@ -1005,6 +1010,58 @@ static void discover_startup_task(bool includedevices, scalar_condition<bool> co
 	catch(...) { handle_generalexception(__func__); }
 }
 
+// discover_wakeup_task
+//
+// Scheduled task implementation to discover all data during PVR wakeup
+static void discover_wakeup_task(scalar_condition<bool> const& /*cancel*/)
+{
+#ifdef _WINDOWS
+
+	// On Windows we can detect if the network is up before executing the startup task
+	INetworkListManager* netlistmgr = nullptr;
+	HRESULT hresult = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_INPROC_SERVER, IID_INetworkListManager, reinterpret_cast<void**>(&netlistmgr));
+	if(SUCCEEDED(hresult)) {
+
+		NLM_CONNECTIVITY connectivity = NLM_CONNECTIVITY_DISCONNECTED;
+
+		// Determine the current network connectivity state and release the NetworkListManager instance
+		hresult = netlistmgr->GetConnectivity(&connectivity);
+		netlistmgr->Release();
+
+		if(SUCCEEDED(hresult)) {
+
+			// If any IPV4 connectivity is detected, execute the startup task to re-discover everything.  If IPV4 connectivity is not 
+			// detected, reschedule this task to execute in a 
+			if((connectivity & (NLM_CONNECTIVITY_IPV4_SUBNET | NLM_CONNECTIVITY_IPV4_LOCALNETWORK | NLM_CONNECTIVITY_IPV4_INTERNET)) != 0) {
+
+				log_notice(__func__, ": IPV4 network connectivity detected; execute startup discovery task");
+				return g_scheduler.now(std::bind(discover_startup_task, true, std::placeholders::_1));
+			}
+
+			// Otherwise, use the startup_task_delay to re-schedule this task to execute again
+			else {
+
+				log_notice(__func__, ": IPV4 network connectivity not detected; reschedule wakeup task to execute in 1 second");
+				return g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(1), discover_wakeup_task);
+			}
+		}
+
+		else log_error(__func__, ": failed to interrogate NetworkListManager connectivity state (hr=", hresult, ") - defaulting to delayed discover_startup_task implementation");
+	}
+
+	else log_error(__func__, ": failed to create NetworkListManager instance (hr=", hresult, ") - defaulting to delayed discover_startup_task implementation");
+
+#endif
+
+	struct addon_settings settings = copy_settings();						// Create a copy of the current addon settings
+
+	// The special discover_startup_task takes care of all discoveries in a more optimized fashion than invoking the 
+	// periodic ones; use that on wakeup too.  Bind true as the first argument to discover_startup_task to indicate 
+	// that devices and lineups should be discovered as well as everything else
+	log_notice(__func__, ": scheduling startup discovery task (delayed ", settings.startup_discovery_task_delay, " seconds)");
+	g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.startup_discovery_task_delay), std::bind(discover_startup_task, true, std::placeholders::_1));
+}
+	
 // enable_epg_task
 //
 // Scheduled task implementation to re-enable access to the EPG functionality after an error
@@ -4488,6 +4545,17 @@ PVR_ERROR SetEPGTimeFrame(int days)
 
 void OnSystemSleep()
 {
+	// CAUTION: This function will be called on a different thread than the main PVR
+	// callback functions -- do not attempt to manipulate any in-progress streams
+
+	try {
+
+		g_scheduler.stop();				// Stop the scheduler
+		g_scheduler.clear();			// Clear out any pending tasks
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); } 
+	catch(...) { return handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
@@ -4501,6 +4569,27 @@ void OnSystemSleep()
 
 void OnSystemWake()
 {
+	// CAUTION: This function will be called on a different thread than the main PVR
+	// callback functions -- do not attempt to manipulate any in-progress streams
+
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
+	try {
+
+		g_scheduler.stop();					// Ensure scheduler was stopped
+		g_scheduler.clear();				// Ensure there are no pending tasks
+
+		// Schedule the discover_wakeup_task to run as soon as possible. On Windows this will check for
+		// network connectivity before re-discovery; on other platforms it will launch re-discovery after
+		// the configured "startup delay" has expired
+		g_scheduler.add(std::chrono::system_clock::now(), discover_wakeup_task);
+
+		g_scheduler.start();				// Restart the scheduler
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); } 
+	catch(...) { return handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
