@@ -626,10 +626,9 @@ void discover_episodes(sqlite3* instance, char const* deviceauth, bool& changed)
 	try {
 
 		// Discover the episode information for each series that has a recording rule
-		execute_non_query(instance, "insert into discover_episode select entry.seriesid as seriesid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, "
-			"nullif(http_get('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || ?1 || '&SeriesID=' || entry.seriesid), 'null') as data "
-			"from (select distinct json_extract(data, '$.SeriesID') as seriesid from recordingrule where seriesid is not null) as entry", deviceauth);
+		execute_non_query(instance, "insert into discover_episode select key as seriesid, cast(strftime('%s', 'now') as integer) as discovered, value as data from "
+			"json_each((select json_get_aggregate('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || ?1 || '&SeriesID=' || entry.seriesid, entry.seriesid) "
+			"from (select distinct json_extract(data, '$.SeriesID') as seriesid from recordingrule where seriesid is not null) as entry))", deviceauth);
 
 		// Filter the resultant JSON data to only include episodes associated with a recording rule and sort that data by both the start
 		// time and the channel number; the backend ordering is unreliable when a series exists on multiple channels
