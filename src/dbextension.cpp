@@ -61,6 +61,17 @@ int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
 
 static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqlite3_value* postvalue, sqlite3_value* defaultvalue);
 
+int generate_series_bestindex(sqlite3_vtab* vtab, sqlite3_index_info* info);
+int generate_series_close(sqlite3_vtab_cursor* cursor);
+int generate_series_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal);
+int generate_series_connect(sqlite3* instance, void* aux, int argc, const char* const* argv, sqlite3_vtab** vtab, char** err);
+int generate_series_disconnect(sqlite3_vtab* vtab);
+int generate_series_eof(sqlite3_vtab_cursor* cursor);
+int generate_series_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* indexstr, int argc, sqlite3_value** argv);
+int generate_series_next(sqlite3_vtab_cursor* cursor);
+int generate_series_open(sqlite3_vtab* vtab, sqlite3_vtab_cursor** cursor);
+int generate_series_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
+
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
@@ -80,7 +91,7 @@ typedef size_t(*curl_writefunction)(void const*, size_t, size_t, void*);
 // Constants indicating the epg virtual table column ordinals
 enum epg_vtab_columns {
 
-	value		= 0,		// value text
+	json		= 0,		// json text
 	deviceauth,				// deviceauth text hidden
 	channel,				// channel integer hidden
 	starttime,				// starttime integer hidden
@@ -117,6 +128,46 @@ struct epg_vtab_cursor : public sqlite3_vtab_cursor
 	std::vector<byte_string> rows;			// returned rows
 };
 
+// generate_series_vtab_columns
+//
+// Constants indicating the generate_series virtual table column ordinals
+enum generate_series_vtab_columns {
+
+	value = 0,			// value integer
+	start,				// start integer hidden
+	stop,				// stop integer hidden
+	step,				// step integer hidden
+};
+
+// generate_series_vtab
+//
+// Subclassed version of sqlite3_vtab for the generate_series virtual table
+struct generate_series_vtab : public sqlite3_vtab
+{
+	// Instance Constructor
+	//
+	generate_series_vtab() { memset(static_cast<sqlite3_vtab*>(this), 0, sizeof(sqlite3_vtab)); }
+};
+
+// generate_series_vtab_cursor
+//
+// Subclassed version of sqlite3_vtab_cursor for the generate_series virtual table
+struct generate_series_vtab_cursor : public sqlite3_vtab_cursor
+{
+	// Instance Constructor
+	//
+	generate_series_vtab_cursor() { memset(static_cast<sqlite3_vtab_cursor*>(this), 0, sizeof(sqlite3_vtab_cursor)); }
+
+	// Fields
+	//
+	bool				desc = false;			// descending flag
+	sqlite3_int64		rowid = 0;				// rowid
+	sqlite3_int64		value = 0;				// current value
+	sqlite3_int64		minvalue = 0;			// minimum value
+	sqlite3_int64		maxvalue = 0;			// maximum value
+	sqlite3_int64		step = 0;				// increment
+};
+
 // json_get_aggregate_state
 //
 // Used as the state object for the json_get_aggregate function
@@ -136,30 +187,61 @@ static curlshare g_curlshare;
 // Defines the entry points for the epg virtual table
 static sqlite3_module g_epg_module = {
 
-	0,						// iVersion
-	nullptr,				// xCreate
-	epg_connect,			// xConnect
-	epg_bestindex,			// xBestIndex
-	epg_disconnect,			// xDisconnect
-	nullptr,				// xDestroy
-	epg_open,				// xOpen
-	epg_close,				// xClose
-	epg_filter,				// xFilter
-	epg_next,				// xNext
-	epg_eof,				// xEof
-	epg_column,				// xColumn
-	epg_rowid,				// xRowid
-	nullptr,				// xUpdate
-	nullptr,				// xBegin
-	nullptr,				// xSync
-	nullptr,				// xCommit
-	nullptr,				// xRollback
-	nullptr,				// xFindMethod
-	nullptr,				// xRename
-	nullptr,				// xSavepoint
-	nullptr,				// xRelease
-	nullptr,				// xRollbackTo
-	nullptr					// xShadowName
+	0,							// iVersion
+	nullptr,					// xCreate
+	epg_connect,				// xConnect
+	epg_bestindex,				// xBestIndex
+	epg_disconnect,				// xDisconnect
+	nullptr,					// xDestroy
+	epg_open,					// xOpen
+	epg_close,					// xClose
+	epg_filter,					// xFilter
+	epg_next,					// xNext
+	epg_eof,					// xEof
+	epg_column,					// xColumn
+	epg_rowid,					// xRowid
+	nullptr,					// xUpdate
+	nullptr,					// xBegin
+	nullptr,					// xSync
+	nullptr,					// xCommit
+	nullptr,					// xRollback
+	nullptr,					// xFindMethod
+	nullptr,					// xRename
+	nullptr,					// xSavepoint
+	nullptr,					// xRelease
+	nullptr,					// xRollbackTo
+	nullptr						// xShadowName
+};
+
+// g_generate_series_module
+//
+// Defines the entry points for the generate_series virtual table
+static sqlite3_module g_generate_series_module = {
+
+	0,							// iVersion
+	nullptr,					// xCreate
+	generate_series_connect,	// xConnect
+	generate_series_bestindex,	// xBestIndex
+	generate_series_disconnect,	// xDisconnect
+	nullptr,					// xDestroy
+	generate_series_open,		// xOpen
+	generate_series_close,		// xClose
+	generate_series_filter,		// xFilter
+	generate_series_next,		// xNext
+	generate_series_eof,		// xEof
+	generate_series_column,		// xColumn
+	generate_series_rowid,		// xRowid
+	nullptr,					// xUpdate
+	nullptr,					// xBegin
+	nullptr,					// xSync
+	nullptr,					// xCommit
+	nullptr,					// xRollback
+	nullptr,					// xFindMethod
+	nullptr,					// xRename
+	nullptr,					// xSavepoint
+	nullptr,					// xRelease
+	nullptr,					// xRollbackTo
+	nullptr						// xShadowName
 };
 
 // g_useragent
@@ -352,7 +434,7 @@ int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordina
 	assert(epgcursor != nullptr);
 
 	// Accessing the value column requires a valid reference to the current row data
-	if((ordinal == epg_vtab_columns::value) && (epgcursor->currentrow < epgcursor->rows.size())) {
+	if((ordinal == epg_vtab_columns::json) && (epgcursor->currentrow < epgcursor->rows.size())) {
 
 		auto const& value = epgcursor->rows[epgcursor->currentrow];
 
@@ -686,6 +768,351 @@ int epg_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
 
 	// Use the current row index as the ROWID for the cursor
 	*rowid = static_cast<sqlite_int64>(epgcursor->currentrow);
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_bestindex
+//
+// Determines the best index to use when querying the virtual table
+//
+// Arguments:
+//
+//	vtab	- Virtual Table instance
+//	info	- Selected index information to populate
+
+int generate_series_bestindex(sqlite3_vtab* /*vtab*/, sqlite3_index_info* info)
+{
+	int			indexmask = 0;				// The query plan bitmask
+	int			unusablemask = 0;			// Mask of unusable constraints
+	int			numargs = 0;				// Number of arguments that xFilter() expects
+	int			usableconstraints[3];		// Usable constraints on start, stop, and step
+
+	// Notes from series.c (sqlite-src/ext/misc)
+	//
+	// SQLite will invoke this method one or more times while planning a query that uses the generate_series 
+	// virtual table.  This routine needs to create a query plan for each invocation and compute an estimated 
+	// cost for that plan. In this implementation bitmask is used to represent the query plan; idxStr is unused.
+	//
+	// The query plan is represented by bits in bitmask:
+	//
+	//  (1)  start = $value   -- constraint exists
+	//  (2)  stop =  $value   -- constraint exists
+	//  (4)  step =  $value   -- constraint exists
+	//  (8)  output in descending order
+		
+	// This implementation assumes that the start, stop, and step columns are the last three columns in the virtual table
+	assert(static_cast<int>(generate_series_vtab_columns::stop) == static_cast<int>(generate_series_vtab_columns::start) + 1);
+	assert(static_cast<int>(generate_series_vtab_columns::step) == static_cast<int>(generate_series_vtab_columns::start) + 2);
+
+	// Initialize the usable constraints array
+	usableconstraints[0] = usableconstraints[1] = usableconstraints[2] = -1;
+
+	// Iterate over the provided constraints to determine which are usable
+	auto constraint = info->aConstraint;
+	for(int index = 0; index < info->nConstraint; index++, constraint++) {
+
+		int		column;			// 0 for start, 1 for stop, 2 for step */
+		int		bitmask;		// bitmask for those columns
+
+		if(constraint->iColumn < static_cast<int>(generate_series_vtab_columns::start)) continue;
+		column = constraint->iColumn - static_cast<int>(generate_series_vtab_columns::start);
+		assert(column >= 0 && column <= 2);
+
+		bitmask = 1 << column;
+		if(constraint->usable == 0) { 
+			
+			unusablemask |= bitmask; 
+			continue; 
+		}
+		else if(constraint->op == SQLITE_INDEX_CONSTRAINT_EQ) {
+
+			indexmask |= bitmask;
+			usableconstraints[column] = index;
+		}
+	}
+
+	// Set up the array of usable constraints for xFilter() to consume
+	for(int index = 0; index < 3; index++) {
+
+		int usableindex = usableconstraints[index];
+		if(usableindex >= 0) {
+
+			info->aConstraintUsage[usableindex].argvIndex = ++numargs;
+			info->aConstraintUsage[usableindex].omit = 1;
+		}
+	}
+
+	// The start, stop, and step columns are inputs. Therefore if there are unusable constraints 
+	// on any of start, stop, or step then this plan is unusable
+	if((unusablemask & ~indexmask) != 0) return SQLITE_CONSTRAINT;
+
+	// Both start= and stop= boundaries are available.  This is the the preferred case
+	if((indexmask & 3) == 3) {
+
+		info->estimatedCost = static_cast<double>(2 - ((indexmask & 4) != 0) ? 1 : 0);
+		info->estimatedRows = 1000;
+		if(info->nOrderBy == 1) {
+
+			if(info->aOrderBy[0].desc) indexmask |= 8;
+			info->orderByConsumed = 1;
+		}
+	}
+
+	// If either boundary is missing, we have to generate a huge span of numbers. Make this case very 
+	// expensive so that the query planner will work hard to avoid it
+	else info->estimatedRows = 2147483647;
+	
+	info->idxNum = indexmask;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_close
+//
+// Closes and deallocates a virtual table cursor instance
+//
+// Arguments:
+//
+//	cursor		- Cursor instance allocated by xOpen
+
+int generate_series_close(sqlite3_vtab_cursor* cursor)
+{
+	if(cursor != nullptr) delete reinterpret_cast<generate_series_vtab_cursor*>(cursor);
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_column
+//
+// Accesses the data in the specified column of the current cursor row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	context		- Result context object
+//	ordinal		- Ordinal of the column being accessed
+
+int generate_series_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal)
+{
+	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
+	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
+	assert(seriescursor != nullptr);
+
+	// Return the current value corresponding to the column that has been requested
+	switch(ordinal) {
+
+		case generate_series_vtab_columns::value: sqlite3_result_int64(context, seriescursor->value); break;
+		case generate_series_vtab_columns::start: sqlite3_result_int64(context, seriescursor->minvalue); break;
+		case generate_series_vtab_columns::stop: sqlite3_result_int64(context, seriescursor->maxvalue); break;
+		case generate_series_vtab_columns::step: sqlite3_result_int64(context, seriescursor->step); break;
+
+		// Invalid ordinal or invalid row when accessing the value column yields null
+		default: sqlite3_result_null(context);
+	}
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_connect
+//
+// Connects to the specified virtual table
+//
+// Arguments:
+//
+//	instance	- SQLite database instance handle
+//	aux			- Client data pointer provided to sqlite3_create_module[_v2]()
+//	argc		- Number of provided metadata strings
+//	argv		- Metadata strings
+//	vtab		- On success contains the allocated virtual table instance
+//	err			- On error contains a string-based error message
+
+int generate_series_connect(sqlite3* instance, void* /*aux*/, int /*argc*/, const char* const* /*argv*/, sqlite3_vtab** vtab, char** err)
+{
+	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
+	int result = sqlite3_declare_vtab(instance, "create table generate_series(value integer, start integer hidden, stop integer hidden, step integer hidden)");
+	if(result != SQLITE_OK) return result;
+
+	// Allocate and initialize the custom virtual table class
+	try { *vtab = static_cast<sqlite3_vtab*>(new generate_series_vtab()); } 
+	catch(std::exception const& ex) { *err = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; } 
+	catch(...) { return SQLITE_ERROR; }
+
+	return (*vtab == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_disconnect
+//
+// Disconnects from the EPG virtual table
+//
+// Arguments:
+//
+//	vtab		- Virtual table instance allocated by xConnect
+
+int generate_series_disconnect(sqlite3_vtab* vtab)
+{
+	if(vtab != nullptr) delete reinterpret_cast<generate_series_vtab*>(vtab);
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_eof
+//
+// Determines if the specified cursor has moved beyond the last row of data
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+
+int generate_series_eof(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
+	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
+	assert(seriescursor != nullptr);
+
+	// Return 1 if the current values exceeds the min/max value for the cursor
+	return (seriescursor->desc) ? seriescursor->value < seriescursor->minvalue : seriescursor->value > seriescursor->maxvalue;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_filter
+//
+// Executes a search of the virtual table
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	indexnum	- Virtual table index number from xBestIndex()
+//	indexstr	- Virtual table index string from xBestIndex()
+//	argc		- Number of arguments assigned by xBestIndex()
+//	argv		- Argument data assigned by xBestIndex()
+
+int generate_series_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* /*indexstr*/, int argc, sqlite3_value** argv)
+{
+	int				argindex = 0;					// Index into the provided argv[] array
+
+	// Cast the provided generic cursor instance back into an epg_vtab_cursor instance
+	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
+	assert(seriescursor != nullptr);
+
+	// Notes from series.c (sqlite-src/ext/misc):
+	//
+	// This method is called to "rewind" the series_cursor object back to the first row of output. This method 
+	// is always called at least once prior to any call to xColumn() or xRowid() or xEof()
+	//
+	// The query plan selected by generate_series_bestindex is passed in the indexnum parameter (indexstr is not 
+	// used in this implementation).  indexnum is a bitmask showing which constraints are available:
+	//
+	// 1 : start = VALUE
+	// 2 : stop = VALUE
+	// 4 : step = VALUE
+	// 
+	// Also, if bit 8 is set, that means that the series should be output in descending order rather than in ascending order
+	//
+	// This routine should initialize the cursor and position it so that it is pointing at the first row, or pointing off 
+	// the end of the table (so that xEof() will return true) if the table is empty
+
+	// 1: minvalue
+	seriescursor->minvalue = (indexnum & 1) ? sqlite3_value_int64(argv[argindex++]) : 0;
+	
+	// 2: maxvalue
+	seriescursor->maxvalue = (indexnum & 2) ? sqlite3_value_int64(argv[argindex++]) : std::numeric_limits<sqlite3_int64>::max();
+	
+	// 4: step
+	seriescursor->step = (indexnum & 4) ? sqlite3_value_int64(argv[argindex++]) : 1;
+	if(seriescursor->step < 1) seriescursor->step = 1;
+	
+	// If any of the constraints have a NULL value, return no rows
+	for(int index = 0; index < argc; index++) {
+
+		if(sqlite3_value_type(argv[index]) == SQLITE_NULL) {
+
+			seriescursor->minvalue = 1;
+			seriescursor->maxvalue = 0;
+			break;
+		}
+	}
+
+	// 8: desc
+	seriescursor->desc = (indexnum & 8);
+
+	// Set the initial value, taking into account the descending flag
+	seriescursor->value = (seriescursor->desc) ? seriescursor->maxvalue : seriescursor->minvalue;
+	if((seriescursor->desc) && (seriescursor->step > 0)) seriescursor->value -= (seriescursor->maxvalue - seriescursor->minvalue) % seriescursor->step;
+
+	// Set the initial rowid value
+	seriescursor->rowid = 1;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_open
+//
+// Creates and intializes a new virtual table cursor instance
+//
+// Arguments:
+//
+//	vtab		- Virtual table instance
+//	cursor		- On success contains the allocated virtual table cursor instance
+
+int generate_series_open(sqlite3_vtab* /*vtab*/, sqlite3_vtab_cursor** cursor)
+{
+	// Allocate and initialize the custom virtual table cursor class
+	try { *cursor = static_cast<sqlite3_vtab_cursor*>(new generate_series_vtab_cursor()); } 
+	catch(...) { return SQLITE_ERROR; }
+
+	return (*cursor == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_next
+//
+// Advances the virtual table cursor to the next row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cusror instance
+
+int generate_series_next(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
+	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
+	assert(seriescursor != nullptr);
+
+	// Check if the operation is ascending or descending and increment/decrement the value accordingly
+	seriescursor->value = (seriescursor->desc) ? seriescursor->value - seriescursor->step : seriescursor->value + seriescursor->step;
+
+	// Increment the rowid for the virtual table
+	seriescursor->rowid++;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// generate_series_rowid
+//
+// Retrieves the ROWID for the current virtual table cursor row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	rowid		- On success contains the ROWID for the current row
+
+int generate_series_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
+{
+	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
+	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
+	assert(seriescursor != nullptr);
+
+	// Return the current ROWID for the cursor instance
+	*rowid = seriescursor->rowid;
 
 	return SQLITE_OK;
 }
@@ -1313,10 +1740,15 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function encode_channel_id"); return result; }
 
-	// epg virtual table function
+	// epg virtual table
 	//
 	result = sqlite3_create_module_v2(db, "epg", &g_epg_module, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module epg"); return result; }
+
+	// generate_series virtual table
+	//
+	result = sqlite3_create_module_v2(db, "generate_series", &g_generate_series_module, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module generate_series"); return result; }
 
 	// fnv_hash function
 	//
