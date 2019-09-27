@@ -1415,7 +1415,7 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
 		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from epg(?1, decode_channel_id(?2), ?3, ?4), json_each(json_extract(nullif(epg.value, 'null'), '$[0].Guide')) as entry";
+		"from epg(?1, decode_channel_id(?2), ?3, ?4), json_each(json_extract(nullif(epg.json, 'null'), '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
