@@ -475,7 +475,7 @@ int epg_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordina
 int epg_connect(sqlite3* instance, void* /*aux*/, int /*argc*/, const char* const* /*argv*/, sqlite3_vtab** vtab, char** err)
 {
 	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
-	int result = sqlite3_declare_vtab(instance, "create table epg(value text, deviceauth text hidden, channel text hidden, starttime integer hidden, endtime integer hidden)");
+	int result = sqlite3_declare_vtab(instance, "create table epg(json text, deviceauth text hidden, channel text hidden, starttime integer hidden, endtime integer hidden)");
 	if(result != SQLITE_OK) return result;
 
 	// Allocate and initialize the custom virtual table class
