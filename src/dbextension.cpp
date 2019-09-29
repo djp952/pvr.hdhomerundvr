@@ -537,7 +537,7 @@ int generate_series_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const
 	}
 
 	// 8: desc
-	seriescursor->desc = (indexnum & 8);
+	seriescursor->desc = ((indexnum & 8) == 8);
 
 	// Set the initial value, taking into account the descending flag
 	seriescursor->value = (seriescursor->desc) ? seriescursor->maxvalue : seriescursor->minvalue;
