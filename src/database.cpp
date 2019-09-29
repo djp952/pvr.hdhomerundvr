@@ -1401,6 +1401,10 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 	starttime = std::max(starttime, now - 14400);			// (60 * 60 * 4) = 4 hours
 	endtime = std::min(endtime, now + 1209600);				// (60 * 60 * 24 * 14) = 14 days
 
+	// Use a step value of 7.5 hours to retrieve the EPG data; the backend will return no more than 8 hours
+	// of data at a time, this should prevent any holes from forming in the data
+	time_t step = 27000;
+
 	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename
 	auto sql = "select json_extract(entry.value, '$.SeriesID') as seriesid, "
 		"json_extract(entry.value, '$.Title') as title, "
@@ -1416,68 +1420,52 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
 		"case when ?2 then coalesce(json_extract(entry.value, '$.EpisodeNumber') || ' - ', '') else '' end || json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from epg(?1, decode_channel_id(?3), ?4, ?5), json_each(json_extract(nullif(epg.json, 'null'), '$[0].Guide')) as entry";
+		"from json_each((select json_get_aggregate('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || '&Channel=' || decode_channel_id(?3) || '&Start=' || starttime.value, starttime.value) "
+		"from generate_series(?4, ?5, ?6) as starttime)) as entries, json_each(json_extract(entries.value, '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
 	try {
 
-		while(starttime < endtime) {
+		// Bind the query parameters
+		result = sqlite3_bind_text(statement, 1, deviceauth, -1, SQLITE_STATIC);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (prependnumber) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, channelid.value);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 4, static_cast<int>(starttime));
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 5, static_cast<int>(endtime));
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 6, static_cast<int>(step));
+		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-			// Bind the query parameters
-			result = sqlite3_bind_text(statement, 1, deviceauth, -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (prependnumber) ? 1 : 0);
-			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, channelid.value);
-			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 4, static_cast<int>(starttime));
-			if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 5, static_cast<int>(endtime));
-			if(result != SQLITE_OK) throw sqlite_exception(result);
+		// Execute the SQL statement
+		result = sqlite3_step(statement);
+		if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
-			// Execute the SQL statement
-			result = sqlite3_step(statement);
-			if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
+		// Process each row returned from the query
+		while(result == SQLITE_ROW) {
 
-			// If no rows were returned from the query and the start time is still in the past,
-			// fast-forward it to the current time and try again.  Otherwise stop - no more data
-			if(result == SQLITE_DONE) {
-				
-				if(starttime < now) starttime = now;
-				else break;
-			}
+			struct guideentry item;
+			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
+			item.channelid = channelid.value;
+			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
+			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
+			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
+			item.year = sqlite3_column_int(statement, 6);
+			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
+			item.genretype = sqlite3_column_int(statement, 8);
+			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
+			item.originalairdate = sqlite3_column_int(statement, 10);
+			item.seriesnumber = sqlite3_column_int(statement, 11);
+			item.episodenumber = sqlite3_column_int(statement, 12);
+			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
 
-			// Process each row returned from the query or until the specified end time has been reached
-			while((result == SQLITE_ROW) && (starttime < endtime)) {
-
-				struct guideentry item;
-				item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-				item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
-				item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
-				item.channelid = channelid.value;
-				item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
-				item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
-				item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
-				item.year = sqlite3_column_int(statement, 6);
-				item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
-				item.genretype = sqlite3_column_int(statement, 8);
-				item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
-				item.originalairdate = sqlite3_column_int(statement, 10);
-				item.seriesnumber = sqlite3_column_int(statement, 11);
-				item.episodenumber = sqlite3_column_int(statement, 12);
-				item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
-
-				// Move the starttime to the last seen endtime to continue the backend queries
-				if(item.endtime > starttime) starttime = item.endtime;
-
-				callback(item);							// Invoke caller-supplied callback
-				result = sqlite3_step(statement);		// Move to the next row of data
-			}
-
-			// Reset the prepared statement so that it can be executed again
-			result = sqlite3_reset(statement);
-			if(result != SQLITE_OK) throw sqlite_exception(result);
-		};
+			callback(item);							// Invoke caller-supplied callback
+			result = sqlite3_step(statement);		// Move to the next row of data
+		}
 	
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
+		sqlite3_finalize(statement);				// Finalize the SQLite statement
 	}
 
 	catch(...) { sqlite3_finalize(statement); throw; }
