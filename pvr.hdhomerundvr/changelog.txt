@@ -1,4 +1,4 @@
-v2.3.1 (2019.09.xx)
+v2.3.1 (2019.09.30)
   - Fix potential for a race condition in background task scheduler when synchronously executing a task
   - Improve performance of backend series episode (timers) discovery
   - (Windows) Wait for IPv4 network connectivity to become available before executing wakeup discovery tasks
