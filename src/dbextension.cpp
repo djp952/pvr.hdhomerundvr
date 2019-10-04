@@ -27,6 +27,7 @@
 #include <list>
 #include <memory>
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <sqlite3ext.h>
@@ -119,7 +120,7 @@ struct generate_series_vtab_cursor : public sqlite3_vtab_cursor
 // json_get_aggregate_state
 //
 // Used as the state object for the json_get_aggregate function
-typedef std::vector<std::tuple<std::string, std::string>> json_get_aggregate_state;
+typedef std::vector<std::tuple<std::string, std::string, bool>> json_get_aggregate_state;
 
 //---------------------------------------------------------------------------
 // GLOBAL VARIABLES
@@ -973,6 +974,129 @@ static void http_request(sqlite3_context* context, sqlite3_value* urlvalue, sqli
 }
 
 //---------------------------------------------------------------------------
+// json_get
+//
+// SQLite scalar function to generate a JSON document
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	bool					post = false;			// Flag indicating an HTTP POST operation
+	std::string				postfields;				// HTTP post fields (optional)
+	long					responsecode = 200;		// HTTP response code
+	std::vector<uint8_t>	blob;					// HTTP response data buffer
+	rapidjson::Document		document;				// Resultant JSON document
+
+	// json_get requires at least the URL argument to be specified, with an optional second
+	// argument indicating the method (GET/POST), and an optional third argument to specify
+	// the post fields if the POST method was specified
+	if((argc < 1) || (argc > 3) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+												
+	// A null or zero-length URL results in null
+	const char* url = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((url == nullptr) || (*url == '\0')) return sqlite3_result_null(context);
+
+	// Check for HTTP POST operation
+	if((argc >= 2) && (argv[1] != nullptr)) {
+
+		const char* method = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
+		if(method != nullptr) post = (strncasecmp(method, "POST", 4) == 0);
+	}
+
+	// Check for HTTP POST field data
+	if((argc >= 3) && (argv[2] != nullptr)) {
+
+		const char* postdata = reinterpret_cast<const char*>(sqlite3_value_text(argv[2]));
+		if(postdata != nullptr) postfields.assign(postdata);
+	}
+
+	// Create a write callback for libcurl to invoke to write the data
+	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
+	
+		// Acquire the pointer to the std::vector<> and retrieve the current size
+		std::vector<uint8_t>* blob = reinterpret_cast<std::vector<uint8_t>*>(userdata);
+		size_t blobsize = blob->size();
+
+		// Resize the vector<> as needed and copy in the data from cURL
+		blob->resize(blobsize + (size * count));
+		memcpy(&blob->data()[blobsize], data, size * count);
+
+		return (size * count);
+	};
+
+	// Set the rapdison document type
+	document.SetObject();
+
+#if defined(_WINDOWS) && defined(_DEBUG)
+	// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
+	char debugurl[256];
+	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s%s%s%s\r\n", __func__, (post) ? "post" : "get", url, (post) ? " [" : "", (post) ? postfields.c_str() : "", (post) ? "]" : "");
+	OutputDebugStringA(debugurl);
+#endif
+
+	// Initialize the CURL session for the download operation
+	CURL* curl = curl_easy_init();
+	if(curl == nullptr) return sqlite3_result_error(context, "cannot initialize libcurl object", -1);
+
+	// Set the CURL options and execute the web request, switching to POST if indicated
+	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
+	if((post) && (curlresult == CURLE_OK)) curlresult = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields.c_str());
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
+	curl_easy_cleanup(curl);
+
+	// Check if any of the above operations failed and return an error condition
+	if(curlresult != CURLE_OK) {
+
+		// Use sqlite3_mprintf to generate the formatted error message
+		auto message = sqlite3_mprintf("http %s request on [%s] failed: %s", (post) ? "post" : "get", url, curl_easy_strerror(curlresult));
+		sqlite3_result_error(context, message, -1);
+		return sqlite3_free(reinterpret_cast<void*>(message));
+	}
+
+	// Check the HTTP response code and return an error condition if unsuccessful
+	if((responsecode < 200) || (responsecode > 299)) {
+
+		// Use sqlite3_mprintf to generate the formatted error message
+		auto message = sqlite3_mprintf("http %s request on url [%s] failed with http response code %ld", (post) ? "post" : "get", url, responsecode);
+		sqlite3_result_error(context, message, -1);
+		return sqlite3_free(reinterpret_cast<void*>(message));
+	}
+
+	// Ensure the BLOB data is null-terminated before attempting to parse it as JSON
+	blob.push_back(static_cast<uint8_t>('\0'));
+
+	// Parse the JSON data returned from the cURL operation
+	document.ParseInsitu(reinterpret_cast<char*>(blob.data()));
+	if(document.HasParseError()) return sqlite3_result_error(context, rapidjson::GetParseError_En(document.GetParseError()), -1);
+
+	// If the document contains no data, return null
+	if(document.IsNull() || (document.IsObject() && (document.MemberCount() == 0)) || (document.IsArray() && (document.Size() == 0))) return sqlite3_result_null(context);
+
+	// Serialize the document back into a JSON string
+	rapidjson::StringBuffer sb;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+	document.Accept(writer);
+
+	// Return the resultant JSON back to the caller as a text string
+	return sqlite3_result_text(context, sb.GetString(), -1, SQLITE_TRANSIENT);
+}
+
+//---------------------------------------------------------------------------
 // json_get_aggregate_final
 //
 // SQLite aggregate function to generate a JSON array of multiple JSON documents
@@ -990,17 +1114,18 @@ void json_get_aggregate_final(sqlite3_context* context)
 	json_get_aggregate_state* statep = (statepp == nullptr) ? nullptr : *statepp;
 	if(statep == nullptr) { sqlite3_aggregate_context(context, 0); return sqlite3_result_null(context); }
 
-	// write_function (local)
-	//
-	// cURL write callback to append data to the provided byte_string instance
+	// Create a write callback for libcurl to invoke to write the data
 	auto write_function = [](void const* data, size_t size, size_t count, void* userdata) -> size_t {
 
-		assert((size * count) > 0);
+		// Acquire the pointer to the std::vector<> and retrieve the current size
+		std::vector<uint8_t>* blob = reinterpret_cast<std::vector<uint8_t>*>(userdata);
+		size_t blobsize = blob->size();
 
-		try { if((size * count) > 0) reinterpret_cast<byte_string*>(userdata)->append(reinterpret_cast<uint8_t const*>(data), size * count); } 
-		catch(...) { return 0; }
+		// Resize the vector<> as needed and copy in the data from cURL
+		blob->resize(blobsize + (size * count));
+		memcpy(&blob->data()[blobsize], data, size * count);
 
-		return size * count;
+		return (size * count);
 	};
 
 	// Wrap the json_get_aggregate_state pointer in a unique_ptr to automatically release it when it falls out of scope
@@ -1014,6 +1139,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 	std::unique_ptr<CURLM, std::function<void(CURLM*)>> curlm(curl_multi_init(), [](CURLM* curlm) -> void { curl_multi_cleanup(curlm); });
 	if(!curlm) throw string_exception(__func__, ": curl_multi_init() failed");
 
+	// Set the rapdison document type
 	document.SetObject();
 
 	try {
@@ -1024,7 +1150,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 		if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_setopt(CURLMOPT_PIPELINING) failed: ", curl_multi_strerror(curlmresult));
 
 		// Create a list<> to hold the individual transfer information (no iterator invalidation)
-		std::list<std::tuple<CURL*, byte_string, std::string>> transfers;
+		std::list<std::tuple<CURL*, std::vector<uint8_t>, std::string, bool>> transfers;
 
 		try {
 
@@ -1042,7 +1168,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 			#endif
 
 				// Create the transfer instance to track this operation in the list<>
-				auto transfer = transfers.emplace(transfers.end(), std::make_tuple(curl, byte_string(), std::get<1>(iterator)));
+				auto transfer = transfers.emplace(transfers.end(), std::make_tuple(curl, std::vector<uint8_t>(), std::get<1>(iterator), std::get<2>(iterator)));
 
 				// Set the CURL options and execute the web request to get the JSON string data
 				CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, std::get<0>(iterator).c_str());
@@ -1089,17 +1215,26 @@ void json_get_aggregate_final(sqlite3_context* context)
 				if(responsecode == 0) throw string_exception(__func__, ": no response from host");
 				else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 
-				// Ignore transfers that returned no data or begin with the string "null"
-				if((std::get<1>(transfer).size() > 0) && (strcasecmp(reinterpret_cast<const char*>(std::get<1>(transfer).c_str()), "null") != 0)) {
+				// Ensure the BLOB data is null-terminated before attempting to parse it as JSON
+				std::get<1>(transfer).push_back(static_cast<uint8_t>('\0'));
 
-					// Convert the data returned from the query into a JSON document object
-					rapidjson::Document json;
-					json.Parse(reinterpret_cast<const char*>(std::get<1>(transfer).data()), std::get<1>(transfer).size());
+				// Parse the JSON data returned from the cURL operation
+				rapidjson::Document json;
+				json.ParseInsitu(reinterpret_cast<char*>(std::get<1>(transfer).data()));
 
-					// If the JSON parsed successfully, add the entire document as a new array element in the final document
-					if(!json.HasParseError()) document.AddMember(rapidjson::GenericStringRef<char>(std::get<2>(transfer).c_str()), 
-						rapidjson::Value(json, document.GetAllocator()), document.GetAllocator());
+				// If the document failed to parse, throw an exception
+				if(json.HasParseError()) throw string_exception(rapidjson::GetParseError_En(document.GetParseError()));
+
+				// Check if the document is null or contained no members/elements
+				if(json.IsNull() || (json.IsObject() && (json.MemberCount() == 0)) || (json.IsArray() && (json.Size() == 0))) {
+
+					// If the "stop on null" option was specified stop processing documents; otherwise skip this document
+					if(std::get<3>(transfer)) break;
+					else continue;
 				}
+
+				// Add the entire document as a new array element in the final document
+				document.AddMember(rapidjson::GenericStringRef<char>(std::get<2>(transfer).c_str()), rapidjson::Value(json, document.GetAllocator()), document.GetAllocator());
 			}
 
 			// Clean up and destroy the generated cURL easy interface handles
@@ -1122,17 +1257,16 @@ void json_get_aggregate_final(sqlite3_context* context)
 			throw;
 		}
 
-		//
-		// TODO: This can be more efficient by providing a custom rapidjson output stream that uses 
-		// sqlite3_malloc() internally and detaches that pointer for sqlite3_result_text, using 
-		// sqlite3_free as the destructor function instead of SQLITE_TRANSIENT
-		//
+		// If the generated document has nothing in it return null as the query result
+		if(document.MemberCount() == 0) return sqlite3_result_null(context);
 
-		// Convert the final document back into JSON and return it to the caller
+		// Serialize the document back into a JSON string
 		rapidjson::StringBuffer sb;
 		rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
 		document.Accept(writer);
-		sqlite3_result_text(context, sb.GetString(), -1, SQLITE_TRANSIENT);
+
+		// Return the resultant JSON back to the caller as a text string
+		return sqlite3_result_text(context, sb.GetString(), -1, SQLITE_TRANSIENT);
 	}
 
 	catch(std::exception const& ex) { return sqlite3_result_error(context, ex.what(), -1); }
@@ -1152,7 +1286,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 
 void json_get_aggregate_step(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
-	if(argc != 2) return sqlite3_result_error(context, "invalid argument", -1);
+	if((argc < 2) || (argc > 3)) return sqlite3_result_error(context, "invalid argument", -1);
 	if(argv[0] == nullptr) return sqlite3_result_error(context, "invalid argument", -1);
 
 	// Use a json_get_aggregate_state to hold the aggregate state as it's calculated
@@ -1164,13 +1298,17 @@ void json_get_aggregate_step(sqlite3_context* context, int argc, sqlite3_value**
 	if(statep == nullptr) *statepp = statep = new json_get_aggregate_state();
 	if(statep == nullptr) return sqlite3_result_error_nomem(context);
 
-	// There are two arguments to this function, the first is the URL to query for the JSON
+	// There are two main rguments to this function, the first is the URL to query for the JSON
 	// and the second is the key name to assign to the resultant JSON array element
 	char const* url = reinterpret_cast<char const*>(sqlite3_value_text(argv[0]));
 	char const* key = reinterpret_cast<char const*>(sqlite3_value_text(argv[1]));
 
+	// There is a third optional argument that evaluates to a boolean indicating that the aggregate query
+	// should be stopped if a null and/or empty JSON document has been encountered
+	bool stoponnull = ((argc >= 3) && (sqlite3_value_int(argv[2]) != 0));
+
 	// The URL string must be non-null, but the key can be null or blank if the caller doesn't care
-	if(url != nullptr) statep->emplace_back(std::make_tuple(url, (key != nullptr) ? key : ""));
+	if(url != nullptr) statep->emplace_back(std::make_tuple(url, (key != nullptr) ? key : "", stoponnull));
 	else return sqlite3_result_error(context, "invalid argument", -1);
 }
 
@@ -1283,9 +1421,29 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "http_post", -1, SQLITE_UTF8, nullptr, http_post, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_post"); return result; }
 
-	// json_get_aggregate (non-deterministic)
+	// json_get (1 argument; non-deterministic)
+	//
+	result = sqlite3_create_function_v2(db, "json_get", 1, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_get"); return result; }
+
+	// json_get (2 arguments; non-deterministic)
+	//
+	result = sqlite3_create_function_v2(db, "json_get", 2, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_get"); return result; }
+
+	// json_get (3 arguments; non-deterministic)
+	//
+	result = sqlite3_create_function_v2(db, "json_get", 3, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_get"); return result; }
+
+	// json_get_aggregate (2 arguments; non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "json_get_aggregate", 2, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
+
+	// json_get_aggregate (3 arguments; non-deterministic)
+	//
+	result = sqlite3_create_function_v2(db, "json_get_aggregate", 3, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
 
 	// url_encode function
