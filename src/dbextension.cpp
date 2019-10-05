@@ -120,7 +120,7 @@ struct generate_series_vtab_cursor : public sqlite3_vtab_cursor
 // json_get_aggregate_state
 //
 // Used as the state object for the json_get_aggregate function
-typedef std::vector<std::tuple<std::string, std::string, bool>> json_get_aggregate_state;
+typedef std::vector<std::tuple<std::string, std::string>> json_get_aggregate_state;
 
 //---------------------------------------------------------------------------
 // GLOBAL VARIABLES
@@ -1150,7 +1150,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 		if(curlmresult != CURLM_OK) throw string_exception(__func__, ": curl_multi_setopt(CURLMOPT_PIPELINING) failed: ", curl_multi_strerror(curlmresult));
 
 		// Create a list<> to hold the individual transfer information (no iterator invalidation)
-		std::list<std::tuple<CURL*, std::vector<uint8_t>, std::string, bool>> transfers;
+		std::list<std::tuple<CURL*, std::vector<uint8_t>, std::string>> transfers;
 
 		try {
 
@@ -1168,7 +1168,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 			#endif
 
 				// Create the transfer instance to track this operation in the list<>
-				auto transfer = transfers.emplace(transfers.end(), std::make_tuple(curl, std::vector<uint8_t>(), std::get<1>(iterator), std::get<2>(iterator)));
+				auto transfer = transfers.emplace(transfers.end(), std::make_tuple(curl, std::vector<uint8_t>(), std::get<1>(iterator)));
 
 				// Set the CURL options and execute the web request to get the JSON string data
 				CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, std::get<0>(iterator).c_str());
@@ -1226,12 +1226,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 				if(json.HasParseError()) throw string_exception(rapidjson::GetParseError_En(document.GetParseError()));
 
 				// Check if the document is null or contained no members/elements
-				if(json.IsNull() || (json.IsObject() && (json.MemberCount() == 0)) || (json.IsArray() && (json.Size() == 0))) {
-
-					// If the "stop on null" option was specified stop processing documents; otherwise skip this document
-					if(std::get<3>(transfer)) break;
-					else continue;
-				}
+				if(json.IsNull() || (json.IsObject() && (json.MemberCount() == 0)) || (json.IsArray() && (json.Size() == 0))) continue;
 
 				// Add the entire document as a new array element in the final document
 				document.AddMember(rapidjson::GenericStringRef<char>(std::get<2>(transfer).c_str()), rapidjson::Value(json, document.GetAllocator()), document.GetAllocator());
@@ -1286,7 +1281,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 
 void json_get_aggregate_step(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
-	if((argc < 2) || (argc > 3)) return sqlite3_result_error(context, "invalid argument", -1);
+	if(argc != 2) return sqlite3_result_error(context, "invalid argument", -1);
 	if(argv[0] == nullptr) return sqlite3_result_error(context, "invalid argument", -1);
 
 	// Use a json_get_aggregate_state to hold the aggregate state as it's calculated
@@ -1298,17 +1293,13 @@ void json_get_aggregate_step(sqlite3_context* context, int argc, sqlite3_value**
 	if(statep == nullptr) *statepp = statep = new json_get_aggregate_state();
 	if(statep == nullptr) return sqlite3_result_error_nomem(context);
 
-	// There are two main rguments to this function, the first is the URL to query for the JSON
+	// There are two arguments to this function, the first is the URL to query for the JSON
 	// and the second is the key name to assign to the resultant JSON array element
 	char const* url = reinterpret_cast<char const*>(sqlite3_value_text(argv[0]));
 	char const* key = reinterpret_cast<char const*>(sqlite3_value_text(argv[1]));
 
-	// There is a third optional argument that evaluates to a boolean indicating that the aggregate query
-	// should be stopped if a null and/or empty JSON document has been encountered
-	bool stoponnull = ((argc >= 3) && (sqlite3_value_int(argv[2]) != 0));
-
 	// The URL string must be non-null, but the key can be null or blank if the caller doesn't care
-	if(url != nullptr) statep->emplace_back(std::make_tuple(url, (key != nullptr) ? key : "", stoponnull));
+	if(url != nullptr) statep->emplace_back(std::make_tuple(url, (key != nullptr) ? key : ""));
 	else return sqlite3_result_error(context, "invalid argument", -1);
 }
 
@@ -1436,14 +1427,9 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "json_get", 3, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_get"); return result; }
 
-	// json_get_aggregate (2 arguments; non-deterministic)
+	// json_get_aggregate (non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "json_get_aggregate", 2, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
-
-	// json_get_aggregate (3 arguments; non-deterministic)
-	//
-	result = sqlite3_create_function_v2(db, "json_get_aggregate", 3, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
 
 	// url_encode function
