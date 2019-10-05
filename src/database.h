@@ -396,6 +396,11 @@ bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid)
 // Generates a stream URL for the specified channel on the specified tuner
 std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union channelid channelid);
 
+// has_dvr_authorization
+//
+// Gets a flag indicating if any devices have DVR service authorization
+bool has_dvr_authorization(sqlite3* instance);
+
 // modify_recordingrule
 //
 // Modifies an existing recording rule
