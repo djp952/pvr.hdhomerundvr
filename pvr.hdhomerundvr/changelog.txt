@@ -1,5 +1,6 @@
 v2.3.2 (2019.10.xx)
   - Enforce previosuly relaxed rules regarding invalid JSON data retrieved from the backend and/or local devices
+  - Limit EPG data requests to no more than 24 hours into the future if no devices with DVR authorization where discovered
 
 v2.3.1 (2019.09.30)
   - Fix potential for a race condition in background task scheduler when synchronously executing a task
