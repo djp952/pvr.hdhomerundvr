@@ -2681,6 +2681,45 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 }
 
 //---------------------------------------------------------------------------
+// has_dvr_authorization
+//
+// Gets a flag indicating if any devices have DVR service authorization
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+
+bool has_dvr_authorization(sqlite3* instance)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	bool						hasauth = false;		// Flag indicating authorization
+	int							result;					// Result from SQLite function call
+
+	if(instance == nullptr) return false;
+
+	// Prepare a scalar query to determine if any devices have a valid DVR authorization flag
+	auto sql = "select exists(select deviceid from device where json_extract(data, '$.DeviceAuth') is not null and coalesce(dvrauthorized, 0) = 1)";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Execute the scalar query
+		result = sqlite3_step(statement);
+
+		// There should be a single SQLITE_ROW returned from the initial step
+		if(result == SQLITE_ROW) hasauth = (sqlite3_column_int(statement, 0) != 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		sqlite3_finalize(statement);
+		return hasauth;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // modify_recordingrule
 //
 // Modifies an existing recording rule
