@@ -1419,7 +1419,7 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
 		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from json_each((select json_get_aggregate('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || '&Channel=' || decode_channel_id(?2) || '&Start=' || starttime.value, starttime.value, true) "
+		"from json_each((select json_get_aggregate('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || '&Channel=' || decode_channel_id(?2) || '&Start=' || starttime.value, starttime.value) "
 		"from generate_series(?3, ?4, ?5) as starttime)) as entries, json_each(json_extract(entries.value, '$[0].Guide')) as entry";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
