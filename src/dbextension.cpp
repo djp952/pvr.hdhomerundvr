@@ -850,30 +850,9 @@ void http_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 }
 
 //---------------------------------------------------------------------------
-// http_post
-//
-// SQLite scalar function to execute an HTTP POST request
-//
-// Arguments:
-//
-//	context		- SQLite context object
-//	argc		- Number of supplied arguments
-//	argv		- Argument values
-
-void http_post(sqlite3_context* context, int argc, sqlite3_value** argv)
-{
-	// http_post requires at least the URL and post data arguments to be specified, with an optional third parameter
-	// indicating a default value to return in the event of an HTTP error
-	if((argc < 2) || (argc > 3) || (argv[0] == nullptr) || (argv[1] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
-
-	// Invoke http_request specifying the POST data argument and the optional default value
-	return http_request(context, argv[0], argv[1], ((argc >= 3) && (argv[2] != nullptr)) ? argv[2] : nullptr);
-}
-
-//---------------------------------------------------------------------------
 // http_request
 //
-// Helper function used by http_get and http_post to execute an HTTP request
+// Helper function used by http_get to execute an HTTP request
 //
 // Arguments:
 //
@@ -1082,7 +1061,8 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 	// Parse the JSON data returned from the cURL operation
 	document.ParseInsitu(reinterpret_cast<char*>(blob.data()));
-	if(document.HasParseError()) return sqlite3_result_error(context, rapidjson::GetParseError_En(document.GetParseError()), -1);
+	if(document.HasParseError()) return (document.GetParseError() == rapidjson::ParseErrorCode::kParseErrorDocumentEmpty) ? 
+		sqlite3_result_null(context) : sqlite3_result_error(context, rapidjson::GetParseError_En(document.GetParseError()), -1);
 
 	// If the document contains no data, return null
 	if(document.IsNull() || (document.IsObject() && (document.MemberCount() == 0)) || (document.IsArray() && (document.Size() == 0))) return sqlite3_result_null(context);
@@ -1222,8 +1202,12 @@ void json_get_aggregate_final(sqlite3_context* context)
 				rapidjson::Document json;
 				json.ParseInsitu(reinterpret_cast<char*>(std::get<1>(transfer).data()));
 
-				// If the document failed to parse, throw an exception
-				if(json.HasParseError()) throw string_exception(rapidjson::GetParseError_En(document.GetParseError()));
+				// If the document failed to parse skip it if it's an empty document; otherwise throw an exception
+				if(json.HasParseError()) {
+
+					if(json.GetParseError() == rapidjson::ParseErrorCode::kParseErrorDocumentEmpty) continue;
+					else throw string_exception(rapidjson::GetParseError_En(json.GetParseError()));
+				}
 
 				// Check if the document is null or contained no members/elements
 				if(json.IsNull() || (json.IsObject() && (json.MemberCount() == 0)) || (json.IsArray() && (json.Size() == 0))) continue;
@@ -1406,11 +1390,6 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "http_get", -1, SQLITE_UTF8, nullptr, http_get, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_get"); return result; }
-
-	// http_post (non-deterministic)
-	//
-	result = sqlite3_create_function_v2(db, "http_post", -1, SQLITE_UTF8, nullptr, http_post, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function http_post"); return result; }
 
 	// json_get (1 argument; non-deterministic)
 	//
