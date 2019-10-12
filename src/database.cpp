@@ -164,13 +164,13 @@ void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordi
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"json_extract(value, '$.SeriesID') as seriesid, "
 		"value as data from "
-		"json_each(nullif(http_post('http://api.hdhomerun.com/api/recording_rules', 'DeviceAuth=' || ?1 || '&Cmd=add&SeriesID=' || ?2 || "
+		"json_each(json_get('http://api.hdhomerun.com/api/recording_rules', 'post', 'DeviceAuth=' || ?1 || '&Cmd=add&SeriesID=' || ?2 || "
 		"case when ?3 is null then '' else '&RecentOnly=' || ?3 end || "
 		"case when ?4 is null then '' else '&ChannelOnly=' || decode_channel_id(?4) end || "
 		"case when ?5 is null then '' else '&AfterOriginalAirdateOnly=' || strftime('%s', date(?5, 'unixepoch')) end || "
 		"case when ?6 is null then '' else '&DateTimeOnly=' || ?6 end || "
 		"case when ?7 is null then '' else '&StartPadding=' || ?7 end || "
-		"case when ?8 is null then '' else '&EndPadding=' || ?8 end), 'null'))";
+		"case when ?8 is null then '' else '&EndPadding=' || ?8 end))";
 
 	// Prepare the query
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -200,7 +200,7 @@ void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordi
 	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device "
+	try_execute_non_query(instance, "select json_get(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', 'post') from device "
 		"where json_extract(data, '$.StorageURL') is not null");
 }
 
@@ -331,7 +331,7 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
 	// Delete the specified recording from the storage device
-	execute_non_query(instance, "select http_post(json_extract(entry.value, '$.CmdURL') || '&cmd=delete&rerecord=' || ?2, null) from recording, json_each(recording.data) as entry "
+	execute_non_query(instance, "select json_get(json_extract(entry.value, '$.CmdURL') || '&cmd=delete&rerecord=' || ?2, 'post') from recording, json_each(recording.data) as entry "
 		"where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1", recordingid, (rerecord) ? 1 : 0);
 
 	// Delete the specified recording from the local database
@@ -356,14 +356,14 @@ void delete_recordingrule(sqlite3* instance, char const* deviceauth, unsigned in
 	if((instance == nullptr) || (deviceauth == nullptr)) return;
 
 	// Delete the recording rule from the backend
-	execute_non_query(instance, "select http_post('http://api.hdhomerun.com/api/recording_rules', 'DeviceAuth=' || ?1 || '&Cmd=delete&RecordingRuleID=' || ?2)",
+	execute_non_query(instance, "select json_get('http://api.hdhomerun.com/api/recording_rules', 'post', 'DeviceAuth=' || ?1 || '&Cmd=delete&RecordingRuleID=' || ?2)",
 		deviceauth, recordingruleid);
 
 	// Delete the recording rule from the database
 	execute_non_query(instance, "delete from recordingrule where recordingruleid = ?1", recordingruleid);
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device "
+	try_execute_non_query(instance, "select json_get(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', 'post') from device "
 		"where json_extract(data, '$.StorageURL') is not null");
 }
 
@@ -2743,12 +2743,12 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"json_extract(value, '$.SeriesID') as seriesid, "
 		"value as data from "
-		"json_each(nullif(http_post('http://api.hdhomerun.com/api/recording_rules', 'DeviceAuth=' || ?1 || '&Cmd=change&RecordingRuleID=' || ?2 || "
+		"json_each(json_get('http://api.hdhomerun.com/api/recording_rules', 'post', 'DeviceAuth=' || ?1 || '&Cmd=change&RecordingRuleID=' || ?2 || "
 		"'&RecentOnly=' || case when ?3 is null then '' else ?3 end || "
 		"'&ChannelOnly=' || case when ?4 is null then '' else decode_channel_id(?4) end || "
 		"'&AfterOriginalAirdateOnly=' || case when ?5 is null then '' else strftime('%s', date(?5, 'unixepoch')) end || "
 		"'&StartPadding=' || case when ?6 is null then '30' else ?6 end || "
-		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end), 'null'))";
+		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end))";
 
 	// Prepare the query
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -2777,7 +2777,7 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Poke the recording engine(s) after a successful rule change; don't worry about exceptions
-	try_execute_non_query(instance, "select http_post(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', null) from device "
+	try_execute_non_query(instance, "select json_get(json_extract(data, '$.BaseURL') || '/recording_events.post?sync', 'post') from device "
 		"where json_extract(data, '$.StorageURL') is not null");
 }
 
@@ -2930,7 +2930,7 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 		"(select distinct(json_extract(device.data, '$.BaseURL') || '/lineup.post?favorite=' || ?1 || decode_channel_id(?2)) "
 		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?2)) "
-		"select http_post(url, null) from deviceurls", flag, channelid.value);
+		"select json_get(url, 'post') from deviceurls", flag, channelid.value);
 }
 
 //---------------------------------------------------------------------------
@@ -2948,8 +2948,11 @@ void set_recording_lastposition(sqlite3* instance, char const* recordingid, int 
 {
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
+	// Kodi will send a position value of -1 if the recording ended by playing it to the end
+	if(lastposition < 0) lastposition = 0;
+
 	// Update the specified recording on the storage device
-	execute_non_query(instance, "select http_post(json_extract(entry.value, '$.CmdURL') || '&cmd=set&Resume=' || ?2, null) from recording, json_each(recording.data) as entry "
+	execute_non_query(instance, "select json_get(json_extract(entry.value, '$.CmdURL') || '&cmd=set&Resume=' || ?2, 'post') from recording, json_each(recording.data) as entry "
 		"where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1", recordingid, lastposition);
 
 	// Update the specified recording in the local database
