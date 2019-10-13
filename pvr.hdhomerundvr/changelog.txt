@@ -1,5 +1,5 @@
 v2.3.2 (2019.10.xx)
-  - Update SQLite database engine to version 3.30.0
+  - Update SQLite database engine to version 3.30.1
   - Enforce previously relaxed rules regarding invalid JSON data retrieved from the backend and/or local devices
   - Limit EPG data requests to no more than 24 hours into the future if no devices with DVR authorization where discovered
 
