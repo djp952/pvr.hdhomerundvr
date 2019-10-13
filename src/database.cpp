@@ -511,14 +511,14 @@ static bool discover_devices_broadcast(sqlite3* instance)
 	catch(...) { sqlite3_finalize(statement); throw; }
 
 	// Replace the base URL temporarily stored in the data column with the full discovery JSON
-	execute_non_query(instance, "update discover_device set data = http_get(data || '/discover.json', null)");
+	execute_non_query(instance, "update discover_device set data = json_get(data || '/discover.json')");
 
 	// Update the deviceid column for legacy storage devices, older versions did not return the storageid attribute during broadcast discovery
 	execute_non_query(instance, "update discover_device set deviceid = coalesce(json_extract(data, '$.StorageID'), '00000000') where deviceid is null");
 
 	// Update the DVR service authorization flag for each discovered tuner device
-	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
-		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
+	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(json_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
+		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Indicate if any tuner devices were detected during discovery or not
 	return hastuners;
@@ -543,7 +543,7 @@ static bool discover_devices_http(sqlite3* instance)
 	
 	//
 	// NOTE: This had to be broken up into a multi-step query involving a temp table to avoid a SQLite bug/feature
-	// wherein using a function (http_get in this case) as part of a column definition is reevaluated when
+	// wherein using a function (json_get in this case) as part of a column definition is reevaluated when
 	// that column is subsequently used as part of a WHERE clause:
 	//
 	// [http://mailinglists.sqlite.org/cgi-bin/mailman/private/sqlite-users/2015-August/061083.html]
@@ -555,13 +555,13 @@ static bool discover_devices_http(sqlite3* instance)
 		"coalesce(json_extract(discovery.value, '$.DeviceID'), coalesce(json_extract(discovery.value, '$.StorageID'), '00000000')) as deviceid, "
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"null as dvrauthorized, "
-		"http_get(json_extract(discovery.value, '$.DiscoverURL'), null) as data from json_each(nullif(http_get('http://api.hdhomerun.com/discover'), 'null')) as discovery");
+		"json_get(json_extract(discovery.value, '$.DiscoverURL')) as data from json_each(json_get('http://api.hdhomerun.com/discover')) as discovery");
 	execute_non_query(instance, "insert into discover_device select deviceid, discovered, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
 	execute_non_query(instance, "drop table discover_device_http");
 
 	// Update the DVR service authorization flag for each discovered tuner device
-	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(nullif(http_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
-		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), 'null'), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
+	execute_non_query(instance, "update discover_device set dvrauthorized = json_extract(json_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || "
+		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
 	auto sql = "select count(deviceid) as numtuners from discover_device where json_extract(data, '$.LineupURL') is not null";
@@ -700,7 +700,7 @@ void discover_episodes_seriesid(sqlite3* instance, char const* deviceauth, char 
 			"?2 as seriesid, "
 			"cast(strftime('%s', 'now') as integer) as discovered, "
 			"nullif(json_group_array(entry.value), '[]') as data "
-			"from json_each(nullif(http_get('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || ?1 || '&SeriesID=' || ?2), 'null')) as entry "
+			"from json_each(json_get('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || ?1 || '&SeriesID=' || ?2)) as entry "
 			"where json_extract(entry.value, '$.RecordingRule') = 1 "
 			"order by json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.ChannelNumber')",
 			deviceauth, seriesid);
@@ -762,7 +762,7 @@ void discover_guide(sqlite3* instance, char const* deviceauth, bool& changed)
 			"cast(strftime('%s', 'now') as integer) as discovered, "
 			"json_extract(discovery.value, '$.GuideName') as channelname, "
 			"json_extract(discovery.value, '$.ImageURL') as iconurl "
-			"from json_each(nullif(http_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1), 'null')) as discovery", deviceauth);
+			"from json_each(json_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1)) as discovery", deviceauth);
 
 		// This requires a multi-step operation against the guide table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -831,7 +831,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
 		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
-			"nullif(http_get(json_extract(device.data, '$.LineupURL') || '?show=demo', null), '[]') as json from device where json_extract(device.data, '$.LineupURL') is not null");
+			"json_get(json_extract(device.data, '$.LineupURL') || '?show=demo') as json from device where json_extract(device.data, '$.LineupURL') is not null");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -908,7 +908,7 @@ void discover_recordingrules(sqlite3* instance, char const* deviceauth, bool& ch
 			"json_extract(value, '$.RecordingRuleID') as recordingruleid, "
 			"cast(strftime('%s', 'now') as integer) as discovered, "
 			"json_extract(value, '$.SeriesID') as seriesid, "
-			"value as data from json_each(nullif(http_get('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1), 'null'))", deviceauth);
+			"value as data from json_each(json_get('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1))", deviceauth);
 
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -977,7 +977,7 @@ void discover_recordings(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the recording information for all available storage devices
-		execute_non_query(instance, "insert into discover_recording select deviceid, cast(strftime('%s', 'now') as integer), http_get(json_extract(device.data, '$.StorageURL')) "
+		execute_non_query(instance, "insert into discover_recording select deviceid, cast(strftime('%s', 'now') as integer), json_get(json_extract(device.data, '$.StorageURL')) "
 			"from device where json_extract(device.data, '$.StorageURL') is not null");
 
 		// This requires a multi-step operation against the recording table; start a transaction
@@ -1748,7 +1748,7 @@ void enumerate_series(sqlite3* instance, char const* deviceauth, char const* tit
 	// title | seriesid
 	auto sql = "select json_extract(value, '$.Title') as title, "
 		"json_extract(value, '$.SeriesID') as seriesid "
-		"from json_each(nullif(http_get('http://api.hdhomerun.com/api/search?DeviceAuth=' || ?1 || '&Search=' || url_encode(?2)), 'null')) "
+		"from json_each(json_get('http://api.hdhomerun.com/api/search?DeviceAuth=' || ?1 || '&Search=' || url_encode(?2))) "
 		"where title like '%' || ?2 || '%'";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -1919,8 +1919,8 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, union chann
 
 	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the electronic program guide API to locate a seriesid based on a channel and timestamp
-	auto sql = "select json_extract(json_extract(nullif(http_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || "
-		"'&Channel=' || decode_channel_id(?2) || '&Start=' || ?3), 'null'), '$[0].Guide[0]'), '$.SeriesID')";
+	auto sql = "select json_extract(json_extract(json_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || "
+		"'&Channel=' || decode_channel_id(?2) || '&Start=' || ?3), '$[0].Guide[0]'), '$.SeriesID')";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -1974,7 +1974,7 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, char const*
 	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the search API to locate a series id based on the series title
 	auto sql = "select json_extract(value, '$.SeriesID') as seriesid "
-		"from json_each(nullif(http_get('http://api.hdhomerun.com/api/search?DeviceAuth=' || ?1 || '&Search=' || url_encode(?2)), 'null')) "
+		"from json_each(json_get('http://api.hdhomerun.com/api/search?DeviceAuth=' || ?1 || '&Search=' || url_encode(?2))) "
 		"where json_extract(value, '$.Title') like ?2 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -2265,9 +2265,9 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 
 	// Prepare a scalar result query to get the last played position of the recording from the storage engine. Limit the amount 
 	// of JSON that needs to be sifted through by specifically asking for the series that this recording belongs to
-	auto sql = "with httprequest(response) as (select http_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
+	auto sql = "with jsonrequest(response) as (select json_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
 		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1)) from device where json_extract(device.data, '$.StorageURL') is not null) "
-		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from httprequest, json_each(httprequest.response) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1";
+		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from jsonrequest, json_each(jsonrequest.response) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
