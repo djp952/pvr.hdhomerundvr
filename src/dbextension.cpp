@@ -887,7 +887,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 #if defined(_WINDOWS) && defined(_DEBUG)
 	// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
-	char debugurl[256];
+	char debugurl[512];
 	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s%s%s%s\r\n", __func__, (post) ? "post" : "get", url, (post) ? " [" : "", (post) ? postfields.c_str() : "", (post) ? "]" : "");
 	OutputDebugStringA(debugurl);
 #endif
