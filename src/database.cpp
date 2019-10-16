@@ -536,10 +536,6 @@ static bool discover_devices_broadcast(sqlite3* instance)
 
 static bool discover_devices_http(sqlite3* instance)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	int							tuners = 0;				// Number of tuners found
-	int							result;					// Result from SQLite function call
-
 	assert(instance != nullptr);
 	
 	//
@@ -565,25 +561,7 @@ static bool discover_devices_http(sqlite3* instance)
 		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
-	auto sql = "select count(deviceid) as numtuners from discover_device where json_extract(data, '$.LineupURL') is not null";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try { 
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) tuners = sqlite3_column_int(statement, 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return (tuners > 0);
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return (execute_scalar_int(instance, "select count(deviceid) as numtuners from discover_device where json_extract(data, '$.LineupURL') is not null") > 0);
 }
 
 //---------------------------------------------------------------------------
@@ -2008,7 +1986,7 @@ static std::string execute_scalar_string(sqlite3* instance, char const* sql, _pa
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							paramindex = 1;		// Bound parameter index value
-	std::string					value = 0;			// Result from the scalar function
+	std::string					value;				// Result from the scalar function
 
 	if(instance == nullptr) throw std::invalid_argument("instance");
 	if(sql == nullptr) throw std::invalid_argument("sql");
@@ -2060,45 +2038,11 @@ static std::string execute_scalar_string(sqlite3* instance, char const* sql, _pa
 
 std::string find_seriesid(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t timestamp)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					seriesid;				// Discovered series identifier
-	int							result;					// Result from SQLite function call
+	if((instance == nullptr) || (deviceauth == nullptr)) return std::string();
 
-	if((instance == nullptr) || (deviceauth == nullptr)) return seriesid;
-
-	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
 	// Use the electronic program guide API to locate a seriesid based on a channel and timestamp
-	auto sql = "select json_extract(json_extract(json_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || "
-		"'&Channel=' || decode_channel_id(?2) || '&Start=' || ?3), '$[0].Guide[0]'), '$.SeriesID')";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters(s)
-		result = sqlite3_bind_text(statement, 1, deviceauth, -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, channelid.value);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(timestamp));
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) seriesid.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return seriesid;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_string(instance, "select json_extract(json_extract(json_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || "
+		"'&Channel=' || decode_channel_id(?2) || '&Start=' || ?3), '$[0].Guide[0]'), '$.SeriesID')", deviceauth, channelid.value, static_cast<int>(timestamp));
 }
 
 //---------------------------------------------------------------------------
@@ -2114,45 +2058,11 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, union chann
 
 std::string find_seriesid(sqlite3* instance, char const* deviceauth, char const* title)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					seriesid;				// Discovered series identifier
-	int							result;					// Result from SQLite function call
+	if((instance == nullptr) || (deviceauth == nullptr)) return std::string();
 
-	if(instance == nullptr) return seriesid;
-
-	// No guide data is stored locally anymore; always use the backend service to search for the seriesid.
-	// Use the search API to locate a series id based on the series title
-	auto sql = "select json_extract(value, '$.SeriesID') as seriesid "
+	return execute_scalar_string(instance, "select json_extract(value, '$.SeriesID') as seriesid "
 		"from json_each(json_get('http://api.hdhomerun.com/api/search?DeviceAuth=' || ?1 || '&Search=' || url_encode(?2))) "
-		"where json_extract(value, '$.Title') like ?2 limit 1";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters(s)
-		result = sqlite3_bind_text(statement, 1, deviceauth, -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, title, -1, SQLITE_STATIC);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) seriesid.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return seriesid;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"where json_extract(value, '$.Title') like ?2 limit 1", deviceauth, title);
 }
 
 //---------------------------------------------------------------------------
@@ -2167,42 +2077,10 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, char const*
 
 std::string get_authorization_strings(sqlite3* instance, bool dvrauthorized)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					authstring;				// Generated device authorization string
-	int							result;					// Result from SQLite function call
+	if(instance == nullptr) return std::string();
 
-	if(instance == nullptr) return authstring;
-
-	// Prepare a scalar query to generate the requested combined device authorization string
-	auto sql = "select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device "
-		"where json_extract(data, '$.DeviceAuth') is not null and coalesce(dvrauthorized, 0) in (1, ?1)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try { 
-
-		// Bind the query parameters(s)
-		result = sqlite3_bind_int(statement, 1, (dvrauthorized) ? 1 : 0);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) authstring.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return authstring;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_string(instance, "select url_encode(group_concat(json_extract(data, '$.DeviceAuth'), '')) from device "
+		"where json_extract(data, '$.DeviceAuth') is not null and coalesce(dvrauthorized, 0) in (1, ?1)", (dvrauthorized) ? 1 : 0);
 }
 
 //---------------------------------------------------------------------------
@@ -2263,37 +2141,10 @@ struct storage_space get_available_storage_space(sqlite3* instance)
 
 int get_channel_count(sqlite3* instance, bool showdrm)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	int							channels = 0;			// Number of channels found
-	int							result;					// Result from SQLite function call
-
 	if(instance == nullptr) return 0;
 
-	// Prepare a query to get the number of distinct channels in the lineup
-	auto sql = "select count(distinct(json_extract(value, '$.GuideNumber'))) "
-		"from lineup, json_each(lineup.data) where nullif(json_extract(value, '$.DRM'), ?1) is null";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try { 
-
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) channels = sqlite3_column_int(statement, 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return channels;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_int(instance, "select count(distinct(json_extract(value, '$.GuideNumber'))) "
+		"from lineup, json_each(lineup.data) where nullif(json_extract(value, '$.DRM'), ?1) is null", (showdrm) ? 1 : 0);
 }
 
 //---------------------------------------------------------------------------
@@ -2307,31 +2158,9 @@ int get_channel_count(sqlite3* instance, bool showdrm)
 
 int get_recording_count(sqlite3* instance)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	int							recordings = 0;			// Number of recordings found
-	int							result;					// Result from SQLite function call
-
 	if(instance == nullptr) return 0;
 
-	// Prepare a scalar result query to get the number of recordings
-	auto sql = "select count(recordingid) from recording";
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try { 
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) recordings = sqlite3_column_int(statement, 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return recordings;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_int(instance, "select count(recordingid) from recording");
 }
 
 //---------------------------------------------------------------------------
@@ -2347,51 +2176,21 @@ int get_recording_count(sqlite3* instance)
 
 std::string get_recording_filename(sqlite3* instance, char const* recordingid, bool flatten)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					filename;				// Generated file name
-	int							result;					// Result from SQLite function call
+	if((instance == nullptr) || (recordingid == nullptr)) return std::string();
 
-	if((instance == nullptr) || (recordingid == nullptr)) return filename;
-
-	// Prepare a scalar result query to generate the base file name of the recording MPG file; recordings with a 
+	// Execute a scalar result query to generate the base file name of the recording MPG file; recordings with a 
 	// category of movie are in a subdirectory named "Movies" and recordings with a category of 'sport' are in a
 	// subdirectory named "Sporting Events".  All other categories use the series name for the subdirectory name
 	//
 	// STANDARD FORMAT  : {"Movies"|"Sporting Events"|Title}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
 	// FLATTENED FORMAT : {Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
-	auto sql = "select case when ?1 then '' else case lower(coalesce(json_extract(data, '$.Category'), 'series')) when 'movie' then 'Movies' when 'sport' then 'Sporting Events' "
-		"else rtrim(clean_filename(json_extract(data, '$.Title')), ' .') end || '/' end || clean_filename(json_extract(data, '$.Title')) || ' ' || "
-		"coalesce(json_extract(data, '$.EpisodeNumber') || ' ', '') || coalesce(strftime('%Y%m%d', datetime(json_extract(data, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
+
+	return execute_scalar_string(instance,  "select case when ?1 then '' else case lower(coalesce(json_extract(data, '$.Category'), 'series')) "
+		"when 'movie' then 'Movies' when 'sport' then 'Sporting Events' else rtrim(clean_filename(json_extract(data, '$.Title')), ' .') end || '/' end || "
+		"clean_filename(json_extract(data, '$.Title')) || ' ' || coalesce(json_extract(data, '$.EpisodeNumber') || ' ', '') || "
+		"coalesce(strftime('%Y%m%d', datetime(json_extract(data, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
 		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(data, '$.StartTime'), 'unixepoch')) || ']' as filename "
-		"from recording where recordingid like ?2 limit 1";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, (flatten) ? 1 : 0);
-		if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, recordingid, -1, SQLITE_STATIC);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) filename.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return filename;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"from recording where recordingid like ?2 limit 1", (flatten) ? 1 : 0, recordingid);
 }
 
 //---------------------------------------------------------------------------
@@ -2463,41 +2262,9 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 
 std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					streamurl;				// Generated stream URL
-	int							result;					// Result from SQLite function call
+	if((instance == nullptr) || (recordingid == nullptr)) return std::string();
 
-	if((instance == nullptr) || (recordingid == nullptr)) return streamurl;
-
-	// Prepare a scalar result query to generate a stream URL for the specified recording
-	auto sql = "select json_extract(data, '$.PlayURL') as streamurl from recording where recordingid like ?1";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) streamurl.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return streamurl;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_string(instance, "select json_extract(data, '$.PlayURL') as streamurl from recording where recordingid like ?1", recordingid);
 }
 
 //---------------------------------------------------------------------------
@@ -2511,31 +2278,9 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 
 int get_recordingrule_count(sqlite3* instance)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	int							rules = 0;				// Recording rules found in database
-	int							result;					// Result from SQLite function call
-
 	if(instance == nullptr) return 0;
 
-	// Prepare a scalar result query to get the number of recording rules
-	auto sql = "select count(recordingruleid) from recordingrule";
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try { 
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) rules = sqlite3_column_int(statement, 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return rules;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_int(instance, "select count(recordingruleid) from recordingrule");
 }
 
 //---------------------------------------------------------------------------
@@ -2550,41 +2295,9 @@ int get_recordingrule_count(sqlite3* instance)
 
 std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recordingruleid)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					seriesid;				// Discovered series identifier
-	int							result;					// Result from SQLite function call
+	if(instance == nullptr) return std::string();
 
-	if(instance == nullptr) return seriesid;
-
-	// Prepare a scalar result query to acquire the series identifer for the recording rule
-	auto sql = "select json_extract(data, '$.SeriesID') as seriesid from recordingrule where recordingruleid = ?1 limit 1";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, static_cast<int>(recordingruleid));
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step or SQLITE_DONE if no rows
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) seriesid.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return seriesid;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_string(instance, "select json_extract(data, '$.SeriesID') as seriesid from recordingrule where recordingruleid = ?1 limit 1", recordingruleid);
 }
 
 //---------------------------------------------------------------------------
@@ -2599,49 +2312,17 @@ std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recording
 
 std::string get_stream_url(sqlite3* instance, union channelid channelid)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					streamurl;				// Generated stream URL
-	int							result;					// Result from SQLite function call
+	if(instance == nullptr) return std::string();
 
-	if(instance == nullptr) return streamurl;
-
-	// Prepare a scalar result query to generate a stream URL for the specified channel
-	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
+	return execute_scalar_string(instance, "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
 		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=0x' || hex(randomblob(4)) from device "
-		"where json_extract(device.data, '$.StorageURL') is not null limit 1";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, channelid.value);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) streamurl.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return streamurl;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"where json_extract(device.data, '$.StorageURL') is not null limit 1", channelid.value);
 }
 
 //---------------------------------------------------------------------------
 // get_timer_count
 //
-// Gets the number of timerss in the database
+// Gets the number of timers in the database
 //
 // Arguments:
 //
@@ -2650,40 +2331,11 @@ std::string get_stream_url(sqlite3* instance, union channelid channelid)
 
 int get_timer_count(sqlite3* instance, int maxdays)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							timers = 0;			// Number of timers found
-	int							result;				// Result from SQLite function
-	
 	if(instance == nullptr) return 0;
 
-	// If the maximum number of days wasn't provided, use a month as the boundary
-	if(maxdays < 0) maxdays = 31;
-
-	// Select the number of episodes set to record in the specified timeframe
-	auto sql = "select count(seriesid) from episode, json_each(episode.data) "
-		"where (json_extract(value, '$.StartTime') < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameter(s)
-		result = sqlite3_bind_int(statement, 1, maxdays);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) timers = sqlite3_column_int(statement, 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return timers;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_int(instance, "select count(seriesid) from episode, json_each(episode.data) "
+		"where (json_extract(value, '$.StartTime') < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))", 
+		(maxdays < 0) ? 31 : maxdays);
 }
 
 //---------------------------------------------------------------------------
@@ -2697,32 +2349,9 @@ int get_timer_count(sqlite3* instance, int maxdays)
 
 int get_tuner_count(sqlite3* instance)
 {
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							tuners = 0;			// Number of tuners found
-	int							result;				// Result from SQLite function
-	
 	if(instance == nullptr) return 0;
 
-	// Select the number of tuner devices listed in the device table
-	auto sql = "select count(deviceid) from device where json_extract(device.data, '$.LineupURL') is not null";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) tuners = sqlite3_column_int(statement, 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return tuners;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return execute_scalar_int(instance, "select count(deviceid) from device where json_extract(device.data, '$.LineupURL') is not null");
 }
 
 //---------------------------------------------------------------------------
@@ -2737,39 +2366,11 @@ int get_tuner_count(sqlite3* instance)
 
 bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid)
 {
-	sqlite3_stmt*			statement;				// SQL statement to execute
-	bool					directonly = false;		// Tuner-direct channel flag
-	int						result;					// Result from SQLite function
-	
-	if(instance == nullptr) return 0;
+	if(instance == nullptr) return false;
 
-	// Select a boolean flag indicating if any instances of this channel in the lineup table
-	// are flagged as tuner-direct only channels
-	auto sql = "select coalesce((select json_extract(lineupdata.value, '$.Demo') as tuneronly "
+	return (execute_scalar_int(instance, "select coalesce((select json_extract(lineupdata.value, '$.Demo') as tuneronly "
 		"from lineup, json_each(lineup.data) as lineupdata "
-		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) and tuneronly is not null limit 1), 0)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, channelid.value);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) directonly = (sqlite3_column_int(statement, 0) != 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return directonly;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) and tuneronly is not null limit 1), 0)", channelid.value) != 0);
 }
 
 //---------------------------------------------------------------------------
@@ -2785,10 +2386,6 @@ bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid)
 
 std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union channelid channelid)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	std::string					streamurl;				// Generated stream URL
-	int							result;					// Result from SQLite function call
-
 	if(instance == nullptr) throw std::invalid_argument("instance");
 	if((tunerid == nullptr) || (*tunerid == '\0')) throw std::invalid_argument("tunerid");
 
@@ -2802,39 +2399,10 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 	std::string tunerindex = tuneridstr.substr(hyphenpos + 1);
 	if((deviceid.length() == 0) || (tunerindex.length() != 1)) throw std::invalid_argument("tunerid");
 
-	// Prepare a scalar query to generate the URL by matching up the device id and channel against the lineup
-	auto sql = "select replace(json_extract(lineupdata.value, '$.URL'), 'auto', 'tuner' || ?1) as url "
+	// Execute a scalar query to generate the URL by matching up the device id and channel against the lineup
+	return execute_scalar_string(instance, "select replace(json_extract(lineupdata.value, '$.URL'), 'auto', 'tuner' || ?1) as url "
 		"from lineup, json_each(lineup.data) as lineupdata where lineup.deviceid = ?2 "
-		"and json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?3)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_text(statement, 1, tunerindex.c_str(), -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, deviceid.c_str(), -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, channelid.value);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-		
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step()
-		if(result == SQLITE_ROW) {
-
-			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			if(value != nullptr) streamurl.assign(value);
-		}
-
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return streamurl;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+		"and json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?3)", tunerindex.c_str(), deviceid.c_str(), channelid.value);
 }
 
 //---------------------------------------------------------------------------
@@ -2848,32 +2416,10 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 
 bool has_dvr_authorization(sqlite3* instance)
 {
-	sqlite3_stmt*				statement;				// Database query statement
-	bool						hasauth = false;		// Flag indicating authorization
-	int							result;					// Result from SQLite function call
-
 	if(instance == nullptr) return false;
 
-	// Prepare a scalar query to determine if any devices have a valid DVR authorization flag
-	auto sql = "select exists(select deviceid from device where json_extract(data, '$.DeviceAuth') is not null and coalesce(dvrauthorized, 0) = 1)";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Execute the scalar query
-		result = sqlite3_step(statement);
-
-		// There should be a single SQLITE_ROW returned from the initial step
-		if(result == SQLITE_ROW) hasauth = (sqlite3_column_int(statement, 0) != 0);
-		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		sqlite3_finalize(statement);
-		return hasauth;
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
+	return (execute_scalar_int(instance, "select exists(select deviceid from device where json_extract(data, '$.DeviceAuth') is not null "
+		"and coalesce(dvrauthorized, 0) = 1)") != 0);
 }
 
 //---------------------------------------------------------------------------
