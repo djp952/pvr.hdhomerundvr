@@ -331,13 +331,11 @@ void delete_recording(sqlite3* instance, char const* recordingid, bool rerecord)
 	if((instance == nullptr) || (recordingid == nullptr)) return;
 
 	// Delete the specified recording from the storage device
-	execute_non_query(instance, "select json_get(json_extract(entry.value, '$.CmdURL') || '&cmd=delete&rerecord=' || ?2, 'post') from recording, json_each(recording.data) as entry "
-		"where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1", recordingid, (rerecord) ? 1 : 0);
+	execute_non_query(instance, "select json_get(json_extract(data, '$.CmdURL') || '&cmd=delete&rerecord=' || ?2, 'post') "
+		"from recording where recordingid like ?1 limit 1", recordingid, (rerecord) ? 1 : 0);
 
 	// Delete the specified recording from the local database
-	execute_non_query(instance, "replace into recording select deviceid, discovered, "
-		"(select case when fullkey is null then recording.data else json_remove(recording.data, fullkey) end) as data "
-		"from recording, (select fullkey from recording, json_each(recording.data) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1)", recordingid);
+	execute_non_query(instance, "delete from recording where recordingid like ?1", recordingid);
 }
 
 //---------------------------------------------------------------------------
@@ -977,8 +975,9 @@ void discover_recordings(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the recording information for all available storage devices
-		execute_non_query(instance, "insert into discover_recording select deviceid, cast(strftime('%s', 'now') as integer), json_get(json_extract(device.data, '$.StorageURL')) "
-			"from device where json_extract(device.data, '$.StorageURL') is not null");
+		execute_non_query(instance, "insert into discover_recording select get_recording_id(json_extract(entry.value, '$.CmdURL')) as recordingid, "
+			"cast(strftime('%s', 'now') as integer) as discovered, json_extract(entry.value, '$.SeriesID') as seriesid, entry.value as data "
+			"from device, json_each(json_get(json_extract(device.data, '$.StorageURL'))) as entry where json_extract(device.data, '$.StorageURL') is not null");
 
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -986,10 +985,10 @@ void discover_recordings(sqlite3* instance, bool& changed)
 		try {
 
 			// Delete any entries in the main recording table that are no longer present in the data
-			if(execute_non_query(instance, "delete from recording where deviceid not in (select deviceid from discover_recording)") > 0) changed = true;
+			if(execute_non_query(instance, "delete from recording where recordingid not in (select recordingid from discover_recording)") > 0) changed = true;
 
 			// Insert/replace entries in the main recording table that are new or different
-			if(execute_non_query(instance, "replace into recording select discover_recording.* from discover_recording left outer join recording using(deviceid) "
+			if(execute_non_query(instance, "replace into recording select discover_recording.* from discover_recording left outer join recording using(recordingid) "
 				"where coalesce(recording.data, '') <> coalesce(discover_recording.data, '')") > 0) changed = true;
 
 			// Commit the database transaction
@@ -1553,25 +1552,24 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 	if((instance == nullptr) || (callback == nullptr)) return;
 
 	// recordingid | title | episodename | firstairing | originalairdate | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
-	auto sql = "select "
-		"get_recording_id(json_extract(value, '$.CmdURL')) as recordingid, "
-		"case when ?1 then coalesce(json_extract(value, '$.EpisodeNumber'), json_extract(value, '$.Title')) else json_extract(value, '$.Title') end as title, "
-		"json_extract(value, '$.EpisodeTitle') as episodename, "
-		"coalesce(json_extract(value, '$.FirstAiring'), 0) as firstairing, "
-		"coalesce(json_extract(value, '$.OriginalAirdate'), 0) as originalairdate, "
-		"get_season_number(json_extract(value, '$.EpisodeNumber')) as seriesnumber, "
-		"get_episode_number(json_extract(value, '$.EpisodeNumber')) as episodenumber, "
-		"cast(strftime('%Y', coalesce(json_extract(value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
-		"json_extract(value, '$.PlayURL') as streamurl, "
-		"case when ?2 or lower(coalesce(json_extract(value, '$.Category'), 'series')) in ('series', 'news') then json_extract(value, '$.Title') else json_extract(value, '$.Category') end as directory, "
-		"json_extract(value, '$.Synopsis') as plot, "
-		"json_extract(value, '$.ChannelName') as channelname, "
-		"json_extract(value, '$.ImageURL') as thumbnailpath, "
-		"coalesce(json_extract(value, '$.RecordStartTime'), 0) as recordingtime, "
-		"coalesce(json_extract(value, '$.RecordEndTime'), 0) - coalesce(json_extract(value, '$.RecordStartTime'), 0) as duration, "
-		"coalesce(json_extract(value, '$.Resume'), 0) as lastposition, "
-		"encode_channel_id(json_extract(value, '$.ChannelNumber')) as channelid "
-		"from recording, json_each(recording.data)";
+	auto sql = "select recordingid, "
+		"case when ?1 then coalesce(json_extract(data, '$.EpisodeNumber'), json_extract(data, '$.Title')) else json_extract(data, '$.Title') end as title, "
+		"json_extract(data, '$.EpisodeTitle') as episodename, "
+		"coalesce(json_extract(data, '$.FirstAiring'), 0) as firstairing, "
+		"coalesce(json_extract(data, '$.OriginalAirdate'), 0) as originalairdate, "
+		"get_season_number(json_extract(data, '$.EpisodeNumber')) as seriesnumber, "
+		"get_episode_number(json_extract(data, '$.EpisodeNumber')) as episodenumber, "
+		"cast(strftime('%Y', coalesce(json_extract(data, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
+		"json_extract(data, '$.PlayURL') as streamurl, "
+		"case when ?2 or lower(coalesce(json_extract(data, '$.Category'), 'series')) in ('series', 'news') then json_extract(data, '$.Title') else json_extract(data, '$.Category') end as directory, "
+		"json_extract(data, '$.Synopsis') as plot, "
+		"json_extract(data, '$.ChannelName') as channelname, "
+		"json_extract(data, '$.ImageURL') as thumbnailpath, "
+		"coalesce(json_extract(data, '$.RecordStartTime'), 0) as recordingtime, "
+		"coalesce(json_extract(data, '$.RecordEndTime'), 0) - coalesce(json_extract(data, '$.RecordStartTime'), 0) as duration, "
+		"coalesce(json_extract(data, '$.Resume'), 0) as lastposition, "
+		"encode_channel_id(json_extract(data, '$.ChannelNumber')) as channelid "
+		"from recording";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2167,7 +2165,7 @@ int get_recording_count(sqlite3* instance)
 	if(instance == nullptr) return 0;
 
 	// Prepare a scalar result query to get the number of recordings
-	auto sql = "select count(json_type(value, '$.ProgramID')) from recording, json_each(recording.data)";
+	auto sql = "select count(recordingid) from recording";
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
@@ -2212,11 +2210,11 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 	//
 	// STANDARD FORMAT  : {"Movies"|"Sporting Events"|Title}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
 	// FLATTENED FORMAT : {Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
-	auto sql = "select case when ?1 then '' else case lower(coalesce(json_extract(value, '$.Category'), 'series')) when 'movie' then 'Movies' when 'sport' then 'Sporting Events' "
-		"else rtrim(clean_filename(json_extract(value, '$.Title')), ' .') end || '/' end || clean_filename(json_extract(value, '$.Title')) || ' ' || "
-		"coalesce(json_extract(value, '$.EpisodeNumber') || ' ', '') || coalesce(strftime('%Y%m%d', datetime(json_extract(value, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
-		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(value, '$.StartTime'), 'unixepoch')) || ']' as filename "
-		"from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?2 limit 1";
+	auto sql = "select case when ?1 then '' else case lower(coalesce(json_extract(data, '$.Category'), 'series')) when 'movie' then 'Movies' when 'sport' then 'Sporting Events' "
+		"else rtrim(clean_filename(json_extract(data, '$.Title')), ' .') end || '/' end || clean_filename(json_extract(data, '$.Title')) || ' ' || "
+		"coalesce(json_extract(data, '$.EpisodeNumber') || ' ', '') || coalesce(strftime('%Y%m%d', datetime(json_extract(data, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
+		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(data, '$.StartTime'), 'unixepoch')) || ']' as filename "
+		"from recording where recordingid like ?2 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2268,7 +2266,7 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 	// Prepare a scalar result query to get the last played position of the recording from the storage engine. Limit the amount 
 	// of JSON that needs to be sifted through by specifically asking for the series that this recording belongs to
 	auto sql = "with jsonrequest(response) as (select json_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
-		"(select json_extract(value, '$.SeriesID') as seriesid from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1)) from device where json_extract(device.data, '$.StorageURL') is not null) "
+		"(select json_extract(data, '$.SeriesID') as seriesid from recording where recordingid like ?1 limit 1)) from device where json_extract(device.data, '$.StorageURL') is not null) "
 		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from jsonrequest, json_each(jsonrequest.response) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -2312,8 +2310,7 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 	if((instance == nullptr) || (recordingid == nullptr)) return streamurl;
 
 	// Prepare a scalar result query to generate a stream URL for the specified recording
-	auto sql = "select json_extract(value, '$.PlayURL') as streamurl "
-		"from recording, json_each(recording.data) where get_recording_id(json_extract(value, '$.CmdURL')) like ?1";
+	auto sql = "select json_extract(data, '$.PlayURL') as streamurl from recording where recordingid like ?1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2850,8 +2847,9 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: recording
 			//
-			// deviceid(pk) | discovered | data
-			execute_non_query(instance, "create table if not exists recording(deviceid text primary key not null, discovered integer not null, data text)");
+			// recordingid(pk) | discovered | seriesid | data
+			execute_non_query(instance, "create table if not exists recording(recordingid text primary key not null, discovered integer not null, seriesid text not null, data text)");
+			execute_non_query(instance, "create index if not exists recording_seriesid_index on recording(seriesid)");
 
 			// table: guide
 			//
@@ -2952,14 +2950,11 @@ void set_recording_lastposition(sqlite3* instance, char const* recordingid, int 
 	if(lastposition < 0) lastposition = 0;
 
 	// Update the specified recording on the storage device
-	execute_non_query(instance, "select json_get(json_extract(entry.value, '$.CmdURL') || '&cmd=set&Resume=' || ?2, 'post') from recording, json_each(recording.data) as entry "
-		"where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1", recordingid, lastposition);
+	execute_non_query(instance, "select json_get(json_extract(data, '$.CmdURL') || '&cmd=set&Resume=' || ?2, 'post') from recording "
+		"where recordingid like ?1 limit 1", recordingid, lastposition);
 
 	// Update the specified recording in the local database
-	execute_non_query(instance, "replace into recording select deviceid, discovered, "
-		"(select case when fullkey is null then recording.data else json_set(recording.data, fullkey || '.Resume', ?2) end) as data "
-		"from recording, (select fullkey from recording, json_each(recording.data) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1)",
-		recordingid, lastposition);
+	execute_non_query(instance, "update recording set data = json_set(data, '$.Resume', ?2) where recordingid like ?1", recordingid, lastposition);
 }
 
 //---------------------------------------------------------------------------
