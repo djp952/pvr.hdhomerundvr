@@ -57,8 +57,11 @@ static void bind_parameter(sqlite3_stmt* statement, int& paramindex, const char*
 static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int value);
 static bool discover_devices_broadcast(sqlite3* instance);
 static bool discover_devices_http(sqlite3* instance);
-static void enumerate_devices_broadcast(enumerate_devices_callback callback); 
+static void discover_series_recordings(sqlite3* instance, char const* seriesid);
+static void enumerate_devices_broadcast(enumerate_devices_callback callback);
 template<typename... _parameters> static int execute_non_query(sqlite3* instance, char const* sql, _parameters&&... parameters);
+template<typename... _parameters> static int execute_scalar_int(sqlite3* instance, char const* sql, _parameters&&... parameters);
+template<typename... _parameters> static std::string execute_scalar_string(sqlite3* instance, char const* sql, _parameters&&... parameters);
 
 //---------------------------------------------------------------------------
 // CONNECTIONPOOL IMPLEMENTATION
@@ -982,6 +985,10 @@ void discover_recordings(sqlite3* instance, bool& changed)
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
 
+		// Check to verify that all of the discovery times are the same; if any are different an update occurred outside of this
+		// main discovery function and a change notification needs to be set since that update may have added or deleted rows
+		if(execute_scalar_int(instance, "select count(distinct(discovered)) from recording") > 1) changed = true;
+		
 		try {
 
 			// Delete any entries in the main recording table that are no longer present in the data
@@ -990,6 +997,9 @@ void discover_recordings(sqlite3* instance, bool& changed)
 			// Insert/replace entries in the main recording table that are new or different
 			if(execute_non_query(instance, "replace into recording select discover_recording.* from discover_recording left outer join recording using(recordingid) "
 				"where coalesce(recording.data, '') <> coalesce(discover_recording.data, '')") > 0) changed = true;
+
+			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
+			execute_non_query(instance, "update recording set discovered = ?1", static_cast<int>(time(nullptr)));
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
@@ -1004,6 +1014,43 @@ void discover_recordings(sqlite3* instance, bool& changed)
 
 	// Drop the temporary table on any exception
 	catch(...) { execute_non_query(instance, "drop table discover_recording"); throw; }
+}
+
+//---------------------------------------------------------------------------
+// discover_series_recordings (local)
+//
+// Reloads the information about the available recordings for a single series
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	seriesid	- Series identifier to use
+
+static void discover_series_recordings(sqlite3* instance, char const* seriesid)
+{
+	if(instance == nullptr) throw std::invalid_argument("instance");
+	if(seriesid == nullptr) return;
+
+	// This is a multi-step operation; begin a database transaction
+	execute_non_query(instance, "begin immediate transaction");
+
+	try {
+
+		// Remove all existing rows from the recording table for the specified series
+		execute_non_query(instance, "delete from recording where seriesid like ?1", seriesid);
+		
+		// Reload all recordings for the specified series from all available storage engines
+		execute_non_query(instance, "insert into recording select get_recording_id(json_extract(entry.value, '$.CmdURL')) as recordingid, "
+			"cast(strftime('%s', 'now') as integer) as discovered, json_extract(entry.value, '$.SeriesID') as seriesid, entry.value as data "
+			"from device, json_each(json_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || ?1)) as entry "
+			"where json_extract(device.data, '$.StorageURL') is not null", seriesid);
+
+		// Commit the transaction
+		execute_non_query(instance, "commit transaction");
+	}
+
+	// Rollback the database transaction on any thrown exception
+	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 }
 
 //---------------------------------------------------------------------------
@@ -1898,6 +1945,110 @@ static int execute_non_query(sqlite3* instance, char const* sql, _parameters&&..
 }
 
 //---------------------------------------------------------------------------
+// execute_scalar_int (local)
+//
+// Executes a database query and returns a scalar integer result
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	sql				- SQL query to execute
+//	parameters		- Parameters to be bound to the query
+
+template<typename... _parameters>
+static int execute_scalar_int(sqlite3* instance, char const* sql, _parameters&&... parameters)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							paramindex = 1;		// Bound parameter index value
+	int							value = 0;			// Result from the scalar function
+
+	if(instance == nullptr) throw std::invalid_argument("instance");
+	if(sql == nullptr) throw std::invalid_argument("sql");
+
+	// Suppress unreferenced local variable warning when there are no parameters to bind
+	(void)paramindex;
+
+	// Prepare the statement
+	int result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the provided query parameter(s) by unpacking the parameter pack
+		int unpack[] = { 0, (static_cast<void>(bind_parameter(statement, paramindex, parameters)), 0) ... };
+		(void)unpack;
+
+		// Execute the query; only the first row returned will be used
+		result = sqlite3_step(statement);
+
+		if(result == SQLITE_ROW) value = sqlite3_column_int(statement, 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Finalize the statement
+		sqlite3_finalize(statement);
+
+		// Return the resultant value from the scalar query
+		return value;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// execute_scalar_string (local)
+//
+// Executes a database query and returns a scalar string result
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	sql				- SQL query to execute
+//	parameters		- Parameters to be bound to the query
+
+template<typename... _parameters>
+static std::string execute_scalar_string(sqlite3* instance, char const* sql, _parameters&&... parameters)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							paramindex = 1;		// Bound parameter index value
+	std::string					value = 0;			// Result from the scalar function
+
+	if(instance == nullptr) throw std::invalid_argument("instance");
+	if(sql == nullptr) throw std::invalid_argument("sql");
+
+	// Suppress unreferenced local variable warning when there are no parameters to bind
+	(void)paramindex;
+
+	// Prepare the statement
+	int result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the provided query parameter(s) by unpacking the parameter pack
+		int unpack[] = { 0, (static_cast<void>(bind_parameter(statement, paramindex, parameters)), 0) ... };
+		(void)unpack;
+
+		// Execute the query; only the first row returned will be used
+		result = sqlite3_step(statement);
+
+		if(result == SQLITE_ROW) {
+
+			char const* ptr = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(ptr != nullptr) value.assign(ptr);
+		}
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Finalize the statement
+		sqlite3_finalize(statement);
+
+		// Return the resultant value from the scalar query
+		return value;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // find_seriesid
 //
 // Retrieves the series id associated with a specific channel/time combination
@@ -2258,37 +2409,48 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 {
 	sqlite3_stmt*				statement;				// Database query statement
-	int							lastposition = 0;		// Last played position
+	int							resume = 0;				// Recording resume position
+	time_t						discovered = 0;			// Recording discovery time
+	std::string					seriesid;				// Recording series identifier
 	int							result;					// Result from SQLite function call
 
 	if(instance == nullptr) return 0;
 
-	// Prepare a scalar result query to get the last played position of the recording from the storage engine. Limit the amount 
-	// of JSON that needs to be sifted through by specifically asking for the series that this recording belongs to
-	auto sql = "with jsonrequest(response) as (select json_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || "
-		"(select json_extract(data, '$.SeriesID') as seriesid from recording where recordingid like ?1 limit 1)) from device where json_extract(device.data, '$.StorageURL') is not null) "
-		"select coalesce(json_extract(entry.value, '$.Resume'), 0) as resume from jsonrequest, json_each(jsonrequest.response) as entry where get_recording_id(json_extract(entry.value, '$.CmdURL')) like ?1 limit 1";
+	// Retrieve the resume position, discovery time, and series identifier for the recording from the database
+	auto sql = "select coalesce(json_extract(data, '$.Resume'), 0) as lastposition, discovered, seriesid from recording where recordingid like ?1 limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
 
-	try { 
-		
+	try {
+
 		// Bind the query parameters
 		result = sqlite3_bind_text(statement, 1, recordingid, -1, SQLITE_STATIC);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
-		// Execute the scalar query
-		result = sqlite3_step(statement);
+		// Execute the query; there should be at most one row returned
+		if(sqlite3_step(statement) == SQLITE_ROW) {
 
-		// If the query returned a result, use that value otherwise leave at zero
-		if(result == SQLITE_ROW) lastposition = sqlite3_column_int(statement, 0);
+			resume = sqlite3_column_int(statement, 0);
+			discovered = sqlite3_column_int(statement, 1);
+
+			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
+			if(value != nullptr) seriesid.assign(value);
+		}
 
 		sqlite3_finalize(statement);
-		return lastposition;
 	}
 
 	catch(...) { sqlite3_finalize(statement); throw; }
+
+	// If the discovery value is zero (no rows returned), or discovery took place less than 30 seconds ago, use the resume value
+	if((discovered == 0) || (discovered >= (time(nullptr) - 30))) return resume;
+
+	// The discovery information is stale, perform a discovery for the series to refresh the information
+	discover_series_recordings(instance, seriesid.c_str());
+
+	// Retrieve the updated resume position for the recording
+	return execute_scalar_int(instance, "select coalesce(json_extract(data, '$.Resume'), 0) as resume from recording where recordingid like ?1 limit 1", recordingid);
 }
 
 //---------------------------------------------------------------------------
