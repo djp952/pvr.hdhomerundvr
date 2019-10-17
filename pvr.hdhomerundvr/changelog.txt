@@ -4,6 +4,7 @@ v2.4.0 (2019.10.xx)
   - Limit EPG data requests to no more than 24 hours into the future if no devices with DVR authorization where discovered
   - Refactor recordings database table to key on auto-generated recording identifier(s) and improve query performance
   - Improve performance of Recorded TV last played (resume) position operations
+  - Display prompt indicating that an individual episode timer cannot be removed from a series recording rule
 
 v2.3.1 (2019.09.30)
   - Fix potential for a race condition in background task scheduler when synchronously executing a task
