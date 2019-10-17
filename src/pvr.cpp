@@ -3810,11 +3810,20 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 
 		// Determine the recording rule identifier for this timer object
 		//
+		// seriestimer                   --> not implemented; display message
 		// datetimeonlytimer             --> use the parent recording rule identifier
 		// seriesrule / datetimeonlyrule --> use the recording rule identifier
 		// anything else                 --> not implemented
 		//
-		if(timer.iTimerType == timer_type::datetimeonlytimer) recordingruleid = timer.iParentClientIndex;
+		if(timer.iTimerType == timer_type::seriestimer) {
+
+			std::string text = "The Timer for this episode of " + std::string(timer.strTitle) + " is a member of an active Record Series Timer Rule and cannot be deleted.";
+			g_gui->Dialog_OK_ShowAndGetInput("Unable to delete Timer", text.c_str());
+
+			return PVR_ERROR::PVR_ERROR_NO_ERROR;
+		}
+
+		else if(timer.iTimerType == timer_type::datetimeonlytimer) recordingruleid = timer.iParentClientIndex;
 		else if((timer.iTimerType == timer_type::seriesrule) || (timer.iTimerType == timer_type::datetimeonlyrule)) recordingruleid = timer.iClientIndex;
 		else return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
