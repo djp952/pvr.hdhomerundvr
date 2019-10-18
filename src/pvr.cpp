@@ -3606,6 +3606,11 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 
 		// Force a timer update in Kodi to refresh whatever this did on the backend
 		g_pvr->TriggerTimerUpdate();
+
+		// Schedule a recording discovery operation for 15 seconds in the future after any new timer has been
+		// added; this allows a timer that kicks off immediately to show the recording in Kodi quickly
+		log_notice(__func__, ": scheduling periodic recording discovery to initiate in 15 seconds");
+		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(15), discover_recordings_task);
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
