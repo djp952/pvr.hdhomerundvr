@@ -304,19 +304,6 @@
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="startup_discovery_task_delay" type="integer" label="30113" help="30523">
-          <level>0</level>
-          <default>3</default>
-          <constraints>
-            <minimum>1</minimum>
-            <step>1</step>
-            <maximum>10</maximum>
-          </constraints>
-          <control type="slider" format="integer">
-            <formatlabel>14045</formatlabel>
-          </control>
-        </setting>
-
         <setting id="stream_read_chunk_size_v2" type="integer" label="30114" help="30524">
           <level>0</level>
           <default>4096</default>
