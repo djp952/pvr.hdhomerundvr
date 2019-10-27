@@ -123,7 +123,9 @@ static void wait_for_network_task(scalar_condition<bool> const& cancel);
 
 // Helper Functions
 //
+static void alert_no_tuners(void) noexcept;
 static std::string select_tuner(std::vector<std::string> const& possibilities);
+static void start_discovery(void) noexcept;
 static void wait_for_channels(void) noexcept;
 static void wait_for_timers(void) noexcept;
 static void wait_for_recordings(void) noexcept;
@@ -589,6 +591,20 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 // HELPER FUNCTIONS
 //---------------------------------------------------------------------------
 
+// alert_no_tuners (local)
+//
+// Alerts the user with a notification that there are no available HDHomeRun tuner devices
+static void alert_no_tuners(void) noexcept
+{
+	static std::once_flag	once;			// std::call_once flag
+
+	// Only trigger this notification one time; if there is a non-transient reason there are no tuners discovered
+	// it would become extremely annoying for the end user to see this every few minutes ...
+	try { std::call_once(once, []() { g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected"); }); }
+	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
+	catch(...) { return handle_generalexception(__func__); }
+}
+
 // copy_settings (inline)
 //
 // Atomically creates a copy of the global addon_settings structure
@@ -661,6 +677,9 @@ static void discover_devices(bool& changed)
 		discover_devices(dbhandle, settings.use_http_device_discovery, changed);
 		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 
+		// Alert the user if no tuner device(s) were found
+		if(get_tuner_count(dbhandle) == 0) alert_no_tuners();
+			
 		g_discovered_devices = true;			// Set the global scalar_condition flag
 	}
 
@@ -1137,7 +1156,7 @@ static std::string select_tuner(std::vector<std::string> const& possibilities)
 // start_discovery
 //
 // Performs a one-time discovery startup operation
-static void start_discovery(void)
+static void start_discovery(void) noexcept
 {
 	static std::once_flag	once;			// std::call_once flag
 
