@@ -6,6 +6,9 @@ v2.4.0 (2019.10.xx)
   - Improve performance of Recorded TV last played (resume) position operations
   - Display prompt indicating that an individual episode timer cannot be removed from a series recording rule
   - Trigger an automatic recording discovery to occur 15 seconds after a new recording rule has been added
+  - Trigger initial discovery operations to occur after PVR Manager has been fully initialized and is requesting data
+  - Wait for initial discoveries to complete before responding to individual PVR Manager data requests (channels, timers, recordings)
+  - Remove "Startup discovery task delay" advanced setting
 
 v2.3.1 (2019.09.30)
   - Fix potential for a race condition in background task scheduler when synchronously executing a task

@@ -76,10 +76,6 @@ msgctxt "#30112"
 msgid "Use season/episode number as title for recordings"
 msgstr ""
 
-msgctxt "#30113"
-msgid "Startup discovery task delay"
-msgstr ""
-
 msgctxt "#30114"
 msgid "DVR stream read chunk size"
 msgstr ""
@@ -430,10 +426,6 @@ msgstr ""
 
 msgctxt "#30522"
 msgid "When set to ON Live TV channels will be streamed directly from an available HDHomeRun tuner device instead of the HDHomeRun RECORD device."
-msgstr ""
-
-msgctxt "#30523"
-msgid "Specifies the amount of delay inserted between PVR startup and execution of the initial discovery tasks."
 msgstr ""
 
 msgctxt "#30524"
