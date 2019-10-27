@@ -1558,12 +1558,14 @@ static void wait_for_network_task(scalar_condition<bool> const& cancel)
 #ifdef _WINDOWS
 
 	INetworkListManager* netlistmgr = nullptr;
+	int attempts = 0;
 
 	// Create an instance of the NetworkListManager object
 	HRESULT hresult = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_INPROC_SERVER, IID_INetworkListManager, reinterpret_cast<void**>(&netlistmgr));
 	if(FAILED(hresult)) { log_error(__func__, ": failed to create NetworkListManager instance (hr=", hresult, ")"); return; }
 
-	while(cancel.test(true) == false) {
+	// Watch for task cancellation and only retry the operation(s) for one minute
+	while((cancel.test(true) == false) && (++attempts < 60)) {
 
 		NLM_CONNECTIVITY connectivity = NLM_CONNECTIVITY_DISCONNECTED;
 
@@ -1580,6 +1582,9 @@ static void wait_for_network_task(scalar_condition<bool> const& cancel)
 
 	// Release the NetworkListManager instance
 	netlistmgr->Release();
+
+	// Log an error message if the wait operation was aborted due to a timeout condition
+	if(attempts >= 60) log_error(__func__, ": IPV4 network connectivity was not detected within one minute; giving up");
 
 #endif
 }
