@@ -2563,9 +2563,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 {
 	assert(g_pvr);
 
-	// Get the current time to reschedule tasks as requested
-	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-
 	// MENUHOOK_RECORD_DELETENORERECORD
 	//
 	if((menuhook.iHookId == MENUHOOK_RECORD_DELETENORERECORD) && (item.cat == PVR_MENUHOOK_RECORDING)) {
