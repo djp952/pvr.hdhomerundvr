@@ -300,8 +300,8 @@ void clear_authorization_strings(sqlite3* instance, int expiry)
 	if((instance == nullptr) || (expiry <= 0)) return;
 
 	// Remove all stale 'DeviceAuth' JSON properties from the device discovery data
-	execute_non_query(instance, "update device set data = json_remove(data, '$.DeviceAuth') "
-		"where coalesce(discovered, 0) < (cast(strftime('%s', 'now') as integer) - ?1)", expiry);
+	execute_non_query(instance, "update device set discovered = cast(strftime('%s', 'now') as integer), "
+		"data = json_remove(data, '$.DeviceAuth') where coalesce(discovered, 0) < (cast(strftime('%s', 'now') as integer) - ?1)", expiry);
 }
 
 //---------------------------------------------------------------------------
@@ -434,6 +434,9 @@ void discover_devices(sqlite3* instance, bool usehttp, bool& changed)
 			// the device authorization string changes routinely.  (REPLACE INTO is easier than UPDATE in this case)
 			execute_non_query(instance, "replace into device select * from discover_device");
 			
+			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
+			execute_non_query(instance, "update device set discovered = ?1", static_cast<int>(time(nullptr)));
+
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
 		}
@@ -634,6 +637,9 @@ void discover_episodes(sqlite3* instance, char const* deviceauth, bool& changed)
 			if(execute_non_query(instance, "replace into episode select discover_episode.* from discover_episode left outer join episode using(seriesid) "
 				"where (discover_episode.data not like 'null') and (coalesce(episode.data, '') <> coalesce(discover_episode.data, ''))") > 0) changed = true;
 
+			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
+			execute_non_query(instance, "update episode set discovered = ?1", static_cast<int>(time(nullptr)));
+
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
 		}
@@ -756,6 +762,9 @@ void discover_guide(sqlite3* instance, char const* deviceauth, bool& changed)
 				"where coalesce(guide.channelname, '') <> coalesce(discover_guide.channelname, '') "
 				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide.iconurl, '')") > 0) changed = true;
 
+			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
+			execute_non_query(instance, "update guide set discovered = ?1", static_cast<int>(time(nullptr)));
+
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
 		}
@@ -826,6 +835,9 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 			// Remove any lineup data that was nulled out by the previous operation
 			execute_non_query(instance, "delete from lineup where data is null or data like '[]'");
+
+			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
+			execute_non_query(instance, "update lineup set discovered = ?1", static_cast<int>(time(nullptr)));
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
@@ -902,6 +914,9 @@ void discover_recordingrules(sqlite3* instance, char const* deviceauth, bool& ch
 				"from discover_recordingrule left outer join recordingrule using(recordingruleid) "
 				"where coalesce(recordingrule.seriesid, '') <> coalesce(discover_recordingrule.seriesid, '') "
 				"or coalesce(recordingrule.data, '') <> coalesce(discover_recordingrule.data, '')") > 0) changed = true;
+
+			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
+			execute_non_query(instance, "update recordingrule set discovered = ?1", static_cast<int>(time(nullptr)));
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
