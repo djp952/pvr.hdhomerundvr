@@ -370,7 +370,7 @@ static std::atomic<bool> g_epgenabled{ true };
 // g_epgmaxtime
 //
 // Maximum number of days to report for EPG and series timers
-static int g_epgmaxtime = EPG_TIMEFRAME_UNLIMITED;
+static std::atomic<int> g_epgmaxtime = EPG_TIMEFRAME_UNLIMITED;
 
 // g_gui
 //
@@ -1655,7 +1655,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 	// Copy anything relevant from the provided parameters
 	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
-	g_epgmaxtime = pvrprops->iEpgMaxDays;
+	g_epgmaxtime.store(pvrprops->iEpgMaxDays);
 
 #ifdef __ANDROID__
 	// Uncomment this to allow normal crash dumps to be generated on Android
@@ -3565,7 +3565,7 @@ int GetTimersAmount(void)
 		connectionpool::handle dbhandle(g_connpool);
 
 		// Return the sum of the timer rules and the invidual timers themselves
-		return get_recordingrule_count(dbhandle) + get_timer_count(dbhandle, g_epgmaxtime); 
+		return get_recordingrule_count(dbhandle) + get_timer_count(dbhandle, g_epgmaxtime.load()); 
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
@@ -3658,7 +3658,7 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 		});
 
 		// Enumerate all of the timers in the database
-		enumerate_timers(dbhandle, g_epgmaxtime, [&](struct timer const& item) -> void {
+		enumerate_timers(dbhandle, g_epgmaxtime.load(), [&](struct timer const& item) -> void {
 
 			PVR_TIMER timer;							// PVR_TIMER to be transferred to Kodi
 			memset(&timer, 0, sizeof(PVR_TIMER));		// Initialize the structure
@@ -4726,7 +4726,12 @@ bool IsRealTimeStream(void)
 
 PVR_ERROR SetEPGTimeFrame(int days)
 {
-	g_epgmaxtime = days;
+	g_epgmaxtime.store(days);
+
+	// Changes to the EPG maximum time value need to trigger a timer update
+	log_notice(__func__, ": EPG time frame has changed -- trigger timer update");
+	g_pvr->TriggerTimerUpdate();
+
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
