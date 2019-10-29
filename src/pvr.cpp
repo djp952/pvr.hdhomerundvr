@@ -124,6 +124,7 @@ static void wait_for_network_task(scalar_condition<bool> const& cancel);
 static void alert_no_tuners(void) noexcept;
 static std::string select_tuner(std::vector<std::string> const& possibilities);
 static void start_discovery(void) noexcept;
+static void wait_for_devices(void) noexcept;
 static void wait_for_channels(void) noexcept;
 static void wait_for_timers(void) noexcept;
 static void wait_for_recordings(void) noexcept;
@@ -1101,7 +1102,7 @@ static void start_discovery(void) noexcept
 // try_getepgforchannel (local)
 //
 // Request the EPG for a channel from the backend
-static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end)
+static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time_t start, time_t end) noexcept
 {
 	assert(g_pvr);
 	assert(handle != nullptr);
@@ -1436,6 +1437,24 @@ static void update_recordings_task(scalar_condition<bool> const& cancel)
 	// Schedule the next periodic invocation of this discovery update task
 	log_notice(__func__, ": scheduling next recording update to initiate in ", settings.discover_recordings_interval, " seconds");
 	g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordings_interval), update_recordings_task);
+}
+
+// wait_for_devices (local)
+//
+// Waits until the data required to produce device data has been discovered
+static void wait_for_devices(void) noexcept
+{
+	try {
+
+		// Ensure that the discovery operations have been started
+		start_discovery();
+
+		// DEVICES
+		g_discovered_devices.wait_until_equals(true);
+	}
+
+	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(...) { handle_generalexception(__func__); }
 }
 
 // wait_for_channels (local)
@@ -2293,7 +2312,10 @@ PVR_ERROR GetDriveSpace(long long* total, long long* used)
 {
 	struct storage_space		space { 0, 0 };		// Disk space returned from database layer
 
-	try { 
+	// Wait until the device information has been discovered for the first time
+	wait_for_devices();
+
+	try {
 		
 		// Attempt to get the available total and available space for the system, but return NOT_IMPLEMENTED
 		// instead of an error code if the total value isn't available - this info wasn't always available
@@ -2534,6 +2556,9 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	std::unique_lock<std::mutex> lock(sync);
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
+
+	// Wait until the device information has been discovered for the first time
+	wait_for_devices();
 
 	// Check if the EPG function has been disabled due to failure(s) and if so, return no data
 	if(!g_epgenabled.load()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
