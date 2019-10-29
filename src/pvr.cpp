@@ -371,7 +371,7 @@ static std::atomic<bool> g_epgenabled{ true };
 // g_epgmaxtime
 //
 // Maximum number of days to report for EPG and series timers
-static std::atomic<int> g_epgmaxtime = EPG_TIMEFRAME_UNLIMITED;
+static std::atomic<int> g_epgmaxtime{ EPG_TIMEFRAME_UNLIMITED };
 
 // g_gui
 //
