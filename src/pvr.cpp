@@ -75,7 +75,6 @@
 #define MENUHOOK_SETTING_TRIGGERGUIDEDISCOVERY			5
 #define MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY		6
 #define MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY	7
-#define MENUHOOK_SETTING_RESETDATABASE					8
 #define MENUHOOK_CHANNEL_DISABLE						9
 #define MENUHOOK_CHANNEL_ADDFAVORITE					10
 #define MENUHOOK_CHANNEL_REMOVEFAVORITE					11
@@ -1711,14 +1710,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					menuhook.category = PVR_MENUHOOK_SETTING;
 					g_pvr->AddMenuHook(&menuhook);
 
-					// MENUHOOK_SETTING_RESETDATABASE
-					//
-					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
-					menuhook.iHookId = MENUHOOK_SETTING_RESETDATABASE;
-					menuhook.iLocalizedStringId = 30308;
-					menuhook.category = PVR_MENUHOOK_SETTING;
-					g_pvr->AddMenuHook(&menuhook);
-
 					// MENUHOOK_CHANNEL_DISABLE
 					//
 					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
@@ -2446,41 +2437,6 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		catch(std::exception & ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
-		return PVR_ERROR::PVR_ERROR_NO_ERROR;
-	}
-
-	// MENUHOOK_SETTING_RESETDATABASE
-	//
-	else if(menuhook.iHookId == MENUHOOK_SETTING_RESETDATABASE) {
-
-		try {
-
-			log_notice(__func__, ": clearing database and rescheduling all discovery tasks");
-
-			g_scheduler.stop();					// Stop the task scheduler
-			g_scheduler.clear();				// Clear all pending tasks
-
-			// Clear the database using an automatically scoped connection
-			clear_database(connectionpool::handle(g_connpool));
-
-			// Re-enable access to the backend EPG functions
-			g_epgenabled.store(true);
-
-			// Schedule the standard update tasks to execute as soon as possible
-			g_scheduler.add(update_devices_task);
-			g_scheduler.add(update_lineups_task);
-			g_scheduler.add(update_guide_task);
-			g_scheduler.add(update_recordingrules_task);
-			g_scheduler.add(update_episodes_task);
-			g_scheduler.add(update_recordings_task);
-
-			// Restart the task scheduler
-			g_scheduler.start();
-		}
-
-		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
-		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
-		
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
