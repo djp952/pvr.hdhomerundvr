@@ -186,11 +186,6 @@ void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordi
 // Clears stale device authorization string from all available tuners
 void clear_authorization_strings(sqlite3* instance, int expiry);
 
-// clear_database
-//
-// Clears all discovery data out of the database
-void clear_database(sqlite3* instance);
-
 // close_database
 //
 // Creates a SQLite database instance handle

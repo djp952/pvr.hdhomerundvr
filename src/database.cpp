@@ -264,28 +264,6 @@ static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int value)
 }
 
 //---------------------------------------------------------------------------
-// clear_database
-//
-// Clears all discovery data from the database
-//
-// Arguments:
-//
-//	instance	- Database instance handle
-
-void clear_database(sqlite3* instance)
-{
-	if(instance == nullptr) return;
-
-	// Not very interesting, just delete all the data from each discovery table
-	execute_non_query(instance, "delete from episode");
-	execute_non_query(instance, "delete from recordingrule");
-	execute_non_query(instance, "delete from guide");
-	execute_non_query(instance, "delete from recording");
-	execute_non_query(instance, "delete from lineup");
-	execute_non_query(instance, "delete from device");
-}
-
-//---------------------------------------------------------------------------
 // clear_authorization_strings
 //
 // Clears the device authorization string from all available tuners

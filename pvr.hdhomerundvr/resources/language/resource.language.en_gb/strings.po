@@ -312,10 +312,6 @@ msgctxt "#30307"
 msgid "Trigger recording rule discovery"
 msgstr ""
 
-msgctxt "#30308"
-msgid "Reset discovery database"
-msgstr ""
-
 msgctxt "#30309"
 msgid "Disable channel"
 msgstr ""
