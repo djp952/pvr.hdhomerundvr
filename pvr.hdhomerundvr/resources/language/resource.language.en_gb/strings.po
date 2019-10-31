@@ -97,7 +97,7 @@ msgid "Enable Edit Decision List (EDL) support for Recorded TV"
 msgstr ""
 
 msgctxt "#30120"
-msgid "EDL file path"
+msgid "Primary EDL file path"
 msgstr ""
 
 msgctxt "#30121"
@@ -142,6 +142,10 @@ msgstr ""
 
 msgctxt "#30135"
 msgid "Disable specialized Recorded TV category folders"
+msgstr ""
+
+msgctxt "#30136"
+msgid "Additional EDL file path"
 msgstr ""
 
 msgctxt "#30201"
@@ -401,11 +405,11 @@ msgid "Enables support for detection of Comskip Edit Decision List (EDL) files."
 msgstr ""
 
 msgctxt "#30517"
-msgid "Specifies the base path to search for Recorded TV Edit Decision List (EDL) files."
+msgid "Specifies the primary base path to search for Recorded TV Edit Decision List (EDL) files."
 msgstr ""
 
 msgctxt "#30518"
-msgid "When set to ON only the base path will be searched for Edit Decision List (EDL) files.  When set to OFF Edit Decision List (EDL) files must be located in a subdirectory that matches the series name as displayed in Kodi."
+msgid "When set to ON only the base path(s) will be searched for Edit Decision List (EDL) files.  When set to OFF Edit Decision List (EDL) files must be located in a subdirectory that matches the series name as displayed in Kodi."
 msgstr ""
 
 msgctxt "#30519"
@@ -451,3 +455,8 @@ msgstr ""
 msgctxt "#30530"
 msgid "When set to ON Recorded TV episodes with specialized category names (Movies, News, Specials, Sporting Events, etc.) will not be grouped into folders corresponding to those specialized category names."
 msgstr ""
+
+msgctxt "#30531"
+msgid "Specifies an additional base path to search for Recorded TV Edit Decision List (EDL) files."
+msgstr ""
+
