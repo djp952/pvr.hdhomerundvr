@@ -2442,12 +2442,12 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 		"json_extract(value, '$.SeriesID') as seriesid, "
 		"value as data from "
 		"json_each(json_get('http://api.hdhomerun.com/api/recording_rules', 'post', 'DeviceAuth=' || ?1 || '&Cmd=change&RecordingRuleID=' || ?2 || "
-		"'&RecentOnly=' || case when ?3 is null then '' else ?3 end || "
-		"'&ChannelOnly=' || case when ?4 is null then '' else decode_channel_id(?4) end || "
-		"'&AfterOriginalAirdateOnly=' || case when ?5 is null then '' else strftime('%s', date(?5, 'unixepoch')) end || "
+		"'&RecentOnly=' || case when ?3 is null then '0' else ?3 end || "
+		"'&ChannelOnly=' || case when ?4 is null then 'null' else decode_channel_id(?4) end || "
+		"'&AfterOriginalAirdateOnly=' || case when ?5 is null then '0' else strftime('%s', date(?5, 'unixepoch')) end || "
 		"'&StartPadding=' || case when ?6 is null then '30' else ?6 end || "
-		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end))";
-
+		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end))";	
+	
 	// Prepare the query
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
