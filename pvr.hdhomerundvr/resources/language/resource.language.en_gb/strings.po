@@ -97,7 +97,7 @@ msgid "Enable Edit Decision List (EDL) support for Recorded TV"
 msgstr ""
 
 msgctxt "#30120"
-msgid "EDL file path"
+msgid "Primary EDL file path"
 msgstr ""
 
 msgctxt "#30121"
@@ -146,6 +146,10 @@ msgstr ""
 
 msgctxt "#30135"
 msgid "Disable specialized Recorded TV category folders"
+msgstr ""
+
+msgctxt "#30136"
+msgid "Additional EDL file path"
 msgstr ""
 
 msgctxt "#30201"

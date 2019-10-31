@@ -12,6 +12,9 @@ v2.4.0 (2019.10.xx)
   - Trigger a timer update when notified that the Kodi EPG "days to display" setting(s) have been changed
   - Remove "Startup discovery task delay" advanced setting
   - Remove "Reset discovery database" PVR Client Specific setting
+  - Fix bug preventing selection of a non-writable path as a valid EDL file location
+  - Rename "EDL file path" EDL setting to "Primary EDL file path"
+  - Add secondary and tertiary "Additional EDL file path" EDL settings
 
 v2.3.1 (2019.09.30)
   - Fix potential for a race condition in background task scheduler when synchronously executing a task

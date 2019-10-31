@@ -296,6 +296,16 @@ struct addon_settings {
 	// Folder containing the recorded TV edit decision list files
 	std::string recording_edl_folder;
 
+	// recording_edl_folder_2
+	//
+	// Additional folder containing the recorded TV edit decision list files
+	std::string recording_edl_folder_2;
+
+	// recording_edl_folder_3
+	//
+	// Additional folder containing the recorded TV edit decision list files
+	std::string recording_edl_folder_3;
+
 	// recording_edl_folder_is_flat
 	//
 	// Indicates that the specified EDL folder is flattened (no subdirectories)
@@ -422,6 +432,8 @@ static addon_settings g_settings = {
 	72000,					// deviceauth_stale_after				default = 20 hours
 	false,					// enable_recording_edl
 	"",						// recording_edl_folder
+	"",						// recording_edl_folder_2
+	"",						// recording_edl_folder_3
 	false,					// recording_edl_folder_is_flat
 	false,					// recording_edl_cut_as_comskip
 	0,						// recording_edl_start_padding
@@ -1738,6 +1750,8 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			// Load the Edit Decision List (EDL) settings
 			if(g_addon->GetSetting("enable_recording_edl", &bvalue)) g_settings.enable_recording_edl = bvalue;
 			if(g_addon->GetSetting("recording_edl_folder", strvalue)) g_settings.recording_edl_folder.assign(strvalue);
+			if(g_addon->GetSetting("recording_edl_folder_2", strvalue)) g_settings.recording_edl_folder_2.assign(strvalue);
+			if(g_addon->GetSetting("recording_edl_folder_3", strvalue)) g_settings.recording_edl_folder_3.assign(strvalue);
 			if(g_addon->GetSetting("recording_edl_folder_is_flat", &bvalue)) g_settings.recording_edl_folder_is_flat = bvalue;
 			if(g_addon->GetSetting("recording_edl_cut_as_comskip", &bvalue)) g_settings.recording_edl_cut_as_comskip = bvalue;
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
@@ -2341,6 +2355,28 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.recording_edl_folder.assign(reinterpret_cast<char const*>(value));
 			log_notice(__func__, ": setting recording_edl_folder changed to ", g_settings.recording_edl_folder.c_str());
+		}
+	}
+
+	// recording_edl_folder_2
+	//
+	else if(strcmp(name, "recording_edl_folder_2") == 0) {
+
+		if(strcmp(g_settings.recording_edl_folder_2.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.recording_edl_folder_2.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting recording_edl_folder_2 changed to ", g_settings.recording_edl_folder_2.c_str());
+		}
+	}
+
+	// recording_edl_folder_3
+	//
+	else if(strcmp(name, "recording_edl_folder_3") == 0) {
+
+		if(strcmp(g_settings.recording_edl_folder_3.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.recording_edl_folder_3.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting recording_edl_folder_3 changed to ", g_settings.recording_edl_folder_3.c_str());
 		}
 	}
 
@@ -3426,10 +3462,6 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 		struct addon_settings settings = copy_settings();
 		if(!settings.enable_recording_edl) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-		// Verify that the specified directory for the EDL files exists
-		if(!g_addon->DirectoryExists(settings.recording_edl_folder.c_str()))
-			throw string_exception(__func__, ": ", std::string("specified edit decision list file directory '") + settings.recording_edl_folder + "' cannot be accessed");
-
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(g_connpool);
 
@@ -3437,59 +3469,71 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 		std::string basename = get_recording_filename(dbhandle, recording.strRecordingId, settings.recording_edl_folder_is_flat);
 		if(basename.length() == 0) throw string_exception(__func__, ": unable to determine the base file name of the specified recording");
 
-		// Generate the full name of the .EDL file and if it exists, attempt to process it
+		// Attempt to locate a matching .EDL file based on the configured directories
 		std::string filename = settings.recording_edl_folder.append(basename).append(".edl");
-		if(g_addon->FileExists(filename.c_str(), false)) {
+		if(!g_addon->FileExists(filename.c_str(), false)) {
 
-			// 2 KiB should be more than sufficient to hold a single line from the .edl file
-			std::unique_ptr<char[]> line(new char[2 KiB]);
+			// Check secondary EDL directory
+			filename = settings.recording_edl_folder_2.append(basename).append(".edl");
+			if(!g_addon->FileExists(filename.c_str(), false)) {
 
-			// Attempt to open the input edit decision list file
-			void* handle = g_addon->OpenFile(filename.c_str(), 0);
-			if(handle != nullptr) {
+				// Check tertiary EDL directory
+				filename = settings.recording_edl_folder_3.append(basename).append(".edl");
+				if(!g_addon->FileExists(filename.c_str(), false)) {
 
-				size_t linenumber = 0;
-				log_notice(__func__, ": processing edit decision list file: ", filename.c_str());
-
-				// Process each line of the file individually
-				while(g_addon->ReadFileString(handle, &line[0], 2 KiB)) {
-
-					++linenumber;									// Increment the line number
-
-					float			start	= 0.0F;					// Starting point, in milliseconds
-					float			end		= 0.0F;					// Ending point, in milliseconds
-					int				type	= PVR_EDL_TYPE_CUT;		// Type of edit to be made
-
-					// The only currently supported format for EDL is the {float|float|[int]} format, as the
-					// frame rate of the recording would be required to process the {#frame|#frame|[int]} format
-					if(sscanf(&line[0], "%f %f %i", &start, &end, &type) >= 2) {
-
-						// Apply any user-specified adjustments to the start and end times accordingly
-						start += (static_cast<float>(settings.recording_edl_start_padding) / 1000.0F);
-						end -= (static_cast<float>(settings.recording_edl_end_padding) / 1000.0F);
-						
-						// Ensure the start and end times are positive and do not overlap
-						start = std::min(std::max(start, 0.0F), std::max(end, 0.0F));
-						end = std::max(std::max(end, 0.0F), std::max(start, 0.0F));
-
-						// Replace CUT indicators with COMSKIP indicators if requested
-						if((static_cast<PVR_EDL_TYPE>(type) == PVR_EDL_TYPE_CUT) && (g_settings.recording_edl_cut_as_comskip)) type = static_cast<int>(PVR_EDL_TYPE_COMBREAK);
-
-						// Log the adjusted values for the entry and add a PVR_EDL_ENTRY to the vector<>
-						log_notice(__func__, ": adding edit decision list entry (start=", start, "s, end=", end, "s, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
-						entries.emplace_back(PVR_EDL_ENTRY { static_cast<int64_t>(static_cast<double>(start) * 1000.0), static_cast<int64_t>(static_cast<double>(end) * 1000.0), static_cast<PVR_EDL_TYPE>(type)});
-					}
-
-					else log_error(__func__, ": invalid edit decision list entry detected at line #", linenumber);
+					// If the .EDL file was not found anywhere, log a notice but return NO_ERROR back to Kodi -- this is not fatal
+					log_notice(__func__, ": edit decision list for recording ", basename.c_str(), " was not found in any configured EDL file directories");
+					return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 				}
-				
-				g_addon->CloseFile(handle);
 			}
-
-			else log_error(__func__, ": unable to open edit decision list file: ", filename.c_str());
 		}
 
-		else log_notice(__func__, ": edit decision list file not found: ", filename.c_str());
+		// 2 KiB should be more than sufficient to hold a single line from the .edl file
+		std::unique_ptr<char[]> line(new char[2 KiB]);
+
+		// Attempt to open the input edit decision list file
+		void* handle = g_addon->OpenFile(filename.c_str(), 0);
+		if(handle != nullptr) {
+
+			size_t linenumber = 0;
+			log_notice(__func__, ": processing edit decision list file: ", filename.c_str());
+
+			// Process each line of the file individually
+			while(g_addon->ReadFileString(handle, &line[0], 2 KiB)) {
+
+				++linenumber;									// Increment the line number
+
+				float			start	= 0.0F;					// Starting point, in milliseconds
+				float			end		= 0.0F;					// Ending point, in milliseconds
+				int				type	= PVR_EDL_TYPE_CUT;		// Type of edit to be made
+
+				// The only currently supported format for EDL is the {float|float|[int]} format, as the
+				// frame rate of the recording would be required to process the {#frame|#frame|[int]} format
+				if(sscanf(&line[0], "%f %f %i", &start, &end, &type) >= 2) {
+
+					// Apply any user-specified adjustments to the start and end times accordingly
+					start += (static_cast<float>(settings.recording_edl_start_padding) / 1000.0F);
+					end -= (static_cast<float>(settings.recording_edl_end_padding) / 1000.0F);
+						
+					// Ensure the start and end times are positive and do not overlap
+					start = std::min(std::max(start, 0.0F), std::max(end, 0.0F));
+					end = std::max(std::max(end, 0.0F), std::max(start, 0.0F));
+
+					// Replace CUT indicators with COMSKIP indicators if requested
+					if((static_cast<PVR_EDL_TYPE>(type) == PVR_EDL_TYPE_CUT) && (g_settings.recording_edl_cut_as_comskip)) type = static_cast<int>(PVR_EDL_TYPE_COMBREAK);
+
+					// Log the adjusted values for the entry and add a PVR_EDL_ENTRY to the vector<>
+					log_notice(__func__, ": adding edit decision list entry (start=", start, "s, end=", end, "s, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
+					entries.emplace_back(PVR_EDL_ENTRY { static_cast<int64_t>(static_cast<double>(start) * 1000.0), static_cast<int64_t>(static_cast<double>(end) * 1000.0), static_cast<PVR_EDL_TYPE>(type)});
+				}
+
+				else log_error(__func__, ": invalid edit decision list entry detected at line #", linenumber);
+			}
+				
+			g_addon->CloseFile(handle);
+		}
+
+		else log_error(__func__, ": unable to open edit decision list file: ", filename.c_str());
 
 		// Copy the parsed entries, if any, from the vector<> into the output array
 		*count = static_cast<int>(std::min(entries.size(), static_cast<size_t>(*count)));
