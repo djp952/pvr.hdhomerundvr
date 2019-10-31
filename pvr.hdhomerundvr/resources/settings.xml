@@ -29,10 +29,10 @@
     <setting id="recording_edl_folder" subsetting="true" enable="eq(-1,true)" label="30120" type="folder" source="auto"/>
     <setting id="recording_edl_folder_2" subsetting="true" enable="eq(-2,true)" visible="!eq(-1,)" label="30136" type="folder" source="auto"/>
     <setting id="recording_edl_folder_3" subsetting="true" enable="eq(-3,true)" visible="!eq(-1,)" label="30136" type="folder" source="auto"/>
-    <setting id="recording_edl_folder_is_flat" subsetting="true" enable="eq(-2,true)" label="30129" type="bool" default="false"/>
-    <setting id="recording_edl_cut_as_comskip" subsetting="true" enable="eq(-3,true)" label="30130" type="bool" default="false"/>
-    <setting id="recording_edl_start_padding" subsetting="true" enable="eq(-4,true)" label="30121" type="slider" default="0" range="0,500,10000" option="int"/>
-    <setting id="recording_edl_end_padding" subsetting="true" enable="eq(-5,true)" label="30122" type="slider" default="0" range="0,500,10000" option="int"/>
+    <setting id="recording_edl_folder_is_flat" subsetting="true" enable="eq(-4,true)" label="30129" type="bool" default="false"/>
+    <setting id="recording_edl_cut_as_comskip" subsetting="true" enable="eq(-5,true)" label="30130" type="bool" default="false"/>
+    <setting id="recording_edl_start_padding" subsetting="true" enable="eq(-6,true)" label="30121" type="slider" default="0" range="0,500,10000" option="int"/>
+    <setting id="recording_edl_end_padding" subsetting="true" enable="eq(-7,true)" label="30122" type="slider" default="0" range="0,500,10000" option="int"/>
   </category>
 
   <category label="30002">
