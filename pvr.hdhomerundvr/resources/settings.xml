@@ -211,13 +211,46 @@
           <default></default>
           <constraints>
             <allowempty>true</allowempty>
-            <writable>true</writable>
+            <writable>false</writable>
           </constraints>
           <dependencies>
             <dependency type="enable" setting="enable_recording_edl">true</dependency>
           </dependencies>
           <control type="button" format="path">
             <heading>30120</heading>
+          </control>
+        </setting>
+
+        <setting id="recording_edl_folder_2" type="path" parent="enable_recording_edl" label="30136" help="30531">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+            <writable>false</writable>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="enable_recording_edl">true</dependency>
+            <dependency type="visible" setting="recording_edl_folder" operator="!is"></dependency>
+          </dependencies>
+          <control type="button" format="path">
+            <heading>30136</heading>
+          </control>
+        </setting>
+
+        <setting id="recording_edl_folder_3" type="path" parent="enable_recording_edl" label="30136" help="30531">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+            <writable>false</writable>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="enable_recording_edl">true</dependency>
+            <dependency type="visible" setting="recording_edl_folder" operator="!is"></dependency>
+            <dependency type="visible" setting="recording_edl_folder_2" operator="!is"></dependency>
+          </dependencies>
+          <control type="button" format="path">
+            <heading>30136</heading>
           </control>
         </setting>
 
