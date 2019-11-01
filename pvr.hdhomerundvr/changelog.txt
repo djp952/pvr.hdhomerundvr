@@ -1,4 +1,4 @@
-v2.4.0 (2019.10.xx)
+v2.4.0 (2019.11.xx)
   - Update SQLite database engine to version 3.30.1
   - Enforce previously relaxed rules regarding invalid JSON data retrieved from the backend and/or local devices
   - Limit EPG data requests to no more than 24 hours into the future if no devices with DVR authorization where discovered
@@ -16,6 +16,7 @@ v2.4.0 (2019.10.xx)
   - Rename "EDL file path" EDL setting to "Primary EDL file path"
   - Add secondary and tertiary "Additional EDL file path" EDL settings
   - Fix bug that caused modification of a recording rule back to a default value(s) from being properly applied on the backend
+  - Change grace period to determine when to show an episode repeat indicator to 48 hours after the original air date timestamp
 
 v2.3.1 (2019.09.30)
   - Fix potential for a race condition in background task scheduler when synchronously executing a task
