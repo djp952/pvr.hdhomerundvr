@@ -1245,8 +1245,8 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 			memset(&epgtag, 0, sizeof(EPG_TAG));				// Initialize the structure
 
 			// Determine if the episode is a repeat -- unlike recordings there is no firstairing field to key on, 
-			// so if the start time of the program is within 24 hours of the originalairdate, consider it as a first airing
-			bool isrepeat = !((item.originalairdate + 86400) >= item.starttime);
+			// so if the start time of the program is within 48 hours of the originalairdate, consider it as a first airing
+			bool isrepeat = !((item.originalairdate + 172800) >= item.starttime);
 
 			// Don't send EPG entries with start/end times outside the requested range
 			if((item.starttime > end) || (item.endtime < start)) return;
@@ -3237,8 +3237,8 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			memset(&recording, 0, sizeof(PVR_RECORDING));		// Initialize the structure
 
 			// Determine if the recording is a repeat -- items marked specifically as firstairing or have a recordstarttime 
-			// within 24 hours of the originalairdate can be considered as first airings
-			bool isrepeat = !((item.firstairing == 1) || ((item.originalairdate + 86400) >= item.recordingtime));
+			// within 48 hours of the originalairdate can be considered as first airings
+			bool isrepeat = !((item.firstairing == 1) || ((item.originalairdate + 172800) >= item.recordingtime));
 
 			// strRecordingId (required)
 			if(item.recordingid == nullptr) return;
