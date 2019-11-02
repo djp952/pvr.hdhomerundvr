@@ -14,7 +14,7 @@
 			<summary lang="en_GB">HDHomeRun DVR PVR Client</summary>
 			<platform><#= this.Host.ResolveParameterValue("", "", "platform") #></platform>
 			<size><#= this.Host.ResolveParameterValue("", "", "zipfilesize") #></size>
-			<path>leia-<#= this.Host.ResolveParameterValue("", "", "displayversion") #>/<#= this.Host.ResolveParameterValue("", "", "zipfilename") #></path>
+			<path>matrix-<#= this.Host.ResolveParameterValue("", "", "displayversion") #>/<#= this.Host.ResolveParameterValue("", "", "zipfilename") #></path>
 		</extension>
 	</addon>
 </addons>
