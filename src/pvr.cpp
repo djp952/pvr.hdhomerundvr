@@ -38,8 +38,16 @@
 #include <sys/prctl.h>
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
 #include <netlistmgr.h>
+#else
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/in.h>
 #endif 
 
 #include <xbmc_addon_dll.h>
@@ -117,11 +125,12 @@ static void update_guide_task(scalar_condition<bool> const& cancel);
 static void update_lineups_task(scalar_condition<bool> const& cancel);
 static void update_recordingrules_task(scalar_condition<bool> const& cancel);
 static void update_recordings_task(scalar_condition<bool> const& cancel);
-static void wait_for_network_task(scalar_condition<bool> const& cancel);
+static void wait_for_network_task(int seconds, scalar_condition<bool> const& cancel);
 
 // Helper Functions
 //
 static void alert_no_tuners(void) noexcept;
+static bool ipv4_network_available(void);
 static std::string select_tuner(std::vector<std::string> const& possibilities);
 static void start_discovery(void) noexcept;
 static void wait_for_devices(void) noexcept;
@@ -899,7 +908,7 @@ static void log_message(ADDON::addon_log_t level, _args&&... args)
 	// Write LOG_ERROR level messages to an appropriate secondary log mechanism
 	if(level == ADDON::addon_log_t::LOG_ERROR) {
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
 		std::string message = "ERROR: " + stream.str() + "\r\n";
 		OutputDebugStringA(message.c_str());
 #elif __ANDROID__
@@ -934,6 +943,84 @@ static char const* const edltype_to_string(PVR_EDL_TYPE const& type)
 	}
 
 	return "<UNKNOWN>";
+}
+
+// ipv4_network_available (local)
+//
+// Determines if IPv4 connectivity has been established on the system
+static bool ipv4_network_available(void)
+{
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+
+  #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+
+	INetworkListManager*	netlistmgr = nullptr;
+	NLM_CONNECTIVITY		connectivity = NLM_CONNECTIVITY_DISCONNECTED;
+
+	// Create an instance of the NetworkListManager object
+	HRESULT hresult = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_INPROC_SERVER, IID_INetworkListManager, reinterpret_cast<void**>(&netlistmgr));
+	if(FAILED(hresult)) throw string_exception(__func__, ": failed to create NetworkListManager instance (hr=", hresult, ")");
+
+	// Interrogate the Network List Manager to determine the current network connectivity status
+	hresult = netlistmgr->GetConnectivity(&connectivity);
+	netlistmgr->Release();
+
+	// If the NetworkListManager returned an error, throw an exception to that effect
+	if(FAILED(hresult)) throw string_exception(__func__, ": failed to interrogate NetworkListManager connectivity state (hr=", hresult, ")");
+	
+	// If the status was successfully interrogated, check for the necessary IPv4 connectivity flags
+	return ((connectivity & (NLM_CONNECTIVITY_IPV4_SUBNET | NLM_CONNECTIVITY_IPV4_LOCALNETWORK | NLM_CONNECTIVITY_IPV4_INTERNET)) != 0);
+
+  #endif // WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+
+#else
+
+	const int MAX_INTERFACES = 128;
+
+	// Allocate a buffer to hold the interface address information
+	std::unique_ptr<struct ifreq[]> ifreqs(new struct ifreq[MAX_INTERFACES]);
+	memset(&ifreqs[0], 0, sizeof(struct ifreq) * MAX_INTERFACES);
+
+	// Create a IPv4 TCP socket instance
+	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+	if(sock == -1) throw string_exception(__func__, ": failed to create socket instance");
+
+	// Initialize an ifconf structure to send into ioctl(SIOCGIFCONF)
+	struct ifconf ifc;
+	ifc.ifc_len = sizeof(struct ifreq) * MAX_INTERFACES;
+	ifc.ifc_req = &ifreqs[0];
+
+	// Retrieve the interface address information
+	if(ioctl(sock, SIOCGIFCONF, &ifc) != 0) { close(sock); throw string_exception(__func__, ": ioctl(SIOCGIFCONF) failed"); }
+
+	// If the returned length is equal to (or greater than) the original length, there was an overflow
+	if(ifc.ifc_len >= static_cast<int>(sizeof(struct ifreq) * MAX_INTERFACES)) { close(sock); throw string_exception(__func__, ": ioctl(SIOCGIFCONF) returned more interfaces than have been allowed for"); }
+
+	// Set up the head and tail pointers into the array of ifreq structures
+	struct ifreq* current = ifc.ifc_req;
+	struct ifreq* end = reinterpret_cast<struct ifreq*>(&ifc.ifc_buf[ifc.ifc_len]);
+
+	// Iterate over each ifreq structure and determine if the interface is running
+	while(current <= end) {
+
+		struct sockaddr_in* addrin = reinterpret_cast<struct sockaddr_in*>(&current->ifr_addr);
+		
+		// If the interface has a valid IPv4 address, get the active flag information
+		uint32_t ipaddr = ntohl(addrin->sin_addr.s_addr);
+		if((ipaddr != 0) && (ioctl(sock, SIOCGIFFLAGS, current) == 0)) {
+
+			// If the flag indicate that the interface is both UP and RUNNING, we're done
+			unsigned int flags = current->ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_UP | IFF_RUNNING);
+			if(flags == (IFF_UP | IFF_RUNNING)) { close(sock); return true; }
+		}
+
+		current++;				// Move to the next interface in the list
+	}
+
+	close(sock);				// Close the socket instance
+	return false;				// No interfaces were both UP and RUNNING
+
+#endif	// defined(_WINDOWS) || defined(WINAPI_FAMILY)
 }
 
 // openlivestream_storage_http (local)
@@ -1088,6 +1175,9 @@ static void start_discovery(void) noexcept
 
 			// Create a copy of the current addon settings structure
 			struct addon_settings settings = copy_settings();
+
+			// Schedule a task to wait for the network to become available
+			g_scheduler.add(std::bind(wait_for_network_task, 10, std::placeholders::_1));
 
 			// Schedule the initial discovery tasks to execute as soon as possible
 			g_scheduler.add([](scalar_condition<bool> const&) -> void { bool changed; discover_devices(changed); });
@@ -1492,42 +1582,22 @@ static void wait_for_channels(void) noexcept
 // wait_for_network_task (local)
 //
 // Scheduled task implementation to wait for the network to become available
-static void wait_for_network_task(scalar_condition<bool> const& cancel)
+static void wait_for_network_task(int seconds, scalar_condition<bool> const& cancel)
 {
-	(void)cancel;			// Avoid unreferenced parameter warnings on non-Windows builds
-
-#ifdef _WINDOWS
-
-	INetworkListManager* netlistmgr = nullptr;
 	int attempts = 0;
 
-	// Create an instance of the NetworkListManager object
-	HRESULT hresult = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_INPROC_SERVER, IID_INetworkListManager, reinterpret_cast<void**>(&netlistmgr));
-	if(FAILED(hresult)) { log_error(__func__, ": failed to create NetworkListManager instance (hr=", hresult, ")"); return; }
+	// Watch for task cancellation and only retry the operation(s) up to the number of seconds specified
+	while((cancel.test(true) == false) && (++attempts < seconds)) {
 
-	// Watch for task cancellation and only retry the operation(s) for one minute
-	while((cancel.test(true) == false) && (++attempts < 60)) {
-
-		NLM_CONNECTIVITY connectivity = NLM_CONNECTIVITY_DISCONNECTED;
-
-		hresult = netlistmgr->GetConnectivity(&connectivity);
-		if(FAILED(hresult)) { log_error(__func__, ": failed to interrogate NetworkListManager connectivity state (hr=", hresult, ")"); break; }
-
-		// Break the loop if IPv4 network connectivity has been detected
-		if((connectivity & (NLM_CONNECTIVITY_IPV4_SUBNET | NLM_CONNECTIVITY_IPV4_LOCALNETWORK | NLM_CONNECTIVITY_IPV4_INTERNET)) != 0) break;
+		if(ipv4_network_available()) { log_notice(__func__, ": IPv4 network connectivity detected"); return; }
 
 		// Sleep for one second before trying the operation again
-		log_notice(__func__, ": IPV4 network connectivity not detected; waiting for one second before trying again"); 
+		log_notice(__func__, ": IPv4 network connectivity not detected; waiting for one second before trying again");
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
-	// Release the NetworkListManager instance
-	netlistmgr->Release();
-
 	// Log an error message if the wait operation was aborted due to a timeout condition
-	if(attempts >= 60) log_error(__func__, ": IPV4 network connectivity was not detected within one minute; giving up");
-
-#endif
+	if(attempts >= seconds) log_error(__func__, ": IPv4 network connectivity was not detected within ", seconds, " seconds; giving up");
 }
 
 // wait_for_timers (local)
@@ -4698,7 +4768,7 @@ void OnSystemWake()
 		g_epgenabled.store(true);
 
 		// Schedule a task to wait for the network to become available
-		g_scheduler.add(wait_for_network_task);
+		g_scheduler.add(std::bind(wait_for_network_task, 60, std::placeholders::_1));
 
 		// Schedule update tasks for everything in an appropriate order
 		g_scheduler.add(update_devices_task);
