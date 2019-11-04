@@ -971,6 +971,11 @@ static bool ipv4_network_available(void)
 	// If the status was successfully interrogated, check for the necessary IPv4 connectivity flags
 	return ((connectivity & (NLM_CONNECTIVITY_IPV4_SUBNET | NLM_CONNECTIVITY_IPV4_LOCALNETWORK | NLM_CONNECTIVITY_IPV4_INTERNET)) != 0);
 
+  #else
+
+	// This function cannot currently be implemented on non-desktop Windows platforms
+	return true;
+
   #endif // WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
 #else
