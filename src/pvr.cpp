@@ -4315,9 +4315,10 @@ PVR_ERROR GetStreamReadChunkSize(int* chunksize)
 {
 	if(chunksize == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	// Create a copy of the current addon settings structure
-	struct addon_settings settings = copy_settings();
-	*chunksize = settings.stream_read_chunk_size;
+	// Use the chunk size that was used in Krypton (32KiB).  This indicates the
+	// maximum amount of data a single read may return, it does not affect the
+	// minimum enforced by settings.stream_read_chunk_size
+	*chunksize = 32 KiB;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
