@@ -77,7 +77,7 @@ msgid "Use season/episode number as title for recordings"
 msgstr ""
 
 msgctxt "#30114"
-msgid "DVR stream read chunk size"
+msgid "DVR stream read operation minimum size"
 msgstr ""
 
 msgctxt "#30115"
