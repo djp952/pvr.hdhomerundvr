@@ -3,6 +3,7 @@ v2.4.1 (2019.11.xx)
   - (Linux/OSX) Wait up to one minute for IPv4 network connectivity before executing wakeup discovery tasks
   - Report a fixed length (32KiB) stream chunk size to Kodi regardless of "DVR stream read chunk size" setting value
   - Rename "DVR stream read chunk size" advanced setting back to "DVR stream read operation minimum size"
+  - Treat "Audio" Recorded TV category mapping as "Series"; avoids creation of "Audio" folder in Recorded TV
 
 v2.4.0 (2019.11.01)
   - Update SQLite database engine to version 3.30.1
