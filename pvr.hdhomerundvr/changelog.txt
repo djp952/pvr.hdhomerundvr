@@ -1,4 +1,5 @@
 v2.4.1 (2019.11.xx)
+  - Update cURL library to version 7.67.0
   - (Windows/Linux/Android/OSX) Wait up to 10 seconds for IPv4 network connectivity before executing startup discovery tasks
   - (Linux/OSX) Wait up to one minute for IPv4 network connectivity before executing wakeup discovery tasks
   - Report a fixed length (32KiB) stream chunk size to Kodi regardless of "DVR stream read chunk size" setting value

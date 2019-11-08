@@ -515,6 +515,9 @@
     <ClInclude Include="..\depends\curl\lib\quic.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\curl\lib\socketpair.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -987,6 +990,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\vquic\quiche.c">
       <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\curl\lib\socketpair.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
