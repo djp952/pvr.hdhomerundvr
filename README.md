@@ -17,7 +17,7 @@ Copyright (C)2016-2019 Michael G. Brehm
 * [Ubuntu on Windows 16.04 LTS](https://www.microsoft.com/store/productId/9PJN388HP8C9)   
 
 **OPTIONAL COMPONENTS**   
-* Android NDK r12b for Windows 64-bit   
+* Android NDK r20b for Windows 64-bit   
 * Oracle Java SE Runtime Environment 8   
 * Raspberry Pi Cross-Compiler   
 * OSXCROSS Cross-Compiler (with Mac OSX 10.11 SDK)   
@@ -34,11 +34,11 @@ sudo apt-get install gcc-4.9-arm-linux-gnueabihf g++-4.9-arm-linux-gnueabihf gcc
 **OPTIONAL: CONFIGURE ANDROID NDK**   
 *Necessary to build Android Targets*   
    
-Download the Android NDK r12b for Windows 64-bit:    
-[https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip](https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip)   
+Download the Android NDK r20b for Windows 64-bit:    
+[https://dl.google.com/android/repository/android-ndk-r20b-windows-x86_64.zip](https://dl.google.com/android/repository/android-ndk-r20b-windows-x86_64.zip)   
 
 * Extract the contents of the .zip file somewhere   
-* Set a System Environment Variable named ANDROID_NDK_ROOT that points to the extracted android-ndk-r12b folder
+* Set a System Environment Variable named ANDROID_NDK_ROOT that points to the extracted android-ndk-r20b folder
    
 **OPTIONAL: CONFIGURE ORACLE JAVA SE RUNTIME ENVIRONMENT AND CREATE PUBLIC-KEY CERTIFICATE**   
 *Necessary to build Universal Windows Platform APPX Targets*   
