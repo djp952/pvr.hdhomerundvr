@@ -348,7 +348,7 @@ int generate_series_bestindex(sqlite3_vtab* /*vtab*/, sqlite3_index_info* info)
 	// Both start= and stop= boundaries are available.  This is the the preferred case
 	if((indexmask & 3) == 3) {
 
-		info->estimatedCost = static_cast<double>(2 - ((indexmask & 4) != 0) ? 1 : 0);
+		info->estimatedCost = static_cast<double>(2 - (((indexmask & 4) != 0) ? 1 : 0));
 		info->estimatedRows = 1000;
 		if(info->nOrderBy == 1) {
 
