@@ -1,4 +1,4 @@
-v2.4.1 (2019.11.xx)
+v2.4.1 (2019.11.13)
   - Update cURL library to version 7.67.0
   - Wait up to 10 seconds for IPv4 network connectivity before executing startup discovery tasks
   - (Linux/OSX) Wait up to one minute for IPv4 network connectivity before executing wakeup discovery tasks
