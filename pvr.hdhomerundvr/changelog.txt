@@ -1,3 +1,6 @@
+v2.4.2 (2019.12.xx)
+  - Add "Use Original Air Date timestamp for Recorded TV programs" setting
+
 v2.4.1 (2019.11.13)
   - Update cURL library to version 7.67.0
   - (Windows/Linux/Android/OSX) Wait up to 10 seconds for IPv4 network connectivity before executing startup discovery tasks
