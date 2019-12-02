@@ -900,6 +900,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
 	if((post) && (curlresult == CURLE_OK)) curlresult = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "identity, gzip, deflate");
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
@@ -1027,6 +1028,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 				// Set the CURL options and execute the web request to get the JSON string data
 				CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, std::get<0>(iterator).c_str());
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "identity, gzip, deflate");
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);

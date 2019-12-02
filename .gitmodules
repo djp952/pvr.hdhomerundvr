@@ -25,3 +25,9 @@
 [submodule "rapidjson"]
 	path = depends/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "libz"]
+	path = depends/libz
+	url = http://github.com/djp952/prebuilt-libz.git
+[submodule "zlib"]
+	path = depends/zlib
+	url = http://github.com/madler/zlib.git
