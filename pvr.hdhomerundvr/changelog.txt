@@ -1,5 +1,7 @@
 v2.4.2 (2019.12.xx)
+  - Add dependency on zlib library v1.2.11
   - Add "Use Original Air Date timestamp for Recorded TV programs" setting
+  - Enable DEFLATE and GZIP encoding support for backend HTTP data requests
 
 v2.4.1 (2019.11.13)
   - Update cURL library to version 7.67.0

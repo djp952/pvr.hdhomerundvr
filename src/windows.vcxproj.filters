@@ -87,6 +87,17 @@
     <Filter Include="External Libraries\curl\Source Files\vssh">
       <UniqueIdentifier>{b760a9db-41fa-441a-88e3-5c1a49e3945d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External Libraries\zlib">
+      <UniqueIdentifier>{b468c409-95fa-41c7-9fc2-3fa23e420efb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\zlib\Header Files">
+      <UniqueIdentifier>{44ad853c-c19d-4b36-80f1-e663fcb3b089}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="External Libraries\zlib\Source Files">
+      <UniqueIdentifier>{9c577591-56bc-4247-887f-2376ba00d8c0}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -514,6 +525,12 @@
     </ClInclude>
     <ClInclude Include="..\depends\curl\lib\socketpair.h">
       <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\zlib\zconf.h">
+      <Filter>External Libraries\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\zlib\zlib.h">
+      <Filter>External Libraries\zlib\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -993,6 +1010,30 @@
     </ClCompile>
     <ClCompile Include="..\depends\curl\lib\socketpair.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\adler32.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\crc32.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\deflate.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\inffast.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\inflate.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\inftrees.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\trees.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\zlib\zutil.c">
+      <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
