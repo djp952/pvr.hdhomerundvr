@@ -172,301 +172,301 @@
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h">
       <Filter>External Libraries\libhdhomerun\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vauth\digest.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vauth\digest.h">
       <Filter>External Libraries\curl\Header Files\vauth</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vauth\ntlm.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vauth\ntlm.h">
       <Filter>External Libraries\curl\Header Files\vauth</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vauth\vauth.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vauth\vauth.h">
       <Filter>External Libraries\curl\Header Files\vauth</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\gskit.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gskit.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\gtls.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gtls.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\mbedtls.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mbedtls.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\nssg.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\nssg.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\openssl.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\openssl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\polarssl.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\polarssl_threadlock.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\schannel.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\schannel.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\vtls.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\vtls.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\amigaos.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\amigaos.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\asyn.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\asyn.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\conncache.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\conncache.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\connect.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\connect.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\content_encoding.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\content_encoding.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_addrinfo.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_addrinfo.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_base64.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_base64.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_des.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_des.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_endian.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_endian.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_fnmatch.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_fnmatch.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_gethostname.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_gethostname.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_gssapi.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_gssapi.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_hmac.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_hmac.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_ldap.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_ldap.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_md4.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_md4.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_md5.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_md5.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_memory.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_memory.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_memrchr.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_memrchr.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_multibyte.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_multibyte.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_ntlm_core.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_ntlm_core.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_ntlm_wb.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_ntlm_wb.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_printf.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_printf.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_rtmp.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_rtmp.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_sasl.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_sasl.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_sec.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_sec.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_setup.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_setup.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_setup_once.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_setup_once.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_sha256.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_sha256.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_sspi.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_sspi.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_threads.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_threads.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curlx.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curlx.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\dotdot.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\dotdot.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\easyif.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\easyif.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\escape.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\escape.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\fileinfo.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\fileinfo.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\ftplistparser.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\ftplistparser.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\getinfo.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\getinfo.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\gopher.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\gopher.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\hash.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\hash.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\hostcheck.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\hostcheck.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\http_chunks.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\http_chunks.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\http_digest.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\http_digest.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\http_negotiate.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\http_negotiate.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\http_ntlm.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\http_ntlm.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\http_proxy.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\http_proxy.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\http2.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\http2.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\imap.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\imap.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\inet_ntop.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\inet_ntop.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\inet_pton.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\inet_pton.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\llist.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\llist.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\memdebug.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\memdebug.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\mime.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\mime.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\multihandle.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\multihandle.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\multiif.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\multiif.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\non-ascii.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\non-ascii.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\nonblock.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\nonblock.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\parsedate.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\parsedate.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\pingpong.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\pingpong.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\pop3.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\pop3.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\rand.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\rand.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\rtsp.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\rtsp.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\select.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\select.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\setopt.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\setopt.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\setup-vms.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\setup-vms.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\share.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\share.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\sigpipe.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\sigpipe.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\slist.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\slist.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\smb.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\smb.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\smtp.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\smtp.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\sockaddr.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\sockaddr.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\socks.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\socks.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\speedcheck.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\speedcheck.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\splay.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\splay.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\ssh.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\ssh.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\strcase.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\strcase.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\strdup.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\strdup.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\strerror.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\strerror.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\strtok.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\strtok.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\strtoofft.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\strtoofft.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\system_win32.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\system_win32.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\telnet.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\telnet.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\tftp.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\tftp.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\transfer.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\transfer.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\urldata.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\urldata.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\warnless.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\warnless.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\wildcard.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\wildcard.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\x509asn1.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\x509asn1.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\http-status-codes-cpp\HttpStatusCodes_C++11.h">
@@ -478,28 +478,28 @@
     <ClInclude Include="curlshare.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_ctype.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_ctype.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_path.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_path.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_range.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_range.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\doh.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\doh.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\urlapi-int.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\urlapi-int.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\mesalink.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mesalink.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
     <ClInclude Include="dbtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\curl_get_line.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_get_line.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="httpstream.h">
@@ -511,25 +511,25 @@
     <ClInclude Include="devicestream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vtls\wolfssl.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\wolfssl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os_windows.h">
       <Filter>External Libraries\libhdhomerun\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vquic\ngtcp2.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vquic\ngtcp2.h">
       <Filter>External Libraries\curl\Header Files\vquic</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\vquic\quiche.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\vquic\quiche.h">
       <Filter>External Libraries\curl\Header Files\vquic</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\curl\lib\socketpair.h">
+    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\zlib\zconf.h">
+    <ClInclude Include="..\depends\libz\src\zconf.h">
       <Filter>External Libraries\zlib\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\zlib\zlib.h">
+    <ClInclude Include="..\depends\libz\src\zlib.h">
       <Filter>External Libraries\zlib\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -594,397 +594,397 @@
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
       <Filter>External Libraries\libhdhomerun\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\gskit.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\gskit.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\gtls.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\gtls.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\mbedtls.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mbedtls.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\nss.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\nss.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\openssl.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\openssl.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\polarssl.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\polarssl_threadlock.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\schannel.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\schannel.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\vtls.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\vtls.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\cleartext.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\cleartext.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\cram.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\cram.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\digest.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\digest.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\digest_sspi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\digest_sspi.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\krb5_gssapi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\krb5_gssapi.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\krb5_sspi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\krb5_sspi.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\ntlm.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\ntlm.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\ntlm_sspi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\ntlm_sspi.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\oauth2.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\oauth2.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\spnego_gssapi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\spnego_gssapi.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\spnego_sspi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\spnego_sspi.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vauth\vauth.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\vauth.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\base64.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\base64.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\cookie.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\cookie.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\dict.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\dict.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\file.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\file.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\formdata.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\formdata.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\ftp.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\ftp.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\getenv.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\getenv.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hostip.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hostip.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\if2ip.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\if2ip.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\ldap.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\ldap.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\progress.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\progress.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\sendf.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\sendf.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\speedcheck.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\speedcheck.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\timeval.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\timeval.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\url.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\url.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\version.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\version.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\connect.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\connect.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\content_encoding.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\content_encoding.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_fnmatch.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_fnmatch.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\easy.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\easy.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\escape.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\escape.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\fileinfo.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\fileinfo.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\ftplistparser.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\ftplistparser.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\getinfo.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\getinfo.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hash.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hash.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http_chunks.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http_chunks.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\krb5.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\krb5.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\llist.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\llist.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\memdebug.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\memdebug.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\mprintf.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\mprintf.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\multi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\multi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\netrc.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\netrc.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\security.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\security.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\share.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\share.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\strcase.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\strcase.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\strtok.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\strtok.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\telnet.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\telnet.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\transfer.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\transfer.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\wildcard.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\wildcard.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\amigaos.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\amigaos.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_addrinfo.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_addrinfo.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_sspi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_sspi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hostasyn.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hostasyn.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hostip4.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hostip4.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hostip6.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hostip6.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hostsyn.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hostsyn.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http_digest.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http_digest.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http_negotiate.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http_negotiate.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\inet_ntop.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\inet_ntop.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\inet_pton.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\inet_pton.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\md4.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\md4.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\md5.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\md5.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\nonblock.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\nonblock.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\parsedate.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\parsedate.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\select.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\select.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\slist.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\slist.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\socks.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\socks.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\socks_gssapi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\socks_gssapi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\socks_sspi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\socks_sspi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\splay.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\splay.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\strdup.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\strdup.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\strerror.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\strerror.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\strtoofft.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\strtoofft.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\tftp.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\tftp.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\asyn-ares.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\asyn-ares.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\asyn-thread.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\asyn-thread.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\conncache.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\conncache.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_des.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_des.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_endian.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_endian.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_gethostname.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_gethostname.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_gssapi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_gssapi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_memrchr.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_memrchr.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_multibyte.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_multibyte.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_ntlm_core.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_ntlm_core.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_ntlm_wb.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_ntlm_wb.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_rtmp.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_rtmp.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_sasl.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_sasl.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_threads.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_threads.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\dotdot.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\dotdot.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\gopher.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\gopher.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hmac.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hmac.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\hostcheck.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\hostcheck.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http_ntlm.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http_ntlm.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http_proxy.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http_proxy.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\http2.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\http2.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\idn_win32.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\idn_win32.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\imap.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\imap.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\mime.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\mime.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\non-ascii.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\non-ascii.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\openldap.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\openldap.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\pingpong.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\pingpong.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\pop3.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\pop3.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\rand.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\rand.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\rtsp.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\rtsp.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\setopt.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\setopt.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\sha256.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\sha256.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\smb.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\smb.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\smtp.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\smtp.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\system_win32.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\system_win32.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\warnless.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\warnless.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\x509asn1.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\x509asn1.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="curlshare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_ctype.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_ctype.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_path.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_path.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_range.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_range.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\mesalink.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mesalink.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\doh.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\doh.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\urlapi.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\urlapi.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\curl_get_line.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\curl_get_line.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="httpstream.cpp">
@@ -993,46 +993,46 @@
     <ClCompile Include="devicestream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vtls\wolfssl.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\wolfssl.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vquic\ngtcp2.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vquic\ngtcp2.c">
       <Filter>External Libraries\curl\Source Files\vquic</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vquic\quiche.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vquic\quiche.c">
       <Filter>External Libraries\curl\Source Files\vquic</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vssh\libssh.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh.c">
       <Filter>External Libraries\curl\Source Files\vssh</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\vssh\libssh2.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh2.c">
       <Filter>External Libraries\curl\Source Files\vssh</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\curl\lib\socketpair.c">
+    <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\adler32.c">
+    <ClCompile Include="..\depends\libz\src\adler32.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\crc32.c">
+    <ClCompile Include="..\depends\libz\src\crc32.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\deflate.c">
+    <ClCompile Include="..\depends\libz\src\deflate.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\inffast.c">
+    <ClCompile Include="..\depends\libz\src\inffast.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\inflate.c">
+    <ClCompile Include="..\depends\libz\src\inflate.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\inftrees.c">
+    <ClCompile Include="..\depends\libz\src\inftrees.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\trees.c">
+    <ClCompile Include="..\depends\libz\src\trees.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\zlib\zutil.c">
+    <ClCompile Include="..\depends\libz\src\zutil.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
