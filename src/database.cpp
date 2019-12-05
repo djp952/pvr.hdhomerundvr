@@ -1418,9 +1418,9 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 	starttime = std::max(starttime, now - 14400);			// (60 * 60 * 4) = 4 hours
 	endtime = std::min(endtime, now + 1209600);				// (60 * 60 * 24 * 14) = 14 days
 
-	// Use a step value of 7.5 hours to retrieve the EPG data; the backend will return no more than 8 hours
+	// Use a step value of 23.5 hours to retrieve the EPG data; the backend will return no more than 24 hours
 	// of data at a time, this should prevent any holes from forming in the data
-	time_t step = 27000;
+	time_t step = 84600;
 
 	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename
 	auto sql = "select json_extract(entry.value, '$.SeriesID') as seriesid, "
@@ -1586,7 +1586,8 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 		"coalesce(json_extract(data, '$.RecordStartTime'), 0) as recordingtime, "
 		"coalesce(json_extract(data, '$.RecordEndTime'), 0) - coalesce(json_extract(data, '$.RecordStartTime'), 0) as duration, "
 		"coalesce(json_extract(data, '$.Resume'), 0) as lastposition, "
-		"encode_channel_id(json_extract(data, '$.ChannelNumber')) as channelid "
+		"encode_channel_id(json_extract(data, '$.ChannelNumber')) as channelid, "
+		"coalesce(json_extract(data, '$.Category'), 'series') as category "
 		"from recording";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -1621,6 +1622,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.duration = sqlite3_column_int(statement, 14);
 			item.lastposition = sqlite3_column_int(statement, 15);
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 16));
+			item.category = reinterpret_cast<char const*>(sqlite3_column_text(statement, 17));
 
 			callback(item);							// Invoke caller-supplied callback
 			result = sqlite3_step(statement);		// Move to the next row in the result set

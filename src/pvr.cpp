@@ -1319,9 +1319,9 @@ static bool try_getepgforchannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel
 		std::string authorization = get_authorization_strings(dbhandle, false);
 		if(authorization.length() == 0) throw string_exception(__func__, ": no valid tuner device authorization string(s) available");
 
-		// Silently limit the end time to no more than 24 hours into the future if there are no
-		// DVR authorized tuners; this prevents requesting data the backend cannot provide
-		if(!has_dvr_authorization(dbhandle)) end = std::min(end, time(nullptr) + 86400);
+		// Silently limit the end time to no more than 23.5 hours into the future if there are no
+		// DVR authorized tuners; this prevents requesting data the backend will not provide
+		if(!has_dvr_authorization(dbhandle)) end = std::min(end, time(nullptr) + 84600);
 
 		// EPG_TAG uses pointers instead of string buffers, collect all of the string data returned 
 		// from the database in a list<> to keep them valid until transferred
@@ -3379,7 +3379,13 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			if(item.thumbnailpath != nullptr) snprintf(recording.strThumbnailPath, std::extent<decltype(recording.strThumbnailPath)>::value, "%s", item.thumbnailpath);
 
 			// recordingTime
-			recording.recordingTime = ((settings.use_airdate_as_recordingdate) && (item.originalairdate > 0)) ? item.originalairdate : item.recordingtime;
+			recording.recordingTime = item.recordingtime;
+			if((item.category != nullptr) && (settings.use_airdate_as_recordingdate) && (item.originalairdate > 0)) {
+
+				// Only apply use_airdate_as_recordindate to items with a category "series", "movie", and "special"
+				if((strcasecmp(item.category, "series") == 0) || (strcasecmp(item.category, "movie") == 0) || (strcasecmp(item.category, "special") == 0))
+					recording.recordingTime = item.originalairdate;
+			}
 
 			// iDuration
 			recording.iDuration = item.duration;
