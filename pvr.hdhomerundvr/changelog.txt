@@ -1,7 +1,9 @@
-v2.4.2 (2019.12.xx)
+v2.4.2 (2019.12.05)
   - Add dependency on zlib library v1.2.11
   - Add "Use Original Air Date timestamp for Recorded TV programs" setting
   - Enable DEFLATE and GZIP encoding support for backend HTTP data requests
+  - Adapt to backend EPG change allowing for more data to be returned per web request
+  - Limit EPG data requests to no more than 23.5 hours into the future if no devices with DVR authorization where discovered
 
 v2.4.1 (2019.11.13)
   - Update cURL library to version 7.67.0

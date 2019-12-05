@@ -126,6 +126,7 @@ struct recording {
 	int					duration;
 	int					lastposition;
 	union channelid		channelid;
+	char const*			category;
 };
 
 // recordingrule_type
