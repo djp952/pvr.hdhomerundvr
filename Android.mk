@@ -36,6 +36,13 @@ LOCAL_MODULE := libuuid-prebuilt
 LOCAL_SRC_FILES := depends/libuuid/$(TARGET_ABI)/lib/libuuid.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# libxml2
+#
+include $(CLEAR_VARS)
+LOCAL_MODULE := libxml2-prebuilt
+LOCAL_SRC_FILES := depends/libxml2/$(TARGET_ABI)/lib/libxml2.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 # libz
 #
 include $(CLEAR_VARS)
@@ -55,6 +62,7 @@ LOCAL_C_INCLUDES += \
 	depends/http-status-codes-cpp \
 	depends/libcurl/$(TARGET_ABI)/include \
 	depends/libuuid/$(TARGET_ABI)/include \
+	depends/libxml2/$(TARGET_ABI)/include \
 	depends/libz/$(TARGET_ABI)/include \
 	depends/libhdhomerun \
 	depends/rapidjson/include \
@@ -79,6 +87,7 @@ LOCAL_CPPFLAGS += \
 LOCAL_STATIC_LIBRARIES += \
 	libuuid-prebuilt \
 	libcurl-prebuilt \
+	libxml2-prebuilt \
 	libz-prebuilt
 
 LOCAL_LDLIBS += \

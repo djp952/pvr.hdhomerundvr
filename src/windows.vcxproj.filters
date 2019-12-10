@@ -50,24 +50,30 @@
     <Filter Include="External Libraries\sqlite\Header Files">
       <UniqueIdentifier>{1022c6b8-71c6-4063-a067-492ca6e61496}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\sqlite\Source Files">
       <UniqueIdentifier>{c2078f5e-475d-4b8c-914b-bc258965872f}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\libhdhomerun\Header Files">
       <UniqueIdentifier>{f66f6c2c-fe70-4021-9677-3d301e60cc75}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\libhdhomerun\Source Files">
       <UniqueIdentifier>{35a035c7-1d43-4f6d-b371-1031b57a527c}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Header Files\vauth">
       <UniqueIdentifier>{0336a692-480e-4a5a-adcb-50b03bbbaa19}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Header Files\vtls">
       <UniqueIdentifier>{e56da373-3dc0-454b-95af-4aad83a1debb}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\http-status-codes-cpp">
       <UniqueIdentifier>{b18a11fc-4539-4f38-b016-85d9ae8c887f}</UniqueIdentifier>
@@ -75,28 +81,56 @@
     </Filter>
     <Filter Include="External Libraries\curl\Source Files\vauth">
       <UniqueIdentifier>{a054928c-a317-4c82-b196-972251c7f415}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Source Files\vtls">
       <UniqueIdentifier>{174b9982-af55-4b10-b4ff-7524a95e19d1}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Source Files\vquic">
       <UniqueIdentifier>{48c66787-8482-4270-90ab-a4ccc2f10a6f}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Source Files\vssh">
       <UniqueIdentifier>{35bd8197-8103-4631-bdcd-024a6cb05128}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Header Files\vquic">
       <UniqueIdentifier>{fcc4b800-d2da-4101-8787-f3932bf19282}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\zlib">
       <UniqueIdentifier>{96b7d848-ab62-4f19-b087-31fc01a3fee2}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\zlib\Header Files">
       <UniqueIdentifier>{5327e0f6-9423-468a-a899-6f7eae574ea5}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\zlib\Source Files">
       <UniqueIdentifier>{328bc53b-cfc6-4d30-a921-8c4235380d4f}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Header Files\compat\libxml">
+      <UniqueIdentifier>{f63c8aaf-66fa-411e-9eb6-881658f120ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\compat\libxml\libxml">
+      <UniqueIdentifier>{bd7e36f7-4cf5-4409-986d-0fa0ec190873}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\libxml2">
+      <UniqueIdentifier>{6b158140-d050-4872-b338-055acb82d578}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="External Libraries\libxml2\Header Files">
+      <UniqueIdentifier>{b0f9ca1a-ff62-444f-a07a-635dbe8a3cb2}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="External Libraries\libxml2\Source Files">
+      <UniqueIdentifier>{dd3f2f3c-b539-4602-a43a-d17bdbf26669}</UniqueIdentifier>
+      <SourceControlFiles>False</SourceControlFiles>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
@@ -127,84 +161,6 @@
     </ClInclude>
     <ClInclude Include="align.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\sqlite\sqlite3.h">
-      <Filter>External Libraries\sqlite\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\sqlite\sqlite3ext.h">
-      <Filter>External Libraries\sqlite\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channels.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channelscan.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_control.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_debug.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device_selector.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_discover.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_pkt.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_sock.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_video.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h">
-      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vauth\digest.h">
-      <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vauth\ntlm.h">
-      <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vauth\vauth.h">
-      <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gskit.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mbedtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\nssg.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\openssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\schannel.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\vtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\amigaos.h">
       <Filter>External Libraries\curl\Header Files</Filter>
@@ -491,9 +447,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\urlapi-int.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mesalink.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
     <ClInclude Include="dbtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -509,11 +462,71 @@
     <ClInclude Include="devicestream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\wolfssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    <ClInclude Include="..\depends\libcurl\src\lib\quic.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channels.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_channelscan.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_control.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_debug.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_device_selector.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_discover.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os_windows.h">
       <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_pkt.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_sock.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libhdhomerun\hdhomerun_video.h">
+      <Filter>External Libraries\libhdhomerun\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\sqlite\sqlite3.h">
+      <Filter>External Libraries\sqlite\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\sqlite\sqlite3ext.h">
+      <Filter>External Libraries\sqlite\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libz\src\zconf.h">
+      <Filter>External Libraries\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libz\src\zlib.h">
+      <Filter>External Libraries\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vauth\digest.h">
+      <Filter>External Libraries\curl\Header Files\vauth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vauth\ntlm.h">
+      <Filter>External Libraries\curl\Header Files\vauth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vauth\vauth.h">
+      <Filter>External Libraries\curl\Header Files\vauth</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\vquic\ngtcp2.h">
       <Filter>External Libraries\curl\Header Files\vquic</Filter>
@@ -521,17 +534,182 @@
     <ClInclude Include="..\depends\libcurl\src\lib\vquic\quiche.h">
       <Filter>External Libraries\curl\Header Files\vquic</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\quic.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gskit.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gtls.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libz\src\zconf.h">
-      <Filter>External Libraries\zlib\Header Files</Filter>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mbedtls.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libz\src\zlib.h">
-      <Filter>External Libraries\zlib\Header Files</Filter>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mesalink.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\nssg.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\openssl.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\schannel.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\vtls.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\wolfssl.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="compat\libxml\config.h">
+      <Filter>Header Files\compat\libxml</Filter>
+    </ClInclude>
+    <ClInclude Include="compat\libxml\libxml\xmlversion.h">
+      <Filter>Header Files\compat\libxml\libxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\c14n.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\catalog.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\chvalid.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\debugXML.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\dict.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\DOCBparser.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\encoding.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\entities.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\globals.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\hash.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\HTMLparser.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\HTMLtree.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\list.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\nanoftp.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\nanohttp.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\parser.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\parserInternals.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\pattern.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\relaxng.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\SAX.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\SAX2.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\schemasInternals.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\schematron.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\threads.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\tree.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\uri.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\valid.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xinclude.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xlink.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlautomata.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlerror.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlexports.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlIO.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlmemory.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlmodule.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlreader.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlregexp.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlsave.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlschemas.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlschemastypes.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlstring.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlunicode.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xmlwriter.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xpath.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xpathInternals.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libxml2\src\include\libxml\xpointer.h">
+      <Filter>External Libraries\libxml2\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -555,105 +733,6 @@
     </ClCompile>
     <ClCompile Include="sqlite_exception.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\sqlite\sqlite3.c">
-      <Filter>External Libraries\sqlite\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channels.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channelscan.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_control.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_debug.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_video.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_sock_windows.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_pkt.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_os_windows.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
-      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\gskit.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\gtls.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mbedtls.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\nss.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\openssl.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\schannel.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\vtls.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\cleartext.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\cram.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\digest.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\digest_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\krb5_gssapi.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\krb5_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\ntlm.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\ntlm_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\oauth2.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\spnego_gssapi.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\spnego_sspi.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vauth\vauth.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\base64.c">
       <Filter>External Libraries\curl\Source Files</Filter>
@@ -973,9 +1052,6 @@
     <ClCompile Include="..\depends\libcurl\src\lib\curl_range.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mesalink.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\doh.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
@@ -991,23 +1067,44 @@
     <ClCompile Include="devicestream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\wolfssl.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vquic\ngtcp2.c">
-      <Filter>External Libraries\curl\Source Files\vquic</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vquic\quiche.c">
-      <Filter>External Libraries\curl\Source Files\vquic</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh.c">
-      <Filter>External Libraries\curl\Source Files\vssh</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh2.c">
-      <Filter>External Libraries\curl\Source Files\vssh</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channels.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channelscan.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_control.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_debug.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_device_selector.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_discover.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_os_windows.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_pkt.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_sock_windows.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_video.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\sqlite\sqlite3.c">
+      <Filter>External Libraries\sqlite\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libz\src\adler32.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
@@ -1032,6 +1129,219 @@
     </ClCompile>
     <ClCompile Include="..\depends\libz\src\zutil.c">
       <Filter>External Libraries\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\cleartext.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\cram.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\digest.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\digest_sspi.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\krb5_gssapi.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\krb5_sspi.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\ntlm.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\ntlm_sspi.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\oauth2.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\spnego_gssapi.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\spnego_sspi.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vauth\vauth.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mesalink.c">
+      <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vquic\ngtcp2.c">
+      <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vquic\quiche.c">
+      <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh.c">
+      <Filter>External Libraries\curl\Source Files\vssh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh2.c">
+      <Filter>External Libraries\curl\Source Files\vssh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\gskit.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\gtls.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mbedtls.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\nss.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\openssl.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\schannel.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\vtls.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\wolfssl.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\buf.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\c14n.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\catalog.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\chvalid.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\debugXML.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\dict.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\DOCBparser.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\encoding.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\entities.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\error.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\globals.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\hash.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\HTMLparser.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\HTMLtree.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\legacy.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\list.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\nanoftp.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\nanohttp.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\parser.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\parserInternals.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\pattern.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\relaxng.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\SAX.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\SAX2.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\schematron.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\threads.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\tree.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\uri.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\valid.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xinclude.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xlink.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlIO.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlmemory.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlmodule.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlreader.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlregexp.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlsave.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlschemas.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlschemastypes.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlstring.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlunicode.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xmlwriter.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xpath.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libxml2\src\xpointer.c">
+      <Filter>External Libraries\libxml2\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

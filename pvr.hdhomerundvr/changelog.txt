@@ -1,3 +1,6 @@
+v3.0.0 (2020.01.xx)
+  - Add dependency on libxml2 library v2.9.10
+
 v2.4.2 (2019.12.05)
   - Add dependency on zlib library v1.2.11
   - Add "Use Original Air Date timestamp for Recorded TV programs" setting
