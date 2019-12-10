@@ -25,15 +25,15 @@
 #pragma once
 
 //---------------------------------------------------------------------------
-// Win32 Declarations
+// Windows
+//---------------------------------------------------------------------------
 
 #ifdef _WINDOWS
 
 #define WINVER			_WIN32_WINNT_WIN8
 #define	_WIN32_WINNT	_WIN32_WINNT_WIN8
 #define	_WIN32_IE		_WIN32_IE_IE80
-
-#define NOMINMAX					// Disable min()/max() macros
+#define NOMINMAX
 
 #ifndef _WIN64
 #define _USE_32BIT_TIME_T			// time_t has to be 32bit with 32bit Kodi
@@ -44,17 +44,18 @@
 
 #endif // _WINDOWS
 
-#include <assert.h>					// Include standard assertion declarations
-#include <stdint.h>					// Include standard integer declarations
+#include <assert.h>
+#include <stdint.h>
 
 // KiB / MiB / GiB
 //
-#define KiB		*(1 << 10)		// KiB multiplier
-#define MiB		*(1 << 20)		// MiB multiplier
-#define GiB		*(1 << 30)		// GiB multiplier
+#define KiB		*(1 << 10)
+#define MiB		*(1 << 20)
+#define GiB		*(1 << 30)
 
 //---------------------------------------------------------------------------
 // Kodi Addon Declarations
+//--------------------------------------------------------------------------
 
 #ifdef _WINDOWS
 #define TARGET_WINDOWS
@@ -62,14 +63,22 @@
 
 //--------------------------------------------------------------------------
 // libcurl
+//---------------------------------------------------------------------------
 
 #define CURL_STATICLIB
 #include <curl/curl.h>				// Include CURL declarations
 
 //---------------------------------------------------------------------------
 // libhdhomerun
+//---------------------------------------------------------------------------
 
 #include <hdhomerun.h>				// Include HDHomeRun declarations
+
+//---------------------------------------------------------------------------
+// libxml2
+//---------------------------------------------------------------------------
+
+#define LIBXML_STATIC				// Statically linking to libxml2
 
 //---------------------------------------------------------------------------
 
