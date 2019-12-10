@@ -1850,7 +1850,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					g_pvr->AddMenuHook(&menuhook);
 
 					// Generate the local file system and URL-based file names for the PVR database, the file name is based on the version
-					std::string databasefile = std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + VERSION_VERSION2_ANSI + ".db";
+					std::string databasefile = std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + DATABASE_SCHEMA_VERSION + ".db";
 					std::string databasefileurl = "file:///" + databasefile;
 
 					// Create the global database connection pool instance
