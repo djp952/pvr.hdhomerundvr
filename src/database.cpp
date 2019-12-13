@@ -24,7 +24,9 @@
 #include "database.h"
 
 #include <cstddef>
+#include <vector>
 
+#include "genremap.h"
 #include "sqlite_exception.h"
 #include "string_exception.h"
 
@@ -49,16 +51,29 @@ struct discover_device {
 // Callback function passed to enumerate_devices
 using enumerate_devices_callback = std::function<void(struct discover_device const& device)>;
 
+// xmltv_channel_element
+//
+// Structure used to convert the pointers returned from the XMLTV callback into std::string()s to
+// hold onto them for insertion into the channels table after the listings have been processed
+struct xmltv_channel_element {
+
+	std::string		id;					// Channel identifier
+	std::string		number;				// Channel number
+	std::string		name;				// Channel name
+	std::string		iconsrc;			// Channel icon URL
+};
+
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
 
 static void bind_parameter(sqlite3_stmt* statement, int& paramindex, const char* value);
-static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int value);
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, uint32_t value);
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int32_t value);
 static bool discover_devices_broadcast(sqlite3* instance);
 static bool discover_devices_http(sqlite3* instance);
 static void discover_series_recordings(sqlite3* instance, char const* seriesid);
-static void enumerate_devices_broadcast(enumerate_devices_callback callback);
+static void enumerate_devices_broadcast(enumerate_devices_callback const& callback);
 template<typename... _parameters> static int execute_non_query(sqlite3* instance, char const* sql, _parameters&&... parameters);
 template<typename... _parameters> static int execute_scalar_int(sqlite3* instance, char const* sql, _parameters&&... parameters);
 template<typename... _parameters> static std::string execute_scalar_string(sqlite3* instance, char const* sql, _parameters&&... parameters);
@@ -257,9 +272,26 @@ static void bind_parameter(sqlite3_stmt* statement, int& paramindex, char& value
 //	paramindex		- Index of the parameter to bind; will be incremented
 //	value			- Value to bind as the parameter
 
-static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int value)
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int32_t value)
 {
 	int result = sqlite3_bind_int(statement, paramindex++, value);
+	if(result != SQLITE_OK) throw sqlite_exception(result);
+}
+
+//---------------------------------------------------------------------------
+// bind_parameter (local)
+//
+// Used by execute_non_query to bind an integer parameter
+//
+// Arguments:
+//
+//	statement		- SQL statement instance
+//	paramindex		- Index of the parameter to bind; will be incremented
+//	value			- Value to bind as the parameter
+
+static void bind_parameter(sqlite3_stmt* statement, int& paramindex, uint32_t value)
+{
+	int result = sqlite3_bind_int(statement, paramindex++, static_cast<int32_t>(value));
 	if(result != SQLITE_OK) throw sqlite_exception(result);
 }
 
@@ -680,85 +712,6 @@ void discover_episodes_seriesid(sqlite3* instance, char const* deviceauth, char 
 }
 
 //---------------------------------------------------------------------------
-// discover_guide
-//
-// Reloads the basic electronic program guide information
-//
-// Arguments:
-//
-//	instance	- SQLite database instance
-//	deviceauth	- Device authorization string to use
-
-void discover_guide(sqlite3* instance, char const* deviceauth)
-{
-	bool ignored;
-	return discover_guide(instance, deviceauth, ignored);
-}
-
-//---------------------------------------------------------------------------
-// discover_guide
-//
-// Reloads the basic electronic program guide information
-//
-// Arguments:
-//
-//	instance	- SQLite database instance
-//	deviceauth	- Device authorization string to use
-//	changed		- Flag indicating if the data has changed
-
-void discover_guide(sqlite3* instance, char const* deviceauth, bool& changed)
-{
-	changed = false;							// Initialize [out] argument
-
-	if(instance == nullptr) throw std::invalid_argument("instance");
-	if(deviceauth == nullptr) throw std::invalid_argument("deviceauth");
-
-	// Clone the guide table schema into a temporary table
-	execute_non_query(instance, "drop table if exists discover_guide");
-	execute_non_query(instance, "create temp table discover_guide as select * from guide limit 0");
-
-	try {
-
-		// Discover the electronic program guide from the network and insert it into a temporary table
-		execute_non_query(instance, "insert into discover_guide select "
-			"encode_channel_id(json_extract(discovery.value, '$.GuideNumber')) as channelid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, "
-			"json_extract(discovery.value, '$.GuideName') as channelname, "
-			"json_extract(discovery.value, '$.ImageURL') as iconurl "
-			"from json_each(json_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1)) as discovery", deviceauth);
-
-		// This requires a multi-step operation against the guide table; start a transaction
-		execute_non_query(instance, "begin immediate transaction");
-
-		try {
-
-			// Delete any entries in the main guide table that are no longer present in the data
-			if(execute_non_query(instance, "delete from guide where channelid not in (select channelid from discover_guide)") > 0) changed = true;
-
-			// Insert/replace entries in the main guide table that are new or different
-			if(execute_non_query(instance, "replace into guide select discover_guide.* from discover_guide left outer join guide using(channelid) "
-				"where coalesce(guide.channelname, '') <> coalesce(discover_guide.channelname, '') "
-				"or coalesce(guide.iconurl, '') <> coalesce(discover_guide.iconurl, '')") > 0) changed = true;
-
-			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
-			execute_non_query(instance, "update guide set discovered = ?1", static_cast<int>(time(nullptr)));
-
-			// Commit the database transaction
-			execute_non_query(instance, "commit transaction");
-		}
-		
-		// Rollback the transaction on any exception
-		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
-
-		// Drop the temporary table
-		execute_non_query(instance, "drop table discover_guide");
-	}
-
-	// Drop the temporary table on any exception
-	catch(...) { execute_non_query(instance, "drop table discover_guide"); throw; }
-}
-
-//---------------------------------------------------------------------------
 // discover_lineups
 //
 // Reloads the information about the available channel lineups
@@ -830,6 +783,138 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 	// Drop the temporary table on any exception
 	catch(...) { execute_non_query(instance, "drop table discover_lineup"); throw; }
+}
+
+//---------------------------------------------------------------------------
+// discover_listings
+//
+// Reloads the information about the available listings
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	deviceauth	- Device authorization string to use
+
+void discover_listings(sqlite3* instance, char const* deviceauth)
+{
+	bool ignored;
+	return discover_listings(instance, deviceauth, ignored);
+}
+
+//---------------------------------------------------------------------------
+// discover_listings
+//
+// Reloads the information about the available listings
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	deviceauth	- Device authorization string to use
+//	changed		- Flag indicating if the data has changed
+
+void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
+{
+	sqlite3_stmt*		statement;				// SQL statement to execute
+	int					result;					// Result from SQLite function
+
+	if((instance == nullptr) || (deviceauth == nullptr)) return;
+
+	// This operation always causes changes to both the listing and guide tables
+	changed = true;
+
+	// As the XMLTV data is processed, a callback method passed to the virtual table
+	// will provide the details about the channel elements as they are processed
+	std::vector<struct xmltv_channel_element> channels;
+	xmltv_onchannel_callback callback = [&](struct xmltv_channel const& channel) -> void {
+	
+		// The identifier and number strings are required to process the channel entry
+		if((channel.id == nullptr) || (channel.number == nullptr)) return;
+		channels.emplace_back(xmltv_channel_element{ std::string(channel.id), std::string(channel.number), 
+			(channel.name != nullptr) ? channel.name : std::string(), (channel.iconsrc != nullptr) ? channel.iconsrc : std::string() });
+	};
+
+	// This is a multi-step operation, perform it in the context of a database transaction
+	execute_non_query(instance, "begin immediate transaction");
+	
+	try {
+
+		// Truncate both the listing and guide tables
+		execute_non_query(instance, "delete from listing");
+		execute_non_query(instance, "delete from guide");
+
+		// Reload the listing table directly from the xmltv virtual table, passing in an onchannel
+		// callback pointer to gather the channel information as the data is processed
+		auto sql = "insert into listing select "
+			"xmltv.channel as channelid, "
+			"coalesce(xmltv_time_to_epoch(xmltv.start), 0) as starttime, "
+			"coalesce(xmltv_time_to_epoch(xmltv.stop), 0) as endtime, "
+			"xmltv.seriesid as seriesid, "
+			"xmltv.title as title, "
+			"xmltv.subtitle as episodename, "
+			"xmltv.desc as synopsis, "
+			"coalesce(xmltv_time_to_epoch(xmltv.date), 0) as originalairdate, "
+			"xmltv.iconsrc as iconurl, "
+			"xmltv.programtype as programtype, "
+			"get_primary_genre(xmltv.categories) as primarygenre, "
+			"xmltv.categories as genres, "
+			"xmltv.episodenum as episodenumber, "
+			"cast(coalesce(xmltv.isnew, 0) as integer) as isnew, "
+			"xmltv.starrating as starrating "
+			"from xmltv where xmltv.uri = 'http://api.hdhomerun.com/api/xmltv?DeviceAuth=' || ?1 and onchannel = ?2";
+
+		// Prepare the statement
+		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Bind the query parameters
+		result = sqlite3_bind_text(statement, 1, deviceauth, -1, SQLITE_STATIC);
+		if(result == SQLITE_OK) result = sqlite3_bind_pointer(statement, 2, &callback, typeid(xmltv_onchannel_callback).name(), nullptr);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the query - no result set is expected
+		result = sqlite3_step(statement);
+		if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+		if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Finalize the statement
+		sqlite3_finalize(statement);
+
+		// Now reload the guide table from the enumerated channel information
+		sql = "insert into guide values(?1, ?2, ?3, ?4)";
+
+		// Prepare the statement
+		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+		if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Iterate over all of the enumerated channels and insert them
+		for(auto const& channel : channels) {
+
+			// (Re)bind the query parameters
+			result = sqlite3_bind_text(statement, 1, channel.id.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, channel.number.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 3, channel.name.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 4, channel.iconsrc.c_str(), -1, SQLITE_STATIC);
+			if(result != SQLITE_OK) throw sqlite_exception(result);
+
+			// Execute the query - no result set is expected
+			result = sqlite3_step(statement);
+			if(result == SQLITE_ROW) throw string_exception(__func__, ": unexpected result set returned from non-query");
+			if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+			// Reset the prepared statement so that it can be executed again
+			result = sqlite3_reset(statement);
+			if(result != SQLITE_OK) throw sqlite_exception(result);
+		}
+
+		// Finalize the statement
+		sqlite3_finalize(statement);
+	
+		// Commit the database transaction
+		execute_non_query(instance, "commit transaction");
+	}
+
+	// Rollback the transaction on any exception
+	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 }
 
 //---------------------------------------------------------------------------
@@ -1037,7 +1122,7 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid)
 //	lineupnames		- Flag to use names from the lineup not the EPG
 //	callback		- Callback function
 
-void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback callback)
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1048,10 +1133,10 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bo
 	auto sql = "select "
 		"distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid, "
 		"case when ?1 then json_extract(entry.value, '$.GuideNumber') || ' ' else '' end || "
-		"case when (?2 or guide.channelid is null) then json_extract(entry.value, '$.GuideName') else guide.channelname end as channelname, "
+		"case when (?2 or guide.name is null) then json_extract(entry.value, '$.GuideName') else guide.name end as channelname, "
 		"guide.iconurl as iconurl, "
 		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm "
-		"from lineup, json_each(lineup.data) as entry left outer join guide on encode_channel_id(json_extract(entry.value, '$.GuideNumber')) = guide.channelid "
+		"from lineup, json_each(lineup.data) as entry left outer join guide on json_extract(entry.value, '$.GuideNumber') = guide.number "
 		"where nullif(json_extract(entry.value, '$.DRM'), ?3) is null "
 		"order by channelid";
 
@@ -1095,7 +1180,7 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bo
 //	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
+void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1141,7 +1226,7 @@ void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_
 //	channelid		- channelid on which to find tuners
 //	callback		- Callback function
 
-void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback callback)
+void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1185,7 +1270,7 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 //	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
+void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1230,7 +1315,7 @@ void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channe
 //
 //	callback	- Callback to be invoked for each discovered device
 
-static void enumerate_devices_broadcast(enumerate_devices_callback callback)
+static void enumerate_devices_broadcast(enumerate_devices_callback const& callback)
 {
 	// Allocate enough heap storage to hold up to 64 enumerated devices on the network
 	std::unique_ptr<struct hdhomerun_discover_device_v3_t[]> devices(new struct hdhomerun_discover_device_v3_t[64]);
@@ -1273,7 +1358,7 @@ static void enumerate_devices_broadcast(enumerate_devices_callback callback)
 //	instance	- Database instance
 //	callback	- Callback function
 
-void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback callback)
+void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1315,7 +1400,7 @@ void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback c
 //	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
+void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1362,7 +1447,7 @@ void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_ch
 //	expiry		- Expiration time, in seconds
 //	callback	- Callback function
 
-void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate_recordingruleids_callback callback)
+void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate_recordingruleids_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1392,101 +1477,6 @@ void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate
 }
 
 //---------------------------------------------------------------------------
-// enumerate_guideentries
-//
-// Enumerates the available guide entries for a channel and time period
-//
-// Arguments:
-//
-//	instance	- Database instance
-//	deviceauth	- Device authorization string to use
-//	channelid	- Channel to be enumerated
-//	starttime	- Starting time to be queried
-//	endtime		- Ending time to be queried
-//	callback	- Callback function
-
-void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t starttime, time_t endtime, enumerate_guideentries_callback callback)
-{
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-
-	if((instance == nullptr) || (deviceauth == nullptr) || (callback == nullptr)) return;
-
-	// Prevent asking for anything older than 4 hours in the past or more than 14 days in the future
-	time_t now = time(nullptr);
-	starttime = std::max(starttime, now - 14400);			// (60 * 60 * 4) = 4 hours
-	endtime = std::min(endtime, now + 1209600);				// (60 * 60 * 24 * 14) = 14 days
-
-	// Use a step value of 23.5 hours to retrieve the EPG data; the backend will return no more than 24 hours
-	// of data at a time, this should prevent any holes from forming in the data
-	time_t step = 84600;
-
-	// seriesid | title | starttime | endtime | synopsis | year | iconurl | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename
-	auto sql = "select json_extract(entry.value, '$.SeriesID') as seriesid, "
-		"json_extract(entry.value, '$.Title') as title, "
-		"fnv_hash(?2, json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.EndTime')) as broadcastid, "
-		"json_extract(entry.value, '$.StartTime') as starttime, "
-		"json_extract(entry.value, '$.EndTime') as endtime, "
-		"json_extract(entry.value, '$.Synopsis') as synopsis, "
-		"cast(strftime('%Y', coalesce(json_extract(entry.value, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
-		"json_extract(entry.value, '$.ImageURL') as iconurl, "
-		"coalesce((select genretype from genremap where filter like json_extract(entry.value, '$.Filter[0]')), 0) as genretype, "
-		"(select group_concat(value) from json_each(json_extract(entry.value, '$.Filter'))) as genres, "
-		"json_extract(entry.value, '$.OriginalAirdate') as originalairdate, "
-		"get_season_number(json_extract(entry.value, '$.EpisodeNumber')) as seriesnumber, "
-		"get_episode_number(json_extract(entry.value, '$.EpisodeNumber')) as episodenumber, "
-		"json_extract(entry.value, '$.EpisodeTitle') as episodename "
-		"from json_each((select json_get_aggregate('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || '&Channel=' || decode_channel_id(?2) || '&Start=' || starttime.value, starttime.value) "
-		"from generate_series(?3, ?4, ?5) as starttime)) as entries, json_each(json_extract(entries.value, '$[0].Guide')) as entry";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_text(statement, 1, deviceauth, -1, SQLITE_STATIC);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, channelid.value);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(starttime));
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 4, static_cast<int>(endtime));
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 5, static_cast<int>(step));
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the SQL statement
-		result = sqlite3_step(statement);
-		if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-		// Process each row returned from the query
-		while(result == SQLITE_ROW) {
-
-			struct guideentry item;
-			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
-			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
-			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
-			item.channelid = channelid.value;
-			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
-			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
-			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
-			item.year = sqlite3_column_int(statement, 6);
-			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
-			item.genretype = sqlite3_column_int(statement, 8);
-			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
-			item.originalairdate = sqlite3_column_int(statement, 10);
-			item.seriesnumber = sqlite3_column_int(statement, 11);
-			item.episodenumber = sqlite3_column_int(statement, 12);
-			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
-
-			callback(item);							// Invoke caller-supplied callback
-			result = sqlite3_step(statement);		// Move to the next row of data
-		}
-	
-		sqlite3_finalize(statement);				// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
-}
-
-//---------------------------------------------------------------------------
 // enumerate_hd_channelids
 //
 // Enumerates the channels marked as 'HD' in the lineups
@@ -1497,7 +1487,7 @@ void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union cha
 //	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
+void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1534,6 +1524,194 @@ void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 }
 
 //---------------------------------------------------------------------------
+// enumerate_listings
+//
+// Enumerates all the available listings in the database
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	showdrm		- Flag if DRM channels should be enumerated
+//	callback	- Callback function
+
+void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_listings_callback const& callback)
+{
+	sqlite3_stmt*			statement;				// SQL statement to execute
+	int						result;					// Result from SQLite function
+	bool					cancel = false;			// Cancellation flag
+
+	if(instance == nullptr) return;
+
+	// If the maximum number of days wasn't provided, use a month as the boundary
+	if(maxdays < 0) maxdays = 31;
+
+	// seriesid | title | broadcastid | channelid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | starrating
+	auto sql = "with allchannels(number) as "
+		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where coalesce(json_extract(entry.value, '$.DRM'), 0) = ?1) "
+		"select listing.seriesid as seriesid, "
+		"listing.title as title, "
+		"fnv_hash(encode_channel_id(guide.number), listing.starttime, listing.endtime) as broadcastid, "
+		"encode_channel_id(guide.number) as channelid, "
+		"listing.starttime as starttime, "
+		"listing.endtime as endtime, "
+		"listing.synopsis as synopsis, "
+		"cast(strftime('%Y', listing.originalairdate, 'unixepoch') as integer) as year, "
+		"listing.iconurl as iconurl, "
+		"listing.programtype as programtype, "
+		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
+		"listing.genres as genres, "
+		"listing.originalairdate as originalairdate, "
+		"get_season_number(listing.episodenumber) as seriesnumber, "
+		"get_episode_number(listing.episodenumber) as episodenumber, "
+		"listing.episodename as episodename, "
+		"listing.isnew as isnew, "
+		"decode_star_rating(listing.starrating) as starrating "
+		"from listing inner join guide on listing.channelid = guide.channelid "
+		"inner join allchannels on guide.number = allchannels.number "
+		"left outer join genremap on listing.primarygenre like genremap.genre "
+		"where (listing.endtime < (cast(strftime('%s', 'now') as integer) + (?2 * 86400)))";
+
+	// Prepare the statement
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, maxdays);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the SQL statement
+		result = sqlite3_step(statement);
+		if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Process each row returned from the query
+		while((result == SQLITE_ROW) && (cancel == false)) {
+
+			struct listing item;
+			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
+			item.channelid = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
+			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
+			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 5));
+			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
+			item.year = sqlite3_column_int(statement, 7);
+			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
+			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
+			item.genretype = sqlite3_column_int(statement, 10);
+			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
+			item.originalairdate = sqlite3_column_int(statement, 12);
+			item.seriesnumber = sqlite3_column_int(statement, 13);
+			item.episodenumber = sqlite3_column_int(statement, 14);
+			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 15));
+			item.isnew = sqlite3_column_int(statement, 16);
+			item.starrating = sqlite3_column_int(statement, 17);
+
+			callback(item, cancel);					// Invoke caller-supplied callback
+			result = sqlite3_step(statement);		// Move to the next row of data
+		}
+
+		sqlite3_finalize(statement);				// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
+// enumerate_listings
+//
+// Enumerates the available listings for a channel and time period
+//
+// Arguments:
+//
+//	instance	- Database instance
+//	channelid	- Channel to be enumerated
+//	starttime	- Starting time to be queried
+//	endtime		- Ending time to be queried
+//	callback	- Callback function
+
+void enumerate_listings(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_listings_callback const& callback)
+{
+	sqlite3_stmt*			statement;				// SQL statement to execute
+	int						result;					// Result from SQLite function
+	bool					cancel = false;			// Cancellation flag
+
+	if(instance == nullptr) return;
+
+	// seriesid | title | broadcastid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | starrating
+	auto sql = "select listing.seriesid as seriesid, "
+		"listing.title as title, "
+		"fnv_hash(encode_channel_id(guide.number), listing.starttime, listing.endtime) as broadcastid, "
+		"listing.starttime as starttime, "
+		"listing.endtime as endtime, "
+		"listing.synopsis as synopsis, "
+		"cast(strftime('%Y', listing.originalairdate, 'unixepoch') as integer) as year, "
+		"listing.iconurl as iconurl, "
+		"listing.programtype as programtype, "
+		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
+		"listing.genres as genres, "
+		"listing.originalairdate as originalairdate, "
+		"get_season_number(listing.episodenumber) as seriesnumber, "
+		"get_episode_number(listing.episodenumber) as episodenumber, "
+		"listing.episodename as episodename, "
+		"listing.isnew as isnew, "
+		"decode_star_rating(listing.starrating) as starrating "
+		"from listing inner join guide on listing.channelid = guide.channelid "
+		"left outer join genremap on listing.primarygenre like genremap.genre "
+		"where guide.number = decode_channel_id(?1) and listing.starttime >= ?2 and listing.endtime <= ?3";
+
+	// Prepare the statement
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, channelid.value);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(starttime));
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(endtime));
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the SQL statement
+		result = sqlite3_step(statement);
+		if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Process each row returned from the query
+		while((result == SQLITE_ROW) && (cancel == false)) {
+
+			struct listing item;
+			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
+			item.channelid = channelid.value;
+			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
+			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
+			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
+			item.year = sqlite3_column_int(statement, 6);
+			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
+			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
+			item.genretype = sqlite3_column_int(statement, 9);
+			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
+			item.originalairdate = sqlite3_column_int(statement, 11);
+			item.seriesnumber = sqlite3_column_int(statement, 12);
+			item.episodenumber = sqlite3_column_int(statement, 13);
+			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 14));
+			item.isnew = sqlite3_column_int(statement, 15);
+			item.starrating = sqlite3_column_int(statement, 16);
+
+			callback(item, cancel);					// Invoke caller-supplied callback
+			result = sqlite3_step(statement);		// Move to the next row of data
+		}
+
+		sqlite3_finalize(statement);				// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // enumerate_recordings
 //
 // Enumerates the available recordings
@@ -1543,7 +1721,7 @@ void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 //	instance	- Database instance
 //	callback	- Callback function
 
-void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callback)
+void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback const& callback)
 {
 	return enumerate_recordings(instance, false, false, callback);
 }
@@ -1560,19 +1738,20 @@ void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callb
 //	ignorecategories	- Flag to ignore the Category attribute of the recording
 //	callback			- Callback function
 
-void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecategories, enumerate_recordings_callback callback)
+void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecategories, enumerate_recordings_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// recordingid | title | episodename | firstairing | originalairdate | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
+	// recordingid | title | episodename | firstairing | originalairdate | programtype | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
 	auto sql = "select recordingid, "
 		"case when ?1 then coalesce(json_extract(data, '$.EpisodeNumber'), json_extract(data, '$.Title')) else json_extract(data, '$.Title') end as title, "
 		"json_extract(data, '$.EpisodeTitle') as episodename, "
 		"coalesce(json_extract(data, '$.FirstAiring'), 0) as firstairing, "
 		"coalesce(json_extract(data, '$.OriginalAirdate'), 0) as originalairdate, "
+		"substr(json_extract(data, '$.ProgramID'), 1, 2) as programtype, "
 		"get_season_number(json_extract(data, '$.EpisodeNumber')) as seriesnumber, "
 		"get_episode_number(json_extract(data, '$.EpisodeNumber')) as episodenumber, "
 		"cast(strftime('%Y', coalesce(json_extract(data, '$.OriginalAirdate'), 0), 'unixepoch') as integer) as year, "
@@ -1608,19 +1787,20 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
 			item.firstairing = sqlite3_column_int(statement, 3);
 			item.originalairdate = sqlite3_column_int(statement, 4);
-			item.seriesnumber = sqlite3_column_int(statement, 5);
-			item.episodenumber = sqlite3_column_int(statement, 6);
-			item.year = sqlite3_column_int(statement, 7);
-			item.streamurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
-			item.directory = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
-			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
-			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
-			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
-			item.recordingtime = sqlite3_column_int(statement, 13);
-			item.duration = sqlite3_column_int(statement, 14);
-			item.lastposition = sqlite3_column_int(statement, 15);
-			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 16));
-			item.category = reinterpret_cast<char const*>(sqlite3_column_text(statement, 17));
+			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
+			item.seriesnumber = sqlite3_column_int(statement, 6);
+			item.episodenumber = sqlite3_column_int(statement, 7);
+			item.year = sqlite3_column_int(statement, 8);
+			item.streamurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
+			item.directory = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
+			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
+			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
+			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
+			item.recordingtime = sqlite3_column_int(statement, 14);
+			item.duration = sqlite3_column_int(statement, 15);
+			item.lastposition = sqlite3_column_int(statement, 16);
+			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 17));
+			item.category = reinterpret_cast<char const*>(sqlite3_column_text(statement, 18));
 
 			callback(item);							// Invoke caller-supplied callback
 			result = sqlite3_step(statement);		// Move to the next row in the result set
@@ -1645,7 +1825,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 //	instance	- Database instance
 //	callback	- Callback function
 
-void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callback callback)
+void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1708,7 +1888,7 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 //	showdrm		- Flag to show DRM channels
 //	callback	- Callback function
 
-void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback)
+void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1756,7 +1936,7 @@ void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 //	title		- Title on which to search
 //	callback	- Callback function
 
-void enumerate_series(sqlite3* instance, char const* deviceauth, char const* title, enumerate_series_callback callback)
+void enumerate_series(sqlite3* instance, char const* deviceauth, char const* title, enumerate_series_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1806,7 +1986,7 @@ void enumerate_series(sqlite3* instance, char const* deviceauth, char const* tit
 //	maxdays		- Maximum number of days to report
 //	callback	- Callback function
 
-void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback callback)
+void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -2027,17 +2207,16 @@ static std::string execute_scalar_string(sqlite3* instance, char const* sql, _pa
 // Arguments:
 //
 //	instance	- Database instance handle
-//	deviceauth	- Device authorization string to use
 //	channelid	- Channel on which to find the series
 //	timestamp	- Time stamp on which to find the series
 
-std::string find_seriesid(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t timestamp)
+std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t timestamp)
 {
-	if((instance == nullptr) || (deviceauth == nullptr)) return std::string();
+	if(instance == nullptr) return std::string();
 
-	// Use the electronic program guide API to locate a seriesid based on a channel and timestamp
-	return execute_scalar_string(instance, "select json_extract(json_extract(json_get('http://api.hdhomerun.com/api/guide?DeviceAuth=' || ?1 || "
-		"'&Channel=' || decode_channel_id(?2) || '&Start=' || ?3), '$[0].Guide[0]'), '$.SeriesID')", deviceauth, channelid.value, static_cast<int>(timestamp));
+	// Use the listings and channel tables to locate a seriesid based on a channel and timestamp
+	return execute_scalar_string(instance, "select listing.seriesid from listing inner join guide on listing.channelid = guide.channelid "
+		"where guide.number = decode_channel_id(?1) and listing.starttime >= ?2 and ?2 <= listing.endtime", channelid.value, static_cast<int>(timestamp));
 }
 
 //---------------------------------------------------------------------------
@@ -2140,6 +2319,23 @@ int get_channel_count(sqlite3* instance, bool showdrm)
 
 	return execute_scalar_int(instance, "select count(distinct(json_extract(value, '$.GuideNumber'))) "
 		"from lineup, json_each(lineup.data) where nullif(json_extract(value, '$.DRM'), ?1) is null", (showdrm) ? 1 : 0);
+}
+
+//---------------------------------------------------------------------------
+// get_discovered
+//
+// Gets the timestamp of the last discovery for the specified type
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	type		- Type of discovery operation to interrogate
+
+time_t get_discovered(sqlite3* instance, char const* type)
+{
+	if((instance == nullptr) || (type == nullptr)) return 0;
+
+	return static_cast<time_t>(execute_scalar_int(instance, "select discovered from discovered where type like ?1", type));
 }
 
 //---------------------------------------------------------------------------
@@ -2418,6 +2614,23 @@ bool has_dvr_authorization(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// has_missing_guide_channels
+//
+// Gets a flag indicating if any channels are missing from the guide data
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+
+bool has_missing_guide_channels(sqlite3* instance)
+{
+	if(instance == nullptr) return false;
+
+	return (execute_scalar_int(instance, "select 1 where exists(select json_extract(entry.value, '$.GuideNumber') as channelnumber "
+		"from lineup, json_each(lineup.data) as entry where channelnumber not in (select distinct(guide.number) from guide))") != 0);
+}
+
+//---------------------------------------------------------------------------
 // modify_recordingrule
 //
 // Modifies an existing recording rule
@@ -2541,26 +2754,10 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 			// deviceid(pk) | discovered | dvrauthorized | data
 			execute_non_query(instance, "create table if not exists device(deviceid text primary key not null, discovered integer not null, dvrauthorized integer, data text)");
 
-			// table: lineup
+			// table: discovered
 			//
-			// deviceid(pk) | discovered | data
-			execute_non_query(instance, "create table if not exists lineup(deviceid text primary key not null, discovered integer not null, data text)");
-
-			// table: recording
-			//
-			// recordingid(pk) | discovered | seriesid | data
-			execute_non_query(instance, "create table if not exists recording(recordingid text primary key not null, discovered integer not null, seriesid text not null, data text)");
-			execute_non_query(instance, "create index if not exists recording_seriesid_index on recording(seriesid)");
-
-			// table: guide
-			//
-			// channelid(pk) | discovered | channelname | iconurl
-			execute_non_query(instance, "create table if not exists guide(channelid integer primary key not null, discovered integer not null, channelname text, iconurl text)");
-
-			// table: recordingrule
-			//
-			// recordingruleid(pk) | discovered | data
-			execute_non_query(instance, "create table if not exists recordingrule(recordingruleid text primary key not null, discovered integer not null, seriesid text not null, data text)");
+			// type(pk) | discovered
+			execute_non_query(instance, "create table if not exists discovered(type text primary key not null, discovered integer not null)");
 
 			// table: episode
 			//
@@ -2569,25 +2766,86 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: genremap
 			//
-			// filter(pk) | genretype
-			execute_non_query(instance, "create table if not exists genremap(filter text primary key not null, genretype integer)");
+			// genre(pk) | genretype
+			execute_non_query(instance, "create table if not exists genremap(genre text primary key not null, genretype integer)");
+
+			// table: guide
+			//
+			// channelid | number | name | iconurl
+			execute_non_query(instance, "create table if not exists guide(channelid text not null, number text not null, name text, iconurl text)");
+			execute_non_query(instance, "create index if not exists guide_channelid_number_index on guide(channelid, number)");
+
+			// table: lineup
+			//
+			// deviceid(pk) | discovered | data
+			execute_non_query(instance, "create table if not exists lineup(deviceid text primary key not null, discovered integer not null, data text)");
+
+			// table: listing
+			//
+			// channelid | starttime | endtime | seriesid | title | episodename | synopsis | originalairdate | iconurl | programtype | primarygenre | genres | episodenumber | isnew | starrating
+			execute_non_query(instance, "create table if not exists listing(channelid text not null, starttime integer not null, endtime integer not null, seriesid text, title text, "
+				"episodename text, synopsis text, originalairdate integer, iconurl text, programtype text, primarygenre text, genres text, episodenumber text, isnew integer, starrating text)");
+			execute_non_query(instance, "create index if not exists listing_channelid_starttime_endtime_index on listing(channelid, starttime, endtime)");
+
+			// table: recording
+			//
+			// recordingid(pk) | discovered | seriesid | data
+			execute_non_query(instance, "create table if not exists recording(recordingid text primary key not null, discovered integer not null, seriesid text not null, data text)");
+			execute_non_query(instance, "create index if not exists recording_seriesid_index on recording(seriesid)");
+
+			// table: recordingrule
+			//
+			// recordingruleid(pk) | discovered | data
+			execute_non_query(instance, "create table if not exists recordingrule(recordingruleid text primary key not null, discovered integer not null, seriesid text not null, data text)");
 
 			// (re)generate the clientid
 			//
 			execute_non_query(instance, "delete from client");
 			execute_non_query(instance, "insert into client values(generate_uuid())");
 
-			// (re)build the genremap table
+			// (re)build the genremap table from the static table
 			//
-			sqlite3_exec(instance, "replace into genremap values('Movies', 0x10)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_MOVIEDRAMA 
-			sqlite3_exec(instance, "replace into genremap values('News', 0x20)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-			sqlite3_exec(instance, "replace into genremap values('Comedy', 0x30)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SHOW
-			sqlite3_exec(instance, "replace into genremap values('Drama', 0x30)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SHOW 
-			sqlite3_exec(instance, "replace into genremap values('Game Show', 0x30)", nullptr, nullptr, nullptr);	// EPG_EVENT_CONTENTMASK_SHOW
-			sqlite3_exec(instance, "replace into genremap values('Talk Show', 0x30)", nullptr, nullptr, nullptr);	// EPG_EVENT_CONTENTMASK_SHOW
-			sqlite3_exec(instance, "replace into genremap values('Sports', 0x40)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_SPORTS
-			sqlite3_exec(instance, "replace into genremap values('Kids', 0x50)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_CHILDRENYOUTH
-			sqlite3_exec(instance, "replace into genremap values('Food', 0xA0)", nullptr, nullptr, nullptr);		// EPG_EVENT_CONTENTMASK_LEISUREHOBBIES
+			execute_non_query(instance, "begin immediate transaction");
+			execute_non_query(instance, "delete from genremap");
+
+			try {
+
+				sqlite3_stmt*				statement = nullptr;
+
+				genremap_element const*		element = &GENRE_MAPPING_TABLE[0];
+
+				// Use a prepared query to replace the data as quickly as possible ...
+				auto sql = "replace into genremap values(?1, ?2)";
+				result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+				if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+				try {
+
+					while(element->genre != nullptr) {
+
+						// Bind the query parameters
+						result = sqlite3_bind_text(statement, 1, element->genre, -1, SQLITE_STATIC);
+						if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, element->genretype);
+
+						// Execute the statement, no results are expected
+						result = sqlite3_step(statement);
+						if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+						// Reset the statement and move to the next element to be inserted/replaced
+						sqlite3_reset(statement);
+						++element;
+					}
+
+					sqlite3_finalize(statement);			// Finalize the SQLite statement
+				}
+
+				catch(...) { sqlite3_finalize(statement); throw; }
+
+				// Commit the transaction against the genremap table
+				execute_non_query(instance, "commit transaction");
+			}
+
+			catch(...) { execute_non_query(instance, "rollback transaction"); throw; }
 		}
 	}
 
@@ -2630,6 +2888,24 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?2)) "
 		"select json_get(url, 'post') from deviceurls", flag, channelid.value);
+}
+
+//---------------------------------------------------------------------------
+// set_discovered
+//
+// Sets the timestamp of the last discovery for the specified type
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+//	type		- Type of discovery operation to interrogate
+//	discovered	- New discovery timestamp to apply for the specified type
+
+void set_discovered(sqlite3* instance, char const* type, time_t discovered)
+{
+	if((instance == nullptr) || (type == nullptr)) return;
+
+	execute_non_query(instance, "replace into discovered values(?1, ?2)", type, static_cast<int>(discovered));
 }
 
 //---------------------------------------------------------------------------

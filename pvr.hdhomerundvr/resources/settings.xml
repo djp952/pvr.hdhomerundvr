@@ -126,24 +126,6 @@
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="discover_guide_interval_v2" type="integer" label="30103" help="30512">
-          <level>0</level>
-          <default>3600</default>
-          <constraints>
-            <options>
-              <option label="30201">300</option>
-              <option label="30202">600</option>
-              <option label="30203">900</option>
-              <option label="30204">1800</option>
-              <option label="30205">2700</option>
-              <option label="30206">3600</option>
-              <option label="30207">7200</option>
-              <option label="30208">14400</option>
-            </options>
-          </constraints>
-          <control type="spinner" format="integer"/>
-        </setting>
-
         <setting id="discover_recordings_interval_v2" type="integer" label="30104" help="30513">
           <level>0</level>
           <default>600</default>
