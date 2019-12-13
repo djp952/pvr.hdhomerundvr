@@ -714,6 +714,12 @@
     <ClInclude Include="compat\libxml\libxml\xmlversion.h">
       <Filter>Header Files\compat\libxml\libxml</Filter>
     </ClInclude>
+    <ClInclude Include="genremap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmlstream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1345,6 +1351,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\libxml2\src\xpointer.c">
       <Filter>External Libraries\libxml2\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xmlstream.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

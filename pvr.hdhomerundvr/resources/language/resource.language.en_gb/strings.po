@@ -44,10 +44,6 @@ msgctxt "#30102"
 msgid "Channel Lineups"
 msgstr ""
 
-msgctxt "#30103"
-msgid "Electronic Program Guide (EPG) Metadata"
-msgstr ""
-
 msgctxt "#30104"
 msgid "Recordings"
 msgstr ""
@@ -300,10 +296,6 @@ msgctxt "#30304"
 msgid "Trigger channel lineup discovery"
 msgstr ""
 
-msgctxt "#30305"
-msgid "Trigger guide metadata discovery"
-msgstr ""
-
 msgctxt "#30306"
 msgid "Trigger recording discovery"
 msgstr ""
@@ -326,6 +318,10 @@ msgstr ""
 
 msgctxt "#30312"
 msgid "List discovered devices"
+msgstr ""
+
+msgctxt "#30313"
+msgid "Trigger guide listing discovery"
 msgstr ""
 
 msgctxt "#30401"
@@ -386,10 +382,6 @@ msgstr ""
 
 msgctxt "#30511"
 msgid "Specifies the interval between re-discovery of available channel lineups from previously discovered HDHomeRun tuner device(s)."
-msgstr ""
-
-msgctxt "#30512"
-msgid "Specifies the interval between re-discovery of the EPG metadata (channel identifiers, names, logo images) from the HDHomeRun backend services."
 msgstr ""
 
 msgctxt "#30513"

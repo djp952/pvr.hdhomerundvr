@@ -23,8 +23,11 @@
 #include "stdafx.h"
 
 #include <algorithm>
+#include <cctype>
 #include <functional>
+#include <libxml/xmlreader.h>
 #include <list>
+#include <map>
 #include <memory>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -41,25 +44,38 @@
 #include "dbtypes.h"
 #include "http_exception.h"
 #include "string_exception.h"
+#include "xmlstream.h"
 
 SQLITE_EXTENSION_INIT1
 
 #pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
+// PLATFORM COMPATIBILITY
+//---------------------------------------------------------------------------
+
+// timegm --> _mkgmtime
+//
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+#define timegm _mkgmtime
+#endif
+
+//---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
 
-int generate_series_bestindex(sqlite3_vtab* vtab, sqlite3_index_info* info);
-int generate_series_close(sqlite3_vtab_cursor* cursor);
-int generate_series_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal);
-int generate_series_connect(sqlite3* instance, void* aux, int argc, const char* const* argv, sqlite3_vtab** vtab, char** err);
-int generate_series_disconnect(sqlite3_vtab* vtab);
-int generate_series_eof(sqlite3_vtab_cursor* cursor);
-int generate_series_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* indexstr, int argc, sqlite3_value** argv);
-int generate_series_next(sqlite3_vtab_cursor* cursor);
-int generate_series_open(sqlite3_vtab* vtab, sqlite3_vtab_cursor** cursor);
-int generate_series_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
+// xmltv virtual table functions
+//
+int xmltv_bestindex(sqlite3_vtab* vtab, sqlite3_index_info* info);
+int xmltv_close(sqlite3_vtab_cursor* cursor);
+int xmltv_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal);
+int xmltv_connect(sqlite3* instance, void* aux, int argc, const char* const* argv, sqlite3_vtab** vtab, char** err);
+int xmltv_disconnect(sqlite3_vtab* vtab);
+int xmltv_eof(sqlite3_vtab_cursor* cursor);
+int xmltv_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* indexstr, int argc, sqlite3_value** argv);
+int xmltv_next(sqlite3_vtab_cursor* cursor);
+int xmltv_open(sqlite3_vtab* vtab, sqlite3_vtab_cursor** cursor);
+int xmltv_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
 
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
@@ -75,50 +91,145 @@ typedef std::basic_string<uint8_t> byte_string;
 // Function pointer for a CURL write function implementation
 typedef size_t(*curl_writefunction)(void const*, size_t, size_t, void*);
 
-// generate_series_vtab_columns
-//
-// Constants indicating the generate_series virtual table column ordinals
-enum generate_series_vtab_columns {
-
-	value = 0,			// value integer
-	start,				// start integer hidden
-	stop,				// stop integer hidden
-	step,				// step integer hidden
-};
-
-// generate_series_vtab
-//
-// Subclassed version of sqlite3_vtab for the generate_series virtual table
-struct generate_series_vtab : public sqlite3_vtab
-{
-	// Instance Constructor
-	//
-	generate_series_vtab() { memset(static_cast<sqlite3_vtab*>(this), 0, sizeof(sqlite3_vtab)); }
-};
-
-// generate_series_vtab_cursor
-//
-// Subclassed version of sqlite3_vtab_cursor for the generate_series virtual table
-struct generate_series_vtab_cursor : public sqlite3_vtab_cursor
-{
-	// Instance Constructor
-	//
-	generate_series_vtab_cursor() { memset(static_cast<sqlite3_vtab_cursor*>(this), 0, sizeof(sqlite3_vtab_cursor)); }
-
-	// Fields
-	//
-	bool				desc = false;			// descending flag
-	sqlite3_int64		rowid = 0;				// rowid
-	sqlite3_int64		value = 0;				// current value
-	sqlite3_int64		minvalue = 0;			// minimum value
-	sqlite3_int64		maxvalue = 0;			// maximum value
-	sqlite3_int64		step = 0;				// increment
-};
-
 // json_get_aggregate_state
 //
 // Used as the state object for the json_get_aggregate function
 typedef std::vector<std::tuple<std::string, std::string>> json_get_aggregate_state;
+
+// xmltv_vtab_columns
+//
+// Constants indicating the xmltv virtual table column ordinals
+enum class xmltv_vtab_columns {
+
+	uri = 0,				// uri text hidden
+	onchannel,				// onchannel pointer hidden
+	channel,				// channel text
+	start,					// start text
+	stop,					// stop text
+	title,					// title text
+	subtitle,				// subtitle text
+	desc,					// desc text
+	date,					// date text
+	categories,				// categories text
+	language,				// language text
+	iconsrc,				// iconsrc text
+	seriesid,				// seriesid text
+	episodenum,				// episodenum text
+	programtype,			// programtype text
+	isnew,					// isnew integer
+	starrating,				// starrating text
+};
+
+// xmltv_vtab
+//
+// Subclassed version of sqlite3_vtab for the xmltv virtual table
+struct xmltv_vtab : public sqlite3_vtab
+{
+	// Instance Constructor
+	//
+	xmltv_vtab() { memset(static_cast<sqlite3_vtab*>(this), 0, sizeof(sqlite3_vtab)); }
+};
+
+// xmltv_vtab_cursor
+//
+// Subclassed version of sqlite3_vtab_cursor for the xmltv virtual table
+struct xmltv_vtab_cursor : public sqlite3_vtab_cursor
+{
+	// Instance Constructor
+	//
+	xmltv_vtab_cursor() { memset(static_cast<sqlite3_vtab_cursor*>(this), 0, sizeof(sqlite3_vtab_cursor)); }
+
+	// Type Declarations
+	//
+	using channelmap_t = std::map<std::string, struct xmltv_channel>;
+
+	// Fields
+	//
+	std::string					uri;					// XMLTV input stream URL
+	xmltv_onchannel_callback	onchannel = nullptr;	// Channel information callback
+	sqlite3_int64				rowid = 0;				// Current SQLite rowid
+	bool						eof = false;			// EOF flag
+	channelmap_t				channelmap;				// Channel mapping collection
+	std::unique_ptr<xmlstream>	stream;					// xmlstream instance
+	xmlParserInputBufferPtr		buffer = nullptr;		// xmlParserInputBuffer instance
+	xmlTextReaderPtr			reader = nullptr;		// xmlTextReader instance
+};
+
+//---------------------------------------------------------------------------
+// LIBXML2 HELPER FUNCTIONS
+//---------------------------------------------------------------------------
+
+// xmlNodeGetChildElement (local)
+//
+// Helper method to access a child element of the specified XML node
+static xmlNodePtr xmlNodeGetChildElement(xmlNodePtr node, xmlChar const* element)
+{
+	if((node == nullptr) || (element == nullptr)) return nullptr;
+
+	node = node->children;
+	while((node != nullptr) && (xmlStrcmp(node->name, element) != 0)) node = node->next;
+	return node;
+};
+
+// xmlTextReaderForEachChildElement (local)
+//
+// Helper method to iterate over each child element of the current XML reader element
+static void xmlTextReaderForEachChildElement(xmlTextReaderPtr reader, xmlChar const* element, std::function<void(xmlNodePtr)> const& callback)
+{
+	if((reader == nullptr) || (element == nullptr)) return;
+
+	xmlNodePtr node = xmlTextReaderExpand(reader);
+	if(node != nullptr) node = node->children;
+
+	while(node != nullptr) {
+
+		if(xmlStrcmp(node->name, element) == 0) callback(node);
+		node = node->next;
+	}
+}
+
+// xmlTextReaderGetChildElement (local)
+//
+// Helper method to access a child element of the current XML reader element
+static xmlNodePtr xmlTextReaderGetChildElement(xmlTextReaderPtr reader, xmlChar const* element)
+{
+	if((reader == nullptr) || (element == nullptr)) return nullptr;
+
+	xmlNodePtr node = xmlTextReaderExpand(reader);
+	if(node != nullptr) node = node->children;
+
+	while((node != nullptr) && (xmlStrcmp(node->name, element) != 0)) node = node->next;
+	return node;
+};
+
+// xmlTextReaderGetChildElementWithAttribute (local)
+//
+// Helper method to access a child element of the current XML reader element
+static xmlNodePtr xmlTextReaderGetChildElementWithAttribute(xmlTextReaderPtr reader, xmlChar const* element, xmlChar const* attribute, xmlChar const* value)
+{
+	if((reader == nullptr) || (element == nullptr) || (attribute == nullptr)) return nullptr;
+
+	xmlNodePtr node = xmlTextReaderExpand(reader);
+	if(node != nullptr) node = node->children;
+
+	while(node != nullptr) {
+
+		if(xmlStrcmp(node->name, element) == 0) {
+
+			xmlChar* prop = xmlGetProp(node, attribute);
+			if(prop != nullptr) {
+
+				int comparison = xmlStrcmp(prop, value);
+				xmlFree(prop);
+				if(comparison == 0) return node;
+			}
+		}
+
+		node = node->next;
+	}
+
+	return node;
+};
 
 //---------------------------------------------------------------------------
 // GLOBAL VARIABLES
@@ -129,24 +240,29 @@ typedef std::vector<std::tuple<std::string, std::string>> json_get_aggregate_sta
 // Global curlshare instance to share resources among all cURL connections
 static curlshare g_curlshare;
 
-// g_generate_series_module
+// g_useragent
 //
-// Defines the entry points for the generate_series virtual table
-static sqlite3_module g_generate_series_module = {
+// Static string to use as the User-Agent for database driven HTTP requests
+static std::string g_useragent = "Kodi-PVR/" + std::string(ADDON_INSTANCE_VERSION_PVR) + " " + VERSION_PRODUCTNAME_ANSI + "/" + VERSION_VERSION3_ANSI;
+
+// g_xmltv_module
+//
+// Defines the entry points for the xmltv virtual table
+static sqlite3_module g_xmltv_module = {
 
 	0,							// iVersion
 	nullptr,					// xCreate
-	generate_series_connect,	// xConnect
-	generate_series_bestindex,	// xBestIndex
-	generate_series_disconnect,	// xDisconnect
+	xmltv_connect,				// xConnect
+	xmltv_bestindex,			// xBestIndex
+	xmltv_disconnect,			// xDisconnect
 	nullptr,					// xDestroy
-	generate_series_open,		// xOpen
-	generate_series_close,		// xClose
-	generate_series_filter,		// xFilter
-	generate_series_next,		// xNext
-	generate_series_eof,		// xEof
-	generate_series_column,		// xColumn
-	generate_series_rowid,		// xRowid
+	xmltv_open,					// xOpen
+	xmltv_close,				// xClose
+	xmltv_filter,				// xFilter
+	xmltv_next,					// xNext
+	xmltv_eof,					// xEof
+	xmltv_column,				// xColumn
+	xmltv_rowid,				// xRowid
 	nullptr,					// xUpdate
 	nullptr,					// xBegin
 	nullptr,					// xSync
@@ -159,11 +275,6 @@ static sqlite3_module g_generate_series_module = {
 	nullptr,					// xRollbackTo
 	nullptr						// xShadowName
 };
-
-// g_useragent
-//
-// Static string to use as the User-Agent for database driven HTTP requests
-static std::string g_useragent = "Kodi-PVR/" + std::string(ADDON_INSTANCE_VERSION_PVR) + " " + VERSION_PRODUCTNAME_ANSI + "/" + VERSION_VERSION3_ANSI;
 
 //---------------------------------------------------------------------------
 // clean_filename
@@ -233,6 +344,35 @@ void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 }
 
 //---------------------------------------------------------------------------
+// decode_star_rating
+//
+// SQLite scalar function to decode a star rating string
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void decode_star_rating(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	float			divisor = 10.0F;			// Parsed rating divisor
+	float			dividend = 0.0F;			// Parsed rating dividend
+
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Null or zero-length input string results in 0
+	const char* str = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((str == nullptr) || (*str == 0)) return sqlite3_result_int(context, 0);
+
+	// Best guess is that this always comes in as x.x/x.x or just x.x ...
+	int parts = sscanf(str, "%f/%f", &dividend, &divisor);
+	if((parts >= 1) && (divisor > 0.0F) && (dividend >= 0.0F)) return sqlite3_result_int(context, static_cast<int>((dividend / divisor) * 10.0F));
+
+	return sqlite3_result_int(context, 0);
+}
+
+//---------------------------------------------------------------------------
 // encode_channel_id
 //
 // SQLite scalar function to generate a channel identifier
@@ -267,351 +407,6 @@ void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 	// Could not parse the channel number into channel/subchannel components
 	return sqlite3_result_int(context, 0);
-}
-
-//---------------------------------------------------------------------------
-// generate_series_bestindex
-//
-// Determines the best index to use when querying the virtual table
-//
-// Arguments:
-//
-//	vtab	- Virtual Table instance
-//	info	- Selected index information to populate
-
-int generate_series_bestindex(sqlite3_vtab* /*vtab*/, sqlite3_index_info* info)
-{
-	int			indexmask = 0;				// The query plan bitmask
-	int			unusablemask = 0;			// Mask of unusable constraints
-	int			numargs = 0;				// Number of arguments that xFilter() expects
-	int			usableconstraints[3];		// Usable constraints on start, stop, and step
-
-	// Notes from series.c (sqlite-src/ext/misc)
-	//
-	// SQLite will invoke this method one or more times while planning a query that uses the generate_series 
-	// virtual table.  This routine needs to create a query plan for each invocation and compute an estimated 
-	// cost for that plan. In this implementation bitmask is used to represent the query plan; idxStr is unused.
-	//
-	// The query plan is represented by bits in bitmask:
-	//
-	//  (1)  start = $value   -- constraint exists
-	//  (2)  stop =  $value   -- constraint exists
-	//  (4)  step =  $value   -- constraint exists
-	//  (8)  output in descending order
-		
-	// This implementation assumes that the start, stop, and step columns are the last three columns in the virtual table
-	assert(static_cast<int>(generate_series_vtab_columns::stop) == static_cast<int>(generate_series_vtab_columns::start) + 1);
-	assert(static_cast<int>(generate_series_vtab_columns::step) == static_cast<int>(generate_series_vtab_columns::start) + 2);
-
-	// Initialize the usable constraints array
-	usableconstraints[0] = usableconstraints[1] = usableconstraints[2] = -1;
-
-	// Iterate over the provided constraints to determine which are usable
-	auto constraint = info->aConstraint;
-	for(int index = 0; index < info->nConstraint; index++, constraint++) {
-
-		int		column;			// 0 for start, 1 for stop, 2 for step */
-		int		bitmask;		// bitmask for those columns
-
-		if(constraint->iColumn < static_cast<int>(generate_series_vtab_columns::start)) continue;
-		column = constraint->iColumn - static_cast<int>(generate_series_vtab_columns::start);
-		assert(column >= 0 && column <= 2);
-
-		bitmask = 1 << column;
-		if(constraint->usable == 0) { 
-			
-			unusablemask |= bitmask; 
-			continue; 
-		}
-		else if(constraint->op == SQLITE_INDEX_CONSTRAINT_EQ) {
-
-			indexmask |= bitmask;
-			usableconstraints[column] = index;
-		}
-	}
-
-	// Set up the array of usable constraints for xFilter() to consume
-	for(int index = 0; index < 3; index++) {
-
-		int usableindex = usableconstraints[index];
-		if(usableindex >= 0) {
-
-			info->aConstraintUsage[usableindex].argvIndex = ++numargs;
-			info->aConstraintUsage[usableindex].omit = 1;
-		}
-	}
-
-	// The start, stop, and step columns are inputs. Therefore if there are unusable constraints 
-	// on any of start, stop, or step then this plan is unusable
-	if((unusablemask & ~indexmask) != 0) return SQLITE_CONSTRAINT;
-
-	// Both start= and stop= boundaries are available.  This is the the preferred case
-	if((indexmask & 3) == 3) {
-
-		info->estimatedCost = static_cast<double>(2 - (((indexmask & 4) != 0) ? 1 : 0));
-		info->estimatedRows = 1000;
-		if(info->nOrderBy == 1) {
-
-			if(info->aOrderBy[0].desc) indexmask |= 8;
-			info->orderByConsumed = 1;
-		}
-	}
-
-	// If either boundary is missing, we have to generate a huge span of numbers. Make this case very 
-	// expensive so that the query planner will work hard to avoid it
-	else info->estimatedRows = 2147483647;
-	
-	info->idxNum = indexmask;
-
-	return SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_close
-//
-// Closes and deallocates a virtual table cursor instance
-//
-// Arguments:
-//
-//	cursor		- Cursor instance allocated by xOpen
-
-int generate_series_close(sqlite3_vtab_cursor* cursor)
-{
-	if(cursor != nullptr) delete reinterpret_cast<generate_series_vtab_cursor*>(cursor);
-
-	return SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_column
-//
-// Accesses the data in the specified column of the current cursor row
-//
-// Arguments:
-//
-//	cursor		- Virtual table cursor instance
-//	context		- Result context object
-//	ordinal		- Ordinal of the column being accessed
-
-int generate_series_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal)
-{
-	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
-	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
-	assert(seriescursor != nullptr);
-
-	// Return the current value corresponding to the column that has been requested
-	switch(ordinal) {
-
-		case generate_series_vtab_columns::value: sqlite3_result_int64(context, seriescursor->value); break;
-		case generate_series_vtab_columns::start: sqlite3_result_int64(context, seriescursor->minvalue); break;
-		case generate_series_vtab_columns::stop: sqlite3_result_int64(context, seriescursor->maxvalue); break;
-		case generate_series_vtab_columns::step: sqlite3_result_int64(context, seriescursor->step); break;
-
-		// Invalid ordinal or invalid row when accessing the value column yields null
-		default: sqlite3_result_null(context);
-	}
-
-	return SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_connect
-//
-// Connects to the specified virtual table
-//
-// Arguments:
-//
-//	instance	- SQLite database instance handle
-//	aux			- Client data pointer provided to sqlite3_create_module[_v2]()
-//	argc		- Number of provided metadata strings
-//	argv		- Metadata strings
-//	vtab		- On success contains the allocated virtual table instance
-//	err			- On error contains a string-based error message
-
-int generate_series_connect(sqlite3* instance, void* /*aux*/, int /*argc*/, const char* const* /*argv*/, sqlite3_vtab** vtab, char** err)
-{
-	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
-	int result = sqlite3_declare_vtab(instance, "create table generate_series(value integer, start integer hidden, stop integer hidden, step integer hidden)");
-	if(result != SQLITE_OK) return result;
-
-	// Allocate and initialize the custom virtual table class
-	try { *vtab = static_cast<sqlite3_vtab*>(new generate_series_vtab()); } 
-	catch(std::exception const& ex) { *err = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; } 
-	catch(...) { return SQLITE_ERROR; }
-
-	return (*vtab == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_disconnect
-//
-// Disconnects from the virtual table
-//
-// Arguments:
-//
-//	vtab		- Virtual table instance allocated by xConnect
-
-int generate_series_disconnect(sqlite3_vtab* vtab)
-{
-	if(vtab != nullptr) delete reinterpret_cast<generate_series_vtab*>(vtab);
-
-	return SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_eof
-//
-// Determines if the specified cursor has moved beyond the last row of data
-//
-// Arguments:
-//
-//	cursor		- Virtual table cursor instance
-
-int generate_series_eof(sqlite3_vtab_cursor* cursor)
-{
-	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
-	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
-	assert(seriescursor != nullptr);
-
-	// Return 1 if the current values exceeds the min/max value for the cursor
-	return (seriescursor->desc) ? seriescursor->value < seriescursor->minvalue : seriescursor->value > seriescursor->maxvalue;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_filter
-//
-// Executes a search of the virtual table
-//
-// Arguments:
-//
-//	cursor		- Virtual table cursor instance
-//	indexnum	- Virtual table index number from xBestIndex()
-//	indexstr	- Virtual table index string from xBestIndex()
-//	argc		- Number of arguments assigned by xBestIndex()
-//	argv		- Argument data assigned by xBestIndex()
-
-int generate_series_filter(sqlite3_vtab_cursor* cursor, int indexnum, char const* /*indexstr*/, int argc, sqlite3_value** argv)
-{
-	int				argindex = 0;					// Index into the provided argv[] array
-
-	// Cast the provided generic cursor instance back into a generate_series_vtab_cursor instance
-	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
-	assert(seriescursor != nullptr);
-
-	// Notes from series.c (sqlite-src/ext/misc):
-	//
-	// This method is called to "rewind" the series_cursor object back to the first row of output. This method 
-	// is always called at least once prior to any call to xColumn() or xRowid() or xEof()
-	//
-	// The query plan selected by generate_series_bestindex is passed in the indexnum parameter (indexstr is not 
-	// used in this implementation).  indexnum is a bitmask showing which constraints are available:
-	//
-	// 1 : start = VALUE
-	// 2 : stop = VALUE
-	// 4 : step = VALUE
-	// 
-	// Also, if bit 8 is set, that means that the series should be output in descending order rather than in ascending order
-	//
-	// This routine should initialize the cursor and position it so that it is pointing at the first row, or pointing off 
-	// the end of the table (so that xEof() will return true) if the table is empty
-
-	// 1: minvalue
-	seriescursor->minvalue = (indexnum & 1) ? sqlite3_value_int64(argv[argindex++]) : 0;
-	
-	// 2: maxvalue
-	seriescursor->maxvalue = (indexnum & 2) ? sqlite3_value_int64(argv[argindex++]) : std::numeric_limits<sqlite3_int64>::max();
-	
-	// 4: step
-	seriescursor->step = (indexnum & 4) ? sqlite3_value_int64(argv[argindex++]) : 1;
-	if(seriescursor->step < 1) seriescursor->step = 1;
-	
-	// If any of the constraints have a NULL value, return no rows
-	for(int index = 0; index < argc; index++) {
-
-		if(sqlite3_value_type(argv[index]) == SQLITE_NULL) {
-
-			seriescursor->minvalue = 1;
-			seriescursor->maxvalue = 0;
-			break;
-		}
-	}
-
-	// 8: desc
-	seriescursor->desc = ((indexnum & 8) == 8);
-
-	// Set the initial value, taking into account the descending flag
-	seriescursor->value = (seriescursor->desc) ? seriescursor->maxvalue : seriescursor->minvalue;
-	if((seriescursor->desc) && (seriescursor->step > 0)) seriescursor->value -= (seriescursor->maxvalue - seriescursor->minvalue) % seriescursor->step;
-
-	// Set the initial rowid value
-	seriescursor->rowid = 1;
-
-	return SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_open
-//
-// Creates and intializes a new virtual table cursor instance
-//
-// Arguments:
-//
-//	vtab		- Virtual table instance
-//	cursor		- On success contains the allocated virtual table cursor instance
-
-int generate_series_open(sqlite3_vtab* /*vtab*/, sqlite3_vtab_cursor** cursor)
-{
-	// Allocate and initialize the custom virtual table cursor class
-	try { *cursor = static_cast<sqlite3_vtab_cursor*>(new generate_series_vtab_cursor()); } 
-	catch(...) { return SQLITE_ERROR; }
-
-	return (*cursor == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_next
-//
-// Advances the virtual table cursor to the next row
-//
-// Arguments:
-//
-//	cursor		- Virtual table cusror instance
-
-int generate_series_next(sqlite3_vtab_cursor* cursor)
-{
-	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
-	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
-	assert(seriescursor != nullptr);
-
-	// Check if the operation is ascending or descending and increment/decrement the value accordingly
-	seriescursor->value = (seriescursor->desc) ? seriescursor->value - seriescursor->step : seriescursor->value + seriescursor->step;
-
-	// Increment the rowid for the virtual table
-	seriescursor->rowid++;
-
-	return SQLITE_OK;
-}
-
-//---------------------------------------------------------------------------
-// generate_series_rowid
-//
-// Retrieves the ROWID for the current virtual table cursor row
-//
-// Arguments:
-//
-//	cursor		- Virtual table cursor instance
-//	rowid		- On success contains the ROWID for the current row
-
-int generate_series_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
-{
-	// Cast the provided generic cursor instance back into an generate_series_vtab_cursor instance
-	generate_series_vtab_cursor* seriescursor = reinterpret_cast<generate_series_vtab_cursor*>(cursor);
-	assert(seriescursor != nullptr);
-
-	// Return the current ROWID for the cursor instance
-	*rowid = seriescursor->rowid;
-
-	return SQLITE_OK;
 }
 
 //---------------------------------------------------------------------------
@@ -748,6 +543,30 @@ void get_episode_number(sqlite3_context* context, int argc, sqlite3_value** argv
 	else if(sscanf(str, "%d", &episode) == 1) return sqlite3_result_int(context, episode);
 
 	return sqlite3_result_int(context, -1);
+}
+
+//---------------------------------------------------------------------------
+// get_primary_genre
+//
+// SQLite scalar function to get the primary genre string from a list
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void get_primary_genre(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// A null or zero-length string results in a NULL result
+	const char* input = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((input == nullptr) || (*input == 0)) return sqlite3_result_null(context);
+
+	// The genre strings are comma-delimited, chop off everything else
+	char const* comma = strchr(input, ',');
+	sqlite3_result_text(context, input, (comma != nullptr) ? static_cast<int>(comma - input) : -1, SQLITE_TRANSIENT);
 }
 
 //---------------------------------------------------------------------------
@@ -1193,6 +1012,541 @@ void url_encode(sqlite3_context* context, int argc, sqlite3_value** argv)
 }
 
 //---------------------------------------------------------------------------
+// xmltv_bestindex
+//
+// Determines the best index to use when querying the virtual table
+//
+// Arguments:
+//
+//	vtab	- Virtual Table instance
+//	info	- Selected index information to populate
+
+int xmltv_bestindex(sqlite3_vtab* /*vtab*/, sqlite3_index_info* info)
+{
+	// usable_constraint_index (local)
+	//
+	// Finds the first usable constraint for the specified column ordinal
+	auto usable_constraint_index = [](sqlite3_index_info* info, int ordinal) -> int {
+
+		// The constraints aren't necessarily in the order specified by the table, loop to find it
+		for(int index = 0; index < info->nConstraint; index++) {
+
+			auto constraint = &info->aConstraint[index];
+			if(constraint->iColumn == ordinal) return ((constraint->usable) && (constraint->op == SQLITE_INDEX_CONSTRAINT_EQ)) ? index : -1;
+		}
+
+		return -1;
+	};
+
+	// argv[1] - uri; required
+	int uri  = usable_constraint_index(info, static_cast<int>(xmltv_vtab_columns::uri));
+	if(uri < 0) return SQLITE_CONSTRAINT;
+	info->aConstraintUsage[uri].argvIndex = 1;
+	info->aConstraintUsage[uri].omit = 1;
+
+	// argv[2] - onchannel; optional
+	int onchannel = usable_constraint_index(info, static_cast<int>(xmltv_vtab_columns::onchannel));
+	if(onchannel >= 0) {
+
+		info->aConstraintUsage[onchannel].argvIndex = 2;
+		info->aConstraintUsage[onchannel].omit = 1;
+	}
+
+	// There are no viable indexes on this virtual table, force the cost to 1
+	info->estimatedCost = 1.0;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_close
+//
+// Closes and deallocates a virtual table cursor instance
+//
+// Arguments:
+//
+//	cursor		- Cursor instance allocated by xOpen
+
+int xmltv_close(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an xmltv_vtab_cursor instance
+	xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(cursor);
+	assert(xmltvcursor != nullptr);
+
+	// Free the embedded text reader and input buffer instances
+	if(xmltvcursor->reader != nullptr) xmlFreeTextReader(xmltvcursor->reader);
+	if(xmltvcursor->buffer != nullptr) xmlFreeParserInputBuffer(xmltvcursor->buffer);
+
+	// Ensure the underlying xmlstream instance has been closed
+	if(xmltvcursor->stream) xmltvcursor->stream->close();
+
+	delete xmltvcursor;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_column
+//
+// Accesses the data in the specified column of the current cursor row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	context		- Result context object
+//	ordinal		- Ordinal of the column being accessed
+
+int xmltv_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordinal)
+{
+	xmlNodePtr			node = nullptr;			// Pointer for accessing child elements
+
+	// Cast the provided generic cursor instance back into an xmltv_vtab_cursor instance
+	xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(cursor);
+	assert(xmltvcursor != nullptr);
+
+	// Assume that the result will be NULL to avoid adding this for each column test below
+	sqlite3_result_null(context);
+
+	// Extract the requested value from the current <programme> element in the XML document
+	switch(static_cast<xmltv_vtab_columns>(ordinal)) {
+
+		case xmltv_vtab_columns::uri:
+			sqlite3_result_text(context, xmltvcursor->uri.c_str(), -1, SQLITE_TRANSIENT);
+			break;
+
+		// Special case: never expose the pointer to the onchannel() callback function
+		case xmltv_vtab_columns::onchannel:
+			break;
+
+		case xmltv_vtab_columns::channel:
+			sqlite3_result_text(context, reinterpret_cast<char*>(xmlTextReaderGetAttribute(xmltvcursor->reader, BAD_CAST("channel"))), -1, xmlFree); 
+			break;
+
+		case xmltv_vtab_columns::start:
+			sqlite3_result_text(context, reinterpret_cast<char*>(xmlTextReaderGetAttribute(xmltvcursor->reader, BAD_CAST("start"))), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::stop:
+			sqlite3_result_text(context, reinterpret_cast<char*>(xmlTextReaderGetAttribute(xmltvcursor->reader, BAD_CAST("stop"))), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::title:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("title"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::subtitle:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("sub-title"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::desc:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("desc"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::date:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("date"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		// Special case: concatenate all of the <category> element values into a comma-delimted string
+		case xmltv_vtab_columns::categories: 
+			{
+				std::string collector;				// Collector for the disparate strings
+				bool progtype = false;				// Flag to skip progType <category> element
+
+				xmlTextReaderForEachChildElement(xmltvcursor->reader, BAD_CAST("category"), [&](xmlNodePtr node) -> void {
+
+					// The first <category> element is the progType, which we don't want to use for anything
+					if(!progtype) { progtype = true; return; }
+
+					xmlChar* value = xmlNodeGetContent(node);
+					if(value != nullptr) {
+
+						if(!collector.empty()) collector.append(",");
+						collector.append(reinterpret_cast<char*>(value));
+						xmlFree(value);
+					}
+				});
+
+				if(!collector.empty()) sqlite3_result_text(context, collector.c_str(), -1, SQLITE_TRANSIENT);
+			}
+			break;
+
+		case xmltv_vtab_columns::language:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("language"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::iconsrc:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("icon"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlGetProp(node, BAD_CAST("src"))), -1, xmlFree);
+			break;
+
+		// Special case: the series-id tag will typically be qualified with system=cseries, but some items like Movies (programtype MV) will
+		// not be qualified with that attribute.  Try system=cseries first, then use any series-id node
+		case xmltv_vtab_columns::seriesid:
+			node = xmlTextReaderGetChildElementWithAttribute(xmltvcursor->reader, BAD_CAST("series-id"), BAD_CAST("system"), BAD_CAST("cseries"));
+			if(node == nullptr) node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("series-id"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		case xmltv_vtab_columns::episodenum:
+			node = xmlTextReaderGetChildElementWithAttribute(xmltvcursor->reader, BAD_CAST("episode-num"), BAD_CAST("system"), BAD_CAST("onscreen"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+
+		// Special case: extract the program type from the alphanumeric identifer at the start of the dd_progid
+		case xmltv_vtab_columns::programtype:
+		{
+			node = xmlTextReaderGetChildElementWithAttribute(xmltvcursor->reader, BAD_CAST("episode-num"), BAD_CAST("system"), BAD_CAST("dd_progid"));
+			if(node != nullptr) {
+
+				xmlChar* progid = xmlNodeGetContent(node);
+				if(progid != nullptr) {
+
+					if(strlen(reinterpret_cast<char*>(progid)) >= 2) sqlite3_result_text(context, reinterpret_cast<char*>(progid), 2, SQLITE_TRANSIENT);
+					xmlFree(progid);
+				}
+			}
+		}
+		break;
+
+		case xmltv_vtab_columns::isnew:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("new"));
+			if(node != nullptr) sqlite3_result_int(context, 1);
+			break;
+
+		case xmltv_vtab_columns::starrating:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("star-rating"));
+			if(node != nullptr) node = xmlNodeGetChildElement(node, BAD_CAST("value"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
+	}
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_create
+//
+// Creates the specified virtual table
+//
+// Arguments:
+//
+//	instance	- SQLite database instance handle
+//	aux			- Client data pointer provided to sqlite3_create_module[_v2]()
+//	argc		- Number of provided metadata strings
+//	argv		- Metadata strings
+//	vtab		- On success contains the allocated virtual table instance
+//	err			- On error contains a string-based error message
+
+int xmltv_connect(sqlite3* instance, void* /*aux*/, int /*argc*/, const char* const* /*argv*/, sqlite3_vtab** vtab, char** err)
+{
+	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
+ 	int result = sqlite3_declare_vtab(instance, "create table xmltv(uri text hidden, onchannel pointer hidden, channel text, start text, "
+		"stop text, title text, subtitle text, desc text, date text, categories text, language text, iconsrc text, seriesid text, "
+		"episodenum text, programtype text, isnew integer, starrating text)");
+	if(result != SQLITE_OK) return result;
+
+	// Allocate and initialize the custom virtual table class
+	try { *vtab = static_cast<sqlite3_vtab*>(new xmltv_vtab()); } 
+	catch(std::exception const& ex) { *err = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; } 
+	catch(...) { return SQLITE_ERROR; }
+
+	return (*vtab == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_disconnect
+//
+// Disconnects from the xmltv virtual table
+//
+// Arguments:
+//
+//	vtab		- Virtual table instance allocated by xConnect
+
+int xmltv_disconnect(sqlite3_vtab* vtab)
+{
+	if(vtab != nullptr) delete reinterpret_cast<xmltv_vtab*>(vtab);
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_eof
+//
+// Determines if the specified cursor has moved beyond the last row of data
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+
+int xmltv_eof(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an xmltv_vtab_cursor instance
+	xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(cursor);
+	assert(xmltvcursor != nullptr);
+
+	return (xmltvcursor->eof) ? 1 : 0;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_filter
+//
+// Executes a search of the virtual table
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	indexnum	- Virtual table index number from xBestIndex()
+//	indexstr	- Virtual table index string from xBestIndex()
+//	argc		- Number of arguments assigned by xBestIndex()
+//	argv		- Argument data assigned by xBestIndex()
+
+int xmltv_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*indexstr*/, int argc, sqlite3_value** argv)
+{
+	// Cast the provided generic cursor instance back into an xmltv_vtab_cursor instance
+	xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(cursor);
+	assert(xmltvcursor != nullptr);
+
+	// input_read_callback (local)
+	//
+	// xmlParserInputBuffer callback function
+	auto input_read_callback = [](void* context, char* buffer, int len) -> int
+	{
+		xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(context);
+		assert(xmltvcursor != nullptr);
+
+		try { return static_cast<int>(xmltvcursor->stream->read(reinterpret_cast<uint8_t*>(buffer), len)); } 
+		catch(...) { return -1; }
+	};
+
+	// input_close_callback (local)
+	//
+	// xmlParserInputBuffer callback function
+	auto input_close_callback = [](void* context) -> int
+	{
+		xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(context);
+		assert(xmltvcursor != nullptr);
+
+		xmltvcursor->stream->close();
+		return 0;
+	};
+
+	try {
+
+		// The uri argument must have been specified by xBestIndex
+		if(argc < 1) throw string_exception(__func__, ": invalid argument count provided by xBestIndex");
+
+		// Assign the uri string to the xmltv_vtab_cursor instance
+		char const* uri = reinterpret_cast<char const*>(sqlite3_value_text(argv[0]));
+		if(uri != nullptr) xmltvcursor->uri.assign(uri);
+		if(xmltvcursor->uri.empty()) throw string_exception(__func__, ": null or zero-length uri string");
+
+		// The onchannel argument is optional and may have been specified by xBestIndex if the calling
+		// function was capable of providing this callback
+		if(argc >= 2) {
+
+			void* onchannelptr = sqlite3_value_pointer(argv[1], typeid(xmltv_onchannel_callback).name());
+			if(onchannelptr) xmltvcursor->onchannel = *reinterpret_cast<xmltv_onchannel_callback*>(onchannelptr);
+		}
+
+		// Create the xmlstream instance that will take care of streaming the XMLTV data
+		xmltvcursor->stream = xmlstream::create(uri, g_useragent.c_str(), g_curlshare);
+
+		// Set up the xmlParserInputBuffer and the xmlTextReader instances around the XMLTV stream
+		xmltvcursor->buffer = xmlParserInputBufferCreateIO(input_read_callback, input_close_callback, xmltvcursor, xmlCharEncoding::XML_CHAR_ENCODING_UTF8);
+		xmltvcursor->reader = xmlNewTextReader(xmltvcursor->buffer, nullptr);
+	}
+	
+	catch(std::exception const& ex) { xmltvcursor->pVtab->zErrMsg = sqlite3_mprintf("%s", ex.what()); return SQLITE_ERROR; } 
+	catch(...) { return SQLITE_ERROR; }
+
+	// xFilter should position the cursor at the first row of the result set or at EOF
+	return xmltv_next(xmltvcursor);
+}
+
+//---------------------------------------------------------------------------
+// xmltv_next
+//
+// Advances the virtual table cursor to the next row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cusror instance
+
+int xmltv_next(sqlite3_vtab_cursor* cursor)
+{
+	// Cast the provided generic cursor instance back into an xmltv_vtab_cursor instance
+	xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(cursor);
+	assert(xmltvcursor != nullptr);
+
+	// Move the text reader to the start of the next element
+	int result = xmlTextReaderRead(xmltvcursor->reader);
+	while(result == 1) {
+
+		if(xmlTextReaderNodeType(xmltvcursor->reader) == xmlReaderTypes::XML_READER_TYPE_ELEMENT) {
+
+			bool ischannel = false;				// Flag indicating a <channel> element
+			bool isprogramme = false;			// Flag indicating a <programme> element
+
+			// Figure out if this is a <channel> or a <programme> element
+			xmlChar* element = xmlTextReaderName(xmltvcursor->reader);
+			if(element != nullptr) {
+
+				ischannel = (xmlStrcmp(element, BAD_CAST("channel")) == 0);
+				isprogramme = ((!ischannel) && (xmlStrcmp(element, BAD_CAST("programme")) == 0));
+				xmlFree(element);
+			}
+
+			// <channel> element - invoke the callback (if present) to map the channel
+			if((ischannel) && (xmltvcursor->onchannel)) {
+
+				struct xmltv_channel channel = { 0 };
+
+				xmlNodePtr node = xmlTextReaderExpand(xmltvcursor->reader);
+				if(node != nullptr) {
+
+					xmlChar* channelid = xmlGetProp(node, BAD_CAST("id"));
+					if(channelid != nullptr) {
+
+						// The channel id attribute is passed into the callback as-is
+						channel.id = reinterpret_cast<char*>(channelid);
+
+						// The virtual channel number is in the <lcn> element
+						xmlNodePtr channelnumber = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("lcn"));
+						if(channelnumber != nullptr) channel.number = reinterpret_cast<char*>(xmlNodeGetContent(channelnumber));
+
+						// The first <display-name> element will contain the guide name for the channel
+						xmlNodePtr guidename = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("display-name"));
+						if(guidename != nullptr) channel.name = reinterpret_cast<char*>(xmlNodeGetContent(guidename));
+
+						// Get the icon source URL for the channel logo
+						xmlNodePtr iconsrc = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("icon"));
+						if(iconsrc != nullptr) channel.iconsrc = reinterpret_cast<char*>(xmlGetProp(iconsrc, BAD_CAST("src")));
+					}
+				}
+
+				// Pass the channel information back via the specified callback function
+				xmltvcursor->onchannel(channel);
+
+				// Chase down any pointers passed to the callback via struct xmltv_channel
+				if(channel.id) xmlFree(const_cast<char*>(channel.id));
+				if(channel.number) xmlFree(const_cast<char*>(channel.number));
+				if(channel.name) xmlFree(const_cast<char*>(channel.name));
+				if(channel.iconsrc) xmlFree(const_cast<char*>(channel.iconsrc));
+			}
+
+			// <programme> element - this is the next row for the result set; break
+			else if(isprogramme) break;
+		}
+
+		// Move to the next node in the XML document
+		result = xmlTextReaderRead(xmltvcursor->reader);
+	};
+
+	// Unsucessful states - set end-of-file if applicable or SQLITE_INTERNAL on error
+	if(result == 0) { xmltvcursor->eof = true; return SQLITE_OK; }
+	else if(result == -1) return SQLITE_INTERNAL;
+
+	// Increment the ROWID value to be returned to SQLite when asked
+	++xmltvcursor->rowid;
+
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_open
+//
+// Creates and intializes a new virtual table cursor instance
+//
+// Arguments:
+//
+//	vtab		- Virtual table instance
+//	cursor		- On success contains the allocated virtual table cursor instance
+
+int xmltv_open(sqlite3_vtab* /*vtab*/, sqlite3_vtab_cursor** cursor)
+{
+	// Allocate and initialize the custom virtual table cursor class
+	try { *cursor = static_cast<sqlite3_vtab_cursor*>(new xmltv_vtab_cursor()); }
+	catch(...) { return SQLITE_ERROR; }
+
+	return (*cursor == nullptr) ? SQLITE_NOMEM : SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_rowid
+//
+// Retrieves the ROWID for the current virtual table cursor row
+//
+// Arguments:
+//
+//	cursor		- Virtual table cursor instance
+//	rowid		- On success contains the ROWID for the current row
+
+int xmltv_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
+{
+	// Cast the provided generic cursor instance back into an xmltv_vtab_cursor instance
+	xmltv_vtab_cursor* xmltvcursor = reinterpret_cast<xmltv_vtab_cursor*>(cursor);
+	assert(xmltvcursor != nullptr);
+
+	*rowid = xmltvcursor->rowid;
+	return SQLITE_OK;
+}
+
+//---------------------------------------------------------------------------
+// xmltv_time_to_epoch
+//
+// SQLite scalar function to convert an XMLTV time stamp into a time_t value
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void xmltv_time_to_epoch(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	struct tm		timeparts = { 0 };			// tm structure to parse components into
+	char			tzoperator = '+';			// timezone offset operator
+	int				tzhours = 0;				// timezone offset hours
+	int				tzminutes = 0;				// timezone offset minutes
+
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Null or zero-length input string results in null
+	const char* str = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((str == nullptr) || (*str == 0)) return sqlite3_result_null(context);
+
+	// Attempt to scan as much of the input string as possible based on the expected format
+	int parts = sscanf(str, "%04d%02d%02d%02d%02d%02d %c%02d%02d", &timeparts.tm_year, &timeparts.tm_mon,
+		&timeparts.tm_mday, &timeparts.tm_hour, &timeparts.tm_min, &timeparts.tm_sec, &tzoperator, &tzhours, &tzminutes);
+	if(parts <= 0) return sqlite3_result_null(context);
+
+	// Adjust the timeparts appropriately for struct tm
+	if(parts >= 1) timeparts.tm_year -= 1900;
+	if(parts >= 2) timeparts.tm_mon -= 1;
+
+	// Convert the individual time parts into a time_t epoch value
+	time_t result = timegm(&timeparts);
+	if(result <= 0) return sqlite3_result_null(context);
+
+	// Calculate any adjustment required based on the specified time zone
+	time_t adjustment = 0;
+	if(parts >= 8) adjustment += (60 * 60 * static_cast<time_t>(tzhours));
+	if(parts >= 9) adjustment += (60 * static_cast<time_t>(tzminutes));
+
+	// Apply the timezone adjustment
+	if(tzoperator == '+') result -= adjustment;
+	else if(tzoperator == '-') result += adjustment;
+
+	// Return the time_t as a 64-bit integer
+	return sqlite3_result_int64(context, static_cast<int64_t>(result));
+}
+
+//---------------------------------------------------------------------------
 // sqlite3_extension_init
 //
 // SQLite Extension Library entry point
@@ -1222,15 +1576,15 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_channel_id"); return result; }
 
+	// decode_star_rating function
+	//
+	result = sqlite3_create_function_v2(db, "decode_star_rating", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_star_rating, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_star_rating"); return result; }
+
 	// encode_channel_id function
 	//
 	result = sqlite3_create_function_v2(db, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function encode_channel_id"); return result; }
-
-	// generate_series virtual table
-	//
-	result = sqlite3_create_module_v2(db, "generate_series", &g_generate_series_module, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module generate_series"); return result; }
 
 	// fnv_hash function
 	//
@@ -1251,6 +1605,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_episode_number"); return result; }
+
+	// get_primary_genre function
+	//
+	result = sqlite3_create_function_v2(db, "get_primary_genre", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_primary_genre, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_primary_genre"); return result; }
 
 	// get_recording_id function
 	//
@@ -1286,6 +1645,16 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_encode"); return result; }
+
+	// xmltv virtual table
+	//
+	result = sqlite3_create_module_v2(db, "xmltv", &g_xmltv_module, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module xmltv"); return result; }
+
+	// xmltv_time_to_epoch function
+	//
+	result = sqlite3_create_function_v2(db, "xmltv_time_to_epoch", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_epoch, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_epoch"); return result; }
 
 	return SQLITE_OK;
 }

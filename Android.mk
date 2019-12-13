@@ -116,7 +116,8 @@ LOCAL_SRC_FILES := \
 	src/httpstream.cpp \
 	src/pvr.cpp \
 	src/scheduler.cpp \
-	src/sqlite_exception.cpp
+	src/sqlite_exception.cpp \
+	src/xmlstream.cpp
 	
 include $(BUILD_SHARED_LIBRARY)
 
