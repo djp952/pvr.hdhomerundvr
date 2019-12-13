@@ -1426,9 +1426,6 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 				// Abort the enumeration if the cancellation scalar_condition has been set
 				if(cancel.test(true) == true) { cancelenum = true; return; }
 
-				// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and isnew is *not* set, flag it as a repeat
-				bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.isnew == false));
-
 				// iUniqueBroadcastId (required)
 				assert(item.broadcastid > EPG_TAG_INVALID_UID);
 				epgtag.iUniqueBroadcastId = item.broadcastid;
@@ -2725,9 +2722,6 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			EPG_TAG			epgtag;						// EPG_TAG to be transferred to Kodi
 
 			memset(&epgtag, 0, sizeof(EPG_TAG));		// Initialize the structure
-
-			// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and isnew is *not* set, flag it as a repeat
-			bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.isnew == false));
 
 			// Don't send EPG entries with start/end times outside the requested range
 			if((item.starttime > end) || (item.endtime < start)) return;
