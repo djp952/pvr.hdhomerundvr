@@ -36,7 +36,7 @@
 // DATABASE_SCHEMA_VERSION
 //
 // This value needs to be incremented with any database schema change
-static char const DATABASE_SCHEMA_VERSION[] = "9";
+static char const DATABASE_SCHEMA_VERSION[] = "10";
 
 //---------------------------------------------------------------------------
 // DATA TYPES
@@ -91,10 +91,10 @@ struct device_name {
 	char const*			name;
 };
 
-// guideentry
+// listing
 //
-// Information about a single guide entry enumerated from the database
-struct guideentry {
+// Information about a single listing enumerated from the database
+struct listing {
 
 	char const*			seriesid;
 	char const*			title;
@@ -105,12 +105,15 @@ struct guideentry {
 	char const*			synopsis;
 	int					year;
 	char const*			iconurl;
+	char const*			programtype;
 	int					genretype;
 	char const*			genres;
 	time_t				originalairdate;
 	int					seriesnumber;
 	int					episodenumber;
 	char const*			episodename;
+	bool				isnew;
+	int					starrating;
 };
 
 // recording
@@ -123,6 +126,7 @@ struct recording {
 	char const*			episodename;
 	int					firstairing;
 	time_t				originalairdate;
+	char const*			programtype;
 	int					seriesnumber;
 	int					episodenumber;
 	int					year;
@@ -200,6 +204,22 @@ struct timer {
 	unsigned int				startpadding;
 	unsigned int				endpadding;
 };
+
+// xmltv_channel
+//
+// Information about a channel enumerated by the xmltv virtual table
+struct xmltv_channel
+{
+	char const*					id;
+	char const*					number;
+	char const*					name;
+	char const*					iconsrc;
+};
+
+// xmltv_onchannel_callback
+//
+// Callback function passed as a pointer to the xmltv virtual table
+using xmltv_onchannel_callback = std::function<void(struct xmltv_channel const& channel)>;
 
 //---------------------------------------------------------------------------
 

@@ -62,10 +62,10 @@ using enumerate_channeltuners_callback = std::function<void(char const* tuner)>;
 // Callback function passed to enumerate_device_names
 using enumerate_device_names_callback = std::function<void(struct device_name const& device_name)>;
 
-// enumerate_guideentries_callback
+// enumerate_listings_callback
 //
-// Callback function passed to enumerate_guideentries
-using enumerate_guideentries_callback = std::function<void(struct guideentry const& guideentry)>;
+// Callback function passed to enumerate_listings
+using enumerate_listings_callback = std::function<void(struct listing const& listing, bool& cancel)>;
 
 // enumerate_recordings_callback
 //
@@ -216,17 +216,17 @@ void discover_episodes(sqlite3* instance, char const* deviceauth, bool& changed)
 // discovers the information about episodes associated with a specific series
 void discover_episodes_seriesid(sqlite3* instance, char const* deviceauth, char const* seriesid);
 
-// discover_guide
-//
-// Reloads the electronic program guide data
-void discover_guide(sqlite3* instance, char const* deviceauth);
-void discover_guide(sqlite3* instance, char const* deviceauth, bool& changed);
-
 // discover_lineups
 //
 // Reloads the information about the available channels
 void discover_lineups(sqlite3* instance);
 void discover_lineups(sqlite3* instance, bool& changed);
+
+// discover_listings
+//
+// Reloads the information about the available listings
+void discover_listings(sqlite3* instance, char const* deviceauth);
+void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed);
 
 // discover_recordingrules
 //
@@ -243,78 +243,79 @@ void discover_recordings(sqlite3* instance, bool& changed);
 // enumerate_channels
 //
 // Enumerates the available channels
-void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback callback);
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback const& callback);
 
 // enumerate_channelids
 //
 // Enumerates the available channelids
-void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
+void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
 
 // enumerate_channeltuners
 //
 // Enumerates the tuners that can tune a specific channel
-void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback callback);
+void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback const& callback);
 
 // enumerate_demo_channelids
 //
 // Enumerates channels marked as 'Demo' in the lineups
-void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
+void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
 
 // enumerate_device_names
 //
 // Enumerates the available device names
-void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback callback);
+void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback const& callback);
 
 // enumerate_expired_recordingruleids
 //
 // Enumerates all recordingruleids that have expired
-void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate_recordingruleids_callback callback);
+void enumerate_expired_recordingruleids(sqlite3* instance, int expiry, enumerate_recordingruleids_callback const& callback);
 
 // enumerate_favorite_channelids
 //
 // Enumerates channels marked as 'Favorite' in the lineups
-void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
-
-// enumerate_guideentries
-//
-// Enumerates the available guide entries for a channel and time period
-void enumerate_guideentries(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t starttime, time_t endtime, bool prependnumber, enumerate_guideentries_callback callback);
+void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
 
 // enumerate_hd_channelids
 //
 // Enumerates channels marked as 'HD' in the lineups
-void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
+void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
+
+// enumerate_listings
+//
+// Enumerates the available listings in the database
+void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_listings_callback const& callback);
+void enumerate_listings(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_listings_callback const& callback);
 
 // enumerate_recordings
 //
 // Enumerates the available recordings
-void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback callback);
-void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecategories, enumerate_recordings_callback callback);
+void enumerate_recordings(sqlite3* instance, enumerate_recordings_callback const& callback);
+void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecategories, enumerate_recordings_callback const& callback);
 
 // enumerate_recordingrules
 //
 // Enumerates the available recording rules
-void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callback callback);
+void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callback const& callback);
 
 // enumerate_sd_channelids
 //
 // Enumerates channels not marked as 'HD' in the lineups
-void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback callback);
+void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
 
 // enumerate_series
 //
 // Enumerates series based on a title matching search
-void enumerate_series(sqlite3* instance, char const* deviceauth, char const* title, enumerate_series_callback callback);
+void enumerate_series(sqlite3* instance, char const* deviceauth, char const* title, enumerate_series_callback const& callback);
 
 // enumerate_timers
 //
 // Enumerates the available timers
-void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback callback);
+void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback const& callback);
 
 // find_seriesid
 //
 // Retrieves the series id associated with a specific channel/time combination
-std::string find_seriesid(sqlite3* instance, char const* deviceauth, union channelid channelid, time_t timestamp);
+std::string find_seriesid(sqlite3* instance, union channelid channelid, time_t timestamp);
 
 // find_seriesid
 //
@@ -335,6 +336,11 @@ struct storage_space get_available_storage_space(sqlite3* instance);
 //
 // Gets the number of available channels in the database
 int get_channel_count(sqlite3* instance, bool showdrm);
+
+// get_discovered
+//
+// Gets the timestamp of the last discovery for the specified type
+time_t get_discovered(sqlite3* instance, char const* type);
 
 // get_recording_count
 //
@@ -396,6 +402,11 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 // Gets a flag indicating if any devices have DVR service authorization
 bool has_dvr_authorization(sqlite3* instance);
 
+// has_missing_guide_channels
+//
+// Gets a flag indicating if any channels are missing from the guide data
+bool has_missing_guide_channels(sqlite3* instance);
+
 // modify_recordingrule
 //
 // Modifies an existing recording rule
@@ -411,6 +422,11 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize);
 //
 // Sets the visibility of a channel on all known tuner devices
 void set_channel_visibility(sqlite3* instance, union channelid channelid, enum channel_visibility visibility);
+
+// set_discovered
+//
+// Sets the timestamp of the last discovery for the specified type
+void set_discovered(sqlite3* instance, char const* type, time_t discovered);
 
 // set_recording_lastposition
 //

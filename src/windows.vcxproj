@@ -280,6 +280,7 @@
     <ClInclude Include="database.h" />
     <ClInclude Include="dbtypes.h" />
     <ClInclude Include="devicestream.h" />
+    <ClInclude Include="genremap.h" />
     <ClInclude Include="httpstream.h" />
     <ClInclude Include="http_exception.h" />
     <ClInclude Include="pvrstream.h" />
@@ -288,6 +289,7 @@
     <ClInclude Include="sqlite_exception.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="string_exception.h" />
+    <ClInclude Include="xmlstream.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\depends\libcurl\src\lib\amigaos.c">
@@ -2138,6 +2140,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="xmlstream.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc" />

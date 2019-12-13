@@ -14,7 +14,7 @@ Copyright (C)2016-2019 Michael G. Brehm
 * Windows 10 x64 1803 (17134) "April 2018 Update"   
 * Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop)   
 * Windows Subsystem for Linux   
-* [Ubuntu on Windows 16.04.4 LTS](https://www.microsoft.com/store/productId/9NBLGGH4MSV6)   
+* [Ubuntu on Windows 16.04 LTS](https://www.microsoft.com/store/productId/9PJN388HP8C9)   
 
 **OPTIONAL COMPONENTS**   
 * Android NDK r20b for Windows 64-bit   
