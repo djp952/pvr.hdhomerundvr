@@ -364,7 +364,7 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,			// bSupportsDescrambleInfo
 	0,				// iRecordingsLifetimesSize
 	{ { 0, "" } },	// recordingsLifetimeValues
-	true,			// bSupportsAsyncEPGTransfer
+	false,			// bSupportsAsyncEPGTransfer
 };
 
 // g_connpool

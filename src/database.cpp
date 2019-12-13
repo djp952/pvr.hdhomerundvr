@@ -1606,7 +1606,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 			item.seriesnumber = sqlite3_column_int(statement, 13);
 			item.episodenumber = sqlite3_column_int(statement, 14);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 15));
-			item.isnew = sqlite3_column_int(statement, 16);
+			item.isnew = (sqlite3_column_int(statement, 16) != 0);
 			item.starrating = sqlite3_column_int(statement, 17);
 
 			callback(item, cancel);					// Invoke caller-supplied callback
@@ -1698,7 +1698,7 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 			item.seriesnumber = sqlite3_column_int(statement, 12);
 			item.episodenumber = sqlite3_column_int(statement, 13);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 14));
-			item.isnew = sqlite3_column_int(statement, 15);
+			item.isnew = (sqlite3_column_int(statement, 15) != 0);
 			item.starrating = sqlite3_column_int(statement, 16);
 
 			callback(item, cancel);					// Invoke caller-supplied callback

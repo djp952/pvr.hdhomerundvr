@@ -2,7 +2,6 @@ v3.0.0 (2020.01.xx)
   - Add dependency on libxml2 library v2.9.10
   - Switch to incremental database schema versioning rather than tying to the addon version number
   - Switch to Electronic Program Guide (EPG) XMLTV source data (available to DVR subscribers only)
-  - Switch to using the PVR API asynchronous Electronic Program Guide (EPG) implementation
   - Change "Append repeat indicators to applicable episode names" setting to apply only to programs of type EP/SH
   - Remove "Electronic Program Guide (EPG) Metadata" discovery intervals setting
   - Remove "Trigger guide metadata discovery" PVR Client Specific setting
