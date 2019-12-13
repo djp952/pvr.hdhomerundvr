@@ -248,7 +248,7 @@ void scheduler::start(void)
 
 			// Process all tasks from the top of the queue that have become due before waiting again
 			std::unique_lock<std::mutex> queuelock(m_queue_lock);
-			while((!m_queue.empty()) && (!m_paused) && (m_queue.top().first <= std::chrono::system_clock::now())) {
+			while((m_stop.test(false) == true) && (!m_queue.empty()) && (!m_paused) && (m_queue.top().first <= std::chrono::system_clock::now())) {
 
 				// Make a copy of the functor and remove the task from the queue
 				auto functor = m_queue.top().second;
