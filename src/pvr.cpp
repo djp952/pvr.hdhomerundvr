@@ -1420,7 +1420,6 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 				[&](struct listing const& item, bool& cancelenum) -> void {
 
 				EPG_TAG			epgtag;						// EPG_TAG to be transferred to Kodi
-				std::string		episodename;				// Temporary string for the episode name
 
 				memset(&epgtag, 0, sizeof(EPG_TAG));		// Initialize the structure
 
@@ -1475,12 +1474,7 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 				epgtag.iEpisodePartNumber = -1;
 
 				// strEpisodeName
-				if(item.episodename != nullptr) {
-
-					// If the setting to generate repeat indicators is set, append to the episode name as appropriate
-					episodename = std::string(item.episodename) + std::string(((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : "");
-					epgtag.strEpisodeName = episodename.c_str();
-				}
+				epgtag.strEpisodeName = item.episodename;
 
 				// iFlags
 				epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;
@@ -2729,7 +2723,6 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 		enumerate_listings(connectionpool::handle(g_connpool), channelid, start, end, [&](struct listing const& item, bool&) -> void {
 
 			EPG_TAG			epgtag;						// EPG_TAG to be transferred to Kodi
-			std::string		episodename;				// Temporary string for the episode name
 
 			memset(&epgtag, 0, sizeof(EPG_TAG));		// Initialize the structure
 
@@ -2784,12 +2777,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			epgtag.iEpisodePartNumber = -1;
 
 			// strEpisodeName
-			if(item.episodename != nullptr) {
-
-				// If the setting to generate repeat indicators is set, append to the episode name as appropriate
-				episodename = std::string(item.episodename) + std::string(((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : "");
-				epgtag.strEpisodeName = episodename.c_str();
-			}
+			epgtag.strEpisodeName = item.episodename;
 
 			// iFlags
 			epgtag.iFlags = EPG_TAG_FLAG_IS_SERIES;

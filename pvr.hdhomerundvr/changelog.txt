@@ -7,6 +7,7 @@ v3.0.0 (2020.01.xx)
   - Remove "Trigger guide metadata discovery" PVR Client Specific setting
   - Add "Trigger guide listing discovery" PVR Client Specific setting
   - Fix bug in task scheduler that would allow pending tasks to execute after stop signal has been sent
+  - Rename "Append repeat indicators to applicable episode names" setting to "Append repeat indicators to applicable recording names"
 
 v2.4.2 (2019.12.05)
   - Add dependency on zlib library v1.2.11

@@ -129,7 +129,7 @@ msgid "Use HTTP cloud-based device discovery"
 msgstr ""
 
 msgctxt "#30133"
-msgid "Append repeat indicators to applicable episode names"
+msgid "Append repeat indicators to applicable recording names"
 msgstr ""
 
 msgctxt "#30134"
@@ -441,7 +441,7 @@ msgid "When set to ON the PVR will use the cloud-based backend to discover avail
 msgstr ""
 
 msgctxt "#30528"
-msgid "When set to ON repeat indicators will be appended to episode names for recordings and EPG listings if the episode aired more than 24 hours after its original air date."
+msgid "When set to ON repeat indicators will be appended to recording episode names if the recording is not flagged as the first airing."
 msgstr ""
 
 msgctxt "#30529"
