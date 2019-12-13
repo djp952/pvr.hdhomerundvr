@@ -119,6 +119,7 @@ template<typename... _args> static void log_notice(_args&&... args);
 
 // Scheduled Tasks
 //
+static void startup_alerts_task(scalar_condition<bool> const& cancel);
 static void update_devices_task(scalar_condition<bool> const& cancel);
 static void update_episodes_task(scalar_condition<bool> const& cancel);
 static void update_lineups_task(scalar_condition<bool> const& cancel);
@@ -129,7 +130,6 @@ static void wait_for_network_task(int seconds, scalar_condition<bool> const& can
 
 // Helper Functions
 //
-static void alert_no_tuners(void) noexcept;
 static bool ipv4_network_available(void);
 static std::string select_tuner(std::vector<std::string> const& possibilities);
 static void start_discovery(void) noexcept;
@@ -617,23 +617,14 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 	},
 };
 
+// g_userpath
+//
+// Set to the input PVR user path string
+static std::string g_userpath;
+
 //---------------------------------------------------------------------------
 // HELPER FUNCTIONS
 //---------------------------------------------------------------------------
-
-// alert_no_tuners (local)
-//
-// Alerts the user with a notification that there are no available HDHomeRun tuner devices
-static void alert_no_tuners(void) noexcept
-{
-	static std::once_flag	once;			// std::call_once flag
-
-	// Only trigger this notification one time; if there is a non-transient reason there are no tuners discovered
-	// it would become extremely annoying for the end user to see this every few minutes ...
-	try { std::call_once(once, []() { g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected"); }); }
-	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
-	catch(...) { return handle_generalexception(__func__); }
-}
 
 // copy_settings (inline)
 //
@@ -669,9 +660,6 @@ static void discover_devices(scalar_condition<bool> const&, bool& changed)
 		discover_devices(dbhandle, settings.use_http_device_discovery, changed);
 		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
 
-		// Alert the user if no tuner device(s) were found
-		if(get_tuner_count(dbhandle) == 0) alert_no_tuners();
-			
 		// Set the discovery time for the device information
 		set_discovered(dbhandle, "devices", time(nullptr));
 
@@ -1211,7 +1199,8 @@ static void start_discovery(void) noexcept
 			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
 
-			// Schedule the listings update to occur after the initial discovery tasks have completed
+			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
+			g_scheduler.add(startup_alerts_task);
 			g_scheduler.add(std::bind(update_listings_task, false, std::placeholders::_1));
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
@@ -1225,6 +1214,42 @@ static void start_discovery(void) noexcept
 
 	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
 	catch(...) { return handle_generalexception(__func__); }
+}
+
+// startup_alerts_task (local)
+//
+// Scheduled task implementation to perform any necessary startup alerts
+static void startup_alerts_task(scalar_condition<bool> const& /*cancel*/)
+{
+	connectionpool::handle dbhandle(g_connpool);
+
+	// Determine how many tuner devices were discovered on the network
+	int numtuners = get_tuner_count(dbhandle);
+
+	// If there were no tuner devices detected alert the user via a notification
+	if(numtuners == 0) g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected");
+
+	// If there are no DVR authorized tuner devices detected, alert the user via a message box.
+	// This operation is only done one time for the installed system, don't use the database for this
+	if((numtuners > 0) && (!has_dvr_authorization(dbhandle))) {
+
+		// If for some reason the user path doesn't exist, skip this operation
+		if(g_addon->DirectoryExists(g_userpath.c_str())) {
+
+			// Check to see if the alert has already been issued on this system by checking for the flag file
+			std::string alertfile = g_userpath + "/alerted-epgauth";
+			if(!g_addon->FileExists(alertfile.c_str(), false)) {
+
+				// Issue the alert about the DVR subscription requirement
+				g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", 
+					"Access to Electronic Program Guide (EPG) listings requires an active HDHomeRun DVR Service subscription.", "", 
+					"https://www.silicondust.com/dvr-service/");
+
+				// Write the tag file to storage to prevent the message from showing again
+				g_addon->CloseFile(g_addon->OpenFileForWrite(alertfile.c_str(), true));
+			}
+		}
+	}
 }
 
 // update_devices_task (local)
@@ -1731,6 +1756,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	// Copy anything relevant from the provided parameters
 	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
 	g_epgmaxtime.store(pvrprops->iEpgMaxDays);
+	g_userpath.assign(pvrprops->strUserPath);
 
 #ifdef __ANDROID__
 	// Uncomment this to allow normal crash dumps to be generated on Android
@@ -1764,11 +1790,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		try { 
 
 			// The user data path doesn't always exist when an addon has been installed
-			if(!g_addon->DirectoryExists(pvrprops->strUserPath)) {
+			if(!g_addon->DirectoryExists(g_userpath.c_str())) {
 
-				log_notice(__func__, ": user data directory ", pvrprops->strUserPath, " does not exist");
-				if(!g_addon->CreateDirectory(pvrprops->strUserPath)) throw string_exception(__func__, ": unable to create addon user data directory");
-				log_notice(__func__, ": user data directory ", pvrprops->strUserPath, " created");
+				log_notice(__func__, ": user data directory ", g_userpath.c_str(), " does not exist");
+				if(!g_addon->CreateDirectory(g_userpath.c_str())) throw string_exception(__func__, ": unable to create addon user data directory");
+				log_notice(__func__, ": user data directory ", g_userpath.c_str(), " created");
 			}
 
 			// Load the general settings
@@ -1902,11 +1928,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					g_pvr->AddMenuHook(&menuhook);
 
 					// Generate the local file system and URL-based file names for the PVR database, the file name is based on the version
-					std::string databasefile = std::string(pvrprops->strUserPath) + "/hdhomerundvr-v" + DATABASE_SCHEMA_VERSION + ".db";
-					std::string databasefileurl = "file:///" + databasefile;
+					std::string databasefile = std::string(g_userpath.c_str()) + "/hdhomerundvr-v" + DATABASE_SCHEMA_VERSION + ".db";
+					std::string databasefileuri = "file:///" + databasefile;
 
 					// Create the global database connection pool instance
-					try { g_connpool = std::make_shared<connectionpool>(databasefileurl.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI); }
+					try { g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI); }
 					catch(sqlite_exception const& dbex) {
 
 						log_error(__func__, ": unable to create/open the PVR database ", databasefile, " - ", dbex.what());
@@ -1914,7 +1940,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 						// If any SQLite-specific errors were thrown during database open/create, attempt to delete and recreate the database
 						log_notice(__func__, ": attempting to delete and recreate the PVR database");
 						g_addon->DeleteFile(databasefile.c_str());
-						g_connpool = std::make_shared<connectionpool>(databasefileurl .c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
+						g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
 						log_notice(__func__, ": successfully recreated the PVR database");
 					}
 
