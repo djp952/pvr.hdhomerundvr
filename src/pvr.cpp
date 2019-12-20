@@ -1129,7 +1129,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 
 	// Generate the URL for the virtual channel by querying the database
 	std::string streamurl = get_stream_url(dbhandle, channelid);
-	if(streamurl.length() == 0) { log_notice(__func__, ": unable to generate storage engine stream url for channel ", vchannel); return nullptr; }
+	if(streamurl.length() == 0) { log_error(__func__, ": unable to generate storage engine stream url for channel ", vchannel); return nullptr; }
 
 	try {
 
@@ -1140,8 +1140,8 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 		return stream;
 	}
 
-	// If the stream creation failed, log a notice and return a null unique_ptr<> back to the caller, do not throw an exception
-	catch(std::exception& ex) { log_notice(__func__, ": unable to stream channel ", vchannel, " via storage engine url ", streamurl.c_str(), ": ", ex.what()); }
+	// If the stream creation failed, log an error and return a null unique_ptr<> back to the caller, do not throw an exception
+	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, " via storage engine url ", streamurl.c_str(), ": ", ex.what()); }
 
 	return nullptr;
 }
@@ -1158,7 +1158,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::ha
 
 	// Create a collection of all the tuners that can possibly stream the requested channel
 	enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { devices.emplace_back(item); });
-	if(devices.size() == 0) { log_notice(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
+	if(devices.size() == 0) { log_error(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
 
 	try {
 
@@ -1169,8 +1169,8 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::ha
 		return stream;
 	}
 
-	// If the stream creation failed, log a notice and return a null unique_ptr<> back to the caller, do not throw an exception
-	catch(std::exception& ex) { log_notice(__func__, ": unable to stream channel ", vchannel, " via tuner device rtp/udp broadcast: ", ex.what()); }
+	// If the stream creation failed, log an error and return a null unique_ptr<> back to the caller, do not throw an exception
+	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, " via tuner device rtp/udp broadcast: ", ex.what()); }
 
 	return nullptr;
 }
@@ -1187,15 +1187,15 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 
 	// Create a collection of all the tuners that can possibly stream the requested channel
 	enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { devices.emplace_back(item); });
-	if(devices.size() == 0) { log_notice(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
+	if(devices.size() == 0) { log_error(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
 
 	// A valid tuner device has to be selected from the available options
 	std::string selected = select_tuner(devices);
-	if(selected.length() == 0) { log_notice(__func__, ": no tuner devices are available to create the requested stream"); return nullptr; }
+	if(selected.length() == 0) { log_error(__func__, ": no tuner devices are available to create the requested stream"); return nullptr; }
 
 	// Generate the URL required to stream the channel via the tuner over HTTP
 	std::string streamurl = get_tuner_stream_url(dbhandle, selected.c_str(), channelid);
-	if(streamurl.length() == 0) { log_notice(__func__, ": unable to generate tuner device stream url for channel ", vchannel); return nullptr; }
+	if(streamurl.length() == 0) { log_error(__func__, ": unable to generate tuner device stream url for channel ", vchannel); return nullptr; }
 
 	try {
 
@@ -1206,8 +1206,8 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 		return stream;
 	}
 
-	// If the stream creation failed, log a notice and return a null unique_ptr<> back to the caller, do not throw an exception
-	catch(std::exception& ex) { log_notice(__func__, ": unable to stream channel ", vchannel, "via tuner device url ", streamurl.c_str(), ": ", ex.what()); }
+	// If the stream creation failed, log an error and return a null unique_ptr<> back to the caller, do not throw an exception
+	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, "via tuner device url ", streamurl.c_str(), ": ", ex.what()); }
 
 	return nullptr;
 }

@@ -1,3 +1,6 @@
+v3.0.1 (2020.01.xx)
+  - TBD
+
 v3.0.0 (2019.12.14)
   - Add dependency on libxml2 library v2.9.10
   - Switch to incremental database schema versioning rather than tying to the addon version number
