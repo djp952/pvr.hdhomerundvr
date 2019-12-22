@@ -465,9 +465,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\quic.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun.h">
       <Filter>External Libraries\libhdhomerun\Header Files</Filter>
     </ClInclude>
@@ -1072,9 +1069,6 @@
     </ClCompile>
     <ClCompile Include="devicestream.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libhdhomerun\hdhomerun_channels.c">
       <Filter>External Libraries\libhdhomerun\Source Files</Filter>
