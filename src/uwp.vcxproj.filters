@@ -468,9 +468,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\quic.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\vauth\digest.h">
       <Filter>External Libraries\curl\Header Files\vauth</Filter>
     </ClInclude>
@@ -1075,9 +1072,6 @@
     </ClCompile>
     <ClCompile Include="devicestream.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vauth\cleartext.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
