@@ -1,5 +1,5 @@
 v3.0.1 (2020.01.xx)
-  - TBD
+  - Revert cURL library to version 7.66.0
 
 v3.0.0 (2019.12.14)
   - Add dependency on libxml2 library v2.9.10

@@ -458,9 +458,6 @@
     <ClInclude Include="devicestream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libxml2\src\include\libxml\c14n.h">
       <Filter>External Libraries\libxml2\Header Files</Filter>
     </ClInclude>
@@ -1152,9 +1149,6 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vssh\libssh2.c">
       <Filter>External Libraries\curl\Source Files\vssh</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libxml2\src\buf.c">
       <Filter>External Libraries\libxml2\Source Files</Filter>
