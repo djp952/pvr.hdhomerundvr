@@ -786,7 +786,7 @@ static void discover_recordingrules(scalar_condition<bool> const&, bool& changed
 			enumerate_expired_recordingruleids(dbhandle, settings.delete_datetime_rules_after, [&](unsigned int const& recordingruleid) -> void
 			{
 				try { delete_recordingrule(dbhandle, authorization.c_str(), recordingruleid); changed = true; }
-				catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+				catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 				catch(...) { handle_generalexception(__func__); }
 			});
 
@@ -1205,7 +1205,7 @@ static void start_discovery(void) noexcept
 		});
 	}
 
-	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); } 
 	catch(...) { return handle_generalexception(__func__); }
 }
 
@@ -1277,7 +1277,7 @@ static void update_devices_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1316,7 +1316,7 @@ static void update_episodes_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1368,7 +1368,7 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1522,7 +1522,7 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1569,7 +1569,7 @@ static void update_recordingrules_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1608,7 +1608,7 @@ static void update_recordings_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1635,7 +1635,7 @@ static void wait_for_devices(void) noexcept
 		g_discovered_devices.wait_until_equals(true);
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -1654,7 +1654,7 @@ static void wait_for_channels(void) noexcept
 		g_discovered_lineups.wait_until_equals(true);
 	}
 	
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -1696,7 +1696,7 @@ static void wait_for_timers(void) noexcept
 		g_discovered_episodes.wait_until_equals(true);
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -1715,7 +1715,7 @@ static void wait_for_recordings(void) noexcept
 		g_discovered_recordings.wait_until_equals(true);
 	}
 	
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -2644,7 +2644,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			g_scheduler.add(update_recordings_task);
 		}
 
-		catch(std::exception & ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -2824,7 +2824,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 		});
 	}
 
-	catch(std::exception & ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -4461,7 +4461,7 @@ void CloseRecordedStream(void)
 		}
 	}
 
-	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
 	catch(...) { return handle_generalexception(__func__); }
 }
 

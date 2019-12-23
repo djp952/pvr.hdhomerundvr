@@ -148,9 +148,9 @@ time_t devicestream::currenttime(void) const
 }
 
 //---------------------------------------------------------------------------
-// httpstream::create (static)
+// devicestream::create (static)
 //
-// Factory method, creates a new httpstream instance
+// Factory method, creates a new devicestream instance
 //
 // Arguments:
 //
