@@ -1,6 +1,7 @@
 v3.0.1 (2020.01.xx)
   - Revert cURL library to version 7.66.0
   - Revert reporting a fixed length (32KiB) stream chunk size to Kodi regardless of "DVR stream read chunk size" setting value
+  - Fix bug preventing stream read operations from exceeding the "DVR stream read chunk size" setting value
 
 v3.0.0 (2019.12.14)
   - Add dependency on libxml2 library v2.9.10
