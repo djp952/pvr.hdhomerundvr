@@ -4326,6 +4326,10 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
 	if(!g_pvrstream) return -1;
 
+	// Krypton doesn't request the stream chunk size and instead always uses
+	// a 32K buffer; align the requested buffer down to match the stream
+	size = std::min(size, static_cast<unsigned int>(g_pvrstream->chunksize()));
+
 	try { 
 	
 		// Attempt to read the requested number of bytes from the stream
@@ -4563,6 +4567,10 @@ void CloseRecordedStream(void)
 
 int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
+	// Krypton doesn't request the stream chunk size and instead always uses
+	// a 32K buffer; align the requested buffer down to match the stream
+	size = std::min(size, static_cast<unsigned int>(g_pvrstream->chunksize()));
+
 	try { return (g_pvrstream) ? static_cast<int>(g_pvrstream->read(buffer, size)) : -1; }
 
 	catch(std::exception& ex) {
