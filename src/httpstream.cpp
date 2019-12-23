@@ -33,15 +33,15 @@
 
 #pragma warning(push, 4)
 
+// httpstream::DEFAULT_CHUNK_SIZE (static)
+//
+// Default stream chunk size
+size_t const httpstream::DEFAULT_CHUNK_SIZE = (4 KiB);
+
 // httpstream::DEFAULT_MEDIA_TYPE (static)
 //
 // Default media type to report for the stream
 char const* httpstream::DEFAULT_MEDIA_TYPE = "video/mp2t";
-
-// httpstream::DEFAULT_READ_MINCOUNT (static)
-//
-// Default minimum amount of data to return from a read request
-size_t const httpstream::DEFAULT_READ_MINCOUNT = (4 KiB);
 
 // httpstream::DEFAULT_RINGBUFFER_SIZE (static)
 //
@@ -57,11 +57,6 @@ long long const httpstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::
 //
 // Length of a single mpeg-ts data packet
 size_t const httpstream::MPEGTS_PACKET_LENGTH = 188;
-
-// httpstream::s_curlshare
-//
-// cURL sharing interface object for all httpstream instances
-curlshare httpstream::s_curlshare;
 	
 //---------------------------------------------------------------------------
 // decode_pcr90khz
@@ -194,8 +189,11 @@ inline uint32_t read_be32(uint8_t const* ptr)
 //
 //	url				- URL of the stream to be opened
 //	buffersize		- Ring buffer size, in bytes
+//	chunksize		- Chunk size to use for the stream
 
-httpstream::httpstream(char const* url, size_t buffersize) : m_buffersize(align::up(buffersize, 65536))
+httpstream::httpstream(char const* url, size_t buffersize, size_t chunksize) :
+	m_chunksize(std::max(align::down(chunksize, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
+	m_buffersize(align::up(buffersize, 65536))
 {
 	size_t		available = 0;				// Amount of available ring buffer data
 
@@ -231,7 +229,6 @@ httpstream::httpstream(char const* url, size_t buffersize) : m_buffersize(align:
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &httpstream::curl_write);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_RANGE, "0-");
-			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_SHARE, static_cast<CURLSH*>(s_curlshare));
 			if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
 
 			// Attempt to add the easy handle to the multi handle
@@ -284,6 +281,20 @@ httpstream::~httpstream()
 bool httpstream::canseek(void) const
 {
 	return m_canseek;
+}
+
+//---------------------------------------------------------------------------
+// httpstream::chunksize
+//
+// Gets the stream chunk size
+//
+// Arguments:
+//
+//	NONE
+
+size_t httpstream::chunksize(void) const
+{
+	return m_chunksize;
 }
 
 //---------------------------------------------------------------------------
@@ -341,7 +352,7 @@ time_t httpstream::currenttime(void) const
 
 std::unique_ptr<httpstream> httpstream::create(char const* url)
 {
-	return create(url, DEFAULT_RINGBUFFER_SIZE);
+	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_CHUNK_SIZE);
 }
 
 //---------------------------------------------------------------------------
@@ -356,7 +367,23 @@ std::unique_ptr<httpstream> httpstream::create(char const* url)
 
 std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize)
 {
-	return std::unique_ptr<httpstream>(new httpstream(url, buffersize));
+	return create(url, buffersize, DEFAULT_CHUNK_SIZE);
+}
+
+//---------------------------------------------------------------------------
+// httpstream::create (static)
+//
+// Factory method, creates a new httpstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+//	buffersize		- Ring buffer size, in bytes
+//	readmincount	- Minimum bytes to return from a read operation
+
+std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize, size_t readmincount)
+{
+	return std::unique_ptr<httpstream>(new httpstream(url, buffersize, readmincount));
 }
 
 //---------------------------------------------------------------------------

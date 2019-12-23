@@ -1,12 +1,13 @@
 v3.0.1 (2020.12.xx)
   - Revert cURL library to version 7.66.0
-  - Revert reporting a fixed length (32KiB) stream chunk size to Kodi regardless of "DVR stream read chunk size" setting value
-  - Fix bug preventing stream read operations from exceeding the "DVR stream read chunk size" setting value
+  - Fix bug during stream changes that would fail to report the MIME type and realtime indicator of the new stream properly
   - Fix bug that could cause "Live Stream creation failed" errors when rapidly changing channels
-  - Improve performance of Live TV channel changes with a cURL shared HTTP connection cache implementation
+  - Fix bug preventing stream read operations from exceeding the "DVR stream read chunk size" setting value
+  - Apply "DVR stream read operation minimum size" setting to RTP/UDP streaming operations
+  - Correct reporting of stream chunk size to accurately reflect the downward-aligned value rather than the raw value
 
 v3.0.0 (2019.12.14)
-  - Add dependency on libxml2 library v2.9.10
+  - Add dependency on libxml2 library 2.9.10
   - Switch to incremental database schema versioning rather than tying to the addon version number
   - Switch to Electronic Program Guide (EPG) XMLTV source data (available to DVR subscribers only)
   - Change "Append repeat indicators to applicable episode names" setting to apply only to programs of type EP/SH
@@ -17,7 +18,7 @@ v3.0.0 (2019.12.14)
   - Add one-time alert message indicating that DVR authorization is required to access Electronic Program Guide data
 
 v2.4.2 (2019.12.05)
-  - Add dependency on zlib library v1.2.11
+  - Add dependency on zlib library 1.2.11
   - Add "Use Original Air Date timestamp for Recorded TV programs" setting
   - Enable DEFLATE and GZIP encoding support for backend HTTP data requests
   - Adapt to backend EPG change allowing for more data to be returned per web request
