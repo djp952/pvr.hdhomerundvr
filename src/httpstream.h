@@ -31,6 +31,7 @@
 #include <set>
 #include <string>
 
+#include "curlshare.h"
 #include "pvrstream.h"
 
 //---------------------------------------------------------------------------
@@ -188,6 +189,10 @@ private:
 	//
 	bool						m_enablefilter = true;				// Flag if packet filter is enabled
 	std::set<uint16_t>			m_pmtpids;							// Set of PMT program ids
+
+	// SHARE INTERFACE
+	//
+	static curlshare			s_curlshare;						// cURL sharing interface object
 };
 
 //-----------------------------------------------------------------------------
