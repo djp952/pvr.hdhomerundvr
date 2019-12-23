@@ -274,6 +274,11 @@ size_t devicestream::read(uint8_t* buffer, size_t count)
 	assert(m_device != nullptr);
 	if(m_device == nullptr) throw string_exception(__func__, ": stream has been closed");
 
+	// The count should be aligned down to VIDEO_DATA_PACKET_SIZE, even though the chunk
+	// size is reported, the application won't obey that value unless the stream is seekable
+	count = align::down(count, VIDEO_DATA_PACKET_SIZE);
+	if(count == 0) return 0;
+
 	// There isn't always data available in the buffer, sleep in WAIT_INTERVAL chunks for
 	// more data to become ready to transfer into the output buffer
 	while((streambuffer == nullptr) && (waited < MAXIMUM_WAIT_TIME)) {

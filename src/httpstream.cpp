@@ -714,6 +714,9 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	assert((m_curlm != nullptr) && (m_curl != nullptr));
 
 	if(count >= m_buffersize) throw std::invalid_argument("count");
+
+	// The count should be aligned down to MPEGTS_PACKET_LENGTH, even though the chunk
+	// size is reported, the application won't obey that value unless the stream is seekable
 	count = align::down(count, MPEGTS_PACKET_LENGTH);
 	if(count == 0) return 0;
 
