@@ -53,6 +53,11 @@ public:
 	// Flag indicating if the stream allows seek operations
 	bool canseek(void) const;
 
+	// chunksize
+	//
+	// Gets the stream chunk size
+	size_t chunksize(void) const;
+
 	// close
 	//
 	// Closes the stream
@@ -62,6 +67,7 @@ public:
 	//
 	// Factory method, creates a new devicestream instance
 	static std::unique_ptr<devicestream> create(std::vector<std::string> const& devices, char const* vchannel);
+	static std::unique_ptr<devicestream> create(std::vector<std::string> const& devices, char const* vchannel, size_t chunksize);
 
 	// currentpts
 	//
@@ -118,6 +124,11 @@ private:
 	devicestream(devicestream const&) = delete;
 	devicestream& operator=(devicestream const&) = delete;
 
+	// DEFAULT_CHUNK_SIZE
+	//
+	// Default stream chunk size
+	static size_t const DEFAULT_CHUNK_SIZE;
+
 	// DEFAULT_MEDIA_TYPE
 	//
 	// Default media type to report for the stream
@@ -135,7 +146,7 @@ private:
 
 	// Instance Constructor
 	//
-	devicestream(struct hdhomerun_device_selector_t* selector, struct hdhomerun_device_t* device);
+	devicestream(struct hdhomerun_device_selector_t* selector, struct hdhomerun_device_t* device, size_t chunksize);
 
 	//-----------------------------------------------------------------------
 	// Member Variables
@@ -143,6 +154,7 @@ private:
 	struct hdhomerun_device_selector_t*		m_selector;			// Device selector
 	struct hdhomerun_device_t*				m_device;			// Selected device
 	time_t									m_starttime = 0;	// Stream start time
+	size_t const							m_chunksize;		// Stream chunk size
 };
 
 //-----------------------------------------------------------------------------

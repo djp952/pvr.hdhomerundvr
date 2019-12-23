@@ -33,15 +33,15 @@
 
 #pragma warning(push, 4)
 
+// httpstream::DEFAULT_CHUNK_SIZE (static)
+//
+// Default stream chunk size
+size_t const httpstream::DEFAULT_CHUNK_SIZE = (4 KiB);
+
 // httpstream::DEFAULT_MEDIA_TYPE (static)
 //
 // Default media type to report for the stream
 char const* httpstream::DEFAULT_MEDIA_TYPE = "video/mp2t";
-
-// httpstream::DEFAULT_READ_MINCOUNT (static)
-//
-// Default minimum amount of data to return from a read request
-size_t const httpstream::DEFAULT_READ_MINCOUNT = (4 KiB);
 
 // httpstream::DEFAULT_RINGBUFFER_SIZE (static)
 //
@@ -189,10 +189,10 @@ inline uint32_t read_be32(uint8_t const* ptr)
 //
 //	url				- URL of the stream to be opened
 //	buffersize		- Ring buffer size, in bytes
-//	readmincount	- Minimum bytes to return from a read operation
+//	chunksize		- Chunk size to use for the stream
 
-httpstream::httpstream(char const* url, size_t buffersize, size_t readmincount) :
-	m_readmincount(std::max(align::down(readmincount, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
+httpstream::httpstream(char const* url, size_t buffersize, size_t chunksize) :
+	m_chunksize(std::max(align::down(chunksize, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
 	m_buffersize(align::up(buffersize, 65536))
 {
 	size_t		available = 0;				// Amount of available ring buffer data
@@ -284,6 +284,20 @@ bool httpstream::canseek(void) const
 }
 
 //---------------------------------------------------------------------------
+// httpstream::chunksize
+//
+// Gets the stream chunk size
+//
+// Arguments:
+//
+//	NONE
+
+size_t httpstream::chunksize(void) const
+{
+	return m_chunksize;
+}
+
+//---------------------------------------------------------------------------
 // httpstream::close
 //
 // Closes the stream
@@ -352,7 +366,7 @@ time_t httpstream::currenttime(void) const
 
 std::unique_ptr<httpstream> httpstream::create(char const* url)
 {
-	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_READ_MINCOUNT);
+	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_CHUNK_SIZE);
 }
 
 //---------------------------------------------------------------------------
@@ -367,7 +381,7 @@ std::unique_ptr<httpstream> httpstream::create(char const* url)
 
 std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize)
 {
-	return create(url, buffersize, DEFAULT_READ_MINCOUNT);
+	return create(url, buffersize, DEFAULT_CHUNK_SIZE);
 }
 
 //---------------------------------------------------------------------------
@@ -712,10 +726,9 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	size_t				available = 0;			// Available bytes to read
 
 	assert((m_curlm != nullptr) && (m_curl != nullptr));
-	assert(m_readmincount == align::down(m_readmincount, MPEGTS_PACKET_LENGTH));
-	assert(m_readmincount >= MPEGTS_PACKET_LENGTH);
 
 	if(count >= m_buffersize) throw std::invalid_argument("count");
+	count = align::down(count, MPEGTS_PACKET_LENGTH);
 	if(count == 0) return 0;
 
 	// Transfer data into the ring buffer until the minimum amount of data is available, 
@@ -723,7 +736,7 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	transfer_until([&]() -> bool {
 
 		available = (m_tail > m_head) ? (m_buffersize - m_tail) + m_head : m_head - m_tail;
-		return (available >= m_readmincount);
+		return (available >= count);
 	});
 
 	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished

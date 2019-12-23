@@ -822,7 +822,7 @@ static void discover_recordingrules(scalar_condition<bool> const&, bool& changed
 			enumerate_expired_recordingruleids(dbhandle, settings.delete_datetime_rules_after, [&](unsigned int const& recordingruleid) -> void
 			{
 				try { delete_recordingrule(dbhandle, authorization.c_str(), recordingruleid); changed = true; }
-				catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+				catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 				catch(...) { handle_generalexception(__func__); }
 			});
 
@@ -1295,7 +1295,7 @@ static void start_discovery(void) noexcept
 		});
 	}
 
-	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex); } 
 	catch(...) { return handle_generalexception(__func__); }
 }
 
@@ -1367,7 +1367,7 @@ static void update_devices_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1406,7 +1406,7 @@ static void update_episodes_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1458,7 +1458,7 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1609,7 +1609,7 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1656,7 +1656,7 @@ static void update_recordingrules_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1695,7 +1695,7 @@ static void update_recordings_task(scalar_condition<bool> const& cancel)
 		}
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
@@ -1722,7 +1722,7 @@ static void wait_for_devices(void) noexcept
 		g_discovered_devices.wait_until_equals(true);
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -1741,7 +1741,7 @@ static void wait_for_channels(void) noexcept
 		g_discovered_lineups.wait_until_equals(true);
 	}
 	
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -1783,7 +1783,7 @@ static void wait_for_timers(void) noexcept
 		g_discovered_episodes.wait_until_equals(true);
 	}
 
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -1802,7 +1802,7 @@ static void wait_for_recordings(void) noexcept
 		g_discovered_recordings.wait_until_equals(true);
 	}
 	
-	catch(std::exception & ex) { handle_stdexception(__func__, ex); } 
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
 	catch(...) { handle_generalexception(__func__); }
 }
 
@@ -2885,7 +2885,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			g_scheduler.add(update_recordings_task);
 		}
 
-		catch(std::exception & ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -3062,7 +3062,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 		});
 	}
 
-	catch(std::exception & ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -3243,9 +3243,6 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 	struct addon_settings settings = copy_settings();
 
 	try {
-
-		// Pull a database connection out from the connection pool
-		connectionpool::handle dbhandle(g_connpool);
 
 		// Enumerate all of the channels in the database
 		enumerate_channels(connectionpool::handle(g_connpool), settings.prepend_channel_numbers, settings.show_drm_protected_channels, settings.use_channel_names_from_lineup, [&](struct channel const& item) -> void {
@@ -4216,8 +4213,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
 	char						vchannel[64];		// Virtual channel number
 
-	assert(g_addon);
-
 	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
 	if(channel.iEncryptionSystem != 0) {
 	
@@ -4271,7 +4266,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
 		}
 
-		catch(...) { g_scheduler.resume(); throw; }
+		catch(...) { g_pvrstream.reset(); g_scheduler.resume(); throw; }
 
 		return true;
 	}
@@ -4297,25 +4292,20 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 void CloseLiveStream(void)
 {
+	if(!g_pvrstream) return;
+
 	try {
 		
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+		g_pvrstream.reset();							// Close the active stream instance
+		g_scheduler.resume();							// Resume task scheduler
 
 		// If the setting to refresh the recordings immediately after playback, reschedule it
-		if(settings.discover_recordings_after_playback) {
+		// to execute in a few seconds; this prevents doing it multiple times when changing channels
+		if(copy_settings().discover_recordings_after_playback) {
 
-			log_notice(__func__, ": triggering recording update");
-			g_scheduler.add(update_recordings_task);
+			log_notice(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
+			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(5), update_recordings_task);
 		}
-			
-		// Ensure scheduler is running, may have been paused during playback
-		g_scheduler.resume();
-
-		// If the DVR stream is active, close it normally so exceptions are
-		// propagated before destroying it; destructor alone won't throw
-		if(g_pvrstream) g_pvrstream->close();
-		g_pvrstream.reset();
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -4334,9 +4324,18 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	assert(g_addon);
+	if(!g_pvrstream) return -1;
 
-	try { return (g_pvrstream) ? static_cast<int>(g_pvrstream->read(buffer, size)) : -1; }
+	try { 
+	
+		// Attempt to read the requested number of bytes from the stream
+		int result = static_cast<int>(g_pvrstream->read(buffer, size));
+
+		// Live streams should always return data, log an error on any zero-length read
+		if(result == 0) log_error(__func__, ": zero-length read on stream at position ", g_pvrstream->position());
+
+		return result;
+	}
 
 	catch(std::exception& ex) {
 
@@ -4365,8 +4364,6 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
-	assert(g_addon);
-
 	try { return (g_pvrstream) ? g_pvrstream->seek(position, whence) : -1; }
 
 	catch(std::exception& ex) {
@@ -4483,8 +4480,6 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 
 bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
-	assert(g_addon);
-
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
@@ -4493,9 +4488,6 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		// Generate the stream URL for the specified channel
 		std::string streamurl = get_recording_stream_url(connectionpool::handle(g_connpool), recording.strRecordingId);
 		if(streamurl.length() == 0) throw string_exception(__func__, ": unable to determine the URL for specified recording");
-
-		// Stop and destroy any existing stream instance before opening the new one
-		g_pvrstream.reset();
 
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
@@ -4513,7 +4505,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
 		}
 
-		catch(...) { g_scheduler.resume(); throw; }
+		catch(...) { g_pvrstream.reset(); g_scheduler.resume(); throw; }
 
 		return true;
 	}
@@ -4539,25 +4531,20 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 void CloseRecordedStream(void)
 {
+	if(!g_pvrstream) return;
+
 	try {
 
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+		g_pvrstream.reset();							// Close the active stream instance
+		g_scheduler.resume();							// Resume task scheduler
 
 		// If the setting to refresh the recordings immediately after playback, reschedule it
-		if(settings.discover_recordings_after_playback) {
+		// to execute in a few seconds; this prevents doing it multiple times when changing channels
+		if(copy_settings().discover_recordings_after_playback) {
 
-			log_notice(__func__, ": triggering recording update");
-			g_scheduler.add(update_recordings_task);
+			log_notice(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
+			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(5), update_recordings_task);
 		}
-			
-		// Ensure scheduler is running, may have been paused during playback
-		g_scheduler.resume();
-
-		// If the DVR stream is active, close it normally so exceptions are
-		// propagated before destroying it; destructor alone won't throw
-		if(g_pvrstream) g_pvrstream->close();
-		g_pvrstream.reset();
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -4576,8 +4563,6 @@ void CloseRecordedStream(void)
 
 int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
-	assert(g_addon);
-
 	try { return (g_pvrstream) ? static_cast<int>(g_pvrstream->read(buffer, size)) : -1; }
 
 	catch(std::exception& ex) {
@@ -4607,8 +4592,6 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 long long SeekRecordedStream(long long position, int whence)
 {
-	assert(g_addon);
-
 	try { return (g_pvrstream) ? g_pvrstream->seek(position, whence) : -1; }
 
 	catch(std::exception& ex) {
