@@ -64,7 +64,6 @@ public:
 	// Factory method, creates a new httpstream instance
 	static std::unique_ptr<httpstream> create(char const* url);
 	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize);
-	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize, size_t readmincount);
 
 	// currenttime
 	//
@@ -138,7 +137,7 @@ private:
 
 	// Instance Constructor
 	//
-	httpstream(char const* url, size_t buffersize, size_t readmincount);
+	httpstream(char const* url, size_t buffersize);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -175,7 +174,6 @@ private:
 	//
 	CURL*						m_curl = nullptr;					// CURL easy interface handle
 	CURLM*						m_curlm = nullptr;					// CURL multi interface handle
-	size_t const				m_readmincount;						// Minimum read byte count
 
 	// STREAM STATE
 	//

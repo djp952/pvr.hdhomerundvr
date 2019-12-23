@@ -1051,7 +1051,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size);
 		log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
 
 		return stream;
@@ -1117,7 +1117,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size);
 		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
 
 		return stream;
@@ -4419,10 +4419,7 @@ PVR_ERROR GetStreamReadChunkSize(int* chunksize)
 {
 	if(chunksize == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	// Use the chunk size that was used in Krypton (32KiB).  This indicates the
-	// maximum amount of data a single read may return, it does not affect the
-	// minimum enforced by settings.stream_read_chunk_size
-	*chunksize = 32 KiB;
+	*chunksize = copy_settings().stream_read_chunk_size;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -4459,7 +4456,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
-			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size);
 
 			// For recorded streams, set the start and end times based on the recording metadata
 			g_stream_starttime = recording.recordingTime;
