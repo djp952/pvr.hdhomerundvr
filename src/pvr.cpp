@@ -4306,15 +4306,18 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_V
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
+PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* recording, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
+	// Determine if the recording will be realtime or not based on the end time
+	bool isrealtime = ((recording->recordingTime + recording->iDuration) > time(nullptr));
+
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
 	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
-	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, "true");
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (isrealtime) ? "true" : "false");
 
 	*numprops = 2;
 
