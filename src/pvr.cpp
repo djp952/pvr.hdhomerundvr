@@ -1044,7 +1044,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
 		log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
 
 		return stream;
@@ -1110,7 +1110,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
 		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
 
 		return stream;
@@ -4306,18 +4306,15 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_V
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* recording, PVR_NAMED_VALUE* props, unsigned int* numprops)
+PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* /*recording*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
-	// For recordings, if the sum of the start time and duration is in the future, consider it as realtime
-	bool isrealtime = ((recording->recordingTime + recording->iDuration) > time(nullptr));
-
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
 	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
-	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (isrealtime ? "true" : "false"));
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, "true");
 
 	*numprops = 2;
 
@@ -4347,14 +4344,17 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 //
 // Arguments:
 //
-//	properties	- The properties of the currently playing stream
+//	chunksize	- Set to the stream chunk size
 
 PVR_ERROR GetStreamReadChunkSize(int* chunksize)
 {
 	if(chunksize == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	*chunksize = copy_settings().stream_read_chunk_size;
+	assert(g_pvrstream);
+	if(!g_pvrstream) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
+	// Report the chunk size value reported by the stream instance
+	*chunksize = static_cast<int>(g_pvrstream->chunksize());
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
@@ -4385,7 +4385,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
-			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size);
+			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
 
 			// For recorded streams, set the start and end times based on the recording metadata
 			g_stream_starttime = recording.recordingTime;

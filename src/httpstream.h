@@ -31,7 +31,6 @@
 #include <set>
 #include <string>
 
-#include "curlshare.h"
 #include "pvrstream.h"
 
 //---------------------------------------------------------------------------
@@ -55,6 +54,11 @@ public:
 	// Flag indicating if the stream allows seek operations
 	bool canseek(void) const;
 
+	// chunksize
+	//
+	// Gets the stream chunk size
+	size_t chunksize(void) const;
+
 	// close
 	//
 	// Closes the stream
@@ -65,6 +69,7 @@ public:
 	// Factory method, creates a new httpstream instance
 	static std::unique_ptr<httpstream> create(char const* url);
 	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize);
+	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize, size_t chunksize);
 
 	// length
 	//
@@ -101,15 +106,15 @@ private:
 	httpstream(httpstream const&)=delete;
 	httpstream& operator=(httpstream const&)=delete;
 
+	// DEFAULT_CHUNK_SIZE
+	//
+	// Default stream chunk size
+	static size_t const DEFAULT_CHUNK_SIZE;
+
 	// DEFAULT_MEDIA_TYPE
 	//
 	// Default media type to report for the stream
 	static char const* DEFAULT_MEDIA_TYPE;
-
-	// DEFAULT_READ_MIN
-	//
-	// Default minimum amount of data to return from a read request
-	static size_t const DEFAULT_READ_MINCOUNT;
 
 	// DEFAULT_RINGBUFFER_SIZE
 	//
@@ -128,7 +133,7 @@ private:
 
 	// Instance Constructor
 	//
-	httpstream(char const* url, size_t buffersize);
+	httpstream(char const* url, size_t buffersize, size_t chunksize);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions
@@ -165,6 +170,7 @@ private:
 	//
 	CURL*						m_curl = nullptr;					// CURL easy interface handle
 	CURLM*						m_curlm = nullptr;					// CURL multi interface handle
+	size_t const				m_chunksize;						// Stream chunk size
 
 	// STREAM STATE
 	//
@@ -189,10 +195,6 @@ private:
 	//
 	bool						m_enablefilter = true;				// Flag if packet filter is enabled
 	std::set<uint16_t>			m_pmtpids;							// Set of PMT program ids
-
-	// SHARE INTERFACE
-	//
-	static curlshare			s_curlshare;						// cURL sharing interface object
 };
 
 //-----------------------------------------------------------------------------
