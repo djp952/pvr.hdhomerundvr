@@ -31,6 +31,7 @@
 #include <set>
 #include <string>
 
+#include "curlshare.h"
 #include "pvrstream.h"
 
 //---------------------------------------------------------------------------
@@ -202,6 +203,10 @@ private:
 	std::set<uint16_t>			m_pmtpids;							// Set of PMT program ids
 	bool						m_enablepcrs = true;				// Flag if PCR reads are enabled
 	uint16_t					m_pcrpid = 0;						// Program Clock PID
+
+	// SHARE INTERFACE
+	//
+	static curlshare			s_curlshare;						// cURL sharing interface object
 };
 
 //-----------------------------------------------------------------------------

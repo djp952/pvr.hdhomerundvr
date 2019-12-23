@@ -454,13 +454,6 @@ static addon_settings g_settings = {
 // Synchronization object to serialize access to addon settings
 static std::mutex g_settings_lock;
 
-// g_stream_close_hack
-//
-// Flag to help deal with starting the stream during GetStreamProperties() -- the PVR
-// always calls CloseStream() before calling OpenStream(), which stops and restarts
-// the stream unnecessarily
-static bool g_stream_close_hack = false;
-
 // g_stream_starttime
 //
 // Start time to report for the current stream
@@ -4061,11 +4054,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
 	char						vchannel[64];		// Virtual channel number
 
-	assert(g_addon);
-
-	// The stream may have already been opened by a call to GetChannelStreamProperties()
-	if(g_pvrstream) return true;
-
 	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
 	if(channel.iEncryptionSystem != 0) {
 	
@@ -4151,32 +4139,21 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 void CloseLiveStream(void)
 {
-	// Opening the stream in GetChannelStreamProperties has a side effect in that while the
-	// stream is already open, Kodi will still always call CloseLiveStream() before OpenLiveStream()
-	if(g_stream_close_hack) { g_stream_close_hack = false; return; }
+	if(!g_pvrstream) return;
 
 	try {
 		
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+		g_pvrstream.reset();							// Close the active stream instance
+		g_scheduler.resume();							// Resume task scheduler
+		g_stream_starttime = g_stream_endtime = 0;		// Reset stream time trackers
 
 		// If the setting to refresh the recordings immediately after playback, reschedule it
-		if(settings.discover_recordings_after_playback) {
+		// to execute in a few seconds; this prevents doing it multiple times when changing channels
+		if(copy_settings().discover_recordings_after_playback) {
 
-			log_notice(__func__, ": triggering recording update");
-			g_scheduler.add(update_recordings_task);
+			log_notice(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
+			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(5), update_recordings_task);
 		}
-			
-		// Ensure scheduler is running, may have been paused during playback
-		g_scheduler.resume();
-
-		// If the DVR stream is active, close it normally so exceptions are
-		// propagated before destroying it; destructor alone won't throw
-		if(g_pvrstream) g_pvrstream->close();
-		g_pvrstream.reset();
-
-		// Reset the global stream start and end time trackers
-		g_stream_starttime = g_stream_endtime = 0;
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
@@ -4195,8 +4172,6 @@ void CloseLiveStream(void)
 
 int ReadLiveStream(unsigned char* buffer, unsigned int size)
 {
-	assert(g_addon);
-
 	if(!g_pvrstream) return -1;
 
 	try { 
@@ -4237,8 +4212,6 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 long long SeekLiveStream(long long position, int whence)
 {
-	assert(g_addon);
-
 	try { return (g_pvrstream) ? g_pvrstream->seek(position, whence) : -1; }
 
 	catch(std::exception& ex) {
@@ -4325,29 +4298,17 @@ PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
 //	props		- Array of properties to be set for the stream
 //	numprops	- Number of properties returned by this function
 
-PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* channel, PVR_NAMED_VALUE* props, unsigned int* numprops)
+PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* /*channel*/, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
-	// This function is called before OpenLiveStream() will be called, but the required properties are
-	// dynamic based on the stream metadata.  To fulfill the request, attempt to open the stream now
-	if((g_pvrstream) || (OpenLiveStream(*channel) == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
-	assert(g_pvrstream);
-
-	// Copy out the current state of the PVR client settings
-	struct addon_settings settings = copy_settings();
-
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
-	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "%s", g_pvrstream->mediatype());
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
-	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (g_pvrstream->realtime() ? "true" : "false"));
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, "true");
 
 	*numprops = 2;
-
-	// Hack to prevent CloseLiveStream() from actually closing the stream since it was opened before 
-	// OpenLiveStream() has technically been called by Kodi
-	g_stream_close_hack = true;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -4365,27 +4326,18 @@ PVR_ERROR GetChannelStreamProperties(PVR_CHANNEL const* channel, PVR_NAMED_VALUE
 
 PVR_ERROR GetRecordingStreamProperties(PVR_RECORDING const* recording, PVR_NAMED_VALUE* props, unsigned int* numprops)
 {
-	// This function is called before OpenRecordedStream() will be called, but the required properties are
-	// dynamic based on the stream metadata.  To fulfill the request, attempt to open the stream now
-	if((g_pvrstream) || (OpenRecordedStream(*recording) == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
-	assert(g_pvrstream);
-
-	// Copy out the current state of the PVR client settings
-	struct addon_settings settings = copy_settings();
+	// For recordings, if the sum of the start time and duration is in the future, consider it as realtime
+	bool isrealtime = ((recording->recordingTime + recording->iDuration) > time(nullptr));
 
 	// PVR_STREAM_PROPERTY_MIMETYPE
 	snprintf(props[0].strName, std::extent<decltype(props[0].strName)>::value, PVR_STREAM_PROPERTY_MIMETYPE);
-	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "%s", g_pvrstream->mediatype());
+	snprintf(props[0].strValue, std::extent<decltype(props[0].strName)>::value, "video/mp2t");
 
 	// PVR_STREAM_PROPERTY_ISREALTIMESTREAM
 	snprintf(props[1].strName, std::extent<decltype(props[1].strName)>::value, PVR_STREAM_PROPERTY_ISREALTIMESTREAM);
-	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (g_pvrstream->realtime() ? "true" : "false"));
+	snprintf(props[1].strValue, std::extent<decltype(props[1].strName)>::value, (isrealtime ? "true" : "false"));
 
 	*numprops = 2;
-
-	// Hack to prevent CloseRecordedStream() from actually closing the stream since it was opened before 
-	// OpenRecordedStream() has technically been called by Kodi
-	g_stream_close_hack = true;
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -4435,11 +4387,6 @@ PVR_ERROR GetStreamReadChunkSize(int* chunksize)
 
 bool OpenRecordedStream(PVR_RECORDING const& recording)
 {
-	assert(g_addon);
-
-	// The stream may have already been opened by a call to GetRecordingStreamProperties()
-	if(g_pvrstream) return true;
-
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
@@ -4497,35 +4444,24 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 void CloseRecordedStream(void)
 {
-	// Opening the stream in GetRecordingStreamProperties has a side effect in that while the
-	// stream is already open, Kodi will still always call CloseRecordedStream() before OpenRecordedStream()
-	if(g_stream_close_hack) { g_stream_close_hack = false; return; }
+	if(!g_pvrstream) return;
 
 	try {
 
-		// Create a copy of the current addon settings structure
-		struct addon_settings settings = copy_settings();
+		g_pvrstream.reset();							// Close the active stream instance
+		g_scheduler.resume();							// Resume task scheduler
+		g_stream_starttime = g_stream_endtime = 0;		// Reset stream time trackers
 
 		// If the setting to refresh the recordings immediately after playback, reschedule it
-		if(settings.discover_recordings_after_playback) {
+		// to execute in a few seconds; this prevents doing it multiple times when changing channels
+		if(copy_settings().discover_recordings_after_playback) {
 
-			log_notice(__func__, ": triggering recording update");
-			g_scheduler.add(update_recordings_task);
+			log_notice(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
+			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(5), update_recordings_task);
 		}
-			
-		// Ensure scheduler is running, may have been paused during playback
-		g_scheduler.resume();
-
-		// If the DVR stream is active, close it normally so exceptions are
-		// propagated before destroying it; destructor alone won't throw
-		if(g_pvrstream) g_pvrstream->close();
-		g_pvrstream.reset();
-
-		// Reset the global stream start and end time trackers
-		g_stream_starttime = g_stream_endtime = 0;
 	}
 
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex); }
+	catch(std::exception & ex) { return handle_stdexception(__func__, ex); } 
 	catch(...) { return handle_generalexception(__func__); }
 }
 
@@ -4541,8 +4477,6 @@ void CloseRecordedStream(void)
 
 int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 {
-	assert(g_addon);
-
 	if(!g_pvrstream) return -1;
 
 	try { 
@@ -4590,8 +4524,6 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 long long SeekRecordedStream(long long position, int whence)
 {
-	assert(g_addon);
-
 	try { return (g_pvrstream) ? g_pvrstream->seek(position, whence) : -1; }
 
 	catch(std::exception& ex) {
