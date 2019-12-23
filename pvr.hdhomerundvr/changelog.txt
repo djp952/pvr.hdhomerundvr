@@ -3,6 +3,8 @@ v3.0.1 (2020.12.xx)
   - Fix bug during stream changes that would fail to report the MIME type and realtime indicator of the new stream properly
   - Fix bug that could cause "Live Stream creation failed" errors when rapidly changing channels
   - Fix bug preventing stream read operations from exceeding the "DVR stream read chunk size" setting value
+  - Fix bug causing recordings update to trigger twice when "Trigger recording discovery immediately after playback" is enabled
+  - Add 5-second delay to application of "Trigger recording discovery immediately after playback" to limit during channel changes
   - Apply "DVR stream read operation minimum size" setting to RTP/UDP streaming operations
   - Correct reporting of stream chunk size to accurately reflect the downward-aligned value rather than the raw value
 
