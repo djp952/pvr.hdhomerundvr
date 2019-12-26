@@ -240,7 +240,12 @@ void scheduler::start(void)
 
 	// Define and launch the scheduler worker thread
 	m_worker = std::thread([&]() -> void {
-	
+
+	#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+		// On Windows, set the scheduler thread to run with a BELOW_NORMAL priority
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+	#endif
+
 		started = true;			// Indicate that the thread started
 
 		// Poll the priority queue once per 250ms to check for new tasks

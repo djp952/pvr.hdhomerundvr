@@ -1,4 +1,7 @@
-v3.1.0 (2020.12.23)
+v3.1.1 (2020.01.xx)
+  - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler
+
+v3.1.0 (2019.12.23)
   - Revert cURL library to version 7.66.0
   - Fix bug during stream changes that would fail to report the MIME type and realtime indicator of the new stream properly
   - Fix bug that could cause "Live Stream creation failed" errors when rapidly changing channels
