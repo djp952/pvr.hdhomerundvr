@@ -1,4 +1,7 @@
-v3.1.0 (2020.12.23)
+v3.1.1 (2020.01.xx)
+  - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler
+
+v3.1.0 (2019.12.23)
   - Revert cURL library to version 7.66.0
   - Fix bug causing recordings update to trigger twice when "Trigger recording discovery immediately after playback" is enabled
   - Add 5-second delay to application of "Trigger recording discovery immediately after playback" to limit during channel changes
