@@ -52,11 +52,6 @@ size_t const httpstream::DEFAULT_RINGBUFFER_SIZE = (1 MiB);
 //
 // Maximum allowable stream length; indicates a real-time stream
 long long const httpstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::max();
-
-// httpstream::MPEGTS_PACKET_LENGTH (static)
-//
-// Length of a single mpeg-ts data packet
-size_t const httpstream::MPEGTS_PACKET_LENGTH = 188;
 	
 //---------------------------------------------------------------------------
 // curl_multi_get_result
@@ -106,8 +101,7 @@ static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
 //	chunksize		- Chunk size to use for the stream
 
 httpstream::httpstream(char const* url, size_t buffersize, size_t chunksize) :
-	m_chunksize(std::max(align::down(chunksize, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
-	m_buffersize(align::up(buffersize, 65536))
+	m_chunksize(chunksize), m_buffersize(align::up(buffersize, 65536))
 {
 	size_t		available = 0;				// Amount of available ring buffer data
 
@@ -462,10 +456,6 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	assert((m_curlm != nullptr) && (m_curl != nullptr));
 
 	if(count >= m_buffersize) throw std::invalid_argument("count");
-
-	// The count should be aligned down to MPEGTS_PACKET_LENGTH, even though the chunk
-	// size is reported, the application won't obey that value unless the stream is seekable
-	count = align::down(count, MPEGTS_PACKET_LENGTH);
 	if(count == 0) return 0;
 
 	// Transfer data into the ring buffer until the minimum amount of data is available, 
@@ -479,14 +469,8 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished
 	if(available == 0) return 0;
 
-	// Reads are no longer aligned to return full MPEG-TS packets, determine the offset
-	// from the current read position to the first full packet of data
-	size_t packetoffset = static_cast<size_t>(align::up(m_readpos, MPEGTS_PACKET_LENGTH) - m_readpos);
-
-	// Starting with the lesser of the amount of data that is available to read and the
-	// originally requested count, adjust the end so that it aligns to a full MPEG-TS packet
+	// Adjust the count based on how much data is actually available
 	count = std::min(available, count);
-	if(count >= (packetoffset + MPEGTS_PACKET_LENGTH)) count = packetoffset + align::down(count - packetoffset, MPEGTS_PACKET_LENGTH);
 
 	// Copy the calculated amount of data into the destination buffer
 	while(count) {
