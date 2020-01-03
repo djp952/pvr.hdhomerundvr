@@ -4709,19 +4709,7 @@ char const* GetBackendHostname(void)
 
 bool IsTimeshifting(void)
 {
-	// Only realtime seekable streams are capable of timeshifting
-	if(!g_pvrstream || !g_pvrstream->realtime() || !g_pvrstream->canseek()) return false;
-
-	try {
-
-		// Get the calculated playback time of the stream.  If non-zero and is
-		// less than the current time (less one second for padding), it's timeshifting
-		time_t currenttime = g_pvrstream->currenttime();
-		return ((currenttime != 0) && (currenttime < (time(nullptr) - 1)));
-	}
-
-	catch(std::exception& ex) { return handle_stdexception(__func__, ex, false); }
-	catch(...) { return handle_generalexception(__func__, false); }
+	return false;
 }
 
 //---------------------------------------------------------------------------

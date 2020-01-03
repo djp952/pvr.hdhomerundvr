@@ -59,40 +59,6 @@ long long const httpstream::MAX_STREAM_LENGTH = std::numeric_limits<long long>::
 size_t const httpstream::MPEGTS_PACKET_LENGTH = 188;
 	
 //---------------------------------------------------------------------------
-// decode_pcr90khz
-//
-// Decodes a PCR (Program Clock Reference) value at the 90KHz clock
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be decoded
-
-inline uint64_t decode_pcr90khz(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	// The 90KHz clock is encoded as a single 33 bit value at the start of the data
-	return (static_cast<uint64_t>(ptr[0]) << 25) | (static_cast<uint32_t>(ptr[1]) << 17) | (static_cast<uint32_t>(ptr[2]) << 9) | (static_cast<uint16_t>(ptr[3]) << 1) | (ptr[4] >> 7);
-}
-
-//---------------------------------------------------------------------------
-// decode_pcr27mhz
-//
-// Decodes a PCR (Program Clock Reference) value at the 27MHz clock
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be decoded
-
-inline uint64_t decode_pcr27mhz(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	// The 27Mhz clock is decoded by multiplying the 33-bit 90KHz base clock by 300 and adding the 9-bit extension
-	return (decode_pcr90khz(ptr) * 300) + (static_cast<uint16_t>(ptr[4] & 0x01) << 8) + ptr[5];
-}
-
-//---------------------------------------------------------------------------
 // curl_multi_get_result
 //
 // Retrieves the result from a cURL easy handle assigned to a multi handle
@@ -128,58 +94,6 @@ static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
 	}
 
 	return false;
-}
-
-//---------------------------------------------------------------------------
-// read_be8
-//
-// Reads a big-endian 8 bit value from memory
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be read
-
-inline uint8_t read_be8(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-	
-	return *ptr;
-}
-
-//---------------------------------------------------------------------------
-// read_be16
-//
-// Reads a big-endian 16 bit value from memory
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be read
-
-inline uint16_t read_be16(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	uint16_t val = read_be8(ptr) << 8;
-	val |= read_be8(ptr + 1);
-	return val;
-}
-
-//---------------------------------------------------------------------------
-// read_be32
-//
-// Reads a big-endian 32 bit value from memory
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be read
-
-inline uint32_t read_be32(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	uint32_t val = read_be16(ptr) << 16;
-	val |= read_be16(ptr + 2);
-	return val;
 }
 
 //---------------------------------------------------------------------------
@@ -315,30 +229,6 @@ void httpstream::close(void)
 
 	m_curl = nullptr;				// Reset easy handle to null
 	m_curlm = nullptr;				// Reset multi handle to null
-}
-
-//---------------------------------------------------------------------------
-// httpstream::currenttime
-//
-// Gets the current playback time based on the presentation timestamps
-//
-// Arguments:
-//
-//	NONE
-
-time_t httpstream::currenttime(void) const
-{
-	// If either of the presentation timestamps are missing, report zero
-	if((m_startpts == 0) || (m_currentpts == 0)) return 0;
-
-	// If the current presentation timestamp is before the start, report zero
-	if(m_currentpts < m_startpts) return 0;
-
-	// Calculate the current playback time via the delta between the current
-	// and starting presentation timestamp values (90KHz periods)
-	uint64_t delta = (m_currentpts - m_startpts) / 90000;
-	assert(delta <= static_cast<uint64_t>(std::numeric_limits<time_t>::max()));
-	return m_starttime + static_cast<time_t>(delta);
 }
 
 //---------------------------------------------------------------------------
@@ -513,148 +403,6 @@ size_t httpstream::curl_write(void const* data, size_t size, size_t count, void*
 }
 
 //---------------------------------------------------------------------------
-// httpstream::filter_packets (private)
-//
-// Applies an mpeg-ts packet filter against the provided packets
-//
-// Arguments:
-//
-//	buffer		- Pointer to the mpeg-ts packets to filter
-//	count		- Number of mpeg-ts packets provided in the buffer
-
-void httpstream::filter_packets(uint8_t* buffer, size_t count)
-{
-	// The packet filter can be disabled completely for a stream if the
-	// MPEG-TS packets become misaligned; leaving it enabled might trash things
-	if(!m_enablefilter) return;
-
-	// Iterate over all of the packets provided in the buffer
-	for(size_t index = 0; index < count; index++) {
-
-		// Set up the pointer to the start of the packet and a working pointer
-		uint8_t* packet = buffer + (index * MPEGTS_PACKET_LENGTH);
-		uint8_t* current = packet;
-
-		// Read relevant values from the transport stream header
-		uint32_t ts_header = read_be32(current);
-		uint8_t sync = (ts_header & 0xFF000000) >> 24;
-		bool pusi = (ts_header & 0x00400000) == 0x00400000;
-		uint16_t pid = static_cast<uint16_t>((ts_header & 0x001FFF00) >> 8);
-		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
-		bool payload = (ts_header & 0x00000010) == 0x00000010;
-
-		// If the sync byte isn't 0x47, this either isn't an MPEG-TS stream or the packets
-		// have become misaligned.  In either case the packet filter must be disabled.
-		if(sync != 0x47) { 
-			
-			m_enablefilter = m_enablepcrs = false;		// Stop filtering packets
-			m_startpts = m_currentpts = 0;				// Disable PCR reporting
-
-			return;
-		}
-
-		// Move the pointer beyond the TS header
-		current += 4U;
-
-		// If the packet contains adaptation bytes check for and handle the PCR
-		if(adaptation) {
-
-			// Get the adapation field length, this needs to be at least 7 bytes for
-			// it to possibly include the PCR value
-			uint8_t adaptationlength = read_be8(current);
-			if((adaptationlength >= 7) && (m_enablepcrs)) {
-
-				// Only use the first PID on which a PCR has been detected, there may
-				// be multiple elementary streams that contain PCR values
-				if((m_pcrpid == 0) || (pid == m_pcrpid)) {
-
-					// Check the adaptation flags to see if a PCR is in this packet
-					uint8_t adaptationflags = read_be8(current + 1U);
-					if((adaptationflags & 0x10) == 0x10) {
-
-						// If the PCR PID hasn't been set, use this PID from now on
-						if(m_pcrpid == 0) m_pcrpid = pid;
-
-						// Decode the current PCR using the 90KHz period only, there is 
-						// no need to deal with the full 27MHz period
-						m_currentpts = decode_pcr90khz(current + 2U);
-						if(m_startpts == 0) m_startpts = m_currentpts;
-
-						assert(m_currentpts >= m_startpts);
-
-						// If the current PCR is less than the original PCR value something has
-						// gone wrong; disable all PCR detection and reporting on this stream
-						if(m_currentpts < m_startpts) {
-
-							m_enablepcrs = false;
-							m_startpts = m_currentpts = 0;
-						}
-					}
-				}
-			}
-
-			// Move the pointer beyond the adaptation data
-			current += adaptationlength;
-		}
-
-		// >> PAT
-		if((pid == 0x0000) && (payload)) {
-
-			// Align the payload using the pointer provided when pusi is set
-			if(pusi) current += read_be8(current) + 1U;
-
-			// Watch out for a TABLEID of 0xFF, this indicates that the remainder
-			// of the packet is just stuffed with 0xFF and nothing useful is here
-			if(read_be8(current) == 0xFF) continue;
-
-			// Get the first and last section indices and skip to the section data
-			uint8_t firstsection = read_be8(current + 6U);
-			uint8_t lastsection = read_be8(current + 7U);
-			current += 8U;
-
-			// Iterate over all the sections and add the PMT program ids to the set<>
-			for(uint8_t section = firstsection; section <= lastsection; section++) {
-
-				uint16_t pmt_program = read_be16(current);
-				if(pmt_program != 0) m_pmtpids.insert(read_be16(current + 2U) & 0x1FFF);
-
-				current += 4U;				// Move to the next section
-			}
-		}
-
-		// >> PMT
-		else if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
-
-			// Get the length of the entire payload to be sure we don't exceed it
-			size_t payloadlen = MPEGTS_PACKET_LENGTH - (current - packet);
-
-			uint8_t* pointer = current;			// Get address of current pointer
-			current += (*pointer + 1U);			// Align offset with the pointer
-
-			// FILTER: Skip over 0xC0 (SCTE Program Information Message) entries followed immediately
-			// by 0x02 (Program Map Table) entries by adjusting the payload pointer and overwriting 0xC0
-			if(read_be8(current) == 0xC0) {
-
-				// Acquire the length of the 0xC0 entry, if it exceeds the length of the payload give
-				// up -- the + 4 bytes is for the pointer (1), the table id (1) and the length (2)
-				uint16_t length = read_be16(current + 1) & 0x3FF;
-				if((length + 4U) > payloadlen) break;
-
-				// If the 0xC0 entry is immediately followed by a 0x02 entry, adjust the payload
-				// pointer to align to the 0x02 entry and overwrite the 0xC0 entry with filler
-				if(read_be8(current + 3U + length) == 0x02) {
-
-					// Take into account any existing pointer value when adjusting it
-					*pointer += (3U + static_cast<uint8_t>(length & 0xFF));
-					memset(current, 0xFF, 3U + length);
-				}
-			}
-		}
-
-	}	// for(index ...
-}
-
-//---------------------------------------------------------------------------
 // httpstream::length
 //
 // Gets the length of the stream; or -1 if stream is real-time
@@ -731,9 +479,6 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished
 	if(available == 0) return 0;
 
-	// Wait until the first successful read operation to set the start time for the stream
-	if(m_starttime == 0) m_starttime = time(nullptr);
-	
 	// Reads are no longer aligned to return full MPEG-TS packets, determine the offset
 	// from the current read position to the first full packet of data
 	size_t packetoffset = static_cast<size_t>(align::up(m_readpos, MPEGTS_PACKET_LENGTH) - m_readpos);
@@ -760,10 +505,6 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	}
 
 	m_readpos += bytesread;					// Update the reader position
-
-	// Apply the mpeg-ts packet filter against all complete packets that were read
-	if((bytesread >= (packetoffset + MPEGTS_PACKET_LENGTH)) && (buffer != nullptr)) 
-		filter_packets(buffer + packetoffset, (bytesread / MPEGTS_PACKET_LENGTH));
 
 	return bytesread;
 }
@@ -808,7 +549,6 @@ long long httpstream::restart(long long position)
 	m_head = m_tail = 0;
 	m_startpos = m_readpos = m_writepos = 0;
 	m_length = MAX_STREAM_LENGTH;
-	m_currentpts = 0;
 
 	// Format the Range: header value to apply to the transfer object, do not use CURLOPT_RESUME_FROM_LARGE 
 	// as it will not insert the request header when the position is zero
@@ -896,20 +636,6 @@ long long httpstream::seek(long long position, int whence)
 
 	// Attempt to restart the stream at the calculated position
 	return restart(newposition);
-}
-
-//---------------------------------------------------------------------------
-// httpstream::starttime
-//
-// Gets the time at which the stream started
-//
-// Arguments:
-//
-//	NONE
-
-time_t httpstream::starttime(void) const
-{
-	return m_starttime;
 }
 
 //---------------------------------------------------------------------------

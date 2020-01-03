@@ -134,20 +134,6 @@ void devicestream::close(void)
 }
 
 //---------------------------------------------------------------------------
-// devicestream::currenttime
-//
-// Gets the current playback time based on the presentation timestamps
-//
-// Arguments:
-//
-//	NONE
-
-time_t devicestream::currenttime(void) const
-{
-	return 0;
-}
-
-//---------------------------------------------------------------------------
 // devicestream::create (static)
 //
 // Factory method, creates a new devicestream instance
@@ -287,13 +273,8 @@ size_t devicestream::read(uint8_t* buffer, size_t count)
 		if(streambuffer == nullptr) { msleep_approx(WAIT_INTERVAL); waited += WAIT_INTERVAL; }
 	}
 
-	// If data is available, copy it into the output buffer; also set the stream start time
-	// to the time when the first chunk of data became available on the stream
-	if((streambuffer != nullptr) && (buffersize > 0)) {
-
-		memcpy(buffer, streambuffer, buffersize);
-		if(m_starttime == 0) m_starttime = time(nullptr);
-	}
+	// If data is available, copy it into the output buffer
+	if((streambuffer != nullptr) && (buffersize > 0)) memcpy(buffer, streambuffer, buffersize);
 
 	return buffersize;
 }
@@ -325,20 +306,6 @@ bool devicestream::realtime(void) const
 long long devicestream::seek(long long /*position*/, int /*whence*/)
 {
 	return -1;
-}
-
-//---------------------------------------------------------------------------
-// devicestream::starttime
-//
-// Gets the time at which the stream started
-//
-// Arguments:
-//
-//	NONE
-
-time_t devicestream::starttime(void) const
-{
-	return m_starttime;
 }
 
 //---------------------------------------------------------------------------

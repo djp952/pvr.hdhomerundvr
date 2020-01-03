@@ -71,11 +71,6 @@ public:
 	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize);
 	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize, size_t chunksize);
 
-	// currenttime
-	//
-	// Gets the current time of the stream
-	time_t currenttime(void) const;
-
 	// length
 	//
 	// Gets the length of the stream
@@ -105,11 +100,6 @@ public:
 	//
 	// Sets the stream pointer to a specific position
 	long long seek(long long position, int whence);
-
-	// starttime
-	//
-	// Gets the starting time for the stream
-	time_t starttime(void) const;
 
 private:
 
@@ -158,11 +148,6 @@ private:
 	// libcurl callback to write received data into the buffer
 	static size_t curl_write(void const* data, size_t size, size_t count, void* context);
 
-	// filter_packets
-	//
-	// Implements the transport stream packet filter
-	void filter_packets(uint8_t* buffer, size_t count);
-
 	// restart
 	//
 	// Restarts the stream at the specified position
@@ -192,9 +177,6 @@ private:
 	long long					m_writepos = 0;						// Current write position
 	std::string					m_mediatype = DEFAULT_MEDIA_TYPE;	// Stream media type 
 	long long					m_length = MAX_STREAM_LENGTH;		// Length of the stream
-	time_t						m_starttime = 0;					// Start time of the stream
-	uint64_t					m_startpts = 0;						// Starting presentation timestamp
-	uint64_t					m_currentpts = 0;					// Current presentation timestamp
 
 	// RING BUFFER
 	//
@@ -202,13 +184,6 @@ private:
 	std::unique_ptr<uint8_t[]>	m_buffer;							// Ring buffer stroage
 	size_t						m_head = 0;							// Head (write) buffer position
 	size_t						m_tail = 0;							// Tail (read) buffer position
-
-	// PACKET FILTER
-	//
-	bool						m_enablefilter = true;				// Flag if packet filter is enabled
-	std::set<uint16_t>			m_pmtpids;							// Set of PMT program ids
-	bool						m_enablepcrs = true;				// Flag if PCR reads are enabled
-	uint16_t					m_pcrpid = 0;						// Program Clock PID
 };
 
 //-----------------------------------------------------------------------------

@@ -58,11 +58,6 @@ public:
 	// Closes the stream
 	virtual void close(void) = 0;
 
-	// currenttime
-	//
-	// Gets the current time of the stream
-	virtual time_t currenttime(void) const = 0;
-
 	// length
 	//
 	// Gets the length of the stream
@@ -92,11 +87,6 @@ public:
 	//
 	// Sets the stream pointer to a specific position
 	virtual long long seek(long long position, int whence) = 0;
-
-	// starttime
-	//
-	// Gets the starting time for the stream
-	virtual time_t starttime(void) const = 0;
 
 private:
 
