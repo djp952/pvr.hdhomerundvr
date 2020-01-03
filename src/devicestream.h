@@ -69,11 +69,6 @@ public:
 	static std::unique_ptr<devicestream> create(std::vector<std::string> const& devices, char const* vchannel);
 	static std::unique_ptr<devicestream> create(std::vector<std::string> const& devices, char const* vchannel, size_t chunksize);
 
-	// currenttime
-	//
-	// Gets the current time of the stream
-	time_t currenttime(void) const;
-
 	// length
 	//
 	// Gets the length of the stream
@@ -103,11 +98,6 @@ public:
 	//
 	// Sets the stream pointer to a specific position
 	long long seek(long long position, int whence);
-
-	// starttime
-	//
-	// Gets the starting time for the stream
-	time_t starttime(void) const;
 
 private:
 
@@ -143,7 +133,6 @@ private:
 
 	struct hdhomerun_device_selector_t*		m_selector;			// Device selector
 	struct hdhomerun_device_t*				m_device;			// Selected device
-	time_t									m_starttime = 0;	// Stream start time
 	size_t const							m_chunksize;		// Stream chunk size
 };
 

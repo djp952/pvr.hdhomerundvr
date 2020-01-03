@@ -97,58 +97,6 @@ static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
 }
 
 //---------------------------------------------------------------------------
-// read_be8
-//
-// Reads a big-endian 8 bit value from memory
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be read
-
-inline uint8_t read_be8(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-	
-	return *ptr;
-}
-
-//---------------------------------------------------------------------------
-// read_be16
-//
-// Reads a big-endian 16 bit value from memory
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be read
-
-inline uint16_t read_be16(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	uint16_t val = read_be8(ptr) << 8;
-	val |= read_be8(ptr + 1);
-	return val;
-}
-
-//---------------------------------------------------------------------------
-// read_be32
-//
-// Reads a big-endian 32 bit value from memory
-//
-// Arguments:
-//
-//	ptr		- Pointer to the data to be read
-
-inline uint32_t read_be32(uint8_t const* ptr)
-{
-	assert(ptr != nullptr);
-
-	uint32_t val = read_be16(ptr) << 16;
-	val |= read_be16(ptr + 2);
-	return val;
-}
-
-//---------------------------------------------------------------------------
 // httpstream Constructor (private)
 //
 // Arguments:
@@ -455,102 +403,6 @@ size_t httpstream::curl_write(void const* data, size_t size, size_t count, void*
 }
 
 //---------------------------------------------------------------------------
-// httpstream::filter_packets (private)
-//
-// Applies an mpeg-ts packet filter against the provided packets
-//
-// Arguments:
-//
-//	buffer		- Pointer to the mpeg-ts packets to filter
-//	count		- Number of mpeg-ts packets provided in the buffer
-
-void httpstream::filter_packets(uint8_t* buffer, size_t count)
-{
-	// The packet filter can be disabled completely for a stream if the
-	// MPEG-TS packets become misaligned; leaving it enabled might trash things
-	if(!m_enablefilter) return;
-
-	// Iterate over all of the packets provided in the buffer
-	for(size_t index = 0; index < count; index++) {
-
-		// Set up the pointer to the start of the packet and a working pointer
-		uint8_t* packet = buffer + (index * MPEGTS_PACKET_LENGTH);
-		uint8_t* current = packet;
-
-		// Read relevant values from the transport stream header
-		uint32_t ts_header = read_be32(current);
-		uint8_t sync = (ts_header & 0xFF000000) >> 24;
-		bool pusi = (ts_header & 0x00400000) == 0x00400000;
-		uint16_t pid = static_cast<uint16_t>((ts_header & 0x001FFF00) >> 8);
-		bool adaptation = (ts_header & 0x00000020) == 0x00000020;
-		bool payload = (ts_header & 0x00000010) == 0x00000010;
-
-		// If the sync byte isn't 0x47, this either isn't an MPEG-TS stream or the packets
-		// have become misaligned.  In either case the packet filter must be disabled.
-		if(sync != 0x47) { m_enablefilter = false; return; }
-
-		// Move the pointer beyond the TS header and any adaptation bytes
-		current += 4U;
-		if(adaptation) { current += read_be8(current); }
-
-		// >> PAT
-		if((pid == 0x0000) && (payload)) {
-
-			// Align the payload using the pointer provided when pusi is set
-			if(pusi) current += read_be8(current) + 1U;
-
-			// Watch out for a TABLEID of 0xFF, this indicates that the remainder
-			// of the packet is just stuffed with 0xFF and nothing useful is here
-			if(read_be8(current) == 0xFF) continue;
-
-			// Get the first and last section indices and skip to the section data
-			uint8_t firstsection = read_be8(current + 6U);
-			uint8_t lastsection = read_be8(current + 7U);
-			current += 8U;
-
-			// Iterate over all the sections and add the PMT program ids to the set<>
-			for(uint8_t section = firstsection; section <= lastsection; section++) {
-
-				uint16_t pmt_program = read_be16(current);
-				if(pmt_program != 0) m_pmtpids.insert(read_be16(current + 2U) & 0x1FFF);
-
-				current += 4U;				// Move to the next section
-			}
-		}
-
-		// >> PMT
-		else if((pusi) && (payload) && (m_pmtpids.find(pid) != m_pmtpids.end())) {
-
-			// Get the length of the entire payload to be sure we don't exceed it
-			size_t payloadlen = MPEGTS_PACKET_LENGTH - (current - packet);
-
-			uint8_t* pointer = current;			// Get address of current pointer
-			current += (*pointer + 1U);			// Align offset with the pointer
-
-			// FILTER: Skip over 0xC0 (SCTE Program Information Message) entries followed immediately
-			// by 0x02 (Program Map Table) entries by adjusting the payload pointer and overwriting 0xC0
-			if(read_be8(current) == 0xC0) {
-
-				// Acquire the length of the 0xC0 entry, if it exceeds the length of the payload give
-				// up -- the + 4 bytes is for the pointer (1), the table id (1) and the length (2)
-				uint16_t length = read_be16(current + 1) & 0x3FF;
-				if((length + 4U) > payloadlen) break;
-
-				// If the 0xC0 entry is immediately followed by a 0x02 entry, adjust the payload
-				// pointer to align to the 0x02 entry and overwrite the 0xC0 entry with filler
-				if(read_be8(current + 3U + length) == 0x02) {
-
-					// Take into account any existing pointer value when adjusting it
-					*pointer += (3U + static_cast<uint8_t>(length & 0xFF));
-					memset(current, 0xFF, 3U + length);
-				}
-			}
-		}
-
-	}	// for(index ...
-}
-
-//---------------------------------------------------------------------------
 // httpstream::length
 //
 // Gets the length of the stream; or -1 if stream is real-time
@@ -627,9 +479,6 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	// If there is no available data in the ring buffer after transfer_until, indicate stream is finished
 	if(available == 0) return 0;
 
-	// Wait until the first successful read operation to set the start time for the stream
-	if(m_starttime == 0) m_starttime = time(nullptr);
-	
 	// Reads are no longer aligned to return full MPEG-TS packets, determine the offset
 	// from the current read position to the first full packet of data
 	size_t packetoffset = static_cast<size_t>(align::up(m_readpos, MPEGTS_PACKET_LENGTH) - m_readpos);
@@ -656,10 +505,6 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 	}
 
 	m_readpos += bytesread;					// Update the reader position
-
-	// Apply the mpeg-ts packet filter against all complete packets that were read
-	if((bytesread >= (packetoffset + MPEGTS_PACKET_LENGTH)) && (buffer != nullptr)) 
-		filter_packets(buffer + packetoffset, (bytesread / MPEGTS_PACKET_LENGTH));
 
 	return bytesread;
 }
