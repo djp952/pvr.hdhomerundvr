@@ -148,10 +148,6 @@ msgctxt "#30136"
 msgid "Additional EDL file path"
 msgstr ""
 
-msgctxt "#30137"
-msgid "Use Original Air Date timestamp for Recorded TV programs"
-msgstr ""
-
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""

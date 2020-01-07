@@ -12,7 +12,6 @@
     <setting id="use_channel_names_from_lineup" label="30128" type="bool" default="false"/>
     <setting id="disable_recording_categories" label="30135" type="bool" default="false"/>
     <setting id="generate_repeat_indicators" label="30133" type="bool" default="false"/>
-    <setting id="use_airdate_as_recordingdate" label="30137" type="bool" default="false"/>
     <setting id="delete_datetime_rules_after" label="30108" type="enum" lvalues="30213|30209|30210|30211|30212" default="3"/>
   </category>
   
