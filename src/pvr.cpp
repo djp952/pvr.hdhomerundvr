@@ -4110,7 +4110,6 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			log_notice(__func__, ": length    = ", g_pvrstream->length());
 			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
 			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
-			// don't log end time here, asctime/localtime won't work if time_t is 64-bit on this platform
 		}
 
 		catch(...) { g_pvrstream.reset(); g_scheduler.resume(); throw; }
@@ -4850,14 +4849,13 @@ PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* times)
 	// Block this function for non-seekable streams otherwise Kodi will allow those operations
 	if((!g_pvrstream) || (!g_pvrstream->canseek())) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-	// SPECIAL CASE: If start time and end time are the same, and this is a fixed-length stream also 
-	// let Kodi handle it - it can figure this out from the stream data. This can happen if the duration 
-	// of a recorded stream was not reported properly for some reason (credit: timecutter)
-	if((g_stream_starttime == g_stream_endtime) && (g_pvrstream->realtime() == false)) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	// SPECIAL CASE: If start time and end time are the same, let Kodi handle it. 
+	// This can happen if the duration of a recorded stream was not reported properly (credit: timecutter)
+	if(g_stream_starttime == g_stream_endtime) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 
-	// Set the start time to the actual start time (UTC) for realtime streams, otherwise zero
+	// Set the start time to the actual start time (UTC) for live streams, otherwise zero
 	// Using zero here is required to enable calls to SetRecordingLastPlayedPosition()
-	times->startTime = (g_pvrstream->realtime()) ? g_stream_starttime : 0;
+	times->startTime = (g_stream_endtime == std::numeric_limits<time_t>::max()) ? g_stream_starttime : 0;
 
 	times->ptsStart = 0;							// Starting PTS gets set to zero
 	times->ptsBegin = 0;							// Timeshift buffer start PTS also gets set to zero
