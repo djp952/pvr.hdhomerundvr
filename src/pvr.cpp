@@ -224,11 +224,6 @@ struct addon_settings {
 	// Flag indicating that a repeat indicator should be appended to episode names
 	bool generate_repeat_indicators;
 
-	// use_airdate_as_recordingdate
-	//
-	// Flag indicating that the original air date should be reported as the recording date
-	bool use_airdate_as_recordingdate;
-
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -426,7 +421,6 @@ static addon_settings g_settings = {
 	false,					// use_channel_names_from_lineup
 	false,					// disable_recording_categories
 	false,					// generate_repeat_indicators
-	false,					// use_airdate_as_recordingdate
 	86400,					// delete_datetime_rules_after			default = 1 day
 	300, 					// discover_devices_interval;			default = 5 minutes
 	7200,					// discover_episodes_interval			default = 2 hours
@@ -1791,7 +1785,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
 			if(g_addon->GetSetting("disable_recording_categories", &bvalue)) g_settings.disable_recording_categories = bvalue;
 			if(g_addon->GetSetting("generate_repeat_indicators", &bvalue)) g_settings.generate_repeat_indicators = bvalue;
-			if(g_addon->GetSetting("use_airdate_as_recordingdate", &bvalue)) g_settings.use_airdate_as_recordingdate = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after_v2", &nvalue)) g_settings.delete_datetime_rules_after = nvalue;
 
 			// Load the discovery interval settings
@@ -2140,19 +2133,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.generate_repeat_indicators = bvalue;
 			log_notice(__func__, ": setting generate_repeat_indicators changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
-			g_pvr->TriggerRecordingUpdate();
-		}
-	}
-
-	// use_airdate_as_recordingdate
-	//
-	else if(strcmp(name, "use_airdate_as_recordingdate") == 0) {
-
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.use_airdate_as_recordingdate) {
-
-			g_settings.use_airdate_as_recordingdate = bvalue;
-			log_notice(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -3266,12 +3246,6 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 			// recordingTime
 			recording.recordingTime = item.recordingtime;
-			if((item.category != nullptr) && (settings.use_airdate_as_recordingdate) && (item.originalairdate > 0)) {
-
-				// Only apply use_airdate_as_recordindate to items with a category "series", "movie", and "special"
-				if((strcasecmp(item.category, "series") == 0) || (strcasecmp(item.category, "movie") == 0) || (strcasecmp(item.category, "special") == 0))
-					recording.recordingTime = item.originalairdate;
-			}
 
 			// iDuration
 			recording.iDuration = item.duration;
