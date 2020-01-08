@@ -1,4 +1,4 @@
-v3.1.1 (2020.01.xx)
+v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler
   - Remove "Use Original Air Date timestamp for Recorded TV programs" setting
 
