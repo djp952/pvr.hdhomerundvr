@@ -133,6 +133,9 @@
     <Filter Include="Header Files\compat\libxml\libxml">
       <UniqueIdentifier>{5c60e457-0549-47ea-a2bc-21dbf24f9b53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External Libraries\curl\Header Files\vssh">
+      <UniqueIdentifier>{13585d81-ac86-47c0-a9f5-4e3f61cdf879}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -379,9 +382,6 @@
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\splay.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\ssh.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\strcase.h">
@@ -716,6 +716,15 @@
     </ClInclude>
     <ClInclude Include="xmlstream.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\bearssl.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vssh\ssh.h">
+      <Filter>External Libraries\curl\Header Files\vssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1348,6 +1357,12 @@
     </ClCompile>
     <ClCompile Include="xmlstream.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\bearssl.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
