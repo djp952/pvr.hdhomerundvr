@@ -1353,6 +1353,13 @@ int xmltv_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*in
 			if(onchannelptr) xmltvcursor->onchannel = *reinterpret_cast<xmltv_onchannel_callback*>(onchannelptr);
 		}
 
+	#if defined(_WINDOWS) && defined(_DEBUG)
+		// Dump the target URI to the debugger on Windows _DEBUG builds
+		char debugurl[256];
+		snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s: %s\r\n", __func__, uri);
+		OutputDebugStringA(debugurl);
+	#endif
+
 		// Create the xmlstream instance that will take care of streaming the XMLTV data
 		xmltvcursor->stream = xmlstream::create(uri, g_useragent.c_str(), g_curlshare);
 
