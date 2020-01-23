@@ -2373,14 +2373,18 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 	// category of movie are in a subdirectory named "Movies" and recordings with a category of 'sport' are in a
 	// subdirectory named "Sporting Events".  All other categories use the series name for the subdirectory name
 	//
+	// HDHomeRun RECORD introduced a new "Filename" attribute that makes this much easier, but leave the old 
+	// 'figure it out' method in place as a fallback mechanism for a while ...
+	//
 	// STANDARD FORMAT  : {"Movies"|"Sporting Events"|Title}/{Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
 	// FLATTENED FORMAT : {Title} {EpisodeNumber} {OriginalAirDate} [{StartTime}]
 
 	return execute_scalar_string(instance,  "select case when ?1 then '' else case lower(coalesce(json_extract(data, '$.Category'), 'series')) "
 		"when 'movie' then 'Movies' when 'sport' then 'Sporting Events' else rtrim(clean_filename(json_extract(data, '$.Title')), ' .') end || '/' end || "
+		"case when json_extract(data, '$.Filename') is not null then json_extract(data, '$.Filename') else "
 		"clean_filename(json_extract(data, '$.Title')) || ' ' || coalesce(json_extract(data, '$.EpisodeNumber') || ' ', '') || "
 		"coalesce(strftime('%Y%m%d', datetime(json_extract(data, '$.OriginalAirdate'), 'unixepoch')) || ' ', '') || "
-		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(data, '$.StartTime'), 'unixepoch')) || ']' as filename "
+		"'[' || strftime('%Y%m%d-%H%M', datetime(json_extract(data, '$.StartTime'), 'unixepoch')) || ']' end as filename "
 		"from recording where recordingid like ?2 limit 1", (flatten) ? 1 : 0, recordingid);
 }
 
