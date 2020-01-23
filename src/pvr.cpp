@@ -3429,6 +3429,10 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 		std::string basename = get_recording_filename(connectionpool::handle(g_connpool), recording.strRecordingId, settings.recording_edl_folder_is_flat);
 		if(basename.length() == 0) throw string_exception(__func__, ": unable to determine the base file name of the specified recording");
 
+		// Remove any extension present on the base file name
+		size_t extindex = basename.find_last_of('.');
+		if(extindex != std::string::npos) basename = basename.substr(0, extindex);
+
 		// Attempt to locate a matching .EDL file based on the configured directories
 		std::string filename = settings.recording_edl_folder.append(basename).append(".edl");
 		if(!g_addon->FileExists(filename.c_str(), false)) {
