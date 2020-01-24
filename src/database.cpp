@@ -854,6 +854,7 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 			"xmltv.title as title, "
 			"xmltv.subtitle as episodename, "
 			"xmltv.desc as synopsis, "
+			"xmltv_time_to_year(xmltv.date) as year, "
 			"cast(coalesce(strftime('%s', xmltv_time_to_w3c(xmltv.date)), 0) as integer) as originalairdate, "
 			"xmltv.iconsrc as iconurl, "
 			"xmltv.programtype as programtype, "
@@ -1557,7 +1558,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 		"listing.starttime as starttime, "
 		"listing.endtime as endtime, "
 		"listing.synopsis as synopsis, "
-		"cast(strftime('%Y', listing.originalairdate, 'unixepoch') as integer) as year, "
+		"coalesce(listing.year, 0) as year, "
 		"listing.iconurl as iconurl, "
 		"listing.programtype as programtype, "
 		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
@@ -1649,7 +1650,7 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 		"listing.starttime as starttime, "
 		"listing.endtime as endtime, "
 		"listing.synopsis as synopsis, "
-		"cast(strftime('%Y', listing.originalairdate, 'unixepoch') as integer) as year, "
+		"coalesce(listing.year, 0) as year, "
 		"listing.iconurl as iconurl, "
 		"listing.programtype as programtype, "
 		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
@@ -2792,9 +2793,9 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: listing
 			//
-			// channelid | starttime | endtime | seriesid | title | episodename | synopsis | originalairdate | iconurl | programtype | primarygenre | genres | episodenumber | isnew | starrating
+			// channelid | starttime | endtime | seriesid | title | episodename | synopsis | year | originalairdate | iconurl | programtype | primarygenre | genres | episodenumber | isnew | starrating
 			execute_non_query(instance, "create table if not exists listing(channelid text not null, starttime integer not null, endtime integer not null, seriesid text, title text, "
-				"episodename text, synopsis text, originalairdate integer, iconurl text, programtype text, primarygenre text, genres text, episodenumber text, isnew integer, starrating text)");
+				"episodename text, synopsis text, year integer, originalairdate integer, iconurl text, programtype text, primarygenre text, genres text, episodenumber text, isnew integer, starrating text)");
 			execute_non_query(instance, "create index if not exists listing_channelid_starttime_endtime_index on listing(channelid, starttime, endtime)");
 
 			// table: recording
