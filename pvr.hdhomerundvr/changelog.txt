@@ -4,6 +4,7 @@ v3.2.0 (2020.02.XX)
   - Exclude episodes flagged as "DeletedDontRerecord" from the list of reported Kodi timer instances
   - Exclude episodes flagged as "RecordIfNotRecorded" from the list of reported Kodi timer instances if a matching recording exists
   - Prevent missing channel(s) in the Electronic Program Guide (EPG) listings from causing unncessary XMLTV reload operations
+  - Fix bug preventing calculation of 'Original Air Date' values for programs that aired prior to 1970.01.01
 
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler

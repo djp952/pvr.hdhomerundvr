@@ -100,15 +100,15 @@ struct listing {
 	char const*			title;
 	unsigned int		broadcastid;
 	unsigned int		channelid;
-	time_t				starttime;
-	time_t				endtime;
+	int64_t				starttime;
+	int64_t				endtime;
 	char const*			synopsis;
 	int					year;
 	char const*			iconurl;
 	char const*			programtype;
 	int					genretype;
 	char const*			genres;
-	time_t				originalairdate;
+	int64_t				originalairdate;
 	int					seriesnumber;
 	int					episodenumber;
 	char const*			episodename;
@@ -125,7 +125,7 @@ struct recording {
 	char const*			title;
 	char const*			episodename;
 	int					firstairing;
-	time_t				originalairdate;
+	int64_t				originalairdate;
 	char const*			programtype;
 	int					seriesnumber;
 	int					episodenumber;
@@ -135,7 +135,7 @@ struct recording {
 	char const*			plot;
 	char const*			channelname;
 	char const*			thumbnailpath;
-	time_t				recordingtime;
+	int64_t				recordingtime;
 	int					duration;
 	int					lastposition;
 	union channelid		channelid;
@@ -161,8 +161,8 @@ struct recordingrule {
 	char const*					seriesid;
 	union channelid				channelid;
 	bool						recentonly;
-	time_t						afteroriginalairdateonly;
-	time_t						datetimeonly;
+	int64_t						afteroriginalairdateonly;
+	int64_t						datetimeonly;
 	char const*					title;
 	char const*					synopsis;
 	unsigned int				startpadding;
@@ -197,8 +197,8 @@ struct timer {
 	unsigned int				timerid;
 	char const*					seriesid;
 	union channelid				channelid;
-	time_t						starttime;
-	time_t						endtime;
+	int64_t						starttime;
+	int64_t						endtime;
 	char const*					title;
 	char const*					synopsis;
 	unsigned int				startpadding;

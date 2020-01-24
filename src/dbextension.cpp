@@ -1504,9 +1504,9 @@ int xmltv_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
 }
 
 //---------------------------------------------------------------------------
-// xmltv_time_to_epoch
+// xmltv_time_to_w3c
 //
-// SQLite scalar function to convert an XMLTV time stamp into a time_t value
+// SQLite scalar function to convert an XMLTV time stamp into a W3C format
 //
 // Arguments:
 //
@@ -1514,12 +1514,17 @@ int xmltv_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
 //	argc		- Number of supplied arguments
 //	argv		- Argument values
 
-void xmltv_time_to_epoch(sqlite3_context* context, int argc, sqlite3_value** argv)
+void xmltv_time_to_w3c(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
-	struct tm		timeparts = { 0 };			// tm structure to parse components into
-	char			tzoperator = '+';			// timezone offset operator
-	int				tzhours = 0;				// timezone offset hours
-	int				tzminutes = 0;				// timezone offset minutes
+	int				year = 1970;				// calendar year
+	int				month = 1;					// calendar month
+	int				day = 1;					// calendar day
+	int				hour = 0;					// clock hours
+	int				minute = 0;					// clock minutes
+	int				second = 0;					// clock seconds
+	char			tzoperator = '+';			// timezone operator
+	int				tzhour = 0;					// timezone hours
+	int				tzminute = 0;				// timezone minutes
 
 	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
 
@@ -1528,29 +1533,26 @@ void xmltv_time_to_epoch(sqlite3_context* context, int argc, sqlite3_value** arg
 	if((str == nullptr) || (*str == 0)) return sqlite3_result_null(context);
 
 	// Attempt to scan as much of the input string as possible based on the expected format
-	int parts = sscanf(str, "%04d%02d%02d%02d%02d%02d %c%02d%02d", &timeparts.tm_year, &timeparts.tm_mon,
-		&timeparts.tm_mday, &timeparts.tm_hour, &timeparts.tm_min, &timeparts.tm_sec, &tzoperator, &tzhours, &tzminutes);
-	if(parts <= 0) return sqlite3_result_null(context);
+	int parts = sscanf(str, "%04d%02d%02d%02d%02d%02d %c%02d%02d", &year, &month, &day, &hour, &minute, &second, &tzoperator, &tzhour, &tzminute);
 
-	// Adjust the timeparts appropriately for struct tm
-	if(parts >= 1) timeparts.tm_year -= 1900;
-	if(parts >= 2) timeparts.tm_mon -= 1;
+	// YYYY-MM-DDThh:mm:ssTZD
+	if(parts == 9)
+		return sqlite3_result_text(context, sqlite3_mprintf("%04u-%02u-%02uT%02u:%02u:%02u%c%02u:%02u", year, month, day, hour, minute, second, tzoperator, tzhour, tzminute), -1, sqlite3_free);
 
-	// Convert the individual time parts into a time_t epoch value
-	time_t result = timegm(&timeparts);
-	if(result <= 0) return sqlite3_result_null(context);
+	// YYYY-MM-DDThh:mm:ss
+	else if(parts >= 6)
+		return sqlite3_result_text(context, sqlite3_mprintf("%04u-%02u-%02uT%02u:%02u:%02u", year, month, day, hour, minute, second), -1, sqlite3_free);
 
-	// Calculate any adjustment required based on the specified time zone
-	time_t adjustment = 0;
-	if(parts >= 8) adjustment += (60 * 60 * static_cast<time_t>(tzhours));
-	if(parts >= 9) adjustment += (60 * static_cast<time_t>(tzminutes));
+	// YYYY-MM-DDThh:mm
+	else if(parts >= 5)
+		return sqlite3_result_text(context, sqlite3_mprintf("%04u-%02u-%02uT%02u:%02u", year, month, day, hour, minute), -1, sqlite3_free);
 
-	// Apply the timezone adjustment
-	if(tzoperator == '+') result -= adjustment;
-	else if(tzoperator == '-') result += adjustment;
+	// YYYY-MM-DD
+	else if(parts >= 3) 
+		return sqlite3_result_text(context, sqlite3_mprintf("%04u-%02u-%02u", year, month, day), -1, sqlite3_free);
 
-	// Return the time_t as a 64-bit integer
-	return sqlite3_result_int64(context, static_cast<int64_t>(result));
+	// No format match possible; return null
+	return sqlite3_result_null(context);
 }
 
 //---------------------------------------------------------------------------
@@ -1658,10 +1660,10 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_module_v2(db, "xmltv", &g_xmltv_module, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module xmltv"); return result; }
 
-	// xmltv_time_to_epoch function
+	// xmltv_time_to_w3c function
 	//
-	result = sqlite3_create_function_v2(db, "xmltv_time_to_epoch", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_epoch, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_epoch"); return result; }
+	result = sqlite3_create_function_v2(db, "xmltv_time_to_w3c", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_w3c, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_w3c"); return result; }
 
 	return SQLITE_OK;
 }

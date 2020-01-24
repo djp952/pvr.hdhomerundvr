@@ -201,8 +201,8 @@ void add_recordingrule(sqlite3* instance, char const* deviceauth, struct recordi
 		if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, recordingrule.seriesid, -1, SQLITE_STATIC);
 		if(result == SQLITE_OK) result = (recordingrule.recentonly) ? sqlite3_bind_int(statement, 3, 1) : sqlite3_bind_null(statement, 3);
 		if(result == SQLITE_OK) result = (recordingrule.channelid.value != 0) ? sqlite3_bind_int(statement, 4, recordingrule.channelid.value) : sqlite3_bind_null(statement, 4);
-		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.afteroriginalairdateonly)) : sqlite3_bind_null(statement, 5);
-		if(result == SQLITE_OK) result = (recordingrule.datetimeonly != 0) ? sqlite3_bind_int(statement, 6, static_cast<int>(recordingrule.datetimeonly)) : sqlite3_bind_null(statement, 6);
+		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int64(statement, 5, recordingrule.afteroriginalairdateonly) : sqlite3_bind_null(statement, 5);
+		if(result == SQLITE_OK) result = (recordingrule.datetimeonly != 0) ? sqlite3_bind_int64(statement, 6, recordingrule.datetimeonly) : sqlite3_bind_null(statement, 6);
 		if(result == SQLITE_OK) result = (recordingrule.startpadding != 30) ? sqlite3_bind_int(statement, 7, recordingrule.startpadding) : sqlite3_bind_null(statement, 7);
 		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? sqlite3_bind_int(statement, 8, recordingrule.endpadding) : sqlite3_bind_null(statement, 8);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
@@ -848,13 +848,13 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 		// callback pointer to gather the channel information as the data is processed
 		auto sql = "insert into listing select "
 			"xmltv.channel as channelid, "
-			"coalesce(xmltv_time_to_epoch(xmltv.start), 0) as starttime, "
-			"coalesce(xmltv_time_to_epoch(xmltv.stop), 0) as endtime, "
+			"cast(coalesce(strftime('%s', xmltv_time_to_w3c(xmltv.start)), 0) as integer) as starttime, "
+			"cast(coalesce(strftime('%s', xmltv_time_to_w3c(xmltv.stop)), 0) as integer) as endtime, "
 			"xmltv.seriesid as seriesid, "
 			"xmltv.title as title, "
 			"xmltv.subtitle as episodename, "
 			"xmltv.desc as synopsis, "
-			"coalesce(xmltv_time_to_epoch(xmltv.date), 0) as originalairdate, "
+			"cast(coalesce(strftime('%s', xmltv_time_to_w3c(xmltv.date)), 0) as integer) as originalairdate, "
 			"xmltv.iconsrc as iconurl, "
 			"xmltv.programtype as programtype, "
 			"get_primary_genre(xmltv.categories) as primarygenre, "
@@ -1596,15 +1596,15 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
 			item.channelid = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
-			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
-			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 5));
+			item.starttime = sqlite3_column_int64(statement, 4);
+			item.endtime = sqlite3_column_int64(statement, 5);
 			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
 			item.year = sqlite3_column_int(statement, 7);
 			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
 			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
 			item.genretype = sqlite3_column_int(statement, 10);
 			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
-			item.originalairdate = sqlite3_column_int(statement, 12);
+			item.originalairdate = sqlite3_column_int64(statement, 12);
 			item.seriesnumber = sqlite3_column_int(statement, 13);
 			item.episodenumber = sqlite3_column_int(statement, 14);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 15));
@@ -1688,15 +1688,15 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
 			item.channelid = channelid.value;
-			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
-			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 4));
+			item.starttime = sqlite3_column_int64(statement, 3);
+			item.endtime = sqlite3_column_int64(statement, 4);
 			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
 			item.year = sqlite3_column_int(statement, 6);
 			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
 			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
 			item.genretype = sqlite3_column_int(statement, 9);
 			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
-			item.originalairdate = sqlite3_column_int(statement, 11);
+			item.originalairdate = sqlite3_column_int64(statement, 11);
 			item.seriesnumber = sqlite3_column_int(statement, 12);
 			item.episodenumber = sqlite3_column_int(statement, 13);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 14));
@@ -1788,7 +1788,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
 			item.firstairing = sqlite3_column_int(statement, 3);
-			item.originalairdate = sqlite3_column_int(statement, 4);
+			item.originalairdate = sqlite3_column_int64(statement, 4);
 			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
 			item.seriesnumber = sqlite3_column_int(statement, 6);
 			item.episodenumber = sqlite3_column_int(statement, 7);
@@ -1798,7 +1798,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
 			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
 			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
-			item.recordingtime = sqlite3_column_int(statement, 14);
+			item.recordingtime = sqlite3_column_int64(statement, 14);
 			item.duration = sqlite3_column_int(statement, 15);
 			item.lastposition = sqlite3_column_int(statement, 16);
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 17));
@@ -1863,8 +1863,8 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
 			item.recentonly = (sqlite3_column_int(statement, 4) != 0);
-			item.afteroriginalairdateonly = static_cast<unsigned int>(sqlite3_column_int(statement, 5));
-			item.datetimeonly = static_cast<unsigned int>(sqlite3_column_int(statement, 6));
+			item.afteroriginalairdateonly = sqlite3_column_int64(statement, 5);
+			item.datetimeonly = sqlite3_column_int64(statement, 6);
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
 			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
 			item.startpadding = static_cast<unsigned int>(sqlite3_column_int(statement, 9));
@@ -2007,8 +2007,8 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		"fnv_hash(json_extract(value, '$.ProgramID'), json_extract(value, '$.StartTime'), json_extract(value, '$.ChannelNumber')) as timerid, "
 		"case when guidenumbers.guidenumber is null then -1 else encode_channel_id(json_extract(value, '$.ChannelNumber')) end as channelid, "
 		"episode.seriesid as seriesid, "
-		"json_extract(value, '$.StartTime') as starttime, "
-		"json_extract(value, '$.EndTime') as endtime, "
+		"coalesce(json_extract(value, '$.StartTime'), 0) as starttime, "
+		"coalesce(json_extract(value, '$.EndTime'), 0) as endtime, "
 		"json_extract(value, '$.Title') as title, "
 		"json_extract(value, '$.Synopsis') as synopsis "
 		"from episode, json_each(episode.data) "
@@ -2037,8 +2037,8 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 			item.timerid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 3));
 			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 4));
-			item.starttime = static_cast<unsigned int>(sqlite3_column_int(statement, 5));
-			item.endtime = static_cast<unsigned int>(sqlite3_column_int(statement, 6));
+			item.starttime = sqlite3_column_int64(statement, 5);
+			item.endtime = sqlite3_column_int64(statement, 6);
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
 			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
 
@@ -2682,7 +2682,7 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, recordingrule.recordingruleid);
 		if(result == SQLITE_OK) result = (recordingrule.recentonly) ? sqlite3_bind_int(statement, 3, 1) : sqlite3_bind_null(statement, 3);
 		if(result == SQLITE_OK) result = (recordingrule.channelid.value != 0) ? sqlite3_bind_int(statement, 4, recordingrule.channelid.value) : sqlite3_bind_null(statement, 4);
-		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int(statement, 5, static_cast<int>(recordingrule.afteroriginalairdateonly)) : sqlite3_bind_null(statement, 5);
+		if(result == SQLITE_OK) result = (recordingrule.afteroriginalairdateonly != 0) ? sqlite3_bind_int64(statement, 5, recordingrule.afteroriginalairdateonly) : sqlite3_bind_null(statement, 5);
 		if(result == SQLITE_OK) result = (recordingrule.startpadding != 30) ? sqlite3_bind_int(statement, 6, recordingrule.startpadding) : sqlite3_bind_null(statement, 6);
 		if(result == SQLITE_OK) result = (recordingrule.endpadding != 30) ? sqlite3_bind_int(statement, 7, recordingrule.endpadding) : sqlite3_bind_null(statement, 7);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
