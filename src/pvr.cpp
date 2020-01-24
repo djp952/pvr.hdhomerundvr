@@ -1465,7 +1465,9 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				epgtag.strPlot = item.synopsis;
 
 				// iYear
-				epgtag.iYear = item.year;
+				//
+				// Only report for program type "MV" (Movies)
+				if(strcasecmp(item.programtype, "MV") == 0) epgtag.iYear = item.year;
 
 				// strIconPath
 				epgtag.strIconPath = item.iconurl;
@@ -1477,8 +1479,10 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				if(settings.use_backend_genre_strings) epgtag.strGenreDescription = item.genres;
 
 				// firstAired
-				// NOTE: listing.originalairdate can be a 'negative epoch'
-				if(item.originalairdate > 0) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+				//
+				// Only report for program types "EP" (Series Episode) and "SH" (Show)
+				if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) &&
+					(item.originalairdate > 0)) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
 
 				// iSeriesNumber
 				epgtag.iSeriesNumber = item.seriesnumber;
@@ -2753,7 +2757,9 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			epgtag.strPlot = item.synopsis;
 
 			// iYear
-			epgtag.iYear = item.year;
+			//
+			// Only report for program type "MV" (Movies)
+			if(strcasecmp(item.programtype, "MV") == 0) epgtag.iYear = item.year;
 
 			// strIconPath
 			epgtag.strIconPath = item.iconurl;
@@ -2765,8 +2771,10 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			if(settings.use_backend_genre_strings) epgtag.strGenreDescription = item.genres;
 
 			// firstAired
-			// NOTE: listing.originalairdate can be a 'negative epoch'
-			if(item.originalairdate > 0) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+			//
+			// Only report for program types "EP" (Series Episode) and "SH" (Show)
+			if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) &&
+				(item.originalairdate > 0)) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
 
 			// iSeriesNumber
 			epgtag.iSeriesNumber = item.seriesnumber;
@@ -3219,7 +3227,9 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			recording.iEpisodeNumber = item.episodenumber;
 
 			// iYear
-			recording.iYear = item.year;
+			//
+			// Only report for program type "MV" (Movies)
+			if(strcasecmp(item.programtype, "MV") == 0) recording.iYear = item.year;
 
 			// strDirectory
 			if(item.directory != nullptr) {
