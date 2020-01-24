@@ -2011,7 +2011,8 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		"from episode, json_each(episode.data) "
 		"left outer join recordingrule on episode.seriesid = recordingrule.seriesid and json_extract(value, '$.StartTime') = json_extract(recordingrule.data, '$.DateTimeOnly') "
 		"left outer join guidenumbers on json_extract(value, '$.ChannelNumber') = guidenumbers.guidenumber "
-		"where (starttime < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
+		"where json_extract(value, '$.RecordingRuleExt') not like 'DeletedDontRerecord' and "
+		"(starttime < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
