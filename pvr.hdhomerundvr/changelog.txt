@@ -2,6 +2,7 @@ v3.2.0 (2020.02.XX)
   - Update cURL library to version 7.68.0
   - Use new "Filename" attribute provided by HDHomeRun RECORD instead of generating EDL file name(s) when present
   - Exclude episodes flagged as "DeletedDontRerecord" from the list of reported Kodi timer instances
+  - Exclude episodes flagged as "RecordIfNotRecorded" from the list of reported Kodi timer instances if a matching recording exists
 
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler
