@@ -1516,9 +1516,9 @@ int xmltv_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid)
 
 void xmltv_time_to_w3c(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
-	int				year = 1970;				// calendar year
-	int				month = 1;					// calendar month
-	int				day = 1;					// calendar day
+	int				year = 0;					// calendar year
+	int				month = 0;					// calendar month
+	int				day = 0;					// calendar day
 	int				hour = 0;					// clock hours
 	int				minute = 0;					// clock minutes
 	int				second = 0;					// clock seconds
@@ -1550,6 +1550,34 @@ void xmltv_time_to_w3c(sqlite3_context* context, int argc, sqlite3_value** argv)
 	// YYYY-MM-DD
 	else if(parts >= 3) 
 		return sqlite3_result_text(context, sqlite3_mprintf("%04u-%02u-%02u", year, month, day), -1, sqlite3_free);
+
+	// No format match possible; return null
+	return sqlite3_result_null(context);
+}
+
+//---------------------------------------------------------------------------
+// xmltv_time_to_year
+//
+// SQLite scalar function to convert an XMLTV time stamp into an integer year
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void xmltv_time_to_year(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	int				year = 0;					// calendar year
+
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// Null or zero-length input string results in null
+	const char* str = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((str == nullptr) || (*str == 0)) return sqlite3_result_null(context);
+
+	// Only care about the first four digits of the XMLTV timestamp here
+	if(sscanf(str, "%04d", &year) == 1) return sqlite3_result_int(context, year);
 
 	// No format match possible; return null
 	return sqlite3_result_null(context);
@@ -1664,6 +1692,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "xmltv_time_to_w3c", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_w3c, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_w3c"); return result; }
+
+	// xmltv_time_to_year function
+	//
+	result = sqlite3_create_function_v2(db, "xmltv_time_to_year", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_year, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_year"); return result; }
 
 	return SQLITE_OK;
 }
