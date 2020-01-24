@@ -1460,10 +1460,10 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				epgtag.strTitle = item.title;
 
 				// startTime (required)
-				epgtag.startTime = item.starttime;
+				epgtag.startTime = static_cast<time_t>(item.starttime);
 
 				// endTime (required)
-				epgtag.endTime = item.endtime;
+				epgtag.endTime = static_cast<time_t>(item.endtime);
 
 				// strPlot
 				epgtag.strPlot = item.synopsis;
@@ -1481,7 +1481,8 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				if(settings.use_backend_genre_strings) epgtag.strGenreDescription = item.genres;
 
 				// firstAired
-				epgtag.firstAired = item.originalairdate;
+				// NOTE: listing.originalairdate can be a 'negative epoch'
+				if(item.originalairdate > 0) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
 
 				// iSeriesNumber
 				epgtag.iSeriesNumber = item.seriesnumber;
@@ -2756,10 +2757,10 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			epgtag.strTitle = item.title;
 
 			// startTime (required)
-			epgtag.startTime = item.starttime;
+			epgtag.startTime = static_cast<time_t>(item.starttime);
 
 			// endTime (required)
-			epgtag.endTime = item.endtime;
+			epgtag.endTime = static_cast<time_t>(item.endtime);
 
 			// strPlot
 			epgtag.strPlot = item.synopsis;
@@ -2777,7 +2778,8 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			if(settings.use_backend_genre_strings) epgtag.strGenreDescription = item.genres;
 
 			// firstAired
-			epgtag.firstAired = item.originalairdate;
+			// NOTE: listing.originalairdate can be a 'negative epoch'
+			if(item.originalairdate > 0) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
 
 			// iSeriesNumber
 			epgtag.iSeriesNumber = item.seriesnumber;
@@ -3269,7 +3271,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			if(item.thumbnailpath != nullptr) snprintf(recording.strThumbnailPath, std::extent<decltype(recording.strThumbnailPath)>::value, "%s", item.thumbnailpath);
 
 			// recordingTime
-			recording.recordingTime = item.recordingtime;
+			recording.recordingTime = static_cast<time_t>(item.recordingtime);
 
 			// iDuration
 			recording.iDuration = item.duration;
@@ -3623,7 +3625,7 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			timer.iClientChannelUid = static_cast<int>(item.channelid.value);
 
 			// startTime
-			timer.startTime = (item.type == recordingrule_type::datetimeonly) ? item.datetimeonly : now;
+			timer.startTime = (item.type == recordingrule_type::datetimeonly) ? static_cast<time_t>(item.datetimeonly) : now;
 
 			// bStartAnyTime
 			timer.bStartAnyTime = (item.type == recordingrule_type::series);
@@ -3645,7 +3647,7 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			snprintf(timer.strEpgSearchString, std::extent<decltype(timer.strEpgSearchString)>::value, "%s", item.title);
 
 			// firstDay
-			if(item.type == recordingrule_type::datetimeonly) timer.firstDay = item.datetimeonly;
+			if(item.type == recordingrule_type::datetimeonly) timer.firstDay = static_cast<time_t>(item.datetimeonly);
 
 			// iPreventDuplicateEpisodes
 			if(item.type == recordingrule_type::series) {
@@ -3684,10 +3686,10 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			timer.iClientChannelUid = static_cast<int>(item.channelid.value);
 
 			// startTime
-			timer.startTime = item.starttime;
+			timer.startTime = static_cast<time_t>(item.starttime);
 
 			// endTime
-			timer.endTime = item.endtime;
+			timer.endTime = static_cast<time_t>(item.endtime);
 
 			// state (required)
 			if(timer.endTime < now) timer.state = PVR_TIMER_STATE_COMPLETED;
