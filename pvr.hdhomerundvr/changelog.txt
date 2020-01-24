@@ -3,6 +3,7 @@ v3.2.0 (2020.02.XX)
   - Use new "Filename" attribute provided by HDHomeRun RECORD instead of generating EDL file name(s) when present
   - Exclude episodes flagged as "DeletedDontRerecord" from the list of reported Kodi timer instances
   - Exclude episodes flagged as "RecordIfNotRecorded" from the list of reported Kodi timer instances if a matching recording exists
+  - Prevent missing channel(s) in the Electronic Program Guide (EPG) listings from causing unncessary XMLTV reload operations
 
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler

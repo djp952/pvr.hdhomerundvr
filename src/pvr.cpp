@@ -123,7 +123,7 @@ static void startup_alerts_task(scalar_condition<bool> const& cancel);
 static void update_devices_task(scalar_condition<bool> const& cancel);
 static void update_episodes_task(scalar_condition<bool> const& cancel);
 static void update_lineups_task(scalar_condition<bool> const& cancel);
-static void update_listings_task(bool force, scalar_condition<bool> const& cancel);
+static void update_listings_task(bool force, bool checkchannels, scalar_condition<bool> const& cancel);
 static void update_recordingrules_task(scalar_condition<bool> const& cancel);
 static void update_recordings_task(scalar_condition<bool> const& cancel);
 static void wait_for_network_task(int seconds, scalar_condition<bool> const& cancel);
@@ -1173,6 +1173,8 @@ static void start_discovery(void) noexcept
 		// and in the order in which they will needed by the Kodi callback functions
 		std::call_once(once, []() {
 
+			bool lineupschanged = false;			// Flag if lineups have changed
+
 			// Create a copy of the current addon settings structure
 			struct addon_settings settings = copy_settings();
 
@@ -1181,14 +1183,14 @@ static void start_discovery(void) noexcept
 
 			// Schedule the initial discovery tasks to execute as soon as possible
 			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
-			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
+			g_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { discover_lineups(cancel, lineupschanged); });
 			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
 			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
 			g_scheduler.add(startup_alerts_task);
-			g_scheduler.add(std::bind(update_listings_task, false, std::placeholders::_1));
+			g_scheduler.add(std::bind(update_listings_task, false, lineupschanged, std::placeholders::_1));
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
 			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), update_devices_task);
@@ -1357,7 +1359,7 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 			if(cancel.test(true) == false) {
 
 				log_notice(__func__, ": lineup discovery data changed -- schedule guide listings update");
-				g_scheduler.add(std::bind(update_listings_task, false, std::placeholders::_1));
+				g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
 			}
 		}
 	}
@@ -1378,7 +1380,7 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 // update_listings_task (local)
 //
 // Scheduled task implementation to update the XMLTV listings
-static void update_listings_task(bool force, scalar_condition<bool> const& cancel)
+static void update_listings_task(bool force, bool checkchannels, scalar_condition<bool> const& cancel)
 {
 	time_t		lastdiscovery = 0;			// Timestamp indicating the last successful discovery
 	bool		changed = false;			// Flag if the discovery data changed
@@ -1400,7 +1402,7 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 	if((!force) && (lastdiscovery <= (now - 64800))) force = true;
 
 	// Force an update to the listings if there are lineup channels without any guide information
-	if((!force) && (has_missing_guide_channels(dbhandle))) {
+	if((!force) && (checkchannels) && (has_missing_guide_channels(dbhandle))) {
 
 		force = true;
 		log_notice(__func__, ": forcing update due to missing channel(s) in listing data");
@@ -1527,7 +1529,7 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 	if(cancel.test(true) == false) {
 
 		log_notice(__func__, ": scheduling next listing update to initiate in ", nextdiscovery - now, " seconds");
-		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(nextdiscovery - now), std::bind(update_listings_task, false, std::placeholders::_1));
+		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(nextdiscovery - now), std::bind(update_listings_task, false, false, std::placeholders::_1));
 	}
 
 	else log_notice(__func__, ": listing update task was cancelled");
@@ -2593,7 +2595,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 		try {
 
 			log_notice(__func__, ": scheduling listing update task (forced)");
-			g_scheduler.add(std::bind(update_listings_task, true, std::placeholders::_1));
+			g_scheduler.add(std::bind(update_listings_task, true, true, std::placeholders::_1));
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -4725,7 +4727,7 @@ PVR_ERROR SetEPGTimeFrame(int days)
 	g_epgmaxtime.store(days);
 
 	log_notice(__func__, ": EPG time frame has changed -- schedule guide listings update");
-	g_scheduler.add(std::bind(update_listings_task, false, std::placeholders::_1));
+	g_scheduler.add(std::bind(update_listings_task, false, false, std::placeholders::_1));
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -4782,7 +4784,10 @@ void OnSystemWake()
 		g_scheduler.add(update_recordingrules_task);
 		g_scheduler.add(update_episodes_task);
 		g_scheduler.add(update_recordings_task);
-		g_scheduler.add(std::bind(update_listings_task, false, std::placeholders::_1));
+
+		// A listings update may have been scheduled by update_lineups_task with a channel check set;
+		// adding it again may override that task, so perform a missing channel check here as well
+		g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
 
 		// Restart the task scheduler
 		g_scheduler.start();
