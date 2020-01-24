@@ -626,6 +626,7 @@ void discover_episodes(sqlite3* instance, char const* deviceauth, bool& changed)
 		// time and the channel number; the backend ordering is unreliable when a series exists on multiple channels
 		execute_non_query(instance, "update discover_episode set data = (select json_group_array(entry.value) from discover_episode as self, json_each(self.data) as entry "
 			"where self.seriesid = discover_episode.seriesid and json_extract(entry.value, '$.RecordingRule') = 1 "
+			"and json_extract(entry.value, '$.RecordingRuleExt') not like 'DeletedDontRerecord' "
 			"order by json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.ChannelNumber'))");
 
 		// Remove any series data that was nulled out by the previous operation (json_group_array() will actually return '[]' instead of null).
@@ -697,6 +698,7 @@ void discover_episodes_seriesid(sqlite3* instance, char const* deviceauth, char 
 			"nullif(json_group_array(entry.value), '[]') as data "
 			"from json_each(json_get('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || ?1 || '&SeriesID=' || ?2)) as entry "
 			"where json_extract(entry.value, '$.RecordingRule') = 1 "
+			"and json_extract(entry.value, '$.RecordingRuleExt') not like 'DeletedDontRerecord' "
 			"order by json_extract(entry.value, '$.StartTime'), json_extract(entry.value, '$.ChannelNumber')",
 			deviceauth, seriesid);
 
@@ -1997,7 +1999,8 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 	if(maxdays < 0) maxdays = 31;
 
 	// recordingruleid | parenttype | timerid | channelid | seriesid | starttime | endtime | title | synopsis
-	auto sql = "with guidenumbers(guidenumber) as (select distinct(json_extract(value, '$.GuideNumber')) as guidenumber from lineup, json_each(lineup.data)) "
+	auto sql = "with guidenumbers(guidenumber) as (select distinct(json_extract(value, '$.GuideNumber')) as guidenumber from lineup, json_each(lineup.data)), "
+		"recorded(programid) as (select json_extract(recording.data, '$.ProgramID') from recording where json_extract(recording.data, '$.RecordSuccess') = 1) "
 		"select case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then recordingrule.recordingruleid else "
 		"(select recordingruleid from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and seriesid = episode.seriesid limit 1) end as recordingruleid, "
 		"case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then 1 else 0 end as parenttype, "
@@ -2011,7 +2014,9 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		"from episode, json_each(episode.data) "
 		"left outer join recordingrule on episode.seriesid = recordingrule.seriesid and json_extract(value, '$.StartTime') = json_extract(recordingrule.data, '$.DateTimeOnly') "
 		"left outer join guidenumbers on json_extract(value, '$.ChannelNumber') = guidenumbers.guidenumber "
-		"where json_extract(value, '$.RecordingRuleExt') not like 'DeletedDontRerecord' and "
+		"where ((json_extract(value, '$.RecordingRuleExt') is null) or "
+		"(json_extract(value, '$.RecordingRuleExt') like 'RecordDuplicate') or "
+		"(json_extract(value, '$.RecordingRuleExt') like 'RecordIfNotRecorded' and json_extract(value, '$.ProgramID') not in recorded)) and "
 		"(starttime < (cast(strftime('%s', 'now') as integer) + (?1 * 86400)))";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
