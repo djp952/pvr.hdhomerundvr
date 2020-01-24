@@ -1400,7 +1400,11 @@ static void update_listings_task(bool force, scalar_condition<bool> const& cance
 	if((!force) && (lastdiscovery <= (now - 64800))) force = true;
 
 	// Force an update to the listings if there are lineup channels without any guide information
-	if((!force) && (has_missing_guide_channels(dbhandle))) force = true;
+	if((!force) && (has_missing_guide_channels(dbhandle))) {
+
+		force = true;
+		log_notice(__func__, ": forcing update due to missing channel(s) in listing data");
+	}
 
 	// Calculate the next time the listings discovery should be executed, which is 24 hours from
 	// now or the last successful discovery with a +/- 2 hour amount of randomness applied to it
