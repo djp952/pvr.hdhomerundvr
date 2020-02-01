@@ -372,10 +372,10 @@ int get_recordingrule_count(sqlite3* instance);
 // Gets the series identifier for the specified recording rule
 std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recordingruleid);
 
-// get_stream_url
+// get_storage_stream_urls
 //
 // Generates a stream URL for the specified channel
-std::string get_stream_url(sqlite3* instance, union channelid channelid);
+std::vector<std::string> get_storage_stream_urls(sqlite3* instance, union channelid channelid);
 
 // get_timer_count
 //
