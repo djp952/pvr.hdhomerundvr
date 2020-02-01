@@ -1,13 +1,14 @@
 v3.2.0 (2020.02.XX)
   - Update SQLite database engine to version 3.31.1
   - Update cURL library to version 7.68.0
-  - Use "Filename" attribute provided by HDHomeRun RECORD instead of manually generating EDL file name(s) when applicable
+  - Use "Filename" attribute provided by HDHomeRun RECORD instead of manually generating EDL file name(s) when available
   - Exclude episodes marked as "DeletedDontRerecord" from the list of reported timer instances
-  - Exclude episodesmarked as "RecordIfNotRecorded" from the list of reported timer instances when a completed recording exists
+  - Exclude episodes marked as "RecordIfNotRecorded" from the list of reported timer instances when a completed recording exists
   - Prevent missing channel(s) in the Electronic Program Guide (EPG) listings from causing unncessary XMLTV reload operations
   - Fix bug preventing calculation of original air date values for programs that aired prior to 1970.01.01
   - Limit reporting of program year to programs of type MV (Movies) in Electronic Program Guide (EPG) and Recorded TV
   - Limit reporting of program original air date to programs of type EP (Series Episode) and SH (Show) in Electronic Program Guide (EPG)
+  - Allow for Live TV to be streamed from any available storage engine before falling back to using a tuner device directly
 
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler

@@ -1031,21 +1031,25 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
 
-	// Generate the URL for the virtual channel by querying the database
-	std::string streamurl = get_stream_url(dbhandle, channelid);
-	if(streamurl.length() == 0) { log_error(__func__, ": unable to generate storage engine stream url for channel ", vchannel); return nullptr; }
+	// Generate a vector<> of possible storage device URLs for the virtual channel
+	std::vector<std::string> streamurls = get_storage_stream_urls(dbhandle, channelid);
+	if(streamurls.size() == 0) { log_error(__func__, ": unable to generate storage engine stream url(s) for channel ", vchannel); return nullptr; }
 
-	try {
+	// Attempt to create a stream using the URLs in the order provided, there is currently no way to choose priority here
+	for(auto const& streamurl : streamurls) {
 
-		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
-		log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
+		try {
 
-		return stream;
+			// Start the new HTTP stream using the parameters currently specified by the settings
+			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+			log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
+
+			return stream;
+		}
+
+		// If the stream creation failed, log an error; do not stop enumerating the available storage devices
+		catch(std::exception & ex) { log_error(__func__, ": unable to stream channel ", vchannel, " via storage engine url ", streamurl.c_str(), ": ", ex.what()); }
 	}
-
-	// If the stream creation failed, log an error and return a null unique_ptr<> back to the caller, do not throw an exception
-	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, " via storage engine url ", streamurl.c_str(), ": ", ex.what()); }
 
 	return nullptr;
 }

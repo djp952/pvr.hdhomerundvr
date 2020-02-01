@@ -2503,22 +2503,55 @@ std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recording
 }
 
 //---------------------------------------------------------------------------
-// get_stream_url
+// get_storage_stream_urls
 //
-// Generates a stream URL for the specified channel
+// Generates a vector<> of possible storage stream URLs for the specified channel
 //
 // Arguments:
 //
 //	instance		- Database instance
-//	channelid		- Channel for which to get the stream
+//	channelid		- Channel for which to get the stream(s)
 
-std::string get_stream_url(sqlite3* instance, union channelid channelid)
+std::vector<std::string> get_storage_stream_urls(sqlite3* instance, union channelid channelid)
 {
-	if(instance == nullptr) return std::string();
+	sqlite3_stmt*				statement;				// Database query statement
+	std::vector<std::string>	urls;					// Generated vector<> of URLs
+	int							result;					// Result from SQLite function call
 
-	return execute_scalar_string(instance, "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || "
-		"'?ClientID=' || (select clientid from client limit 1) || '&SessionID=0x' || hex(randomblob(4)) from device "
-		"where json_extract(device.data, '$.StorageURL') is not null limit 1", channelid.value);
+	if(instance == nullptr) return urls;
+
+	// Retrieve a list of candidate stream URLs for each discovered storage engine device
+	auto sql = "select json_extract(device.data, '$.BaseURL') || '/auto/v' || decode_channel_id(?1) || '?ClientID=' || (select clientid from client limit 1) "
+		"|| '&SessionID=0x' || hex(randomblob(4)) from device where json_extract(device.data, '$.StorageURL') is not null order by json_extract(device.data, '$.StorageID') asc";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, channelid.value);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the SQL statement
+		result = sqlite3_step(statement);
+		if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Process each row returned from the query
+		while(result == SQLITE_ROW) {
+
+			char const* url = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			if(url != nullptr) urls.emplace_back(url);
+
+			result = sqlite3_step(statement);		// Move to the next row of data
+		}
+
+		sqlite3_finalize(statement);				// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+
+	return urls;
 }
 
 //---------------------------------------------------------------------------
