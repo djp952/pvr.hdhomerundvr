@@ -274,11 +274,6 @@ struct addon_settings {
 	// Indicates the minimum number of bytes to return from a stream read
 	int stream_read_chunk_size;
 
-	// stream_ring_buffer_size
-	//
-	// Indicates the size of the stream ring buffer to allocate
-	int stream_ring_buffer_size;
-
 	// deviceauth_stale_after
 	//
 	// Amount of time (seconds) after which an expired device authorization code is removed
@@ -431,7 +426,6 @@ static addon_settings g_settings = {
 	false,					// use_direct_tuning
 	tuning_protocol::http,	// direct_tuning_protocol
 	(4 KiB),				// stream_read_chunk_size
-	(1 MiB),				// stream_ring_buffer_size
 	72000,					// deviceauth_stale_after				default = 20 hours
 	false,					// enable_recording_edl
 	"",						// recording_edl_folder
@@ -1041,7 +1035,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 		try {
 
 			// Start the new HTTP stream using the parameters currently specified by the settings
-			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
 			log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
 
 			return stream;
@@ -1108,7 +1102,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
 		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
 
 		return stream;
@@ -1833,7 +1827,6 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("stream_read_chunk_size_v2", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
-			if(g_addon->GetSetting("stream_ring_buffer_size_v2", &nvalue)) g_settings.stream_ring_buffer_size = nvalue;
 			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 
 			// Create the global guicallbacks instance
@@ -2292,18 +2285,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.stream_read_chunk_size = nvalue;
 			log_notice(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
-		}
-	}
-
-	// stream_ring_buffer_size
-	//
-	else if(strcmp(name, "stream_ring_buffer_size_v2") == 0) {
-
-		int nvalue = *reinterpret_cast<int const*>(value);
-		if(nvalue != g_settings.stream_ring_buffer_size) {
-
-			g_settings.stream_ring_buffer_size = nvalue;
-			log_notice(__func__, ": setting stream_ring_buffer_size changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -4405,7 +4386,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
-			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_ring_buffer_size, settings.stream_read_chunk_size);
+			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
 
 			// For recorded streams, set the start and end times based on the recording metadata
 			g_stream_starttime = recording.recordingTime;

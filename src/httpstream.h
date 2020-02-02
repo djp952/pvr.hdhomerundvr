@@ -68,8 +68,7 @@ public:
 	//
 	// Factory method, creates a new httpstream instance
 	static std::unique_ptr<httpstream> create(char const* url);
-	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize);
-	static std::unique_ptr<httpstream> create(char const* url, size_t buffersize, size_t chunksize);
+	static std::unique_ptr<httpstream> create(char const* url, size_t chunksize);
 
 	// length
 	//
@@ -128,7 +127,7 @@ private:
 
 	// Instance Constructor
 	//
-	httpstream(char const* url, size_t buffersize, size_t chunksize);
+	httpstream(char const* url, size_t chunksize);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions

@@ -97,11 +97,9 @@ static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
 // Arguments:
 //
 //	url				- URL of the stream to be opened
-//	buffersize		- Ring buffer size, in bytes
 //	chunksize		- Chunk size to use for the stream
 
-httpstream::httpstream(char const* url, size_t buffersize, size_t chunksize) :
-	m_chunksize(chunksize), m_buffersize(align::up(buffersize, 65536))
+httpstream::httpstream(char const* url, size_t chunksize) : m_chunksize(chunksize), m_buffersize(DEFAULT_RINGBUFFER_SIZE)
 {
 	size_t		available = 0;				// Amount of available ring buffer data
 
@@ -236,7 +234,7 @@ void httpstream::close(void)
 
 std::unique_ptr<httpstream> httpstream::create(char const* url)
 {
-	return create(url, DEFAULT_RINGBUFFER_SIZE, DEFAULT_CHUNK_SIZE);
+	return create(url, DEFAULT_CHUNK_SIZE);
 }
 
 //---------------------------------------------------------------------------
@@ -247,27 +245,11 @@ std::unique_ptr<httpstream> httpstream::create(char const* url)
 // Arguments:
 //
 //	url				- URL of the stream to be opened
-//	buffersize		- Ring buffer size, in bytes
-
-std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize)
-{
-	return create(url, buffersize, DEFAULT_CHUNK_SIZE);
-}
-
-//---------------------------------------------------------------------------
-// httpstream::create (static)
-//
-// Factory method, creates a new httpstream instance
-//
-// Arguments:
-//
-//	url				- URL of the stream to be opened
-//	buffersize		- Ring buffer size, in bytes
 //	readmincount	- Minimum bytes to return from a read operation
 
-std::unique_ptr<httpstream> httpstream::create(char const* url, size_t buffersize, size_t readmincount)
+std::unique_ptr<httpstream> httpstream::create(char const* url, size_t readmincount)
 {
-	return std::unique_ptr<httpstream>(new httpstream(url, buffersize, readmincount));
+	return std::unique_ptr<httpstream>(new httpstream(url, readmincount));
 }
 
 //---------------------------------------------------------------------------
