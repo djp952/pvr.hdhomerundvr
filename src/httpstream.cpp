@@ -638,21 +638,16 @@ bool httpstream::transfer_until(std::function<bool(void)> predicate)
 
 	assert((m_curlm != nullptr) && (m_curl != nullptr));
 
+	// Evaluate the predicate before doing any work
+	if(predicate()) return true;
+
 	// If the stream has been paused due to the ring buffer filling up, attempt to resume it
 	if(m_paused) {
 
-		// Determine the amount of free space in the ring buffer
-		size_t free = (m_head < m_tail) ? m_tail - m_head : (m_buffersize - m_head) + m_tail;
+		m_paused = false;									// Reset the stream paused flag
+		curl_easy_pause(m_curl, CURLPAUSE_CONT);			// Resume transfer on the stream
 
-		// If the buffer now has more than 50% free space available, resume the transfer.  Note that
-		// calling curl_easy_pause() with CURLPAUSE_CONT synchronously attempts a write operation
-		if(free >= (m_buffersize / 2)) {
-
-			m_paused = false;									// Reset the stream paused flag
-			curl_easy_pause(m_curl, CURLPAUSE_CONT);			// Resume transfer on the stream
-
-			if(m_paused) return predicate();					// Still paused; abort
-		}
+		if(m_paused) return predicate();					// Still paused, abort
 	}
 
 	// Attempt an initial data transfer operation and abort if there are no transfers
