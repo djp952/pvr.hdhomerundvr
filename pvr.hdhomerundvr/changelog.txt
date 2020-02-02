@@ -9,6 +9,7 @@ v3.2.0 (2020.02.XX)
   - Limit reporting of program year to programs of type MV (Movies) in Electronic Program Guide (EPG) and Recorded TV
   - Limit reporting of program original air date to programs of type EP (Series Episode) and SH (Show) in Electronic Program Guide (EPG)
   - Allow for Live TV to be streamed from any available storage engine before falling back to using a tuner device directly
+  - Remove "DVR stream ring buffer size" advanced option
 
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler

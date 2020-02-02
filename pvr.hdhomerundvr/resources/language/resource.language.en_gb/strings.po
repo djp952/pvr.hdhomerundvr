@@ -76,10 +76,6 @@ msgctxt "#30114"
 msgid "DVR stream read operation minimum size"
 msgstr ""
 
-msgctxt "#30115"
-msgid "DVR stream ring buffer size"
-msgstr ""
-
 msgctxt "#30117"
 msgid "Use backend genre string(s) in Electronic Program Guide (EPG)"
 msgstr ""
@@ -422,10 +418,6 @@ msgstr ""
 
 msgctxt "#30524"
 msgid "Specifies the amount of data Kodi will request as a single chunk of Live TV or Recorded TV streams."
-msgstr ""
-
-msgctxt "#30525"
-msgid "Specifies the size of the internal ring buffer used to cache Live TV and Recorded TV stream data."
 msgstr ""
 
 msgctxt "#30526"

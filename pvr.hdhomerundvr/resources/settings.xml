@@ -336,21 +336,6 @@
           <control type="spinner" format="integer"/>
         </setting>
 
-        <setting id="stream_ring_buffer_size_v2" type="integer" label="30115" help="30525">
-          <level>0</level>
-          <default>1048576</default>
-          <constraints>
-            <options>
-              <option label="30224">1048576</option>
-              <option label="30225">2097152</option>
-              <option label="30226">4194304</option>
-              <option label="30227">8388608</option>
-              <option label="30228">16777216</option>
-            </options>
-          </constraints>
-          <control type="spinner" format="integer"/>
-        </setting>
-
         <setting id="deviceauth_stale_after_v2" type="integer" label="30131" help="30526">
           <level>0</level>
           <default>72000</default>
