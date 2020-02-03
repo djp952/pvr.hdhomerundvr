@@ -362,6 +362,11 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid);
 // Gets the playback URL for a recording
 std::string get_recording_stream_url(sqlite3* instance, char const* recordingid);
 
+// get_recording_time
+//
+// Gets the start time for a recording
+int64_t get_recording_time(sqlite3* instance, char const* recordingid);
+
 // get_recordingrule_count
 //
 // Gets the number of available recording rules in the database

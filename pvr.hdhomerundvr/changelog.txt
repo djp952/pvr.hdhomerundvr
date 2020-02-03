@@ -10,6 +10,7 @@ v3.2.0 (2020.02.XX)
   - Limit reporting of program original air date to programs of type EP (Series Episode) and SH (Show) in Electronic Program Guide (EPG)
   - Allow for Live TV to be streamed from any available storage engine before falling back to using a tuner device directly
   - Remove "DVR stream ring buffer size" advanced option
+  - Restore "Use Original Air Date timestamp for Recorded TV programs" setting (different implementation)
 
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler
