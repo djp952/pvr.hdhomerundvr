@@ -140,6 +140,10 @@ msgctxt "#30136"
 msgid "Additional EDL file path"
 msgstr ""
 
+msgctxt "#30137"
+msgid "Use Original Air Date timestamp for Recorded TV programs"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -443,3 +447,8 @@ msgstr ""
 msgctxt "#30531"
 msgid "Specifies an additional base path to search for Recorded TV Edit Decision List (EDL) files."
 msgstr ""
+
+msgctxt "#30532"
+msgid "When set to ON the timestamp reported for Recorded TV programs will be set to the Original Air Date timestamp instead of the recording timestamp."
+msgstr ""
+

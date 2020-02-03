@@ -59,6 +59,12 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="use_airdate_as_recordingdate" type="boolean" label="30137" help="30532">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
         <setting id="delete_datetime_rules_after_v2" type="integer" label="30108" help="30509">
           <level>0</level>
           <default>86400</default>

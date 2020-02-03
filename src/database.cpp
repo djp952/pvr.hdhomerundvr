@@ -76,6 +76,7 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid);
 static void enumerate_devices_broadcast(enumerate_devices_callback const& callback);
 template<typename... _parameters> static int execute_non_query(sqlite3* instance, char const* sql, _parameters&&... parameters);
 template<typename... _parameters> static int execute_scalar_int(sqlite3* instance, char const* sql, _parameters&&... parameters);
+template<typename... _parameters> static int64_t execute_scalar_int64(sqlite3* instance, char const* sql, _parameters&&... parameters);
 template<typename... _parameters> static std::string execute_scalar_string(sqlite3* instance, char const* sql, _parameters&&... parameters);
 
 //---------------------------------------------------------------------------
@@ -2153,6 +2154,56 @@ static int execute_scalar_int(sqlite3* instance, char const* sql, _parameters&&.
 }
 
 //---------------------------------------------------------------------------
+// execute_scalar_int64 (local)
+//
+// Executes a database query and returns a scalar integer result
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	sql				- SQL query to execute
+//	parameters		- Parameters to be bound to the query
+
+template<typename... _parameters>
+static int64_t execute_scalar_int64(sqlite3* instance, char const* sql, _parameters&&... parameters)
+{
+	sqlite3_stmt*				statement;			// SQL statement to execute
+	int							paramindex = 1;		// Bound parameter index value
+	int64_t						value = 0;			// Result from the scalar function
+
+	if(instance == nullptr) throw std::invalid_argument("instance");
+	if(sql == nullptr) throw std::invalid_argument("sql");
+
+	// Suppress unreferenced local variable warning when there are no parameters to bind
+	(void)paramindex;
+
+	// Prepare the statement
+	int result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the provided query parameter(s) by unpacking the parameter pack
+		int unpack[] = { 0, (static_cast<void>(bind_parameter(statement, paramindex, parameters)), 0) ... };
+		(void)unpack;
+
+		// Execute the query; only the first row returned will be used
+		result = sqlite3_step(statement);
+
+		if(result == SQLITE_ROW) value = sqlite3_column_int64(statement, 0);
+		else if(result != SQLITE_DONE) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Finalize the statement
+		sqlite3_finalize(statement);
+
+		// Return the resultant value from the scalar query
+		return value;
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // execute_scalar_string (local)
 //
 // Executes a database query and returns a scalar string result
@@ -2467,6 +2518,23 @@ std::string get_recording_stream_url(sqlite3* instance, char const* recordingid)
 	if((instance == nullptr) || (recordingid == nullptr)) return std::string();
 
 	return execute_scalar_string(instance, "select json_extract(data, '$.PlayURL') as streamurl from recording where recordingid like ?1", recordingid);
+}
+
+//---------------------------------------------------------------------------
+// get_recording_time
+//
+// Gets the start time for a recording
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	recordingid		- Recording identifier (command url)
+
+int64_t get_recording_time(sqlite3* instance, char const* recordingid)
+{
+	if((instance == nullptr) || (recordingid == nullptr)) return 0;
+
+	return execute_scalar_int64(instance, "select coalesce(json_extract(data, '$.RecordStartTime'), 0) from recording where recordingid like ?1", recordingid);
 }
 
 //---------------------------------------------------------------------------
