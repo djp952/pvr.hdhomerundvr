@@ -111,6 +111,7 @@ xmlstream::xmlstream(char const* url, char const* useragent, CURLSH* share) : m_
 
 			// Set the options for the easy interface curl handle
 			CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_URL, url);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "identity, gzip, deflate");
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
