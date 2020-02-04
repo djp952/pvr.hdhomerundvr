@@ -125,6 +125,11 @@ private:
 	// Maximum allowable stream length; indicates a real-time stream
 	static long long const MAX_STREAM_LENGTH;
 
+	// MPEGTS_PACKET_LENGTH
+	//
+	// Length of a single mpeg-ts data packet
+	static size_t const MPEGTS_PACKET_LENGTH;
+
 	// Instance Constructor
 	//
 	httpstream(char const* url, size_t chunksize);
