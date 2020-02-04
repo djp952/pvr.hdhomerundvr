@@ -134,6 +134,7 @@ httpstream::httpstream(char const* url, size_t chunksize) :
 
 			// Set the options for the easy interface curl handle
 			CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_URL, url);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_TIME, 5L);
