@@ -1,4 +1,4 @@
-v3.2.0 (2020.02.XX)
+v3.2.0 (2020.02.07)
   - Update SQLite database engine to version 3.31.1
   - Update cURL library to version 7.68.0
   - Use "Filename" attribute provided by HDHomeRun RECORD instead of manually generating EDL file name(s) when available

@@ -2002,7 +2002,7 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 
 	// recordingruleid | parenttype | timerid | channelid | seriesid | starttime | endtime | title | synopsis
 	auto sql = "with guidenumbers(guidenumber) as (select distinct(json_extract(value, '$.GuideNumber')) as guidenumber from lineup, json_each(lineup.data)), "
-		"recorded(programid) as (select json_extract(recording.data, '$.ProgramID') from recording where json_extract(recording.data, '$.RecordSuccess') = 1) "
+		"recorded(programid) as (select json_extract(recording.data, '$.ProgramID') from recording) "
 		"select case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then recordingrule.recordingruleid else "
 		"(select recordingruleid from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and seriesid = episode.seriesid limit 1) end as recordingruleid, "
 		"case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then 1 else 0 end as parenttype, "
