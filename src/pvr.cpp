@@ -229,6 +229,11 @@ struct addon_settings {
 	// Flag indicating that the original air date should be reported as the recording date
 	bool use_airdate_as_recordingdate;
 
+	// disable_backend_channel_logos
+	//
+	// Flag indicating that the channel logo thumbnail URLs should not be reported
+	bool disable_backend_channel_logos;
+
 	// delete_datetime_rules_after
 	//
 	// Amount of time (seconds) after which an expired date/time rule is deleted
@@ -422,6 +427,7 @@ static addon_settings g_settings = {
 	false,					// disable_recording_categories
 	false,					// generate_repeat_indicators
 	false,					// use_airdate_as_recordingdate
+	false,					// disable_backend_channel_logos
 	86400,					// delete_datetime_rules_after			default = 1 day
 	300, 					// discover_devices_interval;			default = 5 minutes
 	7200,					// discover_episodes_interval			default = 2 hours
@@ -1810,6 +1816,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("disable_recording_categories", &bvalue)) g_settings.disable_recording_categories = bvalue;
 			if(g_addon->GetSetting("generate_repeat_indicators", &bvalue)) g_settings.generate_repeat_indicators = bvalue;
 			if(g_addon->GetSetting("use_airdate_as_recordingdate", &bvalue)) g_settings.use_airdate_as_recordingdate = bvalue;
+			if(g_addon->GetSetting("disable_backend_channel_logos", &bvalue)) g_settings.disable_backend_channel_logos = bvalue;
 			if(g_addon->GetSetting("delete_datetime_rules_after_v2", &nvalue)) g_settings.delete_datetime_rules_after = nvalue;
 
 			// Load the discovery interval settings
@@ -2171,6 +2178,20 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.use_airdate_as_recordingdate = bvalue;
 			log_notice(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
+		}
+	}
+
+	// disable_backend_channel_logos
+	//
+	else if(strcmp(name, "disable_backend_channel_logos") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.disable_backend_channel_logos) {
+
+			g_settings.disable_backend_channel_logos = bvalue;
+			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			g_pvr->TriggerChannelUpdate();
+			g_pvr->TriggerChannelGroupsUpdate();
 		}
 	}
 
@@ -3105,7 +3126,8 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 			channel.iEncryptionSystem = (item.drm) ? std::numeric_limits<unsigned int>::max() : 0;
 
 			// strIconPath
-			if(item.iconurl != nullptr) snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
+			if((settings.disable_backend_channel_logos == false) && (item.iconurl != nullptr))
+				snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
 
 			// Transfer the PVR_CHANNEL structure over to Kodi
 			g_pvr->TransferChannelEntry(handle, &channel);

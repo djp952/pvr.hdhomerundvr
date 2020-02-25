@@ -1,3 +1,6 @@
+v3.2.1 (2020.03.xx)
+  - Add "Disable use of backend service channel logos" option
+
 v3.2.0 (2020.02.07)
   - Update SQLite database engine to version 3.31.1
   - Update cURL library to version 7.68.0
