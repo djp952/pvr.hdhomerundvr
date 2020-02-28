@@ -1,5 +1,6 @@
 v3.2.1 (2020.03.xx)
   - Add "Disable use of backend service channel logos" option
+  - Add new "Interface" settings category and move options that change how data is displayed from "General" to "Interface"
 
 v3.2.0 (2020.02.07)
   - Update SQLite database engine to version 3.31.1

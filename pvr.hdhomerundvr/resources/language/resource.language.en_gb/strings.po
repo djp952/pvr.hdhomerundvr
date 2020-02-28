@@ -32,6 +32,10 @@ msgctxt "#30003"
 msgid "EDL"
 msgstr ""
 
+msgctxt "#30004"
+msgid "Interface"
+msgstr ""
+
 msgctxt "#30100"
 msgid "Pause discovery tasks while streaming"
 msgstr ""
