@@ -11,6 +11,45 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="discover_recordings_after_playback" type="boolean" label="30123" help="30505">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
+        <setting id="show_drm_protected_channels" type="boolean" label="30118" help="30507">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
+        <setting id="disable_backend_channel_logos" type="boolean" label="30138" help="30533">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
+        <setting id="delete_datetime_rules_after_v2" type="integer" label="30108" help="30509">
+          <level>0</level>
+          <default>86400</default>
+          <constraints>
+            <options>
+              <option label="30213">-1</option>
+              <option label="30209">21600</option>
+              <option label="30210">43200</option>
+              <option label="30211">86400</option>
+              <option label="30212">172800</option>
+            </options>
+          </constraints>
+          <control type="spinner" format="integer"/>
+        </setting>
+
+      </group>
+    </category>
+
+    <category id="interface" label="30004">
+      <group id="1" label="-1">
+
         <setting id="prepend_channel_numbers" type="boolean" label="30107" help="30503">
           <level>0</level>
           <default>false</default>
@@ -23,19 +62,7 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="discover_recordings_after_playback" type="boolean" label="30123" help="30505">
-          <level>0</level>
-          <default>false</default>
-          <control type="toggle"/>
-        </setting>
-
         <setting id="use_backend_genre_strings" type="boolean" label="30117" help="30506">
-          <level>0</level>
-          <default>false</default>
-          <control type="toggle"/>
-        </setting>
-
-        <setting id="show_drm_protected_channels" type="boolean" label="30118" help="30507">
           <level>0</level>
           <default>false</default>
           <control type="toggle"/>
@@ -63,27 +90,6 @@
           <level>0</level>
           <default>false</default>
           <control type="toggle"/>
-        </setting>
-
-        <setting id="disable_backend_channel_logos" type="boolean" label="30138" help="30533">
-          <level>0</level>
-          <default>false</default>
-          <control type="toggle"/>
-        </setting>
-
-        <setting id="delete_datetime_rules_after_v2" type="integer" label="30108" help="30509">
-          <level>0</level>
-          <default>86400</default>
-          <constraints>
-            <options>
-              <option label="30213">-1</option>
-              <option label="30209">21600</option>
-              <option label="30210">43200</option>
-              <option label="30211">86400</option>
-              <option label="30212">172800</option>
-            </options>
-          </constraints>
-          <control type="spinner" format="integer"/>
         </setting>
 
       </group>
