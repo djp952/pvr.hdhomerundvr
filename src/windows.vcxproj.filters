@@ -549,12 +549,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\openssl.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\schannel.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
@@ -721,6 +715,15 @@
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vssh\wolfssh.h">
+      <Filter>External Libraries\curl\Header Files\vssh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mbedtls_threadlock.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\rename.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1205,12 +1208,6 @@
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\openssl.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\schannel.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
@@ -1360,6 +1357,15 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\socketpair.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\rename.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vssh\wolfssh.c">
+      <Filter>External Libraries\curl\Source Files\vssh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mbedtls_threadlock.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

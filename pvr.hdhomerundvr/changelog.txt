@@ -1,4 +1,5 @@
 v3.2.1 (2020.03.xx)
+  - Update cURL library to version 7.69.0
   - Update libhdhomerun library to version 20200303
   - Add "Disable backend channel logo images" option
   - Add new "Interface" settings category and move options that change how data is displayed from "General" to "Interface"
