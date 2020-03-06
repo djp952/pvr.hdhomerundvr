@@ -342,8 +342,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\mesalink.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\nssg.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\openssl.h" />
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl.h" />
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\schannel.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\vtls.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\wolfssl.h" />
@@ -3361,6 +3359,32 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\rename.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\rtsp.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -5059,6 +5083,32 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vssh\wolfssh.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\bearssl.c">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -5199,6 +5249,32 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mbedtls_threadlock.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\mesalink.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -5276,82 +5352,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\openssl.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </DisableSpecificWarnings>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(ProjectDir)..\depends\libcurl\src;$(ProjectDir)..\depends\libcurl\src\lib;$(ProjectDir)..\depends\libz\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </DisableSpecificWarnings>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </DisableSpecificWarnings>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)curl\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)curl\</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\polarssl_threadlock.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WINAPI_FAMILY=2;_WIN32_WINNT=0x0602;BUILDING_LIBCURL;CURL_STATICLIB;HTTP_ONLY;CURL_DISABLE_NTLM;CURL_DISABLE_CRYPTO_AUTH;HAVE_GETSOCKNAME;USE_IPV6;HAVE_ZLIB_H;HAVE_LIBZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
