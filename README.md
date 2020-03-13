@@ -11,8 +11,8 @@ Copyright (C)2016-2019 Michael G. Brehm
    
 ## BUILD ENVIRONMENT
 **REQUIRED COMPONENTS**   
-* Windows 10 x64 1809 (17763) "October 2018 Update"   
-* Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop, Windows 10 SDK (10.0.16299.0), and C++ Universal Windows Platform Tools)   
+* Windows 10 x64 1909 (18363) "November 2019 Update"   
+* Visual Studio 2017 (Windows 10 SDK (10.0.17763.0), and C++ Universal Windows Platform Tools)   
 * Windows Subsystem for Linux   
 * [Ubuntu on Windows 16.04 LTS](https://www.microsoft.com/store/productId/9PJN388HP8C9)   
 
@@ -64,11 +64,10 @@ git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 * Generate the MAC OSX 10.11 SDK Package for OSXCROSS by following the instructions provided at [PACKAGING THE SDK](https://github.com/tpoechtrager/osxcross#packaging-the-sdk).  The suggested version of Xcode to use when generating the SDK package is Xcode 7.3.1 (May 3, 2016).
 * Open "Ubuntu"   
 ```
-sudo apt-get install make clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
+sudo apt-get install cmake clang llvm-dev libxml2-dev uuid-dev libssl-dev libbz2-dev zlib1g-dev
 git clone https://github.com/tpoechtrager/osxcross --depth=1
 cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh
-GCC_VERSION=4.9.3 osxcross/build_gcc.sh
 ```
    
 ## BUILD KODI ADDON PACKAGES
