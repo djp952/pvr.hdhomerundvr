@@ -1501,7 +1501,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				epgtag.iEpisodeNumber = item.episodenumber;
 
 				// iEpisodePartNumber
-				epgtag.iEpisodePartNumber = -1;
+				epgtag.iEpisodePartNumber = EPG_TAG_INVALID_SERIES_EPISODE;
 
 				// strEpisodeName
 				epgtag.strEpisodeName = item.episodename;
