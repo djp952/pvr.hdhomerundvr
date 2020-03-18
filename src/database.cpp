@@ -1564,7 +1564,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 		"listing.programtype as programtype, "
 		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
 		"listing.genres as genres, "
-		"cast(coalesce(strftime('%s', listing.originalairdate), 0) as integer) as originalairdate, "
+		"listing.originalairdate as originalairdate, "
 		"get_season_number(listing.episodenumber) as seriesnumber, "
 		"get_episode_number(listing.episodenumber) as episodenumber, "
 		"listing.episodename as episodename, "
@@ -1606,7 +1606,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 9));
 			item.genretype = sqlite3_column_int(statement, 10);
 			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
-			item.originalairdate = sqlite3_column_int64(statement, 12);
+			item.originalairdate = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
 			item.seriesnumber = sqlite3_column_int(statement, 13);
 			item.episodenumber = sqlite3_column_int(statement, 14);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 15));
@@ -1656,7 +1656,7 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 		"listing.programtype as programtype, "
 		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
 		"listing.genres as genres, "
-		"cast(coalesce(strftime('%s', listing.originalairdate), 0) as integer) as originalairdate, "
+		"listing.originalairdate as originalairdate, "
 		"get_season_number(listing.episodenumber) as seriesnumber, "
 		"get_episode_number(listing.episodenumber) as episodenumber, "
 		"listing.episodename as episodename, "
@@ -1698,7 +1698,7 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 			item.programtype = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
 			item.genretype = sqlite3_column_int(statement, 9);
 			item.genres = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
-			item.originalairdate = sqlite3_column_int64(statement, 11);
+			item.originalairdate = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
 			item.seriesnumber = sqlite3_column_int(statement, 12);
 			item.episodenumber = sqlite3_column_int(statement, 13);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 14));
