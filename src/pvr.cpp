@@ -3294,18 +3294,8 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 				// Only apply use_airdate_as_recordindate to items with a program type of "EP" or "SH"
 				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
 
-					// The UTC time_t has to have the system timezone offset applied to it before reporting it as
-					// originalairdate is always a date value with no time component
-					struct tm tm { 0 };
 					time_t epoch = static_cast<time_t>(item.originalairdate);
-
-				#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
-					gmtime_s(&tm, &epoch);
-				#else
-					gmtime_r(&epoch, &tm);
-				#endif
-
-					recording.recordingTime = mktime(&tm);
+					recording.recordingTime = mktime(gmtime(&epoch));
 				}
 			}
 
@@ -3322,6 +3312,13 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 			// channelType
 			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
+
+			// strfirstAired
+			if(item.originalairdate > 0) {
+
+				time_t epoch = static_cast<time_t>(item.originalairdate);
+				strftime(recording.strFirstAired, std::extent<decltype(recording.strFirstAired)>::value, "%Y-%m-%d", gmtime(&epoch));
+			}
 
 			//  Transfer the generated PVR_RECORDING structure over to Kodi 
 			g_pvr->TransferRecordingEntry(handle, &recording);
