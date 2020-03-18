@@ -36,7 +36,7 @@
 // DATABASE_SCHEMA_VERSION
 //
 // This value needs to be incremented with any database schema change
-static char const DATABASE_SCHEMA_VERSION[] = "11";
+static char const DATABASE_SCHEMA_VERSION[] = "12";
 
 //---------------------------------------------------------------------------
 // DATA TYPES
