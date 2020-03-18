@@ -1491,8 +1491,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				// firstAired
 				//
 				// Only report for program types "EP" (Series Episode) and "SH" (Show)
-				if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) &&
-					(item.originalairdate > 0)) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) epgtag.strFirstAired = item.originalairdate;
 
 				// iSeriesNumber
 				epgtag.iSeriesNumber = item.seriesnumber;
@@ -2799,8 +2798,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			// firstAired
 			//
 			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) &&
-				(item.originalairdate > 0)) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+			if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) epgtag.strFirstAired = item.originalairdate;
 
 			// iSeriesNumber
 			epgtag.iSeriesNumber = item.seriesnumber;

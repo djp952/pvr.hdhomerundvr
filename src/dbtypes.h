@@ -108,7 +108,7 @@ struct listing {
 	char const*			programtype;
 	int					genretype;
 	char const*			genres;
-	int64_t				originalairdate;
+	char const*			originalairdate;
 	int					seriesnumber;
 	int					episodenumber;
 	char const*			episodename;
