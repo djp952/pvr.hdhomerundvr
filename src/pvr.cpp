@@ -363,6 +363,7 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,			// bSupportsRecordingsLifetimeChange
 	false,			// bSupportsDescrambleInfo
 	false,			// bSupportsAsyncEPGTransfer
+	false,			// bSupportsRecordingSize
 	0,				// iRecordingsLifetimesSize
 	{ { 0, "" } },	// recordingsLifetimeValues
 };
@@ -3569,6 +3570,21 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//---------------------------------------------------------------------------
+// GetRecordingSize
+//
+// Retrieve the size of a recording on the backend
+//
+// Arguments:
+//
+//	recording	- The recording to get the size in bytes for
+//	sizeInBytes	- The size in bytes of the recording
+
+PVR_ERROR GetRecordingSize(PVR_RECORDING const* /*recording*/, int64_t* /*sizeInBytes*/)
+{
+	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 }
 
 //---------------------------------------------------------------------------
