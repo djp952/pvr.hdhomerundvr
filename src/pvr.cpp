@@ -1492,7 +1492,13 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				// firstAired
 				//
 				// Only report for program types "EP" (Series Episode) and "SH" (Show)
-				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) epgtag.strFirstAired = item.originalairdate;
+				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
+
+					// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+					// unless series/episode information is available
+					if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
+						epgtag.strFirstAired = item.originalairdate;
+				}
 
 				// iSeriesNumber
 				epgtag.iSeriesNumber = item.seriesnumber;
@@ -2799,7 +2805,13 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			// firstAired
 			//
 			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) epgtag.strFirstAired = item.originalairdate;
+			if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
+
+				// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+				// unless series/episode information is available
+				if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
+					epgtag.strFirstAired = item.originalairdate;
+			}
 
 			// iSeriesNumber
 			epgtag.iSeriesNumber = item.seriesnumber;
@@ -3315,10 +3327,17 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
 
 			// strfirstAired
-			if(item.originalairdate > 0) {
+			//
+			// Only report for program types "EP" (Series Episode) and "SH" (Show)
+			if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.originalairdate > 0)) {
 
-				time_t epoch = static_cast<time_t>(item.originalairdate);
-				strftime(recording.strFirstAired, std::extent<decltype(recording.strFirstAired)>::value, "%Y-%m-%d", gmtime(&epoch));
+				// Special case: omit for "news" category programs, these programs are EP/SH programs, but the original
+				// air date will typically be set to the first broadcast date, which makes no sense for recordings
+				if((item.directory != nullptr) && (strcasecmp(item.directory, "news") != 0)) {
+
+					time_t epoch = static_cast<time_t>(item.originalairdate);
+					strftime(recording.strFirstAired, std::extent<decltype(recording.strFirstAired)>::value, "%Y-%m-%d", gmtime(&epoch));
+				}
 			}
 
 			//  Transfer the generated PVR_RECORDING structure over to Kodi 

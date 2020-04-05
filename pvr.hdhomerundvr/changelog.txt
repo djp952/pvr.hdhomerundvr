@@ -1,5 +1,6 @@
-v3.3.0 (2020.03.XX)
+v3.2.2 (2020.04.XX)
   - Update cURL library to version 7.69.1
+  - Omit reporting of original air date for programs of type News/Current Affairs unless a specific season/episode has been specified
 
 v3.2.1 (2020.03.06)
   - Update cURL library to version 7.69.0
