@@ -1495,9 +1495,14 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				// firstAired
 				//
 				// Only report for program types "EP" (Series Episode) and "SH" (Show)
-				if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) &&
-					(item.originalairdate > 0)) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
-
+				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0) && (item.originalairdate > 0)) {
+				
+					// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+					// unless series/episode information is available
+					if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
+						epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+				}
+			
 				// iSeriesNumber
 				epgtag.iSeriesNumber = item.seriesnumber;
 
@@ -2812,8 +2817,13 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			// firstAired
 			//
 			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) &&
-				(item.originalairdate > 0)) epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+			if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0) && (item.originalairdate > 0)) {
+			
+				// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+				// unless series/episode information is available
+				if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
+					epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+			}
 
 			// iSeriesNumber
 			epgtag.iSeriesNumber = item.seriesnumber;
@@ -3314,8 +3324,18 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 				// Only apply use_airdate_as_recordindate to items with a program type of "EP" or "SH"
 				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
 
+					// The UTC time_t has to have the system timezone offset applied to it before reporting it as
+					// originalairdate is always a date value with no time component
+					struct tm tm { 0 };
 					time_t epoch = static_cast<time_t>(item.originalairdate);
-					recording.recordingTime = mktime(gmtime(&epoch));
+
+				#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+					gmtime_s(&tm, &epoch);
+				#else
+					gmtime_r(&epoch, &tm);
+				#endif
+
+					recording.recordingTime = mktime(&tm);
 				}
 			}
 
