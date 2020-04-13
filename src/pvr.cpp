@@ -1495,7 +1495,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				// firstAired
 				//
 				// Only report for program types "EP" (Series Episode) and "SH" (Show)
-				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0) && (item.originalairdate > 0)) {
+				if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.originalairdate > 0)) {
 				
 					// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
 					// unless series/episode information is available
@@ -2817,7 +2817,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 			// firstAired
 			//
 			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0) && (item.originalairdate > 0)) {
+			if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.originalairdate > 0)) {
 			
 				// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
 				// unless series/episode information is available
