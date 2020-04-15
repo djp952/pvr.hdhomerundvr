@@ -3752,10 +3752,10 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			timer.iClientChannelUid = static_cast<int>(item.channelid.value);
 
 			// startTime
-			timer.startTime = static_cast<time_t>(item.starttime);
+			timer.startTime = static_cast<time_t>(item.starttime) - static_cast<time_t>(item.startpadding);
 
 			// endTime
-			timer.endTime = static_cast<time_t>(item.endtime);
+			timer.endTime = static_cast<time_t>(item.endtime) + static_cast<time_t>(item.endpadding);
 
 			// state (required)
 			if(timer.endTime < now) timer.state = PVR_TIMER_STATE_COMPLETED;
