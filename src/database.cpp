@@ -2003,11 +2003,11 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 	// If the maximum number of days wasn't provided, use a month as the boundary
 	if(maxdays < 0) maxdays = 31;
 
-	// recordingruleid | parenttype | timerid | channelid | seriesid | starttime | endtime | title | synopsis
+	// recordingruleid | parenttype | timerid | channelid | seriesid | starttime | endtime | title | synopsis | startpadding | endpadding
 	auto sql = "with guidenumbers(guidenumber) as (select distinct(json_extract(value, '$.GuideNumber')) as guidenumber from lineup, json_each(lineup.data)), "
 		"recorded(programid) as (select json_extract(recording.data, '$.ProgramID') from recording) "
 		"select case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then recordingrule.recordingruleid else "
-		"(select recordingruleid from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and seriesid = episode.seriesid limit 1) end as recordingruleid, "
+		"(select recordingruleid from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end as recordingruleid, "
 		"case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then 1 else 0 end as parenttype, "
 		"fnv_hash(json_extract(value, '$.ProgramID'), json_extract(value, '$.StartTime'), json_extract(value, '$.ChannelNumber')) as timerid, "
 		"case when guidenumbers.guidenumber is null then -1 else encode_channel_id(json_extract(value, '$.ChannelNumber')) end as channelid, "
@@ -2015,7 +2015,11 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		"coalesce(json_extract(value, '$.StartTime'), 0) as starttime, "
 		"coalesce(json_extract(value, '$.EndTime'), 0) as endtime, "
 		"json_extract(value, '$.Title') as title, "
-		"json_extract(value, '$.Synopsis') as synopsis "
+		"json_extract(value, '$.Synopsis') as synopsis, "
+		"coalesce(case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then json_extract(recordingrule.data, '$.StartPadding') else "
+		"(select json_extract(recordingrule.data, '$.StartPadding') from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end, 30) as startpadding, "
+		"coalesce(case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then json_extract(recordingrule.data, '$.EndPadding') else "
+		"(select json_extract(recordingrule.data, '$.EndPadding') from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end, 30) as endpadding "
 		"from episode, json_each(episode.data) "
 		"left outer join recordingrule on episode.seriesid = recordingrule.seriesid and json_extract(value, '$.StartTime') = json_extract(recordingrule.data, '$.DateTimeOnly') "
 		"left outer join guidenumbers on json_extract(value, '$.ChannelNumber') = guidenumbers.guidenumber "
@@ -2046,6 +2050,8 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 			item.endtime = sqlite3_column_int64(statement, 6);
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 7));
 			item.synopsis = reinterpret_cast<char const*>(sqlite3_column_text(statement, 8));
+			item.startpadding = static_cast<unsigned int>(sqlite3_column_int(statement, 9));
+			item.endpadding = static_cast<unsigned int>(sqlite3_column_int(statement, 10));
 
 			callback(item);						// Invoke caller-supplied callback
 		}
