@@ -1,5 +1,7 @@
-v3.2.2 (2020.04.XX)
+v3.2.2 (2020.04.xx)
   - Update cURL library to version 7.69.1
+  - Adapt to HDHomeRun RECORD engine 20200318 breaking changes
+  - Apply recording rule start and end time padding deltas to the reported start and end times for timer instances
   - Omit reporting of original air date for programs of type News/Current Affairs unless a specific season/episode has been specified
 
 v3.2.1 (2020.03.06)
