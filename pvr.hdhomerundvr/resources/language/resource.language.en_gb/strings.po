@@ -152,6 +152,10 @@ msgctxt "#30138"
 msgid "Disable backend channel logo images"
 msgstr ""
 
+msgctxt "#30139"
+msgid "Disable blocking of DRM protected channel streams"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -369,7 +373,7 @@ msgid "When set to ON the EPG genre string(s) will be set to the string(s) provi
 msgstr ""
 
 msgctxt "#30507"
-msgid "When set to ON channels marked as DRM-protected by the HDHomeRun tuner device(s) will still be listed in the Kodi channel lineups."
+msgid "When set to ON channels marked as DRM-protected by the HDHomeRun tuner device(s) will be listed in the Kodi channel lineups."
 msgstr ""
 
 msgctxt "#30508"
@@ -462,4 +466,8 @@ msgstr ""
 
 msgctxt "#30533"
 msgid "When set to ON the channel logo images provided by the backend will not be made available to Kodi."
+msgstr ""
+
+msgctxt "#30534"
+msgid "When set to ON channels marked as DRM protected by the HDHomeRun tuner device(s) will not be blocked from playback attempts."
 msgstr ""

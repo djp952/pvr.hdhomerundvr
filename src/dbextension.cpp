@@ -1004,6 +1004,30 @@ void url_encode(sqlite3_context* context, int argc, sqlite3_value** argv)
 }
 
 //---------------------------------------------------------------------------
+// url_remove_query_string
+//
+// SQLite scalar function to remove the query string portion of a URL
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void url_remove_query_string(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// A null or zero-length string results in a NULL result
+	const char* input = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((input == nullptr) || (*input == 0)) return sqlite3_result_null(context);
+
+	// Chop off everything in the string after the first occurrence of a question mark
+	char const* questionmark = strchr(input, '?');
+	sqlite3_result_text(context, input, (questionmark != nullptr) ? static_cast<int>(questionmark - input) : -1, SQLITE_TRANSIENT);
+}
+
+//---------------------------------------------------------------------------
 // xmltv_bestindex
 //
 // Determines the best index to use when querying the virtual table
@@ -1674,6 +1698,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_encode"); return result; }
+
+	// url_remove_query_string function
+	//
+	result = sqlite3_create_function_v2(db, "url_remove_query_string", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_remove_query_string, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_remove_query_string"); return result; }
 
 	// xmltv virtual table
 	//

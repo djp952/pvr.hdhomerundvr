@@ -2712,7 +2712,7 @@ std::string get_tuner_stream_url(sqlite3* instance, char const* tunerid, union c
 	if((deviceid.length() == 0) || (tunerindex.length() != 1)) throw std::invalid_argument("tunerid");
 
 	// Execute a scalar query to generate the URL by matching up the device id and channel against the lineup
-	return execute_scalar_string(instance, "select replace(json_extract(lineupdata.value, '$.URL'), 'auto', 'tuner' || ?1) as url "
+	return execute_scalar_string(instance, "select replace(url_remove_query_string(json_extract(lineupdata.value, '$.URL')), 'auto', 'tuner' || ?1) as url "
 		"from lineup, json_each(lineup.data) as lineupdata where lineup.deviceid = ?2 "
 		"and json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?3)", tunerindex.c_str(), deviceid.c_str(), channelid.value);
 }
