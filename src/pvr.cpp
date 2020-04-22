@@ -279,6 +279,11 @@ struct addon_settings {
 	// Indicates the preferred protocol to use when streaming directly from the tuner(s)
 	enum tuning_protocol direct_tuning_protocol;
 
+	// direct_tuning_allow_drm
+	//
+	// Indicates that requests to stream DRM channels should be allowed
+	bool direct_tuning_allow_drm;
+
 	// stream_read_chunk_size
 	//
 	// Indicates the minimum number of bytes to return from a stream read
@@ -438,6 +443,7 @@ static addon_settings g_settings = {
 	false,					// use_http_device_discovery
 	false,					// use_direct_tuning
 	tuning_protocol::http,	// direct_tuning_protocol
+	false,					// direct_tuning_allow_drm
 	(4 KiB),				// stream_read_chunk_size
 	72000,					// deviceauth_stale_after				default = 20 hours
 	false,					// enable_recording_edl
@@ -1837,6 +1843,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_http_device_discovery", &bvalue)) g_settings.use_http_device_discovery = bvalue;
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
+			if(g_addon->GetSetting("direct_tuning_allow_drm", &bvalue)) g_settings.direct_tuning_allow_drm = bvalue;
 			if(g_addon->GetSetting("stream_read_chunk_size_v2", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
 			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 
@@ -2311,6 +2318,18 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			log_notice(__func__, ": setting direct_tuning_protocol changed to ", (g_settings.direct_tuning_protocol == tuning_protocol::http) ? "HTTP" : "RTP/UDP");
+		}
+	}
+
+	// direct_tuning_allow_drm
+	//
+	else if(strcmp(name, "direct_tuning_allow_drm") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.direct_tuning_allow_drm) {
+
+			g_settings.direct_tuning_allow_drm = bvalue;
+			log_notice(__func__, ": setting direct_tuning_allow_drm changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -4108,16 +4127,20 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 {
 	char						vchannel[64];		// Virtual channel number
 
-	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent streaming
-	if(channel.iEncryptionSystem != 0) {
-	
-		std::string text = "Channel " + std::string(channel.strChannelName) + " is marked as encrypted and cannot be played";
-		g_gui->Dialog_OK_ShowAndGetInput("DRM Protected Content", text.c_str());
-		return false;
-	}
-
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
+
+	// DRM channels are flagged with a non-zero iEncryptionSystem value to prevent playback.  This can be overriden
+	// if direct-tuning is enabled to allow for channels that are improperly flagged as DRM by the tuner device(s)
+	if(channel.iEncryptionSystem != 0) {
+		
+		if((!settings.use_direct_tuning) || (!settings.direct_tuning_allow_drm)) {
+
+			std::string text = "Channel " + std::string(channel.strChannelName) + " is flagged as DRM protected content and cannot be played";
+			g_gui->Dialog_OK_ShowAndGetInput("DRM Protected Content", text.c_str());
+			return false;
+		}
+	}
 
 	// The only interesting thing about PVR_CHANNEL is the channel id
 	union channelid channelid;

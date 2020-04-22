@@ -337,6 +337,15 @@
           <control type="spinner" format="integer"/>
         </setting>
 
+        <setting id="direct_tuning_allow_drm" type="boolean" parent="use_direct_tuning" label="30139" help="30534">
+          <level>0</level>
+          <default>false</default>
+          <dependencies>
+            <dependency type="enable" setting="use_direct_tuning">true</dependency>
+          </dependencies>
+          <control type="toggle"/>
+        </setting>
+
         <setting id="stream_read_chunk_size_v2" type="integer" label="30114" help="30524">
           <level>0</level>
           <default>4096</default>
