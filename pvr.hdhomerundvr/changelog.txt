@@ -1,4 +1,4 @@
-v3.2.2 (2020.04.xx)
+v3.2.2 (2020.04.23)
   - Update cURL library to version 7.69.1
   - Adapt to HDHomeRun RECORD engine 20200318 breaking changes
   - Apply recording rule start and end time padding deltas to the reported start and end times for timer instances
