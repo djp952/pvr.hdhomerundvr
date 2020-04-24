@@ -114,8 +114,8 @@ template<typename _result> static _result handle_stdexception(char const* functi
 template<typename... _args> static void log_debug(_args&&... args);
 template<typename... _args> static void log_error(_args&&... args);
 template<typename... _args> static void log_info(_args&&... args);
-template<typename... _args>	static void log_message(ADDON::addon_log_t level, _args&&... args);
-template<typename... _args> static void log_notice(_args&&... args);
+template<typename... _args>	static void log_message(addon_log_t level, _args&&... args);
+template<typename... _args> static void log_warning(_args&&... args);
 
 // Scheduled Tasks
 //
@@ -645,7 +645,7 @@ static void discover_devices(scalar_condition<bool> const&, bool& changed)
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
-	log_notice(__func__, ": initiated local network device discovery (method: ", settings.use_http_device_discovery ? "http" : "broadcast", ")");
+	log_info(__func__, ": initiated local network device discovery (method: ", settings.use_http_device_discovery ? "http" : "broadcast", ")");
 
 	try {
 
@@ -658,7 +658,7 @@ static void discover_devices(scalar_condition<bool> const&, bool& changed)
 		// Discover the devices on the local network and check for changes
 		auto caller = __func__;
 		discover_devices(dbhandle, settings.use_http_device_discovery, changed);
-		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_notice(caller, ": discovered: ", device_name.name); });
+		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_info(caller, ": discovered: ", device_name.name); });
 
 		// Set the discovery time for the device information
 		set_discovered(dbhandle, "devices", time(nullptr));
@@ -677,7 +677,7 @@ static void discover_episodes(scalar_condition<bool> const&, bool& changed)
 {
 	changed = false;						// Initialize [ref] argument
 
-	log_notice(__func__, ": initiated recording rule episode discovery");
+	log_info(__func__, ": initiated recording rule episode discovery");
 
 	try {
 
@@ -689,7 +689,7 @@ static void discover_episodes(scalar_condition<bool> const&, bool& changed)
 
 		// Discover the recording rule episode information associated with all of the authorized devices
 		if(authorization.length() != 0) discover_episodes(dbhandle, authorization.c_str(), changed);
-		else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule episode discovery");
+		else log_info(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule episode discovery");
 
 		// Set the discovery time for the episode information
 		set_discovered(dbhandle, "episodes", time(nullptr));
@@ -708,7 +708,7 @@ static void discover_lineups(scalar_condition<bool> const&, bool& changed)
 {
 	changed = false;						// Initialize [ref] argument
 
-	log_notice(__func__, ": initiated local tuner device lineup discovery");
+	log_info(__func__, ": initiated local tuner device lineup discovery");
 
 	try { 
 		
@@ -738,7 +738,7 @@ static void discover_listings(scalar_condition<bool> const&, bool& changed)
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
-	log_notice(__func__, ": initiated listing discovery");
+	log_info(__func__, ": initiated listing discovery");
 
 	try {
 
@@ -753,7 +753,7 @@ static void discover_listings(scalar_condition<bool> const&, bool& changed)
 			if(authorization.length() != 0) discover_listings(dbhandle, authorization.c_str(), changed);
 		}
 
-		else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping listing discovery");
+		else log_info(__func__, ": no tuners with valid DVR authorization were discovered; skipping listing discovery");
 
 		// Set the discovery time for the listing information
 		set_discovered(dbhandle, "listings", time(nullptr));
@@ -775,7 +775,7 @@ static void discover_recordingrules(scalar_condition<bool> const&, bool& changed
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
-	log_notice(__func__, ": initiated recording rule discovery");
+	log_info(__func__, ": initiated recording rule discovery");
 
 	try {
 
@@ -799,7 +799,7 @@ static void discover_recordingrules(scalar_condition<bool> const&, bool& changed
 
 		}
 
-		else log_notice(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule discovery");
+		else log_info(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule discovery");
 
 		// Set the discovery time for the recordingrule information
 		set_discovered(dbhandle, "recordingrules", time(nullptr));
@@ -818,7 +818,7 @@ static void discover_recordings(scalar_condition<bool> const&, bool& changed)
 {
 	changed = false;						// Initialize [ref] argument
 
-	log_notice(__func__, ": initiated local storage device recording discovery");
+	log_info(__func__, ": initiated local storage device recording discovery");
 
 	try {
 
@@ -880,7 +880,7 @@ static _result handle_stdexception(char const* function, std::exception const& e
 template<typename... _args>
 static void log_debug(_args&&... args)
 {
-	log_message(ADDON::addon_log_t::LOG_DEBUG, std::forward<_args>(args)...);
+	log_message(addon_log_t::LOG_DEBUG, std::forward<_args>(args)...);
 }
 
 // log_error (local)
@@ -889,7 +889,7 @@ static void log_debug(_args&&... args)
 template<typename... _args>
 static void log_error(_args&&... args)
 {
-	log_message(ADDON::addon_log_t::LOG_ERROR, std::forward<_args>(args)...);
+	log_message(addon_log_t::LOG_ERROR, std::forward<_args>(args)...);
 }
 
 // log_info (local)
@@ -898,14 +898,14 @@ static void log_error(_args&&... args)
 template<typename... _args>
 static void log_info(_args&&... args)
 {
-	log_message(ADDON::addon_log_t::LOG_INFO, std::forward<_args>(args)...);
+	log_message(addon_log_t::LOG_INFO, std::forward<_args>(args)...);
 }
 
 // log_message (local)
 //
 // Variadic method of writing an entry into the Kodi application log
 template<typename... _args>
-static void log_message(ADDON::addon_log_t level, _args&&... args)
+static void log_message(addon_log_t level, _args&&... args)
 {
 	std::ostringstream stream;
 	int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
@@ -914,7 +914,7 @@ static void log_message(ADDON::addon_log_t level, _args&&... args)
 	if(g_addon) g_addon->Log(level, stream.str().c_str());
 
 	// Write LOG_ERROR level messages to an appropriate secondary log mechanism
-	if(level == ADDON::addon_log_t::LOG_ERROR) {
+	if(level == addon_log_t::LOG_ERROR) {
 
 #if defined(_WINDOWS) || defined(WINAPI_FAMILY)
 		std::string message = "ERROR: " + stream.str() + "\r\n";
@@ -928,13 +928,13 @@ static void log_message(ADDON::addon_log_t level, _args&&... args)
 	}
 }
 
-// log_notice (local)
+// log_warning (local)
 //
-// Variadic method of writing a LOG_NOTICE entry into the Kodi application log
+// Variadic method of writing a LOG_WARNING entry into the Kodi application log
 template<typename... _args>
-static void log_notice(_args&&... args)
+static void log_warning(_args&&... args)
 {
-	log_message(ADDON::addon_log_t::LOG_NOTICE, std::forward<_args>(args)...);
+	log_message(addon_log_t::LOG_WARNING, std::forward<_args>(args)...);
 }
 
 // edltype_to_string (local)
@@ -1055,7 +1055,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 
 			// Start the new HTTP stream using the parameters currently specified by the settings
 			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
-			log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
+			log_info(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
 
 			return stream;
 		}
@@ -1085,7 +1085,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::ha
 
 		// Start the new RTP/UDP stream -- devicestream performs its own tuner selection based on the provided collection
 		std::unique_ptr<pvrstream> stream = devicestream::create(devices, vchannel);
-		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device rtp/udp broadcast");
+		log_info(__func__, ": streaming channel ", vchannel, " via tuner device rtp/udp broadcast");
 
 		return stream;
 	}
@@ -1122,7 +1122,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
 		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
-		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
+		log_info(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
 
 		return stream;
 	}
@@ -1233,7 +1233,7 @@ static void startup_alerts_task(scalar_condition<bool> const& /*cancel*/)
 	int numtuners = get_tuner_count(dbhandle);
 
 	// If there were no tuner devices detected alert the user via a notification
-	if(numtuners == 0) g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected");
+	if(numtuners == 0) g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected");
 
 	// If there are no DVR authorized tuner devices detected, alert the user via a message box.
 	// This operation is only done one time for the installed system, don't use the database for this
@@ -1278,13 +1278,13 @@ static void update_devices_task(scalar_condition<bool> const& cancel)
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": device discovery data changed -- execute lineup update now");
+				log_info(__func__, ": device discovery data changed -- execute lineup update now");
 				g_scheduler.now(update_lineups_task, cancel);
 			}
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": device discovery data changed -- execute recording update now");
+				log_info(__func__, ": device discovery data changed -- execute recording update now");
 				g_scheduler.now(update_recordings_task, cancel);
 			}
 		}
@@ -1296,11 +1296,11 @@ static void update_devices_task(scalar_condition<bool> const& cancel)
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
 	if(cancel.test(true) == false) {
 
-		log_notice(__func__, ": scheduling next device update to initiate in ", settings.discover_devices_interval, " seconds");
+		log_info(__func__, ": scheduling next device update to initiate in ", settings.discover_devices_interval, " seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), update_devices_task);
 	}
 
-	else log_notice(__func__, ": device update task was cancelled");
+	else log_info(__func__, ": device update task was cancelled");
 }
 
 // update_episodes_task (local)
@@ -1323,7 +1323,7 @@ static void update_episodes_task(scalar_condition<bool> const& cancel)
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": recording rule episode discovery data changed -- trigger timer update");
+				log_info(__func__, ": recording rule episode discovery data changed -- trigger timer update");
 				g_pvr->TriggerTimerUpdate();
 			}
 		}
@@ -1335,11 +1335,11 @@ static void update_episodes_task(scalar_condition<bool> const& cancel)
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
 	if(cancel.test(true) == false) {
 
-		log_notice(__func__, ": scheduling next recording rule episode update to initiate in ", settings.discover_episodes_interval, " seconds");
+		log_info(__func__, ": scheduling next recording rule episode update to initiate in ", settings.discover_episodes_interval, " seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_episodes_interval), update_episodes_task);
 	}
 
-	else log_notice(__func__, ": recording rule episode update task was cancelled");
+	else log_info(__func__, ": recording rule episode update task was cancelled");
 }
 
 // update_lineups_task (local)
@@ -1363,19 +1363,19 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": lineup discovery data changed -- trigger channel update");
+				log_info(__func__, ": lineup discovery data changed -- trigger channel update");
 				g_pvr->TriggerChannelUpdate();
 			}
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": lineup discovery data changed -- trigger channel group update");
+				log_info(__func__, ": lineup discovery data changed -- trigger channel group update");
 				g_pvr->TriggerChannelGroupsUpdate();
 			}
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": lineup discovery data changed -- schedule guide listings update");
+				log_info(__func__, ": lineup discovery data changed -- schedule guide listings update");
 				g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
 			}
 		}
@@ -1387,11 +1387,11 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
 	if(cancel.test(true) == false) {
 
-		log_notice(__func__, ": scheduling next lineup update to initiate in ", settings.discover_lineups_interval, " seconds");
+		log_info(__func__, ": scheduling next lineup update to initiate in ", settings.discover_lineups_interval, " seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_lineups_interval), update_lineups_task);
 	}
 
-	else log_notice(__func__, ": lineup update task was cancelled");
+	else log_info(__func__, ": lineup update task was cancelled");
 }
 
 // update_listings_task (local)
@@ -1422,7 +1422,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 	if((!force) && (checkchannels) && (has_missing_guide_channels(dbhandle))) {
 
 		force = true;
-		log_notice(__func__, ": forcing update due to missing channel(s) in listing data");
+		log_info(__func__, ": forcing update due to missing channel(s) in listing data");
 	}
 
 	// Calculate the next time the listings discovery should be executed, which is 24 hours from
@@ -1436,20 +1436,20 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 		if(cancel.test(true) == false) {
 
 			if(force) discover_listings(cancel, changed);
-			else log_notice(__func__, ": listing discovery skipped; data is less than 18 hours old");
+			else log_info(__func__, ": listing discovery skipped; data is less than 18 hours old");
 		}
 
 		// Trigger a channel update; the metadata (name, icon, etc) may have changed
 		if(cancel.test(true) == false) {
 
-			log_notice(__func__, ": triggering channel update");
+			log_info(__func__, ": triggering channel update");
 			g_pvr->TriggerChannelUpdate();
 		}
 
 		// Enumerate all of the listings in the database and (re)send them to Kodi
 		if(cancel.test(true) == false) {
 
-			log_notice(__func__, ": execute electronic program guide update");
+			log_info(__func__, ": execute electronic program guide update");
 
 			enumerate_listings(connectionpool::handle(g_connpool), settings.show_drm_protected_channels, g_epgmaxtime.load(), 
 				[&](struct listing const& item, bool& cancelenum) -> void {
@@ -1534,7 +1534,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 			// Trigger a timer update after the guide information has been updated
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": triggering timer update");
+				log_info(__func__, ": triggering timer update");
 				g_pvr->TriggerTimerUpdate();
 			}
 		}
@@ -1546,11 +1546,11 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
 	if(cancel.test(true) == false) {
 
-		log_notice(__func__, ": scheduling next listing update to initiate in ", nextdiscovery - now, " seconds");
+		log_info(__func__, ": scheduling next listing update to initiate in ", nextdiscovery - now, " seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(nextdiscovery - now), std::bind(update_listings_task, false, false, std::placeholders::_1));
 	}
 
-	else log_notice(__func__, ": listing update task was cancelled");
+	else log_info(__func__, ": listing update task was cancelled");
 }
 
 // update_recordingrules_task (local)
@@ -1574,14 +1574,14 @@ static void update_recordingrules_task(scalar_condition<bool> const& cancel)
 			// Execute a recording rule episode discovery now; task will reschedule itself
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": device discovery data changed -- update recording rule episode discovery now");
+				log_info(__func__, ": device discovery data changed -- update recording rule episode discovery now");
 				g_scheduler.now(update_episodes_task, cancel);
 			}
 
 			// Trigger a PVR timer update (this may be redundant if update_episodes_task already did it)
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": recording rule discovery data changed -- trigger timer update");
+				log_info(__func__, ": recording rule discovery data changed -- trigger timer update");
 				g_pvr->TriggerTimerUpdate();
 			}
 		}
@@ -1593,11 +1593,11 @@ static void update_recordingrules_task(scalar_condition<bool> const& cancel)
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
 	if(cancel.test(true) == false) {
 
-		log_notice(__func__, ": scheduling next recording rule update to initiate in ", settings.discover_recordingrules_interval, " seconds");
+		log_info(__func__, ": scheduling next recording rule update to initiate in ", settings.discover_recordingrules_interval, " seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordingrules_interval), update_recordingrules_task);
 	}
 
-	else log_notice(__func__, ": recording rule update task was cancelled");
+	else log_info(__func__, ": recording rule update task was cancelled");
 }
 
 // update_recordings_task (local)
@@ -1620,7 +1620,7 @@ static void update_recordings_task(scalar_condition<bool> const& cancel)
 
 			if(cancel.test(true) == false) {
 
-				log_notice(__func__, ": recording discovery data changed -- trigger recording update");
+				log_info(__func__, ": recording discovery data changed -- trigger recording update");
 				g_pvr->TriggerRecordingUpdate();
 			}
 		}
@@ -1632,11 +1632,11 @@ static void update_recordings_task(scalar_condition<bool> const& cancel)
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
 	if(cancel.test(true) == false) {
 
-		log_notice(__func__, ": scheduling next recording update to initiate in ", settings.discover_recordings_interval, " seconds");
+		log_info(__func__, ": scheduling next recording update to initiate in ", settings.discover_recordings_interval, " seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordings_interval), update_recordings_task);
 	}
 
-	else log_notice(__func__, ": recording update task was cancelled");
+	else log_info(__func__, ": recording update task was cancelled");
 }
 
 // wait_for_devices (local)
@@ -1686,10 +1686,10 @@ static void wait_for_network_task(int seconds, scalar_condition<bool> const& can
 	// Watch for task cancellation and only retry the operation(s) up to the number of seconds specified
 	while((cancel.test(true) == false) && (++attempts < seconds)) {
 
-		if(ipv4_network_available()) { log_notice(__func__, ": IPv4 network connectivity detected"); return; }
+		if(ipv4_network_available()) { log_info(__func__, ": IPv4 network connectivity detected"); return; }
 
 		// Sleep for one second before trying the operation again
-		log_notice(__func__, ": IPv4 network connectivity not detected; waiting for one second before trying again");
+		log_info(__func__, ": IPv4 network connectivity not detected; waiting for one second before trying again");
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
@@ -1796,16 +1796,16 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 		if(!g_addon->RegisterMe(handle)) throw string_exception(__func__, ": failed to register addon handle (CHelper_libXBMC_addon::RegisterMe)");
 
 		// Throw a banner out to the Kodi log indicating that the add-on is being loaded
-		log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
+		log_info(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loading");
 
 		try { 
 
 			// The user data path doesn't always exist when an addon has been installed
 			if(!g_addon->DirectoryExists(g_userpath.c_str())) {
 
-				log_notice(__func__, ": user data directory ", g_userpath.c_str(), " does not exist");
+				log_info(__func__, ": user data directory ", g_userpath.c_str(), " does not exist");
 				if(!g_addon->CreateDirectory(g_userpath.c_str())) throw string_exception(__func__, ": unable to create addon user data directory");
-				log_notice(__func__, ": user data directory ", g_userpath.c_str(), " created");
+				log_info(__func__, ": user data directory ", g_userpath.c_str(), " created");
 			}
 
 			// Load the general settings
@@ -1950,10 +1950,10 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 						log_error(__func__, ": unable to create/open the PVR database ", databasefile, " - ", dbex.what());
 						
 						// If any SQLite-specific errors were thrown during database open/create, attempt to delete and recreate the database
-						log_notice(__func__, ": attempting to delete and recreate the PVR database");
+						log_info(__func__, ": attempting to delete and recreate the PVR database");
 						g_addon->DeleteFile(databasefile.c_str());
 						g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
-						log_notice(__func__, ": successfully recreated the PVR database");
+						log_info(__func__, ": successfully recreated the PVR database");
 					}
 
 					// Start the task scheduler
@@ -1979,7 +1979,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	catch(...) { return ADDON_STATUS::ADDON_STATUS_PERMANENT_FAILURE; }
 
 	// Throw a simple banner out to the Kodi log indicating that the add-on has been loaded
-	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loaded");
+	log_info(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " loaded");
 
 	return ADDON_STATUS::ADDON_STATUS_OK;
 }
@@ -1996,7 +1996,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 void ADDON_Destroy(void)
 {
 	// Throw a message out to the Kodi log indicating that the add-on is being unloaded
-	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
+	log_info(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloading");
 
 	g_pvrstream.reset();					// Destroy any active stream instance
 	g_scheduler.stop();						// Stop the task scheduler
@@ -2005,7 +2005,7 @@ void ADDON_Destroy(void)
 	// Check for more than just the global connection pool reference during shutdown,
 	// there shouldn't still be any active callbacks running during ADDON_Destroy
 	long poolrefs = g_connpool.use_count();
-	if(poolrefs != 1) log_notice(__func__, ": warning: g_connpool.use_count = ", g_connpool.use_count());
+	if(poolrefs != 1) log_warning(__func__, ": g_connpool.use_count = ", g_connpool.use_count());
 	g_connpool.reset();
 
 	// Destroy the PVR and GUI callback instances
@@ -2013,7 +2013,7 @@ void ADDON_Destroy(void)
 	g_gui.reset();
 
 	// Send a notice out to the Kodi log as late as possible and destroy the addon callbacks
-	log_notice(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
+	log_info(__func__, ": ", VERSION_PRODUCTNAME_ANSI, " v", VERSION_VERSION3_ANSI, " unloaded");
 	g_addon.reset();
 
 	// Clean up libcurl
@@ -2064,7 +2064,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.pause_discovery_while_streaming) {
 
 			g_settings.pause_discovery_while_streaming = bvalue;
-			log_notice(__func__, ": setting pause_discovery_while_streaming changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting pause_discovery_while_streaming changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2076,7 +2076,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.prepend_channel_numbers) {
 
 			g_settings.prepend_channel_numbers = bvalue;
-			log_notice(__func__, ": setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
+			log_info(__func__, ": setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
 		}
 	}
@@ -2089,7 +2089,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_episode_number_as_title) {
 
 			g_settings.use_episode_number_as_title = bvalue;
-			log_notice(__func__, ": setting use_episode_number_as_title changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting use_episode_number_as_title changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2102,7 +2102,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.discover_recordings_after_playback) {
 
 			g_settings.discover_recordings_after_playback = bvalue;
-			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2114,7 +2114,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_backend_genre_strings) {
 
 			g_settings.use_backend_genre_strings = bvalue;
-			log_notice(__func__, ": setting use_backend_genre_strings changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting use_backend_genre_strings changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2126,7 +2126,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.show_drm_protected_channels) {
 
 			g_settings.show_drm_protected_channels = bvalue;
-			log_notice(__func__, ": setting show_drm_protected_channels changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_info(__func__, ": setting show_drm_protected_channels changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -2140,7 +2140,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_channel_names_from_lineup) {
 
 			g_settings.use_channel_names_from_lineup = bvalue;
-			log_notice(__func__, ": setting use_channel_names_from_lineup changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_info(__func__, ": setting use_channel_names_from_lineup changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -2154,7 +2154,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.disable_recording_categories) {
 
 			g_settings.disable_recording_categories = bvalue;
-			log_notice(__func__, ": setting disable_recording_categories changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting disable_recording_categories changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2167,7 +2167,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.generate_repeat_indicators) {
 
 			g_settings.generate_repeat_indicators = bvalue;
-			log_notice(__func__, ": setting generate_repeat_indicators changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting generate_repeat_indicators changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2180,7 +2180,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_airdate_as_recordingdate) {
 
 			g_settings.use_airdate_as_recordingdate = bvalue;
-			log_notice(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2193,7 +2193,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.disable_backend_channel_logos) {
 
 			g_settings.disable_backend_channel_logos = bvalue;
-			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_info(__func__, ": setting disable_backend_channel_logos changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -2207,7 +2207,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.delete_datetime_rules_after) {
 
 			g_settings.delete_datetime_rules_after = nvalue;
-			log_notice(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds -- execute recording rule update");
+			log_info(__func__, ": setting delete_datetime_rules_after changed to ", nvalue, " seconds -- execute recording rule update");
 			g_scheduler.add(update_recordingrules_task);
 		}
 	}
@@ -2221,7 +2221,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the update_devices_task to execute at the specified interval from now
 			g_settings.discover_devices_interval = nvalue;
-			log_notice(__func__, ": setting discover_devices_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
+			log_info(__func__, ": setting discover_devices_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 			g_scheduler.add(now + std::chrono::seconds(nvalue), update_devices_task);
 		}
 	}
@@ -2235,7 +2235,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the update_episodes_task to execute at the specified interval from now
 			g_settings.discover_episodes_interval = nvalue;
-			log_notice(__func__, ": setting discover_episodes_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
+			log_info(__func__, ": setting discover_episodes_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 			g_scheduler.add(now + std::chrono::seconds(nvalue), update_episodes_task);
 		}
 	}
@@ -2249,7 +2249,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the update_lineups_task to execute at the specified interval from now
 			g_settings.discover_lineups_interval = nvalue;
-			log_notice(__func__, ": setting discover_lineups_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
+			log_info(__func__, ": setting discover_lineups_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 			g_scheduler.add(now + std::chrono::seconds(nvalue), update_lineups_task);
 		}
 	}
@@ -2263,7 +2263,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			// Reschedule the update_recordingrules_task to execute at the specified interval from now
 			g_settings.discover_recordingrules_interval = nvalue;
-			log_notice(__func__, ": setting discover_recordingrules_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
+			log_info(__func__, ": setting discover_recordingrules_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 			g_scheduler.add(now + std::chrono::seconds(nvalue), update_recordingrules_task);
 		}
 	}
@@ -2277,7 +2277,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 		// Reschedule the update_recordings_task to execute at the specified interval from now
 		g_settings.discover_recordings_interval = nvalue;
-		log_notice(__func__, ": setting discover_recordings_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
+		log_info(__func__, ": setting discover_recordings_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 		g_scheduler.add(now + std::chrono::seconds(nvalue), update_recordings_task);
 	}
 	}
@@ -2290,7 +2290,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_http_device_discovery) {
 
 			g_settings.use_http_device_discovery = bvalue;
-			log_notice(__func__, ": setting use_http_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device update");
+			log_info(__func__, ": setting use_http_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device update");
 
 			// Reschedule the device update task to run as soon as possible
 			g_scheduler.add(update_devices_task);
@@ -2305,7 +2305,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_direct_tuning) {
 
 			g_settings.use_direct_tuning = bvalue;
-			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2317,7 +2317,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != static_cast<int>(g_settings.direct_tuning_protocol)) {
 
 			g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
-			log_notice(__func__, ": setting direct_tuning_protocol changed to ", (g_settings.direct_tuning_protocol == tuning_protocol::http) ? "HTTP" : "RTP/UDP");
+			log_info(__func__, ": setting direct_tuning_protocol changed to ", (g_settings.direct_tuning_protocol == tuning_protocol::http) ? "HTTP" : "RTP/UDP");
 		}
 	}
 
@@ -2329,7 +2329,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.direct_tuning_allow_drm) {
 
 			g_settings.direct_tuning_allow_drm = bvalue;
-			log_notice(__func__, ": setting direct_tuning_allow_drm changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting direct_tuning_allow_drm changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2341,7 +2341,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.stream_read_chunk_size) {
 
 			g_settings.stream_read_chunk_size = nvalue;
-			log_notice(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
+			log_info(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -2353,7 +2353,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.deviceauth_stale_after) {
 
 			g_settings.deviceauth_stale_after = nvalue;
-			log_notice(__func__, ": setting deviceauth_stale_after changed to ", nvalue, " seconds -- schedule device discovery");
+			log_info(__func__, ": setting deviceauth_stale_after changed to ", nvalue, " seconds -- schedule device discovery");
 
 			// Reschedule the device discovery task to run as soon as possible
 			g_scheduler.add(update_devices_task);
@@ -2368,7 +2368,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.enable_recording_edl) {
 
 			g_settings.enable_recording_edl = bvalue;
-			log_notice(__func__, ": setting enable_recording_edl changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting enable_recording_edl changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2379,7 +2379,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(strcmp(g_settings.recording_edl_folder.c_str(), reinterpret_cast<char const*>(value)) != 0) {
 
 			g_settings.recording_edl_folder.assign(reinterpret_cast<char const*>(value));
-			log_notice(__func__, ": setting recording_edl_folder changed to ", g_settings.recording_edl_folder.c_str());
+			log_info(__func__, ": setting recording_edl_folder changed to ", g_settings.recording_edl_folder.c_str());
 		}
 	}
 
@@ -2390,7 +2390,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(strcmp(g_settings.recording_edl_folder_2.c_str(), reinterpret_cast<char const*>(value)) != 0) {
 
 			g_settings.recording_edl_folder_2.assign(reinterpret_cast<char const*>(value));
-			log_notice(__func__, ": setting recording_edl_folder_2 changed to ", g_settings.recording_edl_folder_2.c_str());
+			log_info(__func__, ": setting recording_edl_folder_2 changed to ", g_settings.recording_edl_folder_2.c_str());
 		}
 	}
 
@@ -2401,7 +2401,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(strcmp(g_settings.recording_edl_folder_3.c_str(), reinterpret_cast<char const*>(value)) != 0) {
 
 			g_settings.recording_edl_folder_3.assign(reinterpret_cast<char const*>(value));
-			log_notice(__func__, ": setting recording_edl_folder_3 changed to ", g_settings.recording_edl_folder_3.c_str());
+			log_info(__func__, ": setting recording_edl_folder_3 changed to ", g_settings.recording_edl_folder_3.c_str());
 		}
 	}
 
@@ -2413,7 +2413,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.recording_edl_folder_is_flat) {
 
 			g_settings.recording_edl_folder_is_flat = bvalue;
-			log_notice(__func__, ": setting recording_edl_folder_is_flat changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting recording_edl_folder_is_flat changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2425,7 +2425,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.recording_edl_cut_as_comskip) {
 
 			g_settings.recording_edl_cut_as_comskip = bvalue;
-			log_notice(__func__, ": setting recording_edl_cut_as_comskip changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting recording_edl_cut_as_comskip changed to ", (bvalue) ? "true" : "false");
 		}
 	}
 
@@ -2437,7 +2437,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.recording_edl_start_padding) {
 
 			g_settings.recording_edl_start_padding = nvalue;
-			log_notice(__func__, ": setting recording_edl_start_padding changed to ", nvalue, " milliseconds");
+			log_info(__func__, ": setting recording_edl_start_padding changed to ", nvalue, " milliseconds");
 		}
 	}
 
@@ -2449,7 +2449,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != g_settings.recording_edl_end_padding) {
 
 			g_settings.recording_edl_end_padding = nvalue;
-			log_notice(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
+			log_info(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
 		}
 	}
 
@@ -2609,7 +2609,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling device update task");
+			log_info(__func__, ": scheduling device update task");
 			g_scheduler.add(update_devices_task);
 		}
 
@@ -2625,7 +2625,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling lineup update task");
+			log_info(__func__, ": scheduling lineup update task");
 			g_scheduler.add(update_lineups_task);
 		}
 
@@ -2641,7 +2641,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling listing update task (forced)");
+			log_info(__func__, ": scheduling listing update task (forced)");
 			g_scheduler.add(std::bind(update_listings_task, true, true, std::placeholders::_1));
 		}
 
@@ -2657,7 +2657,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling recording rule update task");
+			log_info(__func__, ": scheduling recording rule update task");
 			g_scheduler.add(update_recordingrules_task);
 		}
 
@@ -2673,7 +2673,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try {
 
-			log_notice(__func__, ": scheduling recording update task");
+			log_info(__func__, ": scheduling recording update task");
 			g_scheduler.add(update_recordings_task);
 		}
 
@@ -2695,7 +2695,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			// Set the channel visibility to disabled (red x) and kick off a lineup discovery task
 			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::disabled);
 		
-			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " disabled; scheduling lineup update task");
+			log_info(__func__, ": channel ", item.data.channel.strChannelName, " disabled; scheduling lineup update task");
 			g_scheduler.add(update_lineups_task);
 		}
 
@@ -2717,7 +2717,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			// Set the channel visibility to favorite (yellow star) and kick off a lineup discovery task
 			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::favorite);
 		
-			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " added as favorite; scheduling lineup update task");
+			log_info(__func__, ": channel ", item.data.channel.strChannelName, " added as favorite; scheduling lineup update task");
 			g_scheduler.add(update_lineups_task);
 		}
 
@@ -2739,7 +2739,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			// Set the channel visibility to favorite (gray star) and kick off a lineup discovery task
 			set_channel_visibility(connectionpool::handle(g_connpool), channelid, channel_visibility::enabled);
 		
-			log_notice(__func__, ": channel ", item.data.channel.strChannelName, " removed from favorites; scheduling lineup update task");
+			log_info(__func__, ": channel ", item.data.channel.strChannelName, " removed from favorites; scheduling lineup update task");
 			g_scheduler.add(update_lineups_task);
 		}
 
@@ -3544,7 +3544,7 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 				if(!g_addon->FileExists(filename.c_str(), false)) {
 
 					// If the .EDL file was not found anywhere, log a notice but return NO_ERROR back to Kodi -- this is not fatal
-					log_notice(__func__, ": edit decision list for recording ", basename.c_str(), " was not found in any configured EDL file directories");
+					log_info(__func__, ": edit decision list for recording ", basename.c_str(), " was not found in any configured EDL file directories");
 					return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 				}
 			}
@@ -3558,7 +3558,7 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 		if(handle != nullptr) {
 
 			size_t linenumber = 0;
-			log_notice(__func__, ": processing edit decision list file: ", filename.c_str());
+			log_info(__func__, ": processing edit decision list file: ", filename.c_str());
 
 			// Process each line of the file individually
 			while(g_addon->ReadFileString(handle, &line[0], 2 KiB)) {
@@ -3585,7 +3585,7 @@ PVR_ERROR GetRecordingEdl(PVR_RECORDING const& recording, PVR_EDL_ENTRY edl[], i
 					if((static_cast<PVR_EDL_TYPE>(type) == PVR_EDL_TYPE_CUT) && (g_settings.recording_edl_cut_as_comskip)) type = static_cast<int>(PVR_EDL_TYPE_COMBREAK);
 
 					// Log the adjusted values for the entry and add a PVR_EDL_ENTRY to the vector<>
-					log_notice(__func__, ": adding edit decision list entry (start=", start, "s, end=", end, "s, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
+					log_info(__func__, ": adding edit decision list entry (start=", start, "s, end=", end, "s, type=", edltype_to_string(static_cast<PVR_EDL_TYPE>(type)), ")");
 					entries.emplace_back(PVR_EDL_ENTRY { static_cast<int64_t>(static_cast<double>(start) * 1000.0), static_cast<int64_t>(static_cast<double>(end) * 1000.0), static_cast<PVR_EDL_TYPE>(type)});
 				}
 
@@ -3940,15 +3940,15 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 
 		// Update the episode information for the specified series; issue a log warning if the operation fails
 		try { discover_episodes_seriesid(dbhandle, authorization.c_str(), seriesid.c_str()); }
-		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
-		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
+		catch(std::exception& ex) { log_warning(__func__, ": unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
+		catch(...) { log_warning(__func__, ": unable to refresh episode information for series ", seriesid.c_str()); }
 
 		// Force a timer update in Kodi to refresh whatever this did on the backend
 		g_pvr->TriggerTimerUpdate();
 
 		// Schedule a recording update operation for 15 seconds in the future after any new timer has been
 		// added; this allows a timer that kicks off immediately to show the recording in Kodi quickly
-		log_notice(__func__, ": scheduling recording update to initiate in 15 seconds");
+		log_info(__func__, ": scheduling recording update to initiate in 15 seconds");
 		g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(15), update_recordings_task);
 	}
 
@@ -4016,8 +4016,8 @@ PVR_ERROR DeleteTimer(PVR_TIMER const& timer, bool /*force*/)
 
 		// Update the episode information for the specified series; issue a log warning if the operation fails
 		try { discover_episodes_seriesid(dbhandle, authorization.c_str(), seriesid.c_str()); }
-		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
-		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
+		catch(std::exception& ex) { log_warning(__func__, ": unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
+		catch(...) { log_warning(__func__, ": unable to refresh episode information for series ", seriesid.c_str()); }
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -4101,8 +4101,8 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 
 		// Update the episode information for the specified series; issue a log warning if the operation fails
 		try { discover_episodes_seriesid(dbhandle, authorization.c_str(), seriesid.c_str()); }
-		catch(std::exception& ex) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
-		catch(...) { log_notice(__func__, ": warning: unable to refresh episode information for series ", seriesid.c_str()); }
+		catch(std::exception& ex) { log_warning(__func__, ": unable to refresh episode information for series ", seriesid.c_str(), ": ", ex.what()); }
+		catch(...) { log_warning(__func__, ": unable to refresh episode information for series ", seriesid.c_str()); }
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -4182,11 +4182,11 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 			g_stream_endtime = std::numeric_limits<time_t>::max();
 
 			// Log some additional information about the stream for diagnostic purposes
-			log_notice(__func__, ": mediatype = ", g_pvrstream->mediatype());
-			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
-			log_notice(__func__, ": length    = ", g_pvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
-			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
+			log_info(__func__, ": mediatype = ", g_pvrstream->mediatype());
+			log_info(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
+			log_info(__func__, ": length    = ", g_pvrstream->length());
+			log_info(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
+			log_info(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
 		}
 
 		catch(...) { g_pvrstream.reset(); g_scheduler.resume(); throw; }
@@ -4197,7 +4197,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	// Queue a notification for the user when a live stream cannot be opened, don't just silently log it
 	catch(std::exception& ex) { 
 		
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Live Stream creation failed (%s).", ex.what());
+		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Live Stream creation failed (%s).", ex.what());
 		return handle_stdexception(__func__, ex, false); 
 	}
 
@@ -4227,7 +4227,7 @@ void CloseLiveStream(void)
 		// to execute in a few seconds; this prevents doing it multiple times when changing channels
 		if(copy_settings().discover_recordings_after_playback) {
 
-			log_notice(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
+			log_info(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
 			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(5), update_recordings_task);
 		}
 	}
@@ -4265,7 +4265,7 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": read operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
+		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
 
 		// Kodi is going to continue to call this function until it thinks the stream has ended so
 		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
@@ -4294,7 +4294,7 @@ long long SeekLiveStream(long long position, int whence)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": seek operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
+		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
 
 		return -1;
 	}
@@ -4484,7 +4484,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 		try {
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
-			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
+			log_info(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
 			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
 
 			// For recorded streams, set the start and end times based on the recording metadata. Don't use the
@@ -4493,12 +4493,12 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			g_stream_endtime = g_stream_starttime + recording.iDuration;
 
 			// Log some additional information about the stream for diagnostic purposes
-			log_notice(__func__, ": mediatype = ", g_pvrstream->mediatype());
-			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
-			log_notice(__func__, ": length    = ", g_pvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
-			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
-			log_notice(__func__, ": endtime   = ", g_stream_endtime, " (epoch) = ", strtok(asctime(localtime(&g_stream_endtime)), "\n"), " (local)");
+			log_info(__func__, ": mediatype = ", g_pvrstream->mediatype());
+			log_info(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
+			log_info(__func__, ": length    = ", g_pvrstream->length());
+			log_info(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
+			log_info(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
+			log_info(__func__, ": endtime   = ", g_stream_endtime, " (epoch) = ", strtok(asctime(localtime(&g_stream_endtime)), "\n"), " (local)");
 		}
 
 		catch(...) { g_pvrstream.reset(); g_scheduler.resume(); throw; }
@@ -4509,7 +4509,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 	// Queue a notification for the user when a recorded stream cannot be opened, don't just silently log it
 	catch(std::exception& ex) { 
 		
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Recorded Stream creation failed (%s).", ex.what());
+		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Recorded Stream creation failed (%s).", ex.what());
 		return handle_stdexception(__func__, ex, false); 
 	}
 
@@ -4539,7 +4539,7 @@ void CloseRecordedStream(void)
 		// to execute in a few seconds; this prevents doing it multiple times when changing channels
 		if(copy_settings().discover_recordings_after_playback) {
 
-			log_notice(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
+			log_info(__func__, ": playback stopped; scheduling recording update to occur in 5 seconds");
 			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(5), update_recordings_task);
 		}
 	}
@@ -4584,7 +4584,7 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": read operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
+		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
 
 		// Kodi is going to continue to call this function until it thinks the stream has ended so
 		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
@@ -4613,7 +4613,7 @@ long long SeekRecordedStream(long long position, int whence)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": seek operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(ADDON::queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
+		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
 
 		return -1;
 	}
@@ -4822,7 +4822,7 @@ PVR_ERROR SetEPGTimeFrame(int days)
 
 	g_epgmaxtime.store(days);
 
-	log_notice(__func__, ": EPG time frame has changed -- schedule guide listings update");
+	log_info(__func__, ": EPG time frame has changed -- schedule guide listings update");
 	g_scheduler.add(std::bind(update_listings_task, false, false, std::placeholders::_1));
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;

@@ -24,7 +24,7 @@
 #define __GENREMAP_H_
 #pragma once
 
-#include <xbmc_epg_types.h>
+#include <xbmc_pvr_types.h>
 
 #pragma warning(push, 4)
 
