@@ -60,6 +60,8 @@ struct xmltv_channel_element {
 	std::string		id;					// Channel identifier
 	std::string		number;				// Channel number
 	std::string		name;				// Channel name
+	std::string		altname;			// Channel alternate name
+	std::string		network;			// Channel network
 	std::string		iconsrc;			// Channel icon URL
 };
 
@@ -832,8 +834,15 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 	
 		// The identifier and number strings are required to process the channel entry
 		if((channel.id == nullptr) || (channel.number == nullptr)) return;
-		channels.emplace_back(xmltv_channel_element{ std::string(channel.id), std::string(channel.number), 
-			(channel.name != nullptr) ? channel.name : std::string(), (channel.iconsrc != nullptr) ? channel.iconsrc : std::string() });
+		channels.emplace_back(xmltv_channel_element{
+
+			std::string(channel.id), 
+			std::string(channel.number), 
+			(channel.name != nullptr) ? channel.name : std::string(), 
+			(channel.altname != nullptr) ? channel.altname : std::string(),
+			(channel.network != nullptr) ? channel.network : std::string(),
+			(channel.iconsrc != nullptr) ? channel.iconsrc : std::string() 
+		});
 	};
 
 	// This is a multi-step operation, perform it in the context of a database transaction
@@ -884,7 +893,7 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 		sqlite3_finalize(statement);
 
 		// Now reload the guide table from the enumerated channel information
-		sql = "insert into guide values(?1, ?2, ?3, ?4)";
+		sql = "insert into guide values(?1, ?2, ?3, ?4, ?5, ?6)";
 
 		// Prepare the statement
 		result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -897,7 +906,9 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 			result = sqlite3_bind_text(statement, 1, channel.id.c_str(), -1, SQLITE_STATIC);
 			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, channel.number.c_str(), -1, SQLITE_STATIC);
 			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 3, channel.name.c_str(), -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 4, channel.iconsrc.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 4, channel.altname.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 5, channel.network.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 6, channel.iconsrc.c_str(), -1, SQLITE_STATIC);
 			if(result != SQLITE_OK) throw sqlite_exception(result);
 
 			// Execute the query - no result set is expected
@@ -2893,7 +2904,7 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 			// table: guide
 			//
 			// channelid | number | name | iconurl
-			execute_non_query(instance, "create table if not exists guide(channelid text not null, number text not null, name text, iconurl text)");
+			execute_non_query(instance, "create table if not exists guide(channelid text not null, number text not null, name text, altname text, network text, iconurl text)");
 			execute_non_query(instance, "create index if not exists guide_channelid_number_index on guide(channelid, number)");
 
 			// table: lineup

@@ -1428,6 +1428,7 @@ int xmltv_next(sqlite3_vtab_cursor* cursor)
 			if((ischannel) && (xmltvcursor->onchannel)) {
 
 				struct xmltv_channel channel = { 0 };
+				std::vector<xmlChar*> displayNames;
 
 				xmlNodePtr node = xmlTextReaderExpand(xmltvcursor->reader);
 				if(node != nullptr) {
@@ -1442,9 +1443,10 @@ int xmltv_next(sqlite3_vtab_cursor* cursor)
 						xmlNodePtr channelnumber = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("lcn"));
 						if(channelnumber != nullptr) channel.number = reinterpret_cast<char*>(xmlNodeGetContent(channelnumber));
 
-						// The first <display-name> element will contain the guide name for the channel
-						xmlNodePtr guidename = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("display-name"));
-						if(guidename != nullptr) channel.name = reinterpret_cast<char*>(xmlNodeGetContent(guidename));
+						// Collect all of the <display-name> element values into a vector<>
+						xmlTextReaderForEachChildElement(xmltvcursor->reader, BAD_CAST("display-name"), [&](xmlNodePtr node) -> void {
+							displayNames.emplace_back(xmlNodeGetContent(node));
+						});
 
 						// Get the icon source URL for the channel logo
 						xmlNodePtr iconsrc = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("icon"));
@@ -1452,14 +1454,26 @@ int xmltv_next(sqlite3_vtab_cursor* cursor)
 					}
 				}
 
+				// Process the <display-name> elements that are present for this channel
+				//
+				// [0] - GUIDENAME
+				// [1] - CHANNELNUMBER GUIDENAME
+				// [2] - CHANNELNUMBER ALTERNATEGUIDENAME
+				// [3] - CHANNELNUMBER
+				// [4] - ALTERNATEGUIDENAME
+				// [5] - NETWORKNAME
+				if(displayNames.size() >= 1) channel.name = reinterpret_cast<char*>(displayNames[0]);
+				if(displayNames.size() >= 5) channel.altname = reinterpret_cast<char*>(displayNames[4]);
+				if(displayNames.size() >= 6) channel.network = reinterpret_cast<char*>(displayNames[5]);
+
 				// Pass the channel information back via the specified callback function
 				xmltvcursor->onchannel(channel);
 
-				// Chase down any pointers passed to the callback via struct xmltv_channel
+				// Chase down any libxml pointers passed to the callback
 				if(channel.id) xmlFree(const_cast<char*>(channel.id));
 				if(channel.number) xmlFree(const_cast<char*>(channel.number));
-				if(channel.name) xmlFree(const_cast<char*>(channel.name));
 				if(channel.iconsrc) xmlFree(const_cast<char*>(channel.iconsrc));
+				for(auto it : displayNames) if(it) xmlFree(it);
 			}
 
 			// <programme> element - this is the next row for the result set; break

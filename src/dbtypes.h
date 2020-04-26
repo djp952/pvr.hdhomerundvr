@@ -36,7 +36,7 @@
 // DATABASE_SCHEMA_VERSION
 //
 // This value needs to be incremented with any database schema change
-static char const DATABASE_SCHEMA_VERSION[] = "12";
+static char const DATABASE_SCHEMA_VERSION[] = "13";
 
 //---------------------------------------------------------------------------
 // DATA TYPES
@@ -213,6 +213,8 @@ struct xmltv_channel
 	char const*					id;
 	char const*					number;
 	char const*					name;
+	char const*					altname;
+	char const*					network;
 	char const*					iconsrc;
 };
 
