@@ -108,10 +108,6 @@ msgctxt "#30123"
 msgid "Trigger recording discovery immediately after playback"
 msgstr ""
 
-msgctxt "#30128"
-msgid "Use channel names from tuner device(s) in channel lineups"
-msgstr ""
-
 msgctxt "#30129"
 msgid "Use simplified (flattened) file hierarchy"
 msgstr ""
@@ -154,6 +150,10 @@ msgstr ""
 
 msgctxt "#30139"
 msgid "Disable blocking of DRM protected channel streams"
+msgstr ""
+
+msgctxt "#30140"
+msgid "Preferred channel name format"
 msgstr ""
 
 msgctxt "#30201"
@@ -292,6 +292,22 @@ msgctxt "#30234"
 msgid "RTP/UDP"
 msgstr ""
 
+msgctxt "#30235"
+msgid "XMLTV station"
+msgstr ""
+
+msgctxt "#30236"
+msgid "XMLTV channel"
+msgstr ""
+
+msgctxt "#30237"
+msgid "XMLTV network"
+msgstr ""
+
+msgctxt "#30238"
+msgid "Tuner channel"
+msgstr ""
+
 msgctxt "#30302"
 msgid "Delete and re-record"
 msgstr ""
@@ -374,10 +390,6 @@ msgstr ""
 
 msgctxt "#30507"
 msgid "When set to ON channels marked as DRM-protected by the HDHomeRun tuner device(s) will be listed in the Kodi channel lineups."
-msgstr ""
-
-msgctxt "#30508"
-msgid "When set to ON the channel names reported to Kodi will be the names provided by the HDHomeRun tuner device(s) instead of the backend EPG data."
 msgstr ""
 
 msgctxt "#30509"
@@ -470,4 +482,8 @@ msgstr ""
 
 msgctxt "#30534"
 msgid "When set to ON channels marked as DRM protected by the HDHomeRun tuner device(s) will not be blocked from playback attempts."
+msgstr ""
+
+msgctxt "#30535"
+msgid "Specifies the preferred format of the channel names reported to Kodi. When the selected format is not available a fallback format will be selected automatically."
 msgstr ""

@@ -1158,10 +1158,10 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid)
 //	instance		- Database instance
 //	prependnumbers	- Flag to append the channel numbers
 //	showdrm			- Flag to show DRM channels
-//	lineupnames		- Flag to use names from the lineup not the EPG
+//	namesource		- Flag indicating how to source the channel names
 //	callback		- Callback function
 
-void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback const& callback)
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, enum channel_name_source namesource, enumerate_channels_callback const& callback)
 {
 	sqlite3_stmt*				statement;			// SQL statement to execute
 	int							result;				// Result from SQLite function
@@ -1172,7 +1172,10 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bo
 	auto sql = "select "
 		"distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid, "
 		"case when ?1 then json_extract(entry.value, '$.GuideNumber') || ' ' else '' end || "
-		"case when (?2 or guide.name is null) then json_extract(entry.value, '$.GuideName') else guide.name end as channelname, "
+		"case when ?2 = 1 then coalesce(coalesce(guide.altname, guide.name), json_extract(entry.value, '$.GuideName')) "	// channel_name_source::xmltvaltname
+		"     when ?2 = 2 then coalesce(coalesce(guide.network, guide.name), json_extract(entry.value, '$.GuideName')) "	// channel_name_source::xmltvnetwork
+		"     when ?2 = 3 then coalesce(json_extract(entry.value, '$.GuideName'), guide.name) "								// channel_name_source::device
+		"     else coalesce(guide.name, json_extract(entry.value, '$.GuideName')) end as channelname, "						// channel_name_source::xmltv
 		"guide.iconurl as iconurl, "
 		"coalesce(json_extract(entry.value, '$.DRM'), 0) as drm "
 		"from lineup, json_each(lineup.data) as entry left outer join guide on json_extract(entry.value, '$.GuideNumber') = guide.number "
@@ -1186,7 +1189,7 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bo
 
 		// Bind the query parameters
 		result = sqlite3_bind_int(statement, 1, (prependnumbers) ? 1 : 0);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, (lineupnames) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(namesource));
 		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, (showdrm) ? 1 : 0);
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 

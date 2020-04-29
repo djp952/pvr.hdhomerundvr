@@ -209,10 +209,10 @@ struct addon_settings {
 	// Flag indicating that DRM channels should be shown to the user
 	bool show_drm_protected_channels;
 
-	// use_channel_names_from_lineup
+	// channel_name_source
 	//
-	// Flag indicating that the channel names should come from the lineup not the EPG
-	bool use_channel_names_from_lineup;
+	// Indicates the preferred source to use for channel naming purposes
+	enum channel_name_source channel_name_source;
 
 	// disable_recording_categories
 	//
@@ -422,37 +422,37 @@ static scheduler g_scheduler([](std::exception const& ex) -> void { handle_stdex
 // Global addon settings instance
 static addon_settings g_settings = {
 
-	false,					// pause_discovery_while_streaming
-	false,					// prepend_channel_numbers
-	false,					// use_episode_number_as_title
-	false,					// discover_recordings_after_playback
-	false,					// use_backend_genre_strings
-	false,					// show_drm_protected_channels
-	false,					// use_channel_names_from_lineup
-	false,					// disable_recording_categories
-	false,					// generate_repeat_indicators
-	false,					// use_airdate_as_recordingdate
-	false,					// disable_backend_channel_logos
-	86400,					// delete_datetime_rules_after			default = 1 day
-	300, 					// discover_devices_interval;			default = 5 minutes
-	7200,					// discover_episodes_interval			default = 2 hours
-	600,					// discover_lineups_interval			default = 10 minutes
-	600,					// discover_recordings_interval			default = 10 minutes
-	7200,					// discover_recordingrules_interval		default = 2 hours
-	false,					// use_http_device_discovery
-	false,					// use_direct_tuning
-	tuning_protocol::http,	// direct_tuning_protocol
-	false,					// direct_tuning_allow_drm
-	(4 KiB),				// stream_read_chunk_size
-	72000,					// deviceauth_stale_after				default = 20 hours
-	false,					// enable_recording_edl
-	"",						// recording_edl_folder
-	"",						// recording_edl_folder_2
-	"",						// recording_edl_folder_3
-	false,					// recording_edl_folder_is_flat
-	false,					// recording_edl_cut_as_comskip
-	0,						// recording_edl_start_padding
-	0,						// recording_edl_end_padding
+	false,						// pause_discovery_while_streaming
+	false,						// prepend_channel_numbers
+	false,						// use_episode_number_as_title
+	false,						// discover_recordings_after_playback
+	false,						// use_backend_genre_strings
+	false,						// show_drm_protected_channels
+	channel_name_source::xmltv, // channel_name_source
+	false,						// disable_recording_categories
+	false,						// generate_repeat_indicators
+	false,						// use_airdate_as_recordingdate
+	false,						// disable_backend_channel_logos
+	86400,						// delete_datetime_rules_after			default = 1 day
+	300, 						// discover_devices_interval;			default = 5 minutes
+	7200,						// discover_episodes_interval			default = 2 hours
+	600,						// discover_lineups_interval			default = 10 minutes
+	600,						// discover_recordings_interval			default = 10 minutes
+	7200,						// discover_recordingrules_interval		default = 2 hours
+	false,						// use_http_device_discovery
+	false,						// use_direct_tuning
+	tuning_protocol::http,		// direct_tuning_protocol
+	false,						// direct_tuning_allow_drm
+	(4 KiB),					// stream_read_chunk_size
+	72000,						// deviceauth_stale_after				default = 20 hours
+	false,						// enable_recording_edl
+	"",							// recording_edl_folder
+	"",							// recording_edl_folder_2
+	"",							// recording_edl_folder_3
+	false,						// recording_edl_folder_is_flat
+	false,						// recording_edl_cut_as_comskip
+	0,							// recording_edl_start_padding
+	0,							// recording_edl_end_padding
 };
 
 // g_settings_lock
@@ -1823,7 +1823,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
 			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
-			if(g_addon->GetSetting("use_channel_names_from_lineup", &bvalue)) g_settings.use_channel_names_from_lineup = bvalue;
+			if(g_addon->GetSetting("channel_name_source", &nvalue)) g_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
 			if(g_addon->GetSetting("disable_recording_categories", &bvalue)) g_settings.disable_recording_categories = bvalue;
 			if(g_addon->GetSetting("generate_repeat_indicators", &bvalue)) g_settings.generate_repeat_indicators = bvalue;
 			if(g_addon->GetSetting("use_airdate_as_recordingdate", &bvalue)) g_settings.use_airdate_as_recordingdate = bvalue;
@@ -2140,15 +2140,15 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// use_channel_names_from_lineup
+	// channel_name_source
 	//
-	else if(strcmp(name, "use_channel_names_from_lineup") == 0) {
+	else if(strcmp(name, "channel_name_source") == 0) {
 
-		bool bvalue = *reinterpret_cast<bool const*>(value);
-		if(bvalue != g_settings.use_channel_names_from_lineup) {
+		int nvalue = *reinterpret_cast<int const*>(value);
+		if(nvalue != static_cast<int>(g_settings.channel_name_source)) {
 
-			g_settings.use_channel_names_from_lineup = bvalue;
-			log_notice(__func__, ": setting use_channel_names_from_lineup changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			g_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
+			log_notice(__func__, ": setting channel_name_source changed --trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -3126,7 +3126,7 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 	try {
 
 		// Enumerate all of the channels in the database
-		enumerate_channels(connectionpool::handle(g_connpool), settings.prepend_channel_numbers, settings.show_drm_protected_channels, settings.use_channel_names_from_lineup, [&](struct channel const& item) -> void {
+		enumerate_channels(connectionpool::handle(g_connpool), settings.prepend_channel_numbers, settings.show_drm_protected_channels, settings.channel_name_source, [&](struct channel const& item) -> void {
 
 			PVR_CHANNEL channel;								// PVR_CHANNEL to be transferred to Kodi
 			memset(&channel, 0, sizeof(PVR_CHANNEL));			// Initialize the structure
