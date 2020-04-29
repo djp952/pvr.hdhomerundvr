@@ -73,6 +73,17 @@ struct channel {
 	bool				drm;
 };
 
+// channel_name_source
+//
+// Defines the source to use when determining what name to give a channel
+enum channel_name_source {
+
+	xmltv				= 0,
+	xmltvaltname		= 1,
+	xmltvnetwork		= 2,
+	device				= 3,
+};
+
 // channel_visibility
 //
 // Flag indicating a channel's visibility

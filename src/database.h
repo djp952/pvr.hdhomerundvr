@@ -243,7 +243,7 @@ void discover_recordings(sqlite3* instance, bool& changed);
 // enumerate_channels
 //
 // Enumerates the available channels
-void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, bool lineupnames, enumerate_channels_callback const& callback);
+void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, enum channel_name_source namesource, enumerate_channels_callback const& callback);
 
 // enumerate_channelids
 //

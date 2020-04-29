@@ -68,12 +68,20 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="use_channel_names_from_lineup" type="boolean" label="30128" help="30508">
+        <setting id="channel_name_source" type="integer" label="30140" help="30535">
           <level>0</level>
-          <default>false</default>
-          <control type="toggle"/>
+          <default>0</default>
+          <constraints>
+            <options>
+              <option label="30235">0</option>
+              <option label="30236">1</option>
+              <option label="30237">2</option>
+              <option label="30238">3</option>
+            </options>
+          </constraints>
+          <control type="spinner" format="integer"/>
         </setting>
-
+        
         <setting id="disable_recording_categories" type="boolean" label="30135" help="30530">
           <level>0</level>
           <default>false</default>
