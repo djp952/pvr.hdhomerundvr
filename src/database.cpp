@@ -905,10 +905,14 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 			// (Re)bind the query parameters
 			result = sqlite3_bind_text(statement, 1, channel.id.c_str(), -1, SQLITE_STATIC);
 			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 2, channel.number.c_str(), -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 3, channel.name.c_str(), -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 4, channel.altname.c_str(), -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 5, channel.network.c_str(), -1, SQLITE_STATIC);
-			if(result == SQLITE_OK) result = sqlite3_bind_text(statement, 6, channel.iconsrc.c_str(), -1, SQLITE_STATIC);
+			if(result == SQLITE_OK) result = (channel.name.empty() ? sqlite3_bind_null(statement, 3) : 
+				sqlite3_bind_text(statement, 3, channel.name.c_str(), -1, SQLITE_STATIC));
+			if(result == SQLITE_OK) result = (channel.altname.empty() ? sqlite3_bind_null(statement, 4) : 
+				sqlite3_bind_text(statement, 4, channel.altname.c_str(), -1, SQLITE_STATIC));
+			if(result == SQLITE_OK) result = (channel.network.empty() ? sqlite3_bind_null(statement, 5) : 
+				sqlite3_bind_text(statement, 5, channel.network.c_str(), -1, SQLITE_STATIC));
+			if(result == SQLITE_OK) result = (channel.iconsrc.empty() ? sqlite3_bind_null(statement, 6) : 
+				sqlite3_bind_text(statement, 6, channel.iconsrc.c_str(), -1, SQLITE_STATIC));
 			if(result != SQLITE_OK) throw sqlite_exception(result);
 
 			// Execute the query - no result set is expected
