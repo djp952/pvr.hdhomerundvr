@@ -1042,43 +1042,43 @@ void discover_recordings(sqlite3* instance, bool& changed)
 
 	if(instance == nullptr) throw std::invalid_argument("instance");
 
-	// Clone the recording table schema into a temporary table
+	// Create and load a temporary table with the series-level recording information from each storage engine instance
 	execute_non_query(instance, "drop table if exists discover_recording");
-	execute_non_query(instance, "create temp table discover_recording as select * from recording limit 0");
+	execute_non_query(instance, "create temp table discover_recording as "
+		"with storage(deviceid, url) as(select deviceid, json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' from device where json_extract(device.data, '$.StorageURL') is not null) "
+		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
+		"json_extract(displaygroup.value, '$.UpdateID') as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
+		"from storage, json_each(json_get(storage.url)) as displaygroup");
 
 	try {
-
-		// Discover the recording information for all available storage devices
-		execute_non_query(instance, "with storageurls(url) as(select json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' "
-			"from device where json_extract(device.data, '$.StorageURL') is not null) "
-			"insert into discover_recording select distinct get_recording_id(json_extract(recording.value, '$.CmdURL')) as recordingid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, json_extract(recording.value, '$.SeriesID') as seriesid, recording.value as data "
-			"from json_each(entry.value) as recording, json_each((select json_get_aggregate(json_extract(recordinggroup.value, '$.EpisodesURL'), 'RecordingGroup') "
-			"from json_each(json_get(storageurls.url)) as recordinggroup, storageurls)) as entry");
 
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
 
-		// Check to verify that all of the discovery times are the same; if any are different an update occurred outside of this
-		// main discovery function and a change notification needs to be set since that update may have added or deleted rows
-		if(execute_scalar_int(instance, "select count(distinct(discovered)) from recording") > 1) changed = true;
-		
 		try {
 
-			// Delete any entries in the main recording table that are no longer present in the data
-			if(execute_non_query(instance, "delete from recording where recordingid not in (select recordingid from discover_recording)") > 0) changed = true;
+			// Remove all stale deviceids and/or stale seriesids from the recordings table
+			if(execute_non_query(instance, "delete from recording where deviceid not in(select distinct deviceid from discover_recording) or "
+				"seriesid not in(select distinct seriesid from discover_recording)") > 0) changed = true;
 
-			// Insert/replace entries in the main recording table that are new or different
-			if(execute_non_query(instance, "replace into recording select discover_recording.* from discover_recording left outer join recording using(recordingid) "
-				"where coalesce(recording.data, '') <> coalesce(discover_recording.data, '')") > 0) changed = true;
+			// Remove all seriesids with an outdated updateid from the recordings table
+			if(execute_non_query(instance, "delete from recording where updateid <> (select updateid from discover_recording "
+				"where deviceid like recording.deviceid and seriesid like recording.seriesid)") > 0) changed = true;
 
-			// Update all of the discovery timestamps to the current time so they are all the same post-discovery
-			execute_non_query(instance, "update recording set discovered = ?1", static_cast<int>(time(nullptr)));
+			// The update query is easier to do if the matching rows in discover_recording are removed first
+			execute_non_query(instance, "delete from discover_recording where exists(select 1 from recording where "
+				"recording.deviceid like discover_recording.deviceid and recording.seriesid like discover_recording.seriesid)");
+
+			// Chase the episode URLs for each series that has been added/updated and insert them
+			if(execute_non_query(instance, "insert into recording select discover_recording.deviceid as deviceid, "
+				"discover_recording.seriesid as seriesid, get_recording_id(json_extract(entry.value, '$.CmdURL')) as recordingid, "
+				"discover_recording.updateid as updateid, cast(strftime('%s', 'now') as integer) as discovered, "
+				"entry.value as data from discover_recording, json_each(json_get(discover_recording.episodesurl)) as entry") > 0) changed = true;
 
 			// Commit the database transaction
 			execute_non_query(instance, "commit transaction");
 		}
-		
+
 		// Rollback the transaction on any exception
 		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
 
@@ -1105,26 +1105,43 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid)
 	if(instance == nullptr) throw std::invalid_argument("instance");
 	if(seriesid == nullptr) return;
 
-	// This is a multi-step operation; begin a database transaction
-	execute_non_query(instance, "begin immediate transaction");
+	// Create and load a temporary table with the series-level recording information from each storage engine instance
+	execute_non_query(instance, "drop table if exists discover_recording_series");
+	execute_non_query(instance, "create temp table discover_recording_series as "
+		"with storage(deviceid, url) as(select deviceid, json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' from device where json_extract(device.data, '$.StorageURL') is not null) "
+		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
+		"json_extract(displaygroup.value, '$.UpdateID') as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
+		"from storage, json_each(json_get(storage.url)) as displaygroup where seriesid like ?1", seriesid);
 
 	try {
 
-		// Remove all existing rows from the recording table for the specified series
-		execute_non_query(instance, "delete from recording where seriesid like ?1", seriesid);
-		
-		// Reload all recordings for the specified series from all available storage engines
-		execute_non_query(instance, "insert into recording select get_recording_id(json_extract(entry.value, '$.CmdURL')) as recordingid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, json_extract(entry.value, '$.SeriesID') as seriesid, entry.value as data "
-			"from device, json_each(json_get(json_extract(device.data, '$.StorageURL') || '?SeriesID=' || ?1)) as entry "
-			"where json_extract(device.data, '$.StorageURL') is not null", seriesid);
+		// This requires a multi-step operation against the recording table; start a transaction
+		execute_non_query(instance, "begin immediate transaction");
 
-		// Commit the transaction
-		execute_non_query(instance, "commit transaction");
+		try {
+
+			// Remove all existing rows from the recording table for the specified series
+			execute_non_query(instance, "delete from recording where seriesid like ?1", seriesid);
+
+			// Chase the episode URLs for the series and reload the information about the recordings
+			execute_non_query(instance, "insert into recording select discover_recording_series.deviceid as deviceid, "
+				"discover_recording_series.seriesid as seriesid, get_recording_id(json_extract(entry.value, '$.CmdURL')) as recordingid, "
+				"discover_recording_series.updateid as updateid, cast(strftime('%s', 'now') as integer) as discovered, "
+				"entry.value as data from discover_recording_series, json_each(json_get(discover_recording_series.episodesurl)) as entry");
+
+			// Commit the database transaction
+			execute_non_query(instance, "commit transaction");
+		}
+
+		// Rollback the transaction on any exception
+		catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
+
+		// Drop the temporary table
+		execute_non_query(instance, "drop table discover_recording_series");
 	}
 
-	// Rollback the database transaction on any thrown exception
-	catch(...) { try_execute_non_query(instance, "rollback transaction"); throw; }
+	// Drop the temporary table on any exception
+	catch(...) { execute_non_query(instance, "drop table discover_recording_series"); throw; }
 }
 
 //---------------------------------------------------------------------------
@@ -2921,9 +2938,10 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: recording
 			//
-			// recordingid(pk) | discovered | seriesid | data
-			execute_non_query(instance, "create table if not exists recording(recordingid text primary key not null, discovered integer not null, seriesid text not null, data text)");
-			execute_non_query(instance, "create index if not exists recording_seriesid_index on recording(seriesid)");
+			// deviceid(pk) | seriesid(pk) | recordingid(pk) | updateid | discovered | data
+			execute_non_query(instance, "create table if not exists recording(deviceid text not null, seriesid text not null, recordingid text not null, updateid integer not null, "
+				"discovered integer not null, data text, primary key(deviceid, seriesid, recordingid))");
+			execute_non_query(instance, "create index if not exists recording_updateid_index on recording(updateid)");
 
 			// table: recordingrule
 			//
