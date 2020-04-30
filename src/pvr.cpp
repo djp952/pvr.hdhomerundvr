@@ -1233,7 +1233,7 @@ static void startup_alerts_task(scalar_condition<bool> const& /*cancel*/)
 	int numtuners = get_tuner_count(dbhandle);
 
 	// If there were no tuner devices detected alert the user via a notification
-	if(numtuners == 0) g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected");
+	if(numtuners == 0) g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "HDHomeRun tuner device(s) not detected");
 
 	// If there are no DVR authorized tuner devices detected, alert the user via a message box.
 	// This operation is only done one time for the installed system, don't use the database for this
@@ -1749,7 +1749,7 @@ static void wait_for_recordings(void) noexcept
 // Arguments:
 //
 //	handle			- Kodi add-on handle
-//	props			- Add-on specific properties structure (PVR_PROPERTIES)
+//	props			- Add-on specific properties structure (AddonProperties_PVR)
 
 ADDON_STATUS ADDON_Create(void* handle, void* props)
 {
@@ -1765,7 +1765,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 	g_randomengine.seed(static_cast<unsigned int>(time(nullptr)));
 
 	// Copy anything relevant from the provided parameters
-	PVR_PROPERTIES* pvrprops = reinterpret_cast<PVR_PROPERTIES*>(props);
+	AddonProperties_PVR* pvrprops = reinterpret_cast<AddonProperties_PVR*>(props);
 	g_epgmaxtime.store(pvrprops->iEpgMaxDays);
 	g_userpath.assign(pvrprops->strUserPath);
 
@@ -2461,7 +2461,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// GetAddonCapabilities
+// GetCapabilities
 //
 // Get the list of features that this add-on provides
 //
@@ -2469,7 +2469,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 //
 //	capabilities	- Capabilities structure to fill out
 
-PVR_ERROR GetAddonCapabilities(PVR_ADDON_CAPABILITIES *capabilities)
+PVR_ERROR GetCapabilities(PVR_ADDON_CAPABILITIES *capabilities)
 {
 	if(capabilities == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
@@ -4197,7 +4197,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	// Queue a notification for the user when a live stream cannot be opened, don't just silently log it
 	catch(std::exception& ex) { 
 		
-		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Live Stream creation failed (%s).", ex.what());
+		g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "Live Stream creation failed (%s).", ex.what());
 		return handle_stdexception(__func__, ex, false); 
 	}
 
@@ -4265,7 +4265,7 @@ int ReadLiveStream(unsigned char* buffer, unsigned int size)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": read operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
+		g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
 
 		// Kodi is going to continue to call this function until it thinks the stream has ended so
 		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
@@ -4294,7 +4294,7 @@ long long SeekLiveStream(long long position, int whence)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": seek operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
+		g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
 
 		return -1;
 	}
@@ -4336,15 +4336,16 @@ long long LengthLiveStream(void)
 }
 
 //---------------------------------------------------------------------------
-// SignalStatus
+// GetSignalStatus
 //
 // Get the signal status of the stream that's currently open
 //
 // Arguments:
 //
+//	channelUid	- Channel unique identifier
 //	status		- The signal status
 
-PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS& /*status*/)
+PVR_ERROR GetSignalStatus(int /*channelUid*/, PVR_SIGNAL_STATUS* /*status*/)
 {
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 }
@@ -4356,9 +4357,10 @@ PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS& /*status*/)
 //
 // Arguments:
 //
+//	channelUid			- Channel unique identifier
 //	descrambleinfo		- Descramble information
 
-PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
+PVR_ERROR GetDescrambleInfo(int /*channelUid*/, PVR_DESCRAMBLE_INFO* /*descrambleinfo*/)
 {
 	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
 }
@@ -4509,7 +4511,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 	// Queue a notification for the user when a recorded stream cannot be opened, don't just silently log it
 	catch(std::exception& ex) { 
 		
-		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Recorded Stream creation failed (%s).", ex.what());
+		g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "Recorded Stream creation failed (%s).", ex.what());
 		return handle_stdexception(__func__, ex, false); 
 	}
 
@@ -4584,7 +4586,7 @@ int ReadRecordedStream(unsigned char* buffer, unsigned int size)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": read operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
+		g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "Unable to read from stream: %s", ex.what());
 
 		// Kodi is going to continue to call this function until it thinks the stream has ended so
 		// consume whatever data is left in the stream buffer until it returns zero enough times to stop
@@ -4613,7 +4615,7 @@ long long SeekRecordedStream(long long position, int whence)
 
 		// Log the exception and alert the user of the failure with an error notification
 		log_error(__func__, ": seek operation failed with exception: ", ex.what());
-		g_addon->QueueNotification(queue_msg_t::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
+		g_addon->QueueNotification(QueueMsg::QUEUE_ERROR, "Unable to seek stream: %s", ex.what());
 
 		return -1;
 	}

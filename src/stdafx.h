@@ -52,6 +52,7 @@
 #include <Windows.h>
 #include <objbase.h>
 #include <process.h>				// Avoids C4273 with <stdlib.h>
+#define TARGET_WINDOWS
 #define TARGET_WINDOWS_STORE
 
 #endif
