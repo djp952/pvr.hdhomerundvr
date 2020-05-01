@@ -29,6 +29,7 @@
 //---------------------------------------------------------------------------
 
 #if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+
 #include <winapifamily.h>
 
 // Windows Desktop
@@ -41,7 +42,9 @@
 
 #include <WinSock2.h>
 #include <Windows.h>
+
 #define TARGET_WINDOWS
+#define TARGET_WINDOWS_DESKTOP
 
 // Windows App
 #elif WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
@@ -52,12 +55,33 @@
 #include <Windows.h>
 #include <objbase.h>
 #include <process.h>				// Avoids C4273 with <stdlib.h>
+
 #define TARGET_WINDOWS
 #define TARGET_WINDOWS_STORE
 
 #endif
 
-#endif	// defined(_WINDOWS) || defined(WINAPI_FAMILY)
+// Android
+#elif defined(__ANDROID__)
+
+#define TARGET_POSIX
+#define TARGET_LINUX
+#define TARGET_ANDROID
+
+// MacOS
+#elif defined(__APPLE__)
+
+#define TARGET_POSIX
+#define TARGET_DARWIN
+#define TARGET_DARWIN_OSX
+
+// Linux
+#else
+
+#define TARGET_POSIX
+#define TARGET_LINUX
+
+#endif
 
 #include <assert.h>
 #include <stdint.h>
