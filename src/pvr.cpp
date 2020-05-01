@@ -1484,7 +1484,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				// iYear
 				//
 				// Only report for program type "MV" (Movies)
-				if(strcasecmp(item.programtype, "MV") == 0) epgtag.iYear = item.year;
+				if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) epgtag.iYear = item.year;
 
 				// strIconPath
 				epgtag.strIconPath = item.iconurl;
@@ -1498,7 +1498,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 				// firstAired
 				//
 				// Only report for program types "EP" (Series Episode) and "SH" (Show)
-				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
+				if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
 
 					// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
 					// unless series/episode information is available
@@ -2810,7 +2810,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			// iYear
 			//
 			// Only report for program type "MV" (Movies)
-			if(strcasecmp(item.programtype, "MV") == 0) epgtag.iYear = item.year;
+			if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) epgtag.iYear = item.year;
 
 			// strIconPath
 			epgtag.strIconPath = item.iconurl;
@@ -2824,7 +2824,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, int channel, time_t start, time_
 			// firstAired
 			//
 			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
+			if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
 
 				// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
 				// unless series/episode information is available
@@ -3286,7 +3286,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// iYear
 			//
 			// Only report for program type "MV" (Movies)
-			if(strcasecmp(item.programtype, "MV") == 0) recording.iYear = item.year;
+			if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) recording.iYear = item.year;
 
 			// strDirectory
 			if(item.directory != nullptr) {
@@ -3324,7 +3324,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			if((item.category != nullptr) && (settings.use_airdate_as_recordingdate) && (item.originalairdate > 0)) {
 
 				// Only apply use_airdate_as_recordindate to items with a program type of "EP" or "SH"
-				if((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) {
+				if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
 
 					time_t epoch = static_cast<time_t>(item.originalairdate);
 					recording.recordingTime = mktime(gmtime(&epoch));
@@ -3348,7 +3348,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// strfirstAired
 			//
 			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if(((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.originalairdate > 0)) {
+			if((item.programtype != nullptr) && (item.originalairdate > 0) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
 
 				// Special case: omit for "news" category programs, these programs are EP/SH programs, but the original
 				// air date will typically be set to the first broadcast date, which makes no sense for recordings
