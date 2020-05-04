@@ -1051,8 +1051,9 @@ void discover_recordings(sqlite3* instance, bool& changed)
 	execute_non_query(instance, "create temp table discover_recording as "
 		"with storage(deviceid, url) as(select deviceid, json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' from device where json_extract(device.data, '$.StorageURL') is not null) "
 		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
-		"json_extract(displaygroup.value, '$.UpdateID') as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
-		"from storage, json_each(json_get(storage.url)) as displaygroup");
+		"max(cast(json_extract(displaygroup.value, '$.UpdateID') as integer)) as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
+		"from storage, json_each(json_get(storage.url)) as displaygroup "
+		"group by deviceid, seriesid, episodesurl");
 
 	try {
 
