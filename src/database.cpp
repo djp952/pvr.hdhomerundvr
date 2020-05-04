@@ -1410,6 +1410,7 @@ void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback c
 
 	// name
 	auto sql = "select coalesce(json_extract(data, '$.FriendlyName'), 'unknown') || ' ' || deviceid || "
+		"' (version: ' || coalesce(coalesce(json_extract(data, '$.FirmwareVersion'), json_extract(data, '$.Version')), 'unknown') || ')' || "
 		"case when coalesce(dvrauthorized, 0) = 1 then ' (DVR authorized)' else '' end as name from device";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
