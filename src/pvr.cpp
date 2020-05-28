@@ -2646,7 +2646,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 			// Generate a simple list of the recent error messages, this doesn't need to be fancy.
 			std::unique_lock<std::mutex> lock(g_errorlog_lock);
-			for(auto const& iterator : g_errorlog) errors.append(iterator + "\r\n\r\n");
+			for(auto iterator = g_errorlog.rbegin(); iterator != g_errorlog.rend(); iterator++) errors.append((*iterator) + "\r\n\r\n");
 			if(errors.empty()) errors.assign("No recent error messages");
 
 			g_gui->Dialog_TextViewer("Recent error messages", errors.c_str());
