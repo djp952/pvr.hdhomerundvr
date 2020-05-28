@@ -1766,9 +1766,10 @@ static void wait_for_recordings(void) noexcept
 // Arguments:
 //
 //	handle			- Kodi add-on handle
+//	apiversion		- Kodi global API version
 //	props			- Add-on specific properties structure (AddonProperties_PVR)
 
-ADDON_STATUS ADDON_Create(void* handle, void* props)
+ADDON_STATUS ADDON_Create(void* handle, char const* /*apiversion*/, void* props)
 {
 	PVR_MENUHOOK			menuhook;						// For registering menu hooks
 	bool					bvalue = false;					// Setting value
