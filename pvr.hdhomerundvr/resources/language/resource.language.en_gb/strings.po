@@ -348,6 +348,10 @@ msgctxt "#30313"
 msgid "Trigger guide listing discovery"
 msgstr ""
 
+msgctxt "#30314"
+msgid "List recent error messages"
+msgstr ""
+
 msgctxt "#30401"
 msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""

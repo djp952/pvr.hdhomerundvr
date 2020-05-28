@@ -25,8 +25,8 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <deque>
 #include <functional>
-#include <list>
 #include <memory>
 #include <mutex>
 #include <random>
@@ -88,6 +88,7 @@
 #define MENUHOOK_CHANNEL_REMOVEFAVORITE					11
 #define MENUHOOK_SETTING_SHOWDEVICENAMES				12
 #define MENUHOOK_SETTING_TRIGGERLISTINGDISCOVERY		13
+#define MENUHOOK_SETTING_SHOWRECENTERRORS				14
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -392,6 +393,16 @@ static scalar_condition<bool> g_discovered_recordings{ false };
 //
 // Maximum number of days to report for EPG and series timers
 static std::atomic<int> g_epgmaxtime{ EPG_TIMEFRAME_UNLIMITED };
+
+// g_errorlog
+//
+// Maintains a list of recent error messages that have been logged
+static std::deque<std::string> g_errorlog;
+
+// g_errorlog_lock
+//
+// Synchronization object to serialize access to the error log
+static std::mutex g_errorlog_lock;
 
 // g_gui
 //
@@ -907,6 +918,8 @@ static void log_info(_args&&... args)
 template<typename... _args>
 static void log_message(addon_log_t level, _args&&... args)
 {
+	const size_t MAX_ERROR_LOG = 10;	// Maximum entries to store in error log
+
 	std::ostringstream stream;
 	int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
 	(void)unpack;
@@ -924,7 +937,11 @@ static void log_message(addon_log_t level, _args&&... args)
 #else
 		fprintf(stderr, "ERROR: %s\r\n", stream.str().c_str());
 #endif
-
+		// Maintain a list of the last MAX_ERROR_LOG error messages that can be exposed
+		// to the user without needing to reference the Kodi log file
+		std::unique_lock<std::mutex> lock(g_errorlog_lock);
+		while(g_errorlog.size() >= MAX_ERROR_LOG) g_errorlog.pop_front();
+		g_errorlog.push_back(stream.str());
 	}
 }
 
@@ -1875,6 +1892,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					menuhook.category = PVR_MENUHOOK_SETTING;
 					g_pvr->AddMenuHook(&menuhook);
 
+					// MENUHOOK_SETTING_SHOWRECENTERRORS
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_SHOWRECENTERRORS;
+					menuhook.iLocalizedStringId = 30314;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
 					// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
 					//
 					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
@@ -2589,17 +2614,39 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 			// Enumerate all of the device names in the database and build out the text string
 			std::string names;
-			enumerate_device_names(connectionpool::handle(g_connpool), [&](struct device_name const& device_name) -> void { 
+			enumerate_device_names(connectionpool::handle(g_connpool), [&](struct device_name const& device_name) -> void {
 
 				if(device_name.name != nullptr) names.append(std::string(device_name.name) + "\r\n");
 			});
 
-			g_gui->Dialog_TextViewer("Discovered Devices", names.c_str());
+			g_gui->Dialog_TextViewer("Discovered HDHomeRun devices", names.c_str());
 		}
 
-		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
 		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
-		
+
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_SETTING_SHOWRECENTERRORS
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_SHOWRECENTERRORS) {
+
+		try {
+
+			std::string errors;			// Generated list of recent messages
+
+			// Generate a simple list of the recent error messages, this doesn't need to be fancy.
+			std::unique_lock<std::mutex> lock(g_errorlog_lock);
+			for(auto const& iterator : g_errorlog) errors.append(iterator + "\r\n\r\n");
+			if(errors.empty()) errors.assign("No recent error messages");
+
+			g_gui->Dialog_TextViewer("Recent error messages", errors.c_str());
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
 		return PVR_ERROR::PVR_ERROR_NO_ERROR;
 	}
 
