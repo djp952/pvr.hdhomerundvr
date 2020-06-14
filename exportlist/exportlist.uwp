@@ -22,15 +22,6 @@
 
 EXPORTS
 
-	; these may ultimately be unnecessary but for work-in-progress these
-	; aren't being exported by the linker
-	get_addon
-	ADDON_Create
-	ADDON_Destroy
-	ADDON_GetStatus
-	ADDON_GetTypeVersion
-	ADDON_SetSetting
-
 	; Export a SQLite extension to provide access to some of the custom
 	; database functionality from the sqlite3 command line tool
 	sqlite3_extension_init

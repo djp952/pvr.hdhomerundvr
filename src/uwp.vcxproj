@@ -144,7 +144,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include\kodi;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -160,7 +160,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include\kodi;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -176,7 +176,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include\kodi;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -192,7 +192,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include\kodi;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -208,7 +208,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include\kodi;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -224,7 +224,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include\kodi;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)compat;$(ProjectDir)compat\libxml;$(ProjectDir)..\depends\xbmc\xbmc;$(ProjectDir)..\depends\xbmc\xbmc\platform\win32;$(ProjectDir)..\depends\xbmc\xbmc\addons\kodi-addon-dev-kit\include;$(ProjectDir)..\depends\http-status-codes-cpp;$(ProjectDir)..\depends\libcurl\src\include;$(ProjectDir)..\depends\libhdhomerun;$(ProjectDir)..\depends\rapidjson\include;$(ProjectDir)..\depends\sqlite;$(ProjectDir)..\depends\libxml2\src\include;$(ProjectDir)..\depends\libz\src;$(ProjectDir)..\tmp\version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -415,6 +415,7 @@
     <ClInclude Include="..\depends\sqlite\sqlite3.h" />
     <ClInclude Include="..\depends\sqlite\sqlite3ext.h" />
     <ClInclude Include="..\tmp\version\version.h" />
+    <ClInclude Include="addon.h" />
     <ClInclude Include="align.h" />
     <ClInclude Include="compat\libxml\config.h" />
     <ClInclude Include="compat\libxml\libxml\xmlversion.h" />
@@ -6877,6 +6878,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)zlib\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zlib\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="addon.cpp" />
     <ClCompile Include="compat\uuid.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h</PrecompiledHeaderFile>
@@ -6890,7 +6892,14 @@
     <ClCompile Include="dbextension.cpp" />
     <ClCompile Include="devicestream.cpp" />
     <ClCompile Include="httpstream.cpp" />
-    <ClCompile Include="pvr.cpp" />
+    <ClCompile Include="pvr.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="sqlite_exception.cpp" />
     <ClCompile Include="stdafx.cpp">

@@ -36,9 +36,12 @@
 #include <sqlite3ext.h>
 #include <string>
 #include <uuid/uuid.h>
-#include <xbmc_pvr_types.h>
 #include <vector>
 #include <version.h>
+
+#pragma warning(disable: 4267)
+#include <kodi/addon-instance/PVR.h>
+#pragma warning(default: 4267)
 
 #include "curlshare.h"
 #include "dbtypes.h"

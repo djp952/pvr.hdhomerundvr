@@ -60,7 +60,7 @@ scheduler::~scheduler()
 //---------------------------------------------------------------------------
 // scheduler::add
 //
-// Adds a task to the scheduler queue; removes any matching tasks
+// Adds a task to the scheduler queue
 //
 // Arguments:
 //
@@ -68,13 +68,28 @@ scheduler::~scheduler()
 
 void scheduler::add(std::function<void(scalar_condition<bool> const&)> task)
 {
-	add(std::chrono::system_clock::now(), task);
+	return add(nullptr, std::chrono::system_clock::now(), task);
 }
 
 //---------------------------------------------------------------------------
 // scheduler::add
 //
-// Adds a task to the scheduler queue; removes any matching tasks
+// Adds a task to the scheduler queue; removes any matching named tasks
+//
+// Arguments:
+//
+//	name	- name to assign to the task
+//	task	- task to be executed
+
+void scheduler::add(char const* name, std::function<void(scalar_condition<bool> const&)> task)
+{
+	return add(name, std::chrono::system_clock::now(), task);
+}
+
+//---------------------------------------------------------------------------
+// scheduler::add
+//
+// Adds a task to the scheduler queue
 //
 // Arguments:
 //
@@ -83,13 +98,29 @@ void scheduler::add(std::function<void(scalar_condition<bool> const&)> task)
 
 void scheduler::add(std::chrono::time_point<std::chrono::system_clock> due, std::function<void(scalar_condition<bool> const&)> task)
 {
+	return add(nullptr, due, task);
+}
+
+//---------------------------------------------------------------------------
+// scheduler::add
+//
+// Adds a task to the scheduler queue; removes any matching named tasks
+//
+// Arguments:
+//
+//	name	- name to assign to the task
+//	due		- system_time at which the task should be executed
+//	task	- task to be executed
+
+void scheduler::add(char const* name, std::chrono::time_point<std::chrono::system_clock> due, std::function<void(scalar_condition<bool> const&)> task)
+{
 	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 
-	// Remove any existing instances of the specified task from the scheduler
-	remove(queuelock, task);
+	// Remove any existing instances of a named task from the queue
+	if((name != nullptr) && (*name != 0)) remove(queuelock, name);
 
 	// Add the new task to the scheduler priority queue
-	m_queue.emplace(queueitem_t{ due, task });
+	m_queue.emplace(queueitem_t{ (name != nullptr) ? name : std::string(), due, task });
 }
 
 //---------------------------------------------------------------------------
@@ -111,33 +142,64 @@ void scheduler::clear(void)
 //---------------------------------------------------------------------------
 // scheduler::now
 //
-// Executes the specified task synchronously; removes any matching tasks
+// Executes the specified task synchronously
 //
 // Arguments:
 //
-//	task		- Task to be executed synchronously
+//	task	- Task to be executed synchronously
 
 void scheduler::now(std::function<void(scalar_condition<bool> const&)> task)
 {
-	now(task, scalar_condition<bool>{ false });
+	return now(nullptr, task, scalar_condition<bool>{ false });
 }
 
 //---------------------------------------------------------------------------
 // scheduler::now
 //
-// Executes the specified task synchronously; removes any matching tasks
+// Executes the specified task synchronously; removes any matching named tasks
 //
 // Arguments:
 //
-//	task		- Task to be executed synchronously
-//	cancel		- Task cancellation condition variable 
+//	name	- name to assign to the task
+//	task	- Task to be executed synchronously
+
+void scheduler::now(char const* name, std::function<void(scalar_condition<bool> const&)> task)
+{
+	return now(name, task, scalar_condition<bool>{ false });
+}
+
+//---------------------------------------------------------------------------
+// scheduler::now
+//
+// Executes the specified task synchronously
+//
+// Arguments:
+//
+//	task	- Task to be executed synchronously
+//	cancel	- Task cancellation condition variable 
 
 void scheduler::now(std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel)
 {
+	return now(nullptr, task, cancel);
+}
+
+//---------------------------------------------------------------------------
+// scheduler::now
+//
+// Executes the specified task synchronously; removes any matching named tasks
+//
+// Arguments:
+//
+//	name	- name to assign to the task
+//	task	- Task to be executed synchronously
+//	cancel	- Task cancellation condition variable 
+
+void scheduler::now(char const* name, std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel)
+{
 	std::unique_lock<std::mutex> queuelock(m_queue_lock);
 
-	// Remove any existing instances of the task from the queue
-	remove(queuelock, task);
+	// Remove any existing instances of a named task from the queue
+	if((name != nullptr) && (*name != 0)) remove(queuelock, name);
 
 	// Acquire the task mutex to prevent race condition with main worker thread
 	std::unique_lock<std::recursive_mutex> tasklock(m_task_lock);
@@ -165,16 +227,16 @@ void scheduler::pause(void)
 //---------------------------------------------------------------------------
 // scheduler::remove
 //
-// Removes all tasks from the scheduler queue with a specific tag
+// Removes all matching named tasks from the scheduler queue
 //
 // Arguments:
 //
-//	task		- Task to be removed from the queue
+//	name	- name assigned to the task(s)
 
-void scheduler::remove(std::function<void(scalar_condition<bool> const&)> task)
+void scheduler::remove(char const* name)
 {
 	std::unique_lock<std::mutex> queuelock(m_queue_lock);
-	remove(queuelock, task);
+	if((name != nullptr) && (*name != 0)) remove(queuelock, name);
 }
 
 //---------------------------------------------------------------------------
@@ -184,32 +246,28 @@ void scheduler::remove(std::function<void(scalar_condition<bool> const&)> task)
 //
 // Arguments:
 //
-//	lock		- Held lock instance
-//	task		- Task to be removed from the queue
+//	lock	- Held lock instance
+//	name	- name assigned to the task(s)
 
-void scheduler::remove(std::unique_lock<std::mutex> const& lock, std::function<void(scalar_condition<bool> const&)> task)
+void scheduler::remove(std::unique_lock<std::mutex> const& lock, char const* name)
 {
 	queue_t			newqueue;			// The new queue_t instance
 
 	assert(lock.owns_lock());
 	if(!lock.owns_lock()) throw std::invalid_argument("lock");
 
-	// targetptr_t
-	//
-	// Type returned by std::function::target<> below
-	using targetptr_t = void(*const*)(scalar_condition<bool> const&);
+	// This function does nothing if the task is unnamed
+	if((name == nullptr) || (*name == 0)) return;
 
 	// priority_queue<> doesn't actually allow elements to be removed, create
-	// a new queue with all the elements that don't have the same target
+	// a new queue with all the elements that don't have the same task name
 	while(!m_queue.empty()) {
 
-		// Pull out pointers to the left-hand and right-hand std::function targets to be compared
-		targetptr_t left = m_queue.top().second.target<void(*)(scalar_condition<bool> const&)>();
-		targetptr_t right = task.target<void(*)(scalar_condition<bool> const&)>();
+		// Get a reference to the topmost item in the priority_queue<>
+		queueitem_t const& top = m_queue.top();
 
-		// If the current item does not match the task being removed, move it into the new queue<>.
-		// (nullptr targets are going to be one-time lambdas, always move those over)
-		if((left == nullptr) || (right == nullptr) || (*left != *right)) newqueue.push(m_queue.top());
+		// Preserve the existing item if the task name doesn't match
+		if(top.name.compare(name) != 0) newqueue.push(top);
 
 		// Always remove the current item from the old queue<>
 		m_queue.pop();
@@ -253,10 +311,10 @@ void scheduler::start(void)
 
 			// Process all tasks from the top of the queue that have become due before waiting again
 			std::unique_lock<std::mutex> queuelock(m_queue_lock);
-			while((m_stop.test(false) == true) && (!m_queue.empty()) && (!m_paused) && (m_queue.top().first <= std::chrono::system_clock::now())) {
+			while((m_stop.test(false) == true) && (!m_queue.empty()) && (!m_paused) && (m_queue.top().due <= std::chrono::system_clock::now())) {
 
 				// Make a copy of the functor and remove the task from the queue
-				auto functor = m_queue.top().second;
+				auto functor = m_queue.top().task;
 				m_queue.pop();
 
 				// Acquire the task mutex to prevent race condition with now()

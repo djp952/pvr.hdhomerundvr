@@ -58,7 +58,7 @@ LOCAL_MODULE := hdhomerundvr
 LOCAL_C_INCLUDES += \
 	depends/xbmc/xbmc \
 	depends/xbmc/xbmc/linux \
-	depends/xbmc/xbmc/addons/kodi-addon-dev-kit/include/kodi \
+	depends/xbmc/xbmc/addons/kodi-addon-dev-kit/include \
 	depends/http-status-codes-cpp \
 	depends/libcurl/$(TARGET_ABI)/include \
 	depends/libuuid/$(TARGET_ABI)/include \
@@ -109,12 +109,12 @@ LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/libhdhomerun/hdhomerun_video.c \
 	depends/sqlite/sqlite3.c \
+	src/addon.cpp \
 	src/curlshare.cpp \
 	src/database.cpp \
 	src/dbextension.cpp \
 	src/devicestream.cpp \
 	src/httpstream.cpp \
-	src/pvr.cpp \
 	src/scheduler.cpp \
 	src/sqlite_exception.cpp \
 	src/xmlstream.cpp

@@ -27,6 +27,7 @@
 #include <chrono>
 #include <functional>
 #include <queue>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -61,9 +62,15 @@ public:
 
 	// add
 	//
-	// Adds a task to the scheduler queue; removes any matching tasks
+	// Adds a task to the scheduler queue
 	void add(std::function<void(scalar_condition<bool> const&)> task);
+	void add(char const* name, std::function<void(scalar_condition<bool> const&)> task);
 	void add(std::chrono::time_point<std::chrono::system_clock> due, std::function<void(scalar_condition<bool> const&)> task);
+	void add(char const* name, std::chrono::time_point<std::chrono::system_clock> due, std::function<void(scalar_condition<bool> const&)> task); 
+	template<class T> void add(void (T::*func)(scalar_condition<bool> const&), T* instance) { return add(nullptr, std::chrono::system_clock::now(), func, instance); }
+	template<class T> void add(char const* name, void (T::*func)(scalar_condition<bool> const&), T* instance) { return add(name, std::chrono::system_clock::now(), func, instance); }
+	template<class T> void add(std::chrono::time_point<std::chrono::system_clock> due, void (T::*func)(scalar_condition<bool> const&), T* instance) { return add(nullptr, due, func, instance); }
+	template<class T> void add(char const* name, std::chrono::time_point<std::chrono::system_clock> due, void (T::*func)(scalar_condition<bool> const&), T* instance) { return add(name, due, std::bind(func, instance, std::placeholders::_1)); }
 
 	// clear
 	//
@@ -72,9 +79,15 @@ public:
 
 	// now
 	//
-	// Executes the specified task synchronously; removes any matching tasks
+	// Executes the specified task synchronously
 	void now(std::function<void(scalar_condition<bool> const&)> task);
+	void now(char const* name, std::function<void(scalar_condition<bool> const&)> task);
 	void now(std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel);
+	void now(char const* name, std::function<void(scalar_condition<bool> const&)> task, scalar_condition<bool> const& cancel);
+	template<class T> void now(void (T::*func)(scalar_condition<bool> const&), T* instance) { return now(nullptr, func, instance); }
+	template<class T> void now(char const* name, void (T::*func)(scalar_condition<bool> const&), T* instance) { return now(name, func, instance); }
+	template<class T> void now(void (T::*func)(scalar_condition<bool> const&), T* instance, scalar_condition<bool> const& cancel) { return now(nullptr, func, instance, cancel); }
+	template<class T> void now(char const* name, void (T::*func)(scalar_condition<bool> const&), T* instance, scalar_condition<bool> const& cancel) { return now(name, std::bind(func, instance, std::placeholders::_1), cancel); }
 
 	// pause
 	//
@@ -83,8 +96,8 @@ public:
 
 	// remove
 	//
-	// Removes all instances of a single task from the queue
-	void remove(std::function<void(scalar_condition<bool> const&)> task);
+	// Removes all matching named tasks from the scheduler queue
+	void remove(char const* name);
 
 	// resume
 	//
@@ -109,7 +122,23 @@ private:
 	// queueitem_t
 	//
 	// queue<> element type
-	using queueitem_t = std::pair<std::chrono::time_point<std::chrono::system_clock>, std::function<void(scalar_condition<bool> const&)>>;
+	struct queueitem_t {
+
+		// name
+		//
+		// name of the task (optional, can be empty)
+		std::string name;
+
+		// due
+		//
+		// time at which the task becomes due
+		std::chrono::time_point<std::chrono::system_clock> due;
+
+		// task
+		//
+		// functor to invoke to execute the task
+		std::function<void(scalar_condition<bool> const&)> task;
+	};
 
 	// queueitem_greater_t
 	//
@@ -118,7 +147,7 @@ private:
 	{
 		bool operator()(queueitem_t const& lhs, queueitem_t const& rhs) const
 		{
-			return lhs.first > rhs.first;
+			return lhs.due > rhs.due;
 		}
 	};
 
@@ -132,8 +161,8 @@ private:
 
 	// remove
 	//
-	// Removes all instances of a single task from the queue
-	void remove(std::unique_lock<std::mutex> const& lock, std::function<void(scalar_condition<bool> const&)> task);
+	// Removes all instances of a named task from the queue
+	void remove(std::unique_lock<std::mutex> const& lock, char const* name);
 
 	//-----------------------------------------------------------------------
 	// Member Variables

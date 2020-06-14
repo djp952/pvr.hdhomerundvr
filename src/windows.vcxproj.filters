@@ -732,6 +732,12 @@
     <ClInclude Include="..\depends\libcurl\src\lib\mqtt.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="addon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pvrtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -741,9 +747,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="database.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="pvr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compat\uuid.cpp">
@@ -1375,6 +1378,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\mqtt.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="addon.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
