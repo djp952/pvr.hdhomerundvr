@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cctype>
 #include <functional>
+#include <kodi/addon-instance/PVR.h>
 #include <libxml/xmlreader.h>
 #include <list>
 #include <map>
@@ -38,10 +39,6 @@
 #include <uuid/uuid.h>
 #include <vector>
 #include <version.h>
-
-#pragma warning(disable: 4267)
-#include <kodi/addon-instance/PVR.h>
-#pragma warning(default: 4267)
 
 #include "curlshare.h"
 #include "dbtypes.h"

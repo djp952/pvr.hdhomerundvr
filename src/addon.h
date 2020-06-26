@@ -26,15 +26,11 @@
 
 #include <atomic>
 #include <deque>
+#include <kodi/addon-instance/PVR.h>
 #include <mutex>
 #include <random>
 #include <string>
 #include <vector>
-
-// TODO: PR to remove these #pragmas; wait for final implementation
-#pragma warning(disable: 4267)
-#include <kodi/addon-instance/PVR.h>
-#pragma warning(default: 4267)
 
 #include "database.h"
 #include "pvrstream.h"

@@ -24,9 +24,7 @@
 #define __GENREMAP_H_
 #pragma once
 
-#pragma warning(disable: 4267)
 #include <kodi/addon-instance/PVR.h>
-#pragma warning(default: 4267)
 
 #pragma warning(push, 4)
 

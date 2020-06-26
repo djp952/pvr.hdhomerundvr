@@ -59,6 +59,10 @@
 
 #pragma warning(push, 4)
 
+// Addon Entry Points 
+//
+ADDONCREATOR(addon)
+
 // Scheduled Task Names
 //
 char const* addon::UPDATE_DEVICES_TASK			= "update_devices_task";
@@ -4082,11 +4086,6 @@ PVR_ERROR addon::UpdateTimer(kodi::addon::PVRTimer const& timer)
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
-
-// TODO: PR to remove these #pragmas; wait for final implementation
-#pragma warning(disable: 4100)
-ADDONCREATOR(addon)
-#pragma warning(default: 4100)
 
 //---------------------------------------------------------------------------
 
