@@ -732,6 +732,15 @@
     <ClInclude Include="..\depends\libcurl\src\lib\mqtt.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\dynbuf.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vquic\vquic.h">
+      <Filter>External Libraries\curl\Header Files\vquic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\vtls\keylog.h">
+      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1375,6 +1384,15 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\mqtt.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\dynbuf.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vquic\vquic.c">
+      <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\keylog.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
