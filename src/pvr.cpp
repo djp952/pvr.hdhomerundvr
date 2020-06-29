@@ -1977,7 +1977,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					std::string databasefileuri = "file:///" + databasefile;
 
 					// Create the global database connection pool instance
-					try { g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI); }
+					try { g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), DATABASE_CONNECTIONPOOL_SIZE, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI); }
 					catch(sqlite_exception const& dbex) {
 
 						log_error(__func__, ": unable to create/open the PVR database ", databasefile, " - ", dbex.what());
@@ -1985,7 +1985,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 						// If any SQLite-specific errors were thrown during database open/create, attempt to delete and recreate the database
 						log_notice(__func__, ": attempting to delete and recreate the PVR database");
 						g_addon->DeleteFile(databasefile.c_str());
-						g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
+						g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), DATABASE_CONNECTIONPOOL_SIZE, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
 						log_notice(__func__, ": successfully recreated the PVR database");
 					}
 
