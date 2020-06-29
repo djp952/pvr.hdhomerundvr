@@ -5,9 +5,9 @@
 <addons>
 	<addon id="pvr.hdhomerundvr" version="<#= this.Host.ResolveParameterValue("", "", "displayversion") #>" name="HDHomeRun DVR PVR Client" provider-name="Michael Brehm (djp952)">
 		<requires>
-			<import addon="kodi.binary.global.main" version="1.2.2"/>
-			<import addon="kodi.binary.global.gui" version="5.14.0"/>
-			<import addon="kodi.binary.instance.pvr" version="7.0.0"/>
+			<import addon="kodi.binary.global.main" version="1.2.3"/>
+			<import addon="kodi.binary.global.gui" version="5.14.1"/>
+			<import addon="kodi.binary.instance.pvr" version="7.0.1"/>
 		</requires>
 		<extension point="kodi.pvrclient" needs_configuration="false" library_<#= this.Host.ResolveParameterValue("", "", "libraryplatform") #>="<#= this.Host.ResolveParameterValue("", "", "libraryname") #>"/>
 		<extension point="xbmc.addon.metadata">
