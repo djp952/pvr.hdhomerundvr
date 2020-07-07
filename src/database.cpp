@@ -1034,9 +1034,12 @@ void discover_recordings(sqlite3* instance, bool& changed)
 	try {
 
 		// Discover the recording information for all available storage devices
-		execute_non_query(instance, "insert into discover_recording select get_recording_id(json_extract(entry.value, '$.CmdURL')) as recordingid, "
-			"cast(strftime('%s', 'now') as integer) as discovered, json_extract(entry.value, '$.SeriesID') as seriesid, entry.value as data "
-			"from device, json_each(json_get(json_extract(device.data, '$.StorageURL'))) as entry where json_extract(device.data, '$.StorageURL') is not null");
+		execute_non_query(instance, "with storageurls(url) as(select json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' "
+			"from device where json_extract(device.data, '$.StorageURL') is not null) "
+			"insert into discover_recording select distinct get_recording_id(json_extract(recording.value, '$.CmdURL')) as recordingid, "
+			"cast(strftime('%s', 'now') as integer) as discovered, json_extract(recording.value, '$.SeriesID') as seriesid, recording.value as data "
+			"from json_each(entry.value) as recording, json_each((select json_get_aggregate(json_extract(recordinggroup.value, '$.EpisodesURL'), 'RecordingGroup') "
+			"from json_each(json_get(storageurls.url)) as recordinggroup, storageurls)) as entry");
 
 		// This requires a multi-step operation against the recording table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");

@@ -1,3 +1,7 @@
+v3.1.2 (2020.07.06)
+  - Backport: Adapt to HDHomeRun RECORD engine 20200318 breaking changes
+  - Backport: Fix bug that could cause HTTP 416 when seeking on a Recorded TV stream that has switched from in-progress to fully recorded
+
 v3.1.1 (2020.01.08)
   - (Windows) Use a BELOW_NORMAL thread priority for the background task scheduler
   - Remove "Use Original Air Date timestamp for Recorded TV programs" setting

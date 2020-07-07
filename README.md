@@ -13,6 +13,7 @@ Copyright (C)2016-2019 Michael G. Brehm
 **REQUIRED COMPONENTS**   
 * Windows 10 x64 1803 (17134) "April 2018 Update"   
 * Visual Studio 2017 (with VC 2015.3 v140 toolset for Desktop)   
+* Windows 8.1 SDK   
 * Windows Subsystem for Linux   
 * [Ubuntu on Windows 16.04 LTS](https://www.microsoft.com/store/productId/9PJN388HP8C9)   
 
@@ -80,7 +81,10 @@ git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 * Open "Ubuntu"   
 ```
 sudo apt-get install make clang zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev
-git clone https://github.com/tpoechtrager/osxcross --depth=1
+git clone https://github.com/tpoechtrager/osxcross
+cd osxcross
+git checkout 9498bfdc621716959e575bd6779c853a03cf5f8d
+cd ..
 cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh
 GCC_VERSION=4.9.3 osxcross/build_gcc.sh

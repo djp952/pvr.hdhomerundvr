@@ -861,7 +861,8 @@ long long httpstream::restart(long long position)
 
 long long httpstream::seek(long long position, int whence)
 {
-	long long			newposition = 0;			// New stream position
+	long long			newposition = 0;				// New stream position
+	long long const		currentpos = m_readpos;			// Current read position
 
 	assert((m_curlm != nullptr) && (m_curl != nullptr));
 
@@ -870,7 +871,7 @@ long long httpstream::seek(long long position, int whence)
 
 	// Calculate the new position of the stream
 	if(whence == SEEK_SET) newposition = std::max(position, 0LL);
-	else if(whence == SEEK_CUR) newposition = m_readpos + position;
+	else if(whence == SEEK_CUR) newposition = currentpos + position;
 	else if(whence == SEEK_END) newposition = m_length + position;
 	else throw std::invalid_argument("whence");
 
@@ -879,7 +880,7 @@ long long httpstream::seek(long long position, int whence)
 	if(newposition < 0) newposition = (position >= 0) ? std::numeric_limits<long long>::max() : 0;
 
 	// If the calculated position matches the current position there is nothing to do
-	if(newposition == m_readpos) return m_readpos;
+	if(newposition == currentpos) return currentpos;
 
 	// Calculate the minimum stream position currently represented in the ring buffer
 	long long minpos = ((m_writepos - m_startpos) > static_cast<long long>(m_buffersize)) ? m_writepos - m_buffersize : m_startpos;
@@ -906,7 +907,24 @@ long long httpstream::seek(long long position, int whence)
 	}
 
 	// Attempt to restart the stream at the calculated position
-	return restart(newposition);
+	try { return restart(newposition); }
+	catch(http_exception const& ex) {
+		
+		// Recalculate the requested position and try again on HTTP 416: Range not satisfiable,
+		// this can occur when a stream has switched from live (infinite) to recorded (finite)
+		if((ex.responsecode() == 416) && (newposition > m_length)) {
+
+			// This only happens with SEEK_END in practice, but handle them all anyway ...
+			if(whence == SEEK_SET) newposition = std::min(std::max(position, 0LL), m_length);
+			else if(whence == SEEK_CUR) newposition = std::min(currentpos + position, m_length);
+			else if(whence == SEEK_END) newposition = std::min(m_length + position, m_length);
+			else throw std::invalid_argument("whence");
+
+			return restart(newposition);
+		}
+
+		else throw;
+	}
 }
 
 //---------------------------------------------------------------------------
