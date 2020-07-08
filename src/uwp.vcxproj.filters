@@ -726,15 +726,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\setup-win32.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\dynbuf.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vquic\vquic.h">
-      <Filter>External Libraries\curl\Header Files\vquic</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\keylog.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
     <ClInclude Include="addon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1382,12 +1373,8 @@
     <ClCompile Include="..\depends\libcurl\src\lib\mqtt.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vquic\vquic.c">
-      <Filter>External Libraries\curl\Source Files\vquic</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\keylog.c">
-      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    <ClCompile Include="addon.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
