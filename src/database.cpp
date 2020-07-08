@@ -91,40 +91,19 @@ template<typename... _parameters> static std::string execute_scalar_string(sqlit
 // Arguments:
 //
 //	connstring		- Database connection string
-//	poolsize		- Initial connection pool size
 //	flags			- Database connection flags
 
-connectionpool::connectionpool(char const* connstring, size_t poolsize, int flags) : 
-	m_connstr((connstring) ? connstring : ""), m_flags(flags)
+connectionpool::connectionpool(char const* connstring, int flags) : m_connstr((connstring) ? connstring : ""), m_flags(flags)
 {
 	sqlite3*		handle = nullptr;		// Initial database connection
 
 	if(connstring == nullptr) throw std::invalid_argument("connstring");
 
-	// Create and pool an initial connection to initialize the database
+	// Create and pool the initial connection now to give the caller an opportunity
+	// to catch any exceptions during initialization of the database
 	handle = open_database(m_connstr.c_str(), m_flags, true);
 	m_connections.push_back(handle);
 	m_queue.push(handle);
-
-	// Create and pool the requested number of additional connections
-	try {
-
-		for(size_t index = 1; index < poolsize; index++) {
-
-			handle = open_database(m_connstr.c_str(), m_flags, false);
-			m_connections.push_back(handle);
-			m_queue.push(handle);
-		}
-	}
-
-	catch(...) {
-
-		// Clear the connection cache and destroy all created connections
-		while(!m_queue.empty()) m_queue.pop();
-		for(auto const& iterator : m_connections) close_database(iterator);
-
-		throw;
-	}
 }
 
 //---------------------------------------------------------------------------

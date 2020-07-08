@@ -103,7 +103,7 @@ public:
 
 	// Instance Constructor
 	//
-	connectionpool(char const* connstr, size_t poolsize, int flags);
+	connectionpool(char const* connstr, int flags);
 
 	// Destructor
 	//
