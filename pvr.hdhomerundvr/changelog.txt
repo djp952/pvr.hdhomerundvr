@@ -1,6 +1,3 @@
-v3.3.2 (2020.06.xx)
-  - Update SQLite database engine to version 3.32.3
-
 v3.3.1 (2020.05.28)
   - Update SQLite database engine to version 3.32.1
   - Fix bug preventing recordings from being loaded when duplicate series identifiers exist
