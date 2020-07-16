@@ -1,4 +1,4 @@
-v3.3.2 (2020.07.xx)
+v3.3.2 (2020.07.15)
   - Update SQLite database engine to version 3.32.3
   - Update cURL library to version 7.71.1
   - (Linux/OSX) Enable missing compiler optimization flags during build
