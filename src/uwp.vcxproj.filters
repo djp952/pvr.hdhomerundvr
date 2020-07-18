@@ -1382,12 +1382,17 @@
     <ClCompile Include="..\depends\libcurl\src\lib\mqtt.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vquic\vquic.c">
       <Filter>External Libraries\curl\Source Files\vquic</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\keylog.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="addon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\dynbuf.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
