@@ -230,6 +230,11 @@ struct addon_settings {
 	// Flag indicating that the original air date should be reported as the recording date
 	bool use_airdate_as_recordingdate;
 
+	// use_actual_timer_times
+	//
+	// Flag indicating that the actual start and end times for timers should be reported
+	bool use_actual_timer_times;
+
 	// disable_backend_channel_logos
 	//
 	// Flag indicating that the channel logo thumbnail URLs should not be reported
@@ -443,6 +448,7 @@ static addon_settings g_settings = {
 	false,						// disable_recording_categories
 	false,						// generate_repeat_indicators
 	false,						// use_airdate_as_recordingdate
+	false,						// use_actual_timer_times
 	false,						// disable_backend_channel_logos
 	86400,						// delete_datetime_rules_after			default = 1 day
 	300, 						// discover_devices_interval;			default = 5 minutes
@@ -1835,17 +1841,20 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 			// Load the general settings
 			if(g_addon->GetSetting("pause_discovery_while_streaming", &bvalue)) g_settings.pause_discovery_while_streaming = bvalue;
+			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
+			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
+			if(g_addon->GetSetting("disable_backend_channel_logos", &bvalue)) g_settings.disable_backend_channel_logos = bvalue;
+			if(g_addon->GetSetting("delete_datetime_rules_after_v2", &nvalue)) g_settings.delete_datetime_rules_after = nvalue;
+
+			// Load the interface settings
 			if(g_addon->GetSetting("prepend_channel_numbers", &bvalue)) g_settings.prepend_channel_numbers = bvalue;
 			if(g_addon->GetSetting("use_episode_number_as_title", &bvalue)) g_settings.use_episode_number_as_title = bvalue;
-			if(g_addon->GetSetting("discover_recordings_after_playback", &bvalue)) g_settings.discover_recordings_after_playback = bvalue;
 			if(g_addon->GetSetting("use_backend_genre_strings", &bvalue)) g_settings.use_backend_genre_strings = bvalue;
-			if(g_addon->GetSetting("show_drm_protected_channels", &bvalue)) g_settings.show_drm_protected_channels = bvalue;
 			if(g_addon->GetSetting("channel_name_source", &nvalue)) g_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
 			if(g_addon->GetSetting("disable_recording_categories", &bvalue)) g_settings.disable_recording_categories = bvalue;
 			if(g_addon->GetSetting("generate_repeat_indicators", &bvalue)) g_settings.generate_repeat_indicators = bvalue;
 			if(g_addon->GetSetting("use_airdate_as_recordingdate", &bvalue)) g_settings.use_airdate_as_recordingdate = bvalue;
-			if(g_addon->GetSetting("disable_backend_channel_logos", &bvalue)) g_settings.disable_backend_channel_logos = bvalue;
-			if(g_addon->GetSetting("delete_datetime_rules_after_v2", &nvalue)) g_settings.delete_datetime_rules_after = nvalue;
+			if(g_addon->GetSetting("use_actual_timer_times", &bvalue)) g_settings.use_actual_timer_times = bvalue;
 
 			// Load the discovery interval settings
 			if(g_addon->GetSetting("discover_devices_interval_v2", &nvalue)) g_settings.discover_devices_interval = nvalue;
@@ -2215,6 +2224,19 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			g_settings.use_airdate_as_recordingdate = bvalue;
 			log_notice(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
+		}
+	}
+
+	// use_actual_timer_times
+	//
+	else if(strcmp(name, "use_actual_timer_times") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_actual_timer_times) {
+
+			g_settings.use_actual_timer_times = bvalue;
+			log_notice(__func__, ": setting use_actual_timer_times changed to ", (bvalue) ? "true" : "false", " -- trigger timer update");
+			g_pvr->TriggerTimerUpdate();
 		}
 	}
 
@@ -3739,6 +3761,9 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 
 	time_t now = time(nullptr);				// Get the current date/time for comparison
 
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -3818,10 +3843,12 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			timer.iClientChannelUid = static_cast<int>(item.channelid.value);
 
 			// startTime
-			timer.startTime = static_cast<time_t>(item.starttime) - static_cast<time_t>(item.startpadding);
+			timer.startTime = static_cast<time_t>(item.starttime) - 
+				((settings.use_actual_timer_times) ? static_cast<time_t>(item.startpadding) : 0);
 
 			// endTime
-			timer.endTime = static_cast<time_t>(item.endtime) + static_cast<time_t>(item.endpadding);
+			timer.endTime = static_cast<time_t>(item.endtime) + 
+				((settings.use_actual_timer_times) ? static_cast<time_t>(item.endpadding) : 0);
 
 			// state (required)
 			if(timer.endTime < now) timer.state = PVR_TIMER_STATE_COMPLETED;
