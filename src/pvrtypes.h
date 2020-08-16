@@ -138,6 +138,11 @@ struct settings {
 	// Flag indicating that the original air date should be reported as the recording date
 	bool use_airdate_as_recordingdate;
 
+	// use_actual_timer_times
+	//
+	// Flag indicating that the actual start and end times for timers should be reported
+	bool use_actual_timer_times;
+
 	// disable_backend_channel_logos
 	//
 	// Flag indicating that the channel logo thumbnail URLs should not be reported

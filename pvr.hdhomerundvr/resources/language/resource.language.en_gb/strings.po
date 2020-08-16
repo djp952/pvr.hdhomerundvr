@@ -156,6 +156,10 @@ msgctxt "#30140"
 msgid "Preferred channel name format"
 msgstr ""
 
+msgctxt "#30141"
+msgid "Report actual start and end times for upcoming timers"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -397,7 +401,7 @@ msgid "When set to ON channels marked as DRM-protected by the HDHomeRun tuner de
 msgstr ""
 
 msgctxt "#30509"
-msgid "Specifies the age at which an expired date/time recording rule (timer rule) will be automatically deleted."
+msgid "Specifies the age at which an expired date/time recording rule (Kodi Timer Rule) will be automatically deleted."
 msgstr ""
 
 msgctxt "#30510"
@@ -491,3 +495,8 @@ msgstr ""
 msgctxt "#30535"
 msgid "Specifies the preferred format of the channel names reported to Kodi. When the selected format is not available a fallback format will be selected automatically."
 msgstr ""
+
+msgctxt "#30536"
+msgid "When set to ON any specified reording rule (Kodi Timer Rule) start and end time padding will be applied to recording rule episodes (Kodi Timers)."
+msgstr ""
+

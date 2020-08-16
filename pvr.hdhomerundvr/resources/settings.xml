@@ -100,6 +100,12 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="use_actual_timer_times" type="boolean" label="30141" help="30536">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
       </group>
     </category>
 

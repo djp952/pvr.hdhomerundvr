@@ -1482,17 +1482,20 @@ ADDON_STATUS addon::Create(void)
 
 			// Load the general settings
 			m_settings.pause_discovery_while_streaming = kodi::GetSettingBoolean("pause_discovery_while_streaming", false);
+			m_settings.discover_recordings_after_playback = kodi::GetSettingBoolean("discover_recordings_after_playback", false);
+			m_settings.show_drm_protected_channels = kodi::GetSettingBoolean("show_drm_protected_channels", false);
+			m_settings.disable_backend_channel_logos = kodi::GetSettingBoolean("disable_backend_channel_logos", false);
+			m_settings.delete_datetime_rules_after = kodi::GetSettingInt("delete_datetime_rules_after_v2", 86400);				// 1 day
+
+			// Load the interface settings
 			m_settings.prepend_channel_numbers = kodi::GetSettingBoolean("prepend_channel_numbers", false);
 			m_settings.use_episode_number_as_title = kodi::GetSettingBoolean("use_episode_number_as_title", false);
-			m_settings.discover_recordings_after_playback = kodi::GetSettingBoolean("discover_recordings_after_playback", false);
 			m_settings.use_backend_genre_strings = kodi::GetSettingBoolean("use_backend_genre_strings", false);
-			m_settings.show_drm_protected_channels = kodi::GetSettingBoolean("show_drm_protected_channels", false);
 			m_settings.channel_name_source = kodi::GetSettingEnum("channel_name_source", channel_name_source::xmltv);
 			m_settings.disable_recording_categories = kodi::GetSettingBoolean("disable_recording_categories", false);
 			m_settings.generate_repeat_indicators = kodi::GetSettingBoolean("generate_repeat_indicators", false);
 			m_settings.use_airdate_as_recordingdate = kodi::GetSettingBoolean("use_airdate_as_recordingdate", false);
-			m_settings.disable_backend_channel_logos = kodi::GetSettingBoolean("disable_backend_channel_logos", false);
-			m_settings.delete_datetime_rules_after = kodi::GetSettingInt("delete_datetime_rules_after_v2", 86400);				// 1 day
+			m_settings.use_actual_timer_times = kodi::GetSettingBoolean("use_actual_timer_times", false);
 
 			// Load the discovery interval settings
 			m_settings.discover_devices_interval = kodi::GetSettingInt("discover_devices_interval_v2", 300);					// 5 minutes
@@ -1754,6 +1757,19 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 			m_settings.use_airdate_as_recordingdate = bvalue;
 			log_info(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
 			TriggerRecordingUpdate();
+		}
+	}
+
+	// use_actual_timer_times
+	//
+	else if(settingName == "use_actual_timer_times") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.use_actual_timer_times) {
+
+			m_settings.use_actual_timer_times = bvalue;
+			log_info(__func__, ": setting use_actual_timer_times changed to ", (bvalue) ? "true" : "false", " -- trigger timer update");
+			TriggerTimerUpdate();
 		}
 	}
 
@@ -3343,6 +3359,9 @@ PVR_ERROR addon::GetTimers(kodi::addon::PVRTimersResultSet& results)
 
 	time_t now = time(nullptr);				// Get the current date/time for comparison
 
+	// Create a copy of the current addon settings structure
+	struct settings settings = copy_settings();
+
 	try {
 
 		// Pull a database connection out from the connection pool
@@ -3395,7 +3414,7 @@ PVR_ERROR addon::GetTimers(kodi::addon::PVRTimersResultSet& results)
 			timer.SetMarginStart(item.startpadding / 60);
 
 			// MarginEnd
-			timer.SetMarginEnd(item.startpadding / 60);
+			timer.SetMarginEnd(item.endpadding / 60);
 
 			// SeriesLink
 			if(item.seriesid != nullptr) timer.SetSeriesLink(item.seriesid);
@@ -3418,10 +3437,12 @@ PVR_ERROR addon::GetTimers(kodi::addon::PVRTimersResultSet& results)
 			timer.SetClientChannelUid(static_cast<int>(item.channelid.value));
 
 			// StartTime
-			timer.SetStartTime(static_cast<time_t>(item.starttime) - static_cast<time_t>(item.startpadding));
+			timer.SetStartTime(static_cast<time_t>(item.starttime) - 
+				((settings.use_actual_timer_times) ? static_cast<time_t>(item.startpadding) : 0));
 
 			// EndTime
-			timer.SetEndTime(static_cast<time_t>(item.endtime) + static_cast<time_t>(item.endpadding));
+			timer.SetEndTime(static_cast<time_t>(item.endtime) + 
+				((settings.use_actual_timer_times) ? static_cast<time_t>(item.endpadding) : 0));
 
 			// State (required)
 			if(timer.GetEndTime() < now) timer.SetState(PVR_TIMER_STATE::PVR_TIMER_STATE_COMPLETED);
