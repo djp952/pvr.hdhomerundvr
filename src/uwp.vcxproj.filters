@@ -738,6 +738,9 @@
     <ClInclude Include="addon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\version_win32.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1392,6 +1395,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\dynbuf.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\version_win32.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
