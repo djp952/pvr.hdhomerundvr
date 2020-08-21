@@ -735,6 +735,9 @@
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\keylog.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\version_win32.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1379,14 +1382,17 @@
     <ClCompile Include="..\depends\libcurl\src\lib\mqtt.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\dynbuf.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vquic\vquic.c">
       <Filter>External Libraries\curl\Source Files\vquic</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\keylog.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\dynbuf.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\version_win32.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
