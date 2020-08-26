@@ -58,7 +58,7 @@ LOCAL_MODULE := hdhomerundvr
 LOCAL_C_INCLUDES += \
 	depends/xbmc/xbmc \
 	depends/xbmc/xbmc/linux \
-	depends/xbmc/xbmc/addons/kodi-addon-dev-kit/include \
+	depends/xbmc/xbmc/addons/kodi-dev-kit/include \
 	depends/http-status-codes-cpp \
 	depends/libcurl/$(TARGET_ABI)/include \
 	depends/libuuid/$(TARGET_ABI)/include \
