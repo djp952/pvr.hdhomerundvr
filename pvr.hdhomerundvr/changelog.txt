@@ -1,4 +1,4 @@
-v3.3.3 (2020.09.XX)
+v3.3.3 (2020.09.30)
   - Update SQLite database engine to version 3.33.0
   - Update cURL library to version 7.72.0
   - Fix bug that reported recording rule start time padding as both the start and end time padding
