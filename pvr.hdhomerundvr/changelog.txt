@@ -1,3 +1,6 @@
+v3.3.4 (2020.11.xx)
+  - Update cURL library to version 7.73.0
+
 v3.3.3 (2020.09.30)
   - Update SQLite database engine to version 3.33.0
   - Update cURL library to version 7.72.0
