@@ -19,7 +19,6 @@ Copyright (C)2016-2020 Michael G. Brehm
 **OPTIONAL COMPONENTS**   
 * Android NDK r20b for Windows 64-bit   
 * Oracle Java SE Runtime Environment 8   
-* Raspberry Pi Cross-Compiler   
 * OSXCROSS Cross-Compiler (with Mac OSX 10.11 SDK)   
    
 **REQUIRED: CONFIGURE UBUNTU ON WINDOWS**   
@@ -49,14 +48,6 @@ Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:
 * Extract the contents of the jre-8xxx-windows-x64.tar.gz file somewhere   
 * Set a System Environment Variable named JAVA_HOME that points to the location the tar.gz was extracted   
 * Generate a custom public-key certificate that can be used to sign the generated package(s). Follow the instructions provided by Google at the Android Developer [Sign Your App](https://developer.android.com/studio/publish/app-signing.html) page.   
-   
-**OPTIONAL: CONFIGURE RASPBERRY PI CROSS-COMPILER**   
-*Necessary to build Raspbian Targets*   
-   
-* Open "Ubuntu"   
-```
-git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
-```
    
 **OPTIONAL: CONFIGURE OSXCROSS CROSS-COMPILER**   
 *Necessary to build OS X Targets*   
@@ -117,7 +108,6 @@ Examples:
 | linux-i686 | Linux X86 | /t:linux-i686 |
 | linux-x86\_64 | Linux X64 | /t:linux-x86\_64 |
 | osx-x86\_64 | Mac OS X X64 | /t:osx-x86\_64 |
-| raspbian-armhf | Raspbian ARM (hard float) | /t:raspbian-armhf |
 | uwp-arm | Universal Windows Platform ARM | /t:uwp-arm |
 | uwp-win32 | Universal Windows Platform X86 | /t:uwp-win32 |
 | uwp-x64 | Universal Windows Platform X64 | /t:uwp-x64 |

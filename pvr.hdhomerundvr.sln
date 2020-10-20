@@ -51,7 +51,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03
 		manifest\linux-i686.manifest = manifest\linux-i686.manifest
 		manifest\linux-x86_64.manifest = manifest\linux-x86_64.manifest
 		manifest\osx-x86_64.manifest = manifest\osx-x86_64.manifest
-		manifest\raspbian-armhf.manifest = manifest\raspbian-armhf.manifest
 		manifest\uwp-arm.manifest = manifest\uwp-arm.manifest
 		manifest\uwp-win32.manifest = manifest\uwp-win32.manifest
 		manifest\uwp-x64.manifest = manifest\uwp-x64.manifest
@@ -64,7 +63,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "exportlist", "exportlist", 
 		exportlist\exportlist.android = exportlist\exportlist.android
 		exportlist\exportlist.linux = exportlist\exportlist.linux
 		exportlist\exportlist.osx = exportlist\exportlist.osx
-		exportlist\exportlist.raspbian = exportlist\exportlist.raspbian
 		exportlist\exportlist.uwp = exportlist\exportlist.uwp
 		exportlist\exportlist.windows = exportlist\exportlist.windows
 	EndProjectSection

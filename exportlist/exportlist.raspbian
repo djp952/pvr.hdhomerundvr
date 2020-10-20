@@ -1,5 +1,0 @@
-{
-	global: ADDON_*; sqlite3_extension_init;
-	local: *;
-};
-
