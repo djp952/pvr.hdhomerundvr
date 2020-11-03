@@ -3338,7 +3338,7 @@ PVR_ERROR addon::GetStreamTimes(kodi::addon::PVRStreamTimes& times)
 	// Set the timeshift duration to the delta between the start time and the lesser of the 
 	// current wall clock time or the known stream end time
 	time_t now = time(nullptr);
-	times.SetPTSEnd(static_cast<int64_t>(((now < m_stream_endtime) ? now : m_stream_endtime) - m_stream_starttime) * DVD_TIME_BASE);
+	times.SetPTSEnd(static_cast<int64_t>(((now < m_stream_endtime) ? now : m_stream_endtime) - m_stream_starttime) * STREAM_TIME_BASE);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
