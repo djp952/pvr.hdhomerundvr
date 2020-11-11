@@ -62,6 +62,13 @@ sqlite_exception::sqlite_exception(sqlite_exception const& rhs) : m_what(rhs.m_w
 }
 
 //-----------------------------------------------------------------------------
+// sqlite_exception Move Constructor
+
+sqlite_exception::sqlite_exception(sqlite_exception&& rhs) : m_what(std::move(rhs.m_what))
+{
+}
+
+//-----------------------------------------------------------------------------
 // sqlite_exception char const* conversion operator
 
 sqlite_exception::operator char const*() const

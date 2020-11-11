@@ -48,6 +48,10 @@ public:
 	//
 	sqlite_exception(sqlite_exception const& rhs);
 
+	// Move Constructor
+	//
+	sqlite_exception(sqlite_exception&& rhs);
+
 	// char const* conversion operator
 	//
 	operator char const*() const;
