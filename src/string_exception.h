@@ -48,6 +48,10 @@ public:
 	//
 	string_exception(string_exception const& rhs) : m_what(rhs.m_what) {}
 
+	// Move Constructor
+	//
+	string_exception(string_exception&& rhs) : m_what(std::move(rhs.m_what)) {}
+
 	// char const* conversion operator
 	//
 	operator char const*() const
