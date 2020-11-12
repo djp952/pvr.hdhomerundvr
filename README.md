@@ -111,8 +111,8 @@ Examples:
 | uwp-arm | Universal Windows Platform ARM | /t:uwp-arm |
 | uwp-win32 | Universal Windows Platform X86 | /t:uwp-win32 |
 | uwp-x64 | Universal Windows Platform X64 | /t:uwp-x64 |
-| uwpappx-win32 | Universal Windows Platform X86 APPX | /t:uwpappx-win32 /p:Keystore={keystore};KeystorePassword={keystore-password} |
-| uwpappx-x64 | Universal Windows Platform X64 APPX | /t:uwpappx-x64 /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| uwpappx-arm | Universal Windows Platform ARM MSIX | /t:uwpappx-arm /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| uwpappx-x64 | Universal Windows Platform X64 MSIX | /t:uwpappx-x64 /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | windows-win32 | Windows X86 | /t:windows-win32 |
 | windows-x64 | Windows X64 | /t:windows-x64 |
    
@@ -125,7 +125,7 @@ Examples:
 | linux | All Linux targets | /t:linux |
 | osx | All Mac OS X targets | /t:osx |
 | uwp | All Universal Windows Platform targets | /t:uwp |
-| uwpappx | All Universal Windows Platform APPX targets | /t:uwpappx /p:Keystore={keystore};KeystorePassword={keystore-password} |
+| uwpappx | All Universal Windows Platform MSIX targets | /t:uwpappx /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | windows (default) | All Windows targets | /t:windows |
    
 ## ADDITIONAL LICENSE INFORMATION
