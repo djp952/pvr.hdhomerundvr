@@ -738,11 +738,14 @@
     <ClInclude Include="..\depends\libcurl\src\lib\version_win32.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_sec.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="pvrtypes.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_krb5.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\easyoptions.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

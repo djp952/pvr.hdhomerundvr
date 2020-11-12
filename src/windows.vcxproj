@@ -195,6 +195,7 @@
     <ClInclude Include="..\depends\libcurl\src\lib\curl_get_line.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_gssapi.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_hmac.h" />
+    <ClInclude Include="..\depends\libcurl\src\lib\curl_krb5.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_ldap.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_md4.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_md5.h" />
@@ -208,7 +209,6 @@
     <ClInclude Include="..\depends\libcurl\src\lib\curl_range.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_rtmp.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_sasl.h" />
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_sec.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_setup.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_setup_once.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\curl_sha256.h" />
@@ -218,6 +218,7 @@
     <ClInclude Include="..\depends\libcurl\src\lib\dotdot.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\dynbuf.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\easyif.h" />
+    <ClInclude Include="..\depends\libcurl\src\lib\easyoptions.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\escape.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\fileinfo.h" />
     <ClInclude Include="..\depends\libcurl\src\lib\ftplistparser.h" />
