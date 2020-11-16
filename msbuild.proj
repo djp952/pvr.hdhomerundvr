@@ -290,8 +290,8 @@
 
     <PropertyGroup>
       <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armel/include -Idepends/libuuid/linux-armel/include -Idepends/libxml2/linux-armel/include -Idepends/libz/linux-armel/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
-      <CFLAGS>-DNDEBUG -O2 -fPIC</CFLAGS>
-      <CXXFLAGS>-DNDEBUG -O2 -fPIC -std=c++14</CXXFLAGS>
+      <CFLAGS>-DNDEBUG -O2 -fPIC -march=armv6</CFLAGS>
+      <CXXFLAGS>-DNDEBUG -O2 -fPIC -march=armv6 -std=c++14</CXXFLAGS>
     </PropertyGroup>
 
     <MakeDir Directories="out\linux-armel" ContinueOnError="false"/>
