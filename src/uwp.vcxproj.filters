@@ -20,14 +20,8 @@
       <UniqueIdentifier>{824cb369-40c3-4c93-b00f-26a89f80cb70}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
-    <Filter Include="Source Files\compat">
-      <UniqueIdentifier>{4d3c3b8b-5e05-4f27-8305-5f870daffba9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\compat">
       <UniqueIdentifier>{2a0c1029-3d04-4d2d-a301-468d7e2c070c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\compat\uuid">
-      <UniqueIdentifier>{434554ef-071f-4214-a443-ade85ba7d18e}</UniqueIdentifier>
     </Filter>
     <Filter Include="External Libraries\libhdhomerun">
       <UniqueIdentifier>{885c13cb-38dd-4c5c-97ed-9c6269c92dc3}</UniqueIdentifier>
@@ -136,6 +130,9 @@
     <Filter Include="External Libraries\curl\Header Files\vssh">
       <UniqueIdentifier>{13585d81-ac86-47c0-a9f5-4e3f61cdf879}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sqlext">
+      <UniqueIdentifier>{c397e415-61f7-4206-b050-11f1796e90f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -143,9 +140,6 @@
     </ClInclude>
     <ClInclude Include="database.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="compat\uuid\uuid.h">
-      <Filter>Header Files\compat\uuid</Filter>
     </ClInclude>
     <ClInclude Include="scalar_condition.h">
       <Filter>Header Files</Filter>
@@ -760,9 +754,6 @@
     </ClCompile>
     <ClCompile Include="pvr.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compat\uuid.cpp">
-      <Filter>Source Files\compat</Filter>
     </ClCompile>
     <ClCompile Include="scheduler.cpp">
       <Filter>Source Files</Filter>
@@ -1411,6 +1402,12 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\altsvc.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlext\zipfile.c">
+      <Filter>Source Files\sqlext</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlext\uuid.c">
+      <Filter>Source Files\sqlext</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

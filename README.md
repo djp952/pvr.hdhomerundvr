@@ -6,8 +6,12 @@ Unofficial Kodi HDHomeRun DVR PVR Client
 Copyright (C)2016-2020 Michael G. Brehm    
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
-[__CURL__](https://curl.haxx.se/) - Copyright (C)1996 - 2018, Daniel Stenberg, daniel@haxx.se, and many contributors   
-[__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2018 Silicondust USA Inc     
+[__CURL__](https://curl.haxx.se/) - Copyright (C)1996-2020, Daniel Stenberg, daniel@haxx.se, and many contributors   
+[__HTTP-STATUS-CODES-CPP__](https://github.com/j-ulrich/http-status-codes-cpp) - Copyright (C) Jochen Ulrich   
+[__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2018 Silicondust USA Inc   
+[__LIBXML2__](http://xmlsoft.org/) - Copyright (C)1998-2012 Daniel Veillard   
+[__RAPIDJSON__](https://rapidjson.org/) - Copyright (C)2015 THL A29 Limited, a Tencent company, and Milo Yip   
+[__ZLIB__](https://zlib.net/) - Copyright (C)1995-2017 Jean-loup Gailly and Mark Adler   
    
 ## BUILD ENVIRONMENT
 **REQUIRED COMPONENTS**   
@@ -64,7 +68,7 @@ git clone https://github.com/raspberrypi/tools.git raspberrypi --depth=1
 * Generate the MAC OSX 10.11 SDK Package for OSXCROSS by following the instructions provided at [PACKAGING THE SDK](https://github.com/tpoechtrager/osxcross#packaging-the-sdk).  The suggested version of Xcode to use when generating the SDK package is Xcode 7.3.1 (May 3, 2016).
 * Open "Ubuntu"   
 ```
-sudo apt-get install cmake clang llvm-dev libxml2-dev uuid-dev libssl-dev libbz2-dev zlib1g-dev
+sudo apt-get install cmake clang llvm-dev libxml2-dev libssl-dev libbz2-dev zlib1g-dev
 git clone https://github.com/tpoechtrager/osxcross --depth=1
 cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh

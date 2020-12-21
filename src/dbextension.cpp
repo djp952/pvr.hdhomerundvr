@@ -35,7 +35,6 @@
 #include <rapidjson/writer.h>
 #include <sqlite3ext.h>
 #include <string>
-#include <uuid/uuid.h>
 #include <xbmc_pvr_types.h>
 #include <vector>
 #include <version.h>
@@ -46,13 +45,21 @@
 #include "string_exception.h"
 #include "xmlstream.h"
 
-SQLITE_EXTENSION_INIT1
+extern "C" { SQLITE_EXTENSION_INIT1 };
 
 #pragma warning(push, 4)
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //---------------------------------------------------------------------------
+
+// sqlext/uuid.c
+//
+extern "C" int sqlite3_uuid_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines * pApi);
+
+// sqlext/zipfile.c
+//
+extern "C" int sqlite3_zipfile_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines *pApi);
 
 // xmltv virtual table functions
 //
@@ -451,31 +458,6 @@ void fnv_hash(sqlite3_context* context, int argc, sqlite3_value** argv)
 	}
 
 	return sqlite3_result_int(context, hash);
-}
-
-//---------------------------------------------------------------------------
-// generate_uuid
-//
-// SQLite scalar function to generate a UUID
-//
-// Arguments:
-//
-//	context		- SQLite context object
-//	argc		- Number of supplied arguments
-//	argv		- Argument values
-
-void generate_uuid(sqlite3_context* context, int argc, sqlite3_value** /*argv*/)
-{
-	uuid_t		uuid;						// Generated UUID
-	char		uuidstr[40];				// UUID string representation
-
-	if(argc != 0) return sqlite3_result_error(context, "invalid argument", -1);
-
-	// Create and convert a new UUID to provide as the string result
-	uuid_generate(uuid);
-	uuid_unparse(uuid, uuidstr);
-
-	sqlite3_result_text(context, uuidstr, -1, SQLITE_TRANSIENT);
 }
 
 //---------------------------------------------------------------------------
@@ -1658,11 +1640,6 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "fnv_hash", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, fnv_hash, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function fnv_hash"); return result; }
 
-	// generate_uuid (non-deterministic)
-	//
-	result = sqlite3_create_function_v2(db, "generate_uuid", 0, SQLITE_UTF8, nullptr, generate_uuid, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function generate_uuid"); return result; }
-
 	// get_channel_number function
 	//
 	result = sqlite3_create_function_v2(db, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
@@ -1708,6 +1685,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	result = sqlite3_create_function_v2(db, "json_get_aggregate", 2, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
 
+	// uuid extension
+	//
+	result = sqlite3_uuid_init(db, nullptr, sqlite3_api);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension uuid"); return result; }
+
 	// url_encode function
 	//
 	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
@@ -1732,6 +1714,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "xmltv_time_to_year", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_year, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_year"); return result; }
+
+	// zipfile extension
+	//
+	result = sqlite3_zipfile_init(db, nullptr, sqlite3_api);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension zipfile"); return result; }
 
 	return SQLITE_OK;
 }
