@@ -29,13 +29,6 @@ LOCAL_MODULE := libcurl-prebuilt
 LOCAL_SRC_FILES := depends/libcurl/$(TARGET_ABI)/lib/libcurl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-# libuuid
-#
-include $(CLEAR_VARS)
-LOCAL_MODULE := libuuid-prebuilt
-LOCAL_SRC_FILES := depends/libuuid/$(TARGET_ABI)/lib/libuuid.a
-include $(PREBUILT_STATIC_LIBRARY)
-
 # libxml2
 #
 include $(CLEAR_VARS)
@@ -61,7 +54,6 @@ LOCAL_C_INCLUDES += \
 	depends/xbmc/xbmc/addons/kodi-dev-kit/include \
 	depends/http-status-codes-cpp \
 	depends/libcurl/$(TARGET_ABI)/include \
-	depends/libuuid/$(TARGET_ABI)/include \
 	depends/libxml2/$(TARGET_ABI)/include \
 	depends/libz/$(TARGET_ABI)/include \
 	depends/libhdhomerun \
@@ -86,7 +78,6 @@ LOCAL_CPPFLAGS += \
 	-Wno-unknown-pragmas
 	
 LOCAL_STATIC_LIBRARIES += \
-	libuuid-prebuilt \
 	libcurl-prebuilt \
 	libxml2-prebuilt \
 	libz-prebuilt
@@ -118,7 +109,9 @@ LOCAL_SRC_FILES := \
 	src/httpstream.cpp \
 	src/scheduler.cpp \
 	src/sqlite_exception.cpp \
-	src/xmlstream.cpp
+	src/xmlstream.cpp \
+	src/sqlext/uuid.c \
+	src/sqlext/zipfile.c
 	
 include $(BUILD_SHARED_LIBRARY)
 

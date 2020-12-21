@@ -2981,7 +2981,7 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 			// (re)generate the clientid
 			//
 			execute_non_query(instance, "delete from client");
-			execute_non_query(instance, "insert into client values(generate_uuid())");
+			execute_non_query(instance, "insert into client values(uuid())");
 
 			// (re)build the genremap table from the static table
 			//
