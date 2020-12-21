@@ -89,6 +89,7 @@
 #define MENUHOOK_SETTING_SHOWDEVICENAMES				12
 #define MENUHOOK_SETTING_TRIGGERLISTINGDISCOVERY		13
 #define MENUHOOK_SETTING_SHOWRECENTERRORS				14
+#define MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS	15
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -1917,6 +1918,14 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 					menuhook.category = PVR_MENUHOOK_SETTING;
 					g_pvr->AddMenuHook(&menuhook);
 
+					// MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS
+					//
+					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
+					menuhook.iHookId = MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS;
+					menuhook.iLocalizedStringId = 30315;
+					menuhook.category = PVR_MENUHOOK_SETTING;
+					g_pvr->AddMenuHook(&menuhook);
+
 					// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY
 					//
 					memset(&menuhook, 0, sizeof(PVR_MENUHOOK));
@@ -2672,6 +2681,42 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 			if(errors.empty()) errors.assign("No recent error messages");
 
 			g_gui->Dialog_TextViewer("Recent error messages", errors.c_str());
+		}
+
+		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 
+		catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	}
+
+	// MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS
+	//
+	else if(menuhook.iHookId == MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS) {
+
+		try {
+
+			char path[1024] = {};					// Export folder path
+
+			// The legacy Kodi GUI API doesn't support the source filters (like "local|network|removable"),
+			// therefore the diagnostics file must be written somewhere within the Kodi home directory
+			if(g_gui->Dialog_FileBrowser_ShowAndGetFile(g_addon->TranslateSpecialProtocol("special://home"), "/w",
+				"Select diagnostic data export folder", path[0], 1024)) {
+
+				try {
+
+					// The database module handles this; just have to tell it where to write the file
+					generate_discovery_diagnostic_file(connectionpool::handle(g_connpool), path);
+
+					// Inform the user that the operation was successful
+					g_gui->Dialog_OK_ShowAndGetInput("Discovery Diagnostic Data", "The discovery diagnostic data was exported successfully");
+				}
+
+				catch(std::exception& ex) {
+
+					g_gui->Dialog_OK_ShowAndGetInput("Discovery Diagnostic Data", "An error occurred exporting the discovery diagnostic data:", "", ex.what());
+					throw;
+				}
+			}
 		}
 
 		catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); } 

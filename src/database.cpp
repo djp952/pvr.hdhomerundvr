@@ -2365,6 +2365,118 @@ std::string find_seriesid(sqlite3* instance, char const* deviceauth, char const*
 }
 
 //---------------------------------------------------------------------------
+// generate_discovery_diagnostic_file
+//
+// Generates a zip file containing all of the discovery information for diagnostic purposes
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+//	path			- Location where the diagnostic file will be written
+
+void generate_discovery_diagnostic_file(sqlite3* instance, char const* path)
+{
+	if(instance == nullptr || path == nullptr) return;
+
+	// TYPE | DEVICEID | DATA
+	//
+	execute_non_query(instance, "drop table if exists discovery_diagnostics");
+	execute_non_query(instance, "create temp table discovery_diagnostics(type text not null, deviceid text, data text)");
+
+	try {
+
+		// HTTP DISCOVERY
+		//
+		try { execute_non_query(instance, "insert into discovery_diagnostics values('discover', null, "
+			"ifnull(json_get('http://api.hdhomerun.com/discover'), 'null'))"); }
+		catch(...) { /* DO NOTHING */ }
+
+		// DEVICES
+		//
+		execute_non_query(instance, "insert into discovery_diagnostics select 'device', device.deviceid, device.data from device");
+
+		// ACCOUNTS
+		//
+		try { execute_non_query(instance, "insert into discovery_diagnostics select 'account', device.deviceid, "
+			"ifnull(json_get('http://api.hdhomerun.com/api/account?DeviceAuth=' || coalesce(url_encode(json_extract(device.data, '$.DeviceAuth')), '')), 'null') "
+			"from device where json_extract(device.data, '$.DeviceAuth') is not null"); }
+		catch(...) { /* DO NOTHING */ }
+
+		// LINEUPS
+		//
+		try { execute_non_query(instance, "insert into discovery_diagnostics select 'lineup', device.deviceid, "
+			"ifnull(json_get(json_extract(device.data, '$.LineupURL') || '?show=demo'), 'null') "
+			"from device where json_extract(device.data, '$.LineupURL') is not null "); }
+		catch(...) { /* DO NOTHING */ }
+
+		// RECORDINGS
+		//
+		try { execute_non_query(instance, "insert into discovery_diagnostics select 'recordings', device.deviceid, "
+			"ifnull(json_get(json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root'), 'null') "
+			"from device where json_extract(device.data, '$.StorageURL') is not null"); }
+		catch(...) { /* DO NOTHING */ }
+
+		// RECORDED EPISODES
+		//
+		try { execute_non_query(instance, "insert into discovery_diagnostics "
+			"select 'recordings-' || json_extract(entry.value, '$.SeriesID') as seriesid, "
+			"discovery_diagnostics.deviceid, ifnull(json_get(json_extract(entry.value, '$.EpisodesURL')), 'null') "
+			"from discovery_diagnostics, json_each(discovery_diagnostics.data) as entry where discovery_diagnostics.type like 'recordings' "
+			"group by seriesid"); }
+		catch(...) { /* DO NOTHING */ }
+
+		// The remaining operations require DVR authorization to function
+		std::string authorization = get_authorization_strings(instance, true);
+		if(authorization.length() > 0) {
+
+			// RECORDING RULES
+			//
+			execute_non_query(instance, "insert into discovery_diagnostics select 'recordingrules', null, "
+				"ifnull(json_get('http://api.hdhomerun.com/api/recording_rules?DeviceAuth=' || ?1), 'null')", authorization.c_str());
+
+			// RECORDING RULE EPISODES
+			//
+			try { execute_non_query(instance, "insert into discovery_diagnostics "
+				"select 'episodes-' || json_extract(entry.value, '$.SeriesID') as seriesid, null, "
+				"ifnull(json_get('http://api.hdhomerun.com/api/episodes?DeviceAuth=' || ?1 || '&SeriesID=' || json_extract(entry.value, '$.SeriesID')), 'null') "
+				"from discovery_diagnostics, json_each(discovery_diagnostics.data) as entry where discovery_diagnostics.type like 'recordingrules' "
+				"group by seriesid", authorization.c_str()); }
+			catch(...) { /* DO NOTHING */ }
+		}
+
+		// Remove device authorization codes and e-mail addresses from the generated information
+		execute_non_query(instance, "update discovery_diagnostics set data = json_remove(data, '$.DeviceAuth') where type = 'device'");
+		execute_non_query(instance, "update discovery_diagnostics set data = json_remove(data, '$.AccountEmail') where type = 'account'");
+
+		// Create the output .zip file as a temporary virtual table [hdhomerundvr-diag-yyyymmdd-hhmmss.zip]
+		execute_non_query(instance, "drop table if exists temp.diagnostics_file");
+		std::string zipfile = execute_scalar_string(instance, "select ?1 || '/hdhomerundvr-diag-' || strftime('%Y%m%d-%H%M%S') || '.zip'", path);
+		std::string sql = "create virtual table temp.diagnostics_file using zipfile('" + zipfile + "')";
+		execute_non_query(instance, sql.c_str());
+
+		try {
+
+			// Dump the information collected in the temporary table into the .zip file
+			execute_non_query(instance, "insert into temp.diagnostics_file(name, data) "
+				"select discovered.type || case when discovered.deviceid is null then '' else '-' || discovered.deviceid end || '.json', "
+				"discovered.data from discovery_diagnostics as discovered");
+
+			// Drop the temporary virtual table
+			execute_non_query(instance, "drop table temp.diagnostics_file");
+		}
+
+		// Drop the temporary virtual table on any exception
+		catch(...) { execute_non_query(instance, "drop table temp.diagnostics_file"); throw; }
+
+		// Drop the temporary table
+		execute_non_query(instance, "drop table discovery_diagnostics");
+	}
+
+	// Drop the temporary table on any exception
+	catch(...) { execute_non_query(instance, "drop table discovery_diagnostics"); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_authorization_strings
 //
 // Gets the device authorization string for all available tuners

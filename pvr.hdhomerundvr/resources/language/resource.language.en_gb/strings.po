@@ -356,6 +356,10 @@ msgctxt "#30314"
 msgid "List recent error messages"
 msgstr ""
 
+msgctxt "#30315"
+msgid "Export discovery diagnostic data"
+msgstr ""
+
 msgctxt "#30401"
 msgid "Please restart Kodi to apply the selected configuration changes"
 msgstr ""
