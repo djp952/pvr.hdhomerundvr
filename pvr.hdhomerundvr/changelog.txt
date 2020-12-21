@@ -1,5 +1,5 @@
 v3.4.0 (2021.01.xx)
-  -
+  - Add "Export discovery diagnostic data" PVR Client Specific setting
 
 v3.3.4 (2020.12.09)
   - Update SQLite database engine to version 3.34.0

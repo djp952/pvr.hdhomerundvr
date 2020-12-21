@@ -30,6 +30,7 @@
 #include <kodi/Filesystem.h>
 #include <kodi/General.h>
 #include <kodi/gui/dialogs/OK.h>
+#include <kodi/gui/dialogs/FileBrowser.h>
 #include <kodi/gui/dialogs/Select.h>
 #include <kodi/gui/dialogs/TextViewer.h>
 #include <sstream>
@@ -1528,6 +1529,7 @@ ADDON_STATUS addon::Create(void)
 			// Register the PVR_MENUHOOK_SETTING category menu hooks
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_SETTING_SHOWDEVICENAMES, 30312, PVR_MENUHOOK_SETTING));
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_SETTING_SHOWRECENTERRORS, 30314, PVR_MENUHOOK_SETTING));
+			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS, 30315, PVR_MENUHOOK_SETTING));
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY, 30303, PVR_MENUHOOK_SETTING));
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY, 30304, PVR_MENUHOOK_SETTING));
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_SETTING_TRIGGERLISTINGDISCOVERY, 30313, PVR_MENUHOOK_SETTING));
@@ -2329,6 +2331,32 @@ PVR_ERROR addon::CallSettingsMenuHook(kodi::addon::PVRMenuhook const& menuhook)
 			if(errors.empty()) errors.assign("No recent error messages");
 
 			kodi::gui::dialogs::TextViewer::Show("Recent error messages", errors);
+		}
+
+		// MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS
+		//
+		else if(menuhook.GetHookId() == MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS) {
+
+			std::string					folderpath;				// Export folder path
+
+			// Prompt the user to locate the folder where the .json file will be exported ...
+			if(kodi::gui::dialogs::FileBrowser::ShowAndGetDirectory("local|network|removable", "Select diagnostic data export folder", folderpath, true)) {
+
+				try {
+
+					// The database module handles this; just have to tell it where to write the file
+					generate_discovery_diagnostic_file(connectionpool::handle(m_connpool), folderpath.c_str());
+
+					// Inform the user that the operation was successful
+					kodi::gui::dialogs::OK::ShowAndGetInput("Discovery Diagnostic Data", "The discovery diagnostic data was exported successfully");
+				}
+
+				catch(std::exception& ex) {
+
+					kodi::gui::dialogs::OK::ShowAndGetInput("Discovery Diagnostic Data", "An error occurred exporting the discovery diagnostic data:", "", ex.what());
+					throw;
+				}
+			}
 		}
 
 		// MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY

@@ -312,6 +312,11 @@ void enumerate_series(sqlite3* instance, char const* deviceauth, char const* tit
 // Enumerates the available timers
 void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback const& callback);
 
+// generate_discovery_diagnostic_file
+//
+// Generates a zip file containing all of the discovery information for diagnostic purposes
+void generate_discovery_diagnostic_file(sqlite3* instance, char const* path);
+
 // find_seriesid
 //
 // Retrieves the series id associated with a specific channel/time combination

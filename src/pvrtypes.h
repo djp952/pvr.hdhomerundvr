@@ -46,6 +46,7 @@ static int const MENUHOOK_CHANNEL_REMOVEFAVORITE				= 11;
 static int const MENUHOOK_SETTING_SHOWDEVICENAMES				= 12;
 static int const MENUHOOK_SETTING_TRIGGERLISTINGDISCOVERY		= 13;
 static int const MENUHOOK_SETTING_SHOWRECENTERRORS				= 14;
+static int const MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS	= 15;
 
 //---------------------------------------------------------------------------
 // DATA TYPES
