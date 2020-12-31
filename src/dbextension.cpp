@@ -687,6 +687,9 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	CURL* curl = curl_easy_init();
 	if(curl == nullptr) return sqlite3_result_error(context, "cannot initialize libcurl object", -1);
 
+	// Create an error message buffer that *may* contain more information on a failure result
+	char curlerr[CURL_ERROR_SIZE + 1] = {};
+
 	// Set the CURL options and execute the web request, switching to POST if indicated
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
 	if((post) && (curlresult == CURLE_OK)) curlresult = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields.c_str());
@@ -701,6 +704,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlerr);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
 	curl_easy_cleanup(curl);
@@ -709,7 +713,8 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult != CURLE_OK) {
 
 		// Use sqlite3_mprintf to generate the formatted error message
-		auto message = sqlite3_mprintf("http %s request on [%s] failed: %s", (post) ? "post" : "get", url, curl_easy_strerror(curlresult));
+		auto message = sqlite3_mprintf("http %s request on [%s] failed with cURL error: %s", (post) ? "post" : "get", url, 
+			(strlen(curlerr)) ? curlerr : curl_easy_strerror(curlresult));
 		sqlite3_result_error(context, message, -1);
 		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
