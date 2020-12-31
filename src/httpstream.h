@@ -165,6 +165,7 @@ private:
 	CURL*						m_curl = nullptr;					// CURL easy interface handle
 	CURLM*						m_curlm = nullptr;					// CURL multi interface handle
 	size_t const				m_chunksize;						// Stream chunk size
+	std::unique_ptr<char[]>		m_curlerr;							// CURL error message
 
 	// STREAM STATE
 	//

@@ -93,6 +93,11 @@ xmlstream::xmlstream(char const* url, char const* useragent, CURLSH* share) : m_
 	m_buffer = std::unique_ptr<uint8_t[]>(new uint8_t[m_buffersize]);
 	if(!m_buffer) throw std::bad_alloc();
 
+	// Allocate and initialize the cURL handle error message buffer
+	m_curlerr = std::unique_ptr<char[]>(new char[CURL_ERROR_SIZE + 1]);
+	if(!m_curlerr) throw std::bad_alloc();
+	memset(m_curlerr.get(), 0, CURL_ERROR_SIZE + 1);
+
 	// Create and initialize the curl multi interface object
 	m_curlm = curl_multi_init();
 	if(m_curlm == nullptr) throw string_exception(__func__, ": curl_multi_init() failed");
@@ -120,6 +125,7 @@ xmlstream::xmlstream(char const* url, char const* useragent, CURLSH* share) : m_
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &xmlstream::curl_write);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_curlerr.get());
 
 			if((curlresult == CURLE_OK) && (useragent != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_USERAGENT, useragent);
 			if((curlresult == CURLE_OK) && (share != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_SHARE, share);
@@ -387,7 +393,7 @@ bool xmlstream::transfer_until(std::function<bool(void)> predicate)
 		curl_multi_remove_handle(m_curlm, m_curl);
 
 		// If the cURL result indicated a failure, throw it as an exception
-		if(result != CURLE_OK) throw string_exception(curl_easy_strerror(result));
+		if(result != CURLE_OK) throw string_exception((strlen(m_curlerr.get())) ? m_curlerr.get() : curl_easy_strerror(result));
 
 		// The response code will come back as zero if there was no response from the host,
 		// otherwise it should be a standard HTTP response code

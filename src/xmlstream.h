@@ -96,6 +96,7 @@ private:
 	//
 	CURL*						m_curl = nullptr;					// CURL easy interface handle
 	CURLM*						m_curlm = nullptr;					// CURL multi interface handle
+	std::unique_ptr<char[]>		m_curlerr;							// CURL error message
 	bool						m_paused = false;					// Flag if transfer is paused
 
 	// RING BUFFER
