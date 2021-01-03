@@ -312,6 +312,14 @@ msgctxt "#30238"
 msgid "Tuner channel"
 msgstr ""
 
+msgctxt "#30239"
+msgid "64 KiB"
+msgstr ""
+
+msgctxt "#30240"
+msgid "Automatic"
+msgstr ""
+
 msgctxt "#30302"
 msgid "Delete and re-record"
 msgstr ""

@@ -625,12 +625,10 @@ void addon::log_warning(_args&&... args)
 // Arguments:
 //
 //	dbhandle	- Active database connection to use
-//	settings	- Active addon settings instance to use
 //	channelid	- Channel identifier
 //	vchannel	- Virtual channel number
 
-std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::handle const& dbhandle, struct settings const& settings, 
-	union channelid channelid, char const* vchannel)
+std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
 {
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
@@ -645,7 +643,7 @@ std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::ha
 		try {
 
 			// Start the new HTTP stream using the parameters currently specified by the settings
-			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
+			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str());
 			log_info(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
 
 			return stream;
@@ -666,12 +664,10 @@ std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::ha
 // Arguments:
 //
 //	dbhandle	- Active database connection to use
-//	settings	- Active addon settings instance to use
 //	channelid	- Channel identifier
 //	vchannel	- Virtual channel number
 
-std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::handle const& dbhandle, struct settings const& /*settings*/, 
-	union channelid channelid, char const* vchannel)
+std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
 {
 	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
 
@@ -705,12 +701,10 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::ha
 // Arguments:
 //
 //	dbhandle	- Active database connection to use
-//	settings	- Active addon settings instance to use
 //	channelid	- Channel identifier
 //	vchannel	- Virtual channel number
 
-std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::handle const& dbhandle, struct settings const& settings, 
-	union channelid channelid, char const* vchannel)
+std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
 {
 	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
 
@@ -732,7 +726,7 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::hand
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str());
 		log_info(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
 
 		return stream;
@@ -1520,7 +1514,7 @@ ADDON_STATUS addon::Create(void)
 			m_settings.use_direct_tuning = kodi::GetSettingBoolean("use_direct_tuning", false);
 			m_settings.direct_tuning_protocol = kodi::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
 			m_settings.direct_tuning_allow_drm = kodi::GetSettingBoolean("direct_tuning_allow_drm", false);
-			m_settings.stream_read_chunk_size = kodi::GetSettingInt("stream_read_chunk_size_v2", 4 KiB);
+			m_settings.stream_read_chunk_size = kodi::GetSettingInt("stream_read_chunk_size_v3", 0);							// Automatic
 			m_settings.deviceauth_stale_after = kodi::GetSettingInt("deviceauth_stale_after_v2", 72000);						// 20 hours
 
 			// Register the PVR_MENUHOOK_RECORDING category menu hooks
@@ -1925,13 +1919,14 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 
 	// stream_read_chunk_size
 	//
-	else if(settingName == "stream_read_chunk_size_v2") {
+	else if(settingName == "stream_read_chunk_size_v3") {
 
 		int nvalue = settingValue.GetInt();
 		if(nvalue != m_settings.stream_read_chunk_size) {
 
 			m_settings.stream_read_chunk_size = nvalue;
-			log_info(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
+			if(m_settings.stream_read_chunk_size == 0) log_info(__func__, ": setting stream_read_chunk_size changed to Automatic");
+			else log_info(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -3327,14 +3322,13 @@ PVR_ERROR addon::GetRecordingStreamProperties(kodi::addon::PVRRecording const& r
 
 PVR_ERROR addon::GetStreamReadChunkSize(int& chunksize)
 {
-	if(!m_pvrstream) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	// Only report this as implemented if not set to 'Automatic'
+	int stream_read_chunk_size = copy_settings().stream_read_chunk_size;
+	if(stream_read_chunk_size == 0) return PVR_ERROR_NOT_IMPLEMENTED;
 
-	// Report the chunk size value reported by the stream instance
-	chunksize = static_cast<int>(m_pvrstream->chunksize());
-
+	chunksize = stream_read_chunk_size;
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
-
 
 //-----------------------------------------------------------------------------
 // addon::GetStreamTimes (CInstancePVRClient)
@@ -3774,13 +3768,13 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 		bool use_tuner_http = (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http);
 
 		// Attempt to create the stream from the storage engine via HTTP if available
-		if(use_storage_http) m_pvrstream = openlivestream_storage_http(dbhandle, settings, channelid, vchannel);
+		if(use_storage_http) m_pvrstream = openlivestream_storage_http(dbhandle, channelid, vchannel);
 		
 		// Attempt to create the stream from the tuner via HTTP if available
-		if((!m_pvrstream) && (use_tuner_http)) m_pvrstream = openlivestream_tuner_http(dbhandle, settings, channelid, vchannel);
+		if((!m_pvrstream) && (use_tuner_http)) m_pvrstream = openlivestream_tuner_http(dbhandle, channelid, vchannel);
 		
 		// Attempt to create the stream from the tuner via RTP/UDP (always available)
-		if(!m_pvrstream) m_pvrstream = openlivestream_tuner_device(dbhandle, settings, channelid, vchannel);
+		if(!m_pvrstream) m_pvrstream = openlivestream_tuner_device(dbhandle, channelid, vchannel);
 
 		// If none of the above methods generated a valid stream, there is nothing left to try
 		if(!m_pvrstream) throw string_exception(__func__, ": unable to create a valid stream instance for channel ", vchannel);
@@ -3847,7 +3841,7 @@ bool addon::OpenRecordedStream(kodi::addon::PVRRecording const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_info(__func__, ": streaming recording '", recording.GetTitle().c_str(), "' via url ", streamurl.c_str());
-			m_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
+			m_pvrstream = httpstream::create(streamurl.c_str());
 
 			// For recorded streams, set the start and end times based on the recording metadata. Don't use the
 			// start time value in PVR_RECORDING; that may have been altered for display purposes

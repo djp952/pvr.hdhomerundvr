@@ -30,11 +30,6 @@
 
 #pragma warning(push, 4)
 
-// devicestream::DEFAULT_CHUNK_SIZE (static)
-//
-// Default stream chunk size
-size_t const devicestream::DEFAULT_CHUNK_SIZE = (4 KiB);
-
 // devicestream::DEFAULT_MEDIA_TYPE (static)
 //
 // Default media type to report for the stream
@@ -57,11 +52,9 @@ uint64_t const devicestream::WAIT_INTERVAL = 15;
 //
 //	selector	- HDHomeRun device selector instance
 //	device		- Selected HDHomeRun device instance
-//	chunksize	- Chunk size to use for the stream
 
-devicestream::devicestream(struct hdhomerun_device_selector_t* selector, struct hdhomerun_device_t* device, size_t chunksize) : 
-	m_selector(selector), m_device(device), 
-	m_chunksize(std::max(align::down(chunksize, VIDEO_DATA_PACKET_SIZE), static_cast<size_t>(VIDEO_DATA_PACKET_SIZE)))
+devicestream::devicestream(struct hdhomerun_device_selector_t* selector, struct hdhomerun_device_t* device) : 
+	m_selector(selector), m_device(device)
 {
 	assert((selector != nullptr) && (device != nullptr));
 	if(selector == nullptr) throw std::invalid_argument("selector");
@@ -98,20 +91,6 @@ bool devicestream::canseek(void) const
 }
 
 //---------------------------------------------------------------------------
-// devicestream::chunksize
-//
-// Gets the stream chunk size
-//
-// Arguments:
-//
-//	NONE
-
-size_t devicestream::chunksize(void) const
-{
-	return m_chunksize;
-}
-
-//---------------------------------------------------------------------------
 // devicestream::close
 //
 // Closes the stream
@@ -145,22 +124,6 @@ void devicestream::close(void)
 
 std::unique_ptr<devicestream> devicestream::create(std::vector<std::string> const& devices, char const* vchannel)
 {
-	return create(devices, vchannel, DEFAULT_CHUNK_SIZE);
-}
-
-//---------------------------------------------------------------------------
-// devicestream::create (static)
-//
-// Factory method, creates a new devicestream instance
-//
-// Arguments:
-//
-//	devices		- vector<> of valid devices for the target stream
-//	vchannel	- Virtual channel number of the stream to create
-//	chunksize	- Chunk size to use for the stream
-
-std::unique_ptr<devicestream> devicestream::create(std::vector<std::string> const& devices, char const* vchannel, size_t chunksize)
-{
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
 
@@ -190,7 +153,7 @@ std::unique_ptr<devicestream> devicestream::create(std::vector<std::string> cons
 			if(result != 1) { throw string_exception(__func__, ": unable to set virtual channel ", vchannel, " on device"); }
 
 			// Create the device stream for the selected tuner
-			return std::unique_ptr<devicestream>(new devicestream(selector, selected, chunksize)); 
+			return std::unique_ptr<devicestream>(new devicestream(selector, selected)); 
 		
 		}
 		catch(...) { hdhomerun_device_tuner_lockkey_release(selected); throw; }
@@ -260,8 +223,7 @@ size_t devicestream::read(uint8_t* buffer, size_t count)
 	assert(m_device != nullptr);
 	if(m_device == nullptr) throw string_exception(__func__, ": stream has been closed");
 
-	// The count should be aligned down to VIDEO_DATA_PACKET_SIZE, even though the chunk
-	// size is reported, the application won't obey that value unless the stream is seekable
+	// The count should be aligned down to VIDEO_DATA_PACKET_SIZE
 	count = align::down(count, VIDEO_DATA_PACKET_SIZE);
 	if(count == 0) return 0;
 

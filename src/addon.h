@@ -379,11 +379,11 @@ private:
 	// Stream Helpers
 	//
 	std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::handle const& dbhandle,
-		struct settings const& settings, union channelid channelid, char const* vchannel);
+		union channelid channelid, char const* vchannel);
 	std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::handle const& dbhandle,
-		struct settings const& settings, union channelid channelid, char const* vchannel);
+		union channelid channelid, char const* vchannel);
 	std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::handle const& dbhandle,
-		struct settings const& settings, union channelid channelid, char const* vchannel);
+		union channelid channelid, char const* vchannel);
 
 	//-------------------------------------------------------------------------
 	// Member Variables

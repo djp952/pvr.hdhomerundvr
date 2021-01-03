@@ -33,11 +33,6 @@
 
 #pragma warning(push, 4)
 
-// httpstream::DEFAULT_CHUNK_SIZE (static)
-//
-// Default stream chunk size
-size_t const httpstream::DEFAULT_CHUNK_SIZE = (4 KiB);
-
 // httpstream::DEFAULT_MEDIA_TYPE (static)
 //
 // Default media type to report for the stream
@@ -102,11 +97,8 @@ static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
 // Arguments:
 //
 //	url				- URL of the stream to be opened
-//	chunksize		- Chunk size to use for the stream
 
-httpstream::httpstream(char const* url, size_t chunksize) : 
-	m_chunksize(std::max(align::down(chunksize, MPEGTS_PACKET_LENGTH), MPEGTS_PACKET_LENGTH)),
-	m_buffersize(DEFAULT_RINGBUFFER_SIZE)
+httpstream::httpstream(char const* url) : m_buffersize(DEFAULT_RINGBUFFER_SIZE)
 {
 	size_t		available = 0;				// Amount of available ring buffer data
 
@@ -204,20 +196,6 @@ bool httpstream::canseek(void) const
 }
 
 //---------------------------------------------------------------------------
-// httpstream::chunksize
-//
-// Gets the stream chunk size
-//
-// Arguments:
-//
-//	NONE
-
-size_t httpstream::chunksize(void) const
-{
-	return m_chunksize;
-}
-
-//---------------------------------------------------------------------------
 // httpstream::close
 //
 // Closes the stream
@@ -248,22 +226,7 @@ void httpstream::close(void)
 
 std::unique_ptr<httpstream> httpstream::create(char const* url)
 {
-	return create(url, DEFAULT_CHUNK_SIZE);
-}
-
-//---------------------------------------------------------------------------
-// httpstream::create (static)
-//
-// Factory method, creates a new httpstream instance
-//
-// Arguments:
-//
-//	url				- URL of the stream to be opened
-//	readmincount	- Minimum bytes to return from a read operation
-
-std::unique_ptr<httpstream> httpstream::create(char const* url, size_t readmincount)
-{
-	return std::unique_ptr<httpstream>(new httpstream(url, readmincount));
+	return std::unique_ptr<httpstream>(new httpstream(url));
 }
 
 //---------------------------------------------------------------------------
@@ -453,8 +416,7 @@ size_t httpstream::read(uint8_t* buffer, size_t count)
 
 	if(count >= m_buffersize) throw std::invalid_argument("count");
 
-	// The count should be aligned down to MPEGTS_PACKET_LENGTH, even though the chunk
-	// size is reported, the application won't obey that value unless the stream is seekable
+	// The count should be aligned down to MPEGTS_PACKET_LENGTH
 	count = align::down(count, MPEGTS_PACKET_LENGTH);
 	if(count == 0) return 0;
 
