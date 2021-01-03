@@ -461,7 +461,7 @@ static addon_settings g_settings = {
 	false,						// use_direct_tuning
 	tuning_protocol::http,		// direct_tuning_protocol
 	false,						// direct_tuning_allow_drm
-	(4 KiB),					// stream_read_chunk_size
+	0,							// stream_read_chunk_size				automatic
 	72000,						// deviceauth_stale_after				default = 20 hours
 	false,						// enable_recording_edl
 	"",							// recording_edl_folder
@@ -1062,7 +1062,7 @@ static bool ipv4_network_available(void)
 // openlivestream_storage_http (local)
 //
 // Attempts to open a live stream via HTTP from an available storage engine
-static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::handle const& dbhandle, struct addon_settings const& settings, union channelid channelid, char const* vchannel)
+static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
 {
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
@@ -1077,7 +1077,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 		try {
 
 			// Start the new HTTP stream using the parameters currently specified by the settings
-			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
+			std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str());
 			log_notice(__func__, ": streaming channel ", vchannel, " via storage engine url ", streamurl.c_str());
 
 			return stream;
@@ -1093,7 +1093,7 @@ static std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::ha
 // openlivestream_tuner_device (local)
 //
 // Attempts to open a live stream via RTP/UDP from an available tuner device
-static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::handle const& dbhandle, struct addon_settings const& /*settings*/, union channelid channelid, char const* vchannel)
+static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
 {
 	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
 
@@ -1122,7 +1122,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::ha
 // openlivestream_tuner_http (local)
 //
 // Attempts to open a live stream via HTTP from an available tuner device
-static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::handle const& dbhandle, struct addon_settings const& settings, union channelid channelid, char const* vchannel)
+static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
 {
 	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
 
@@ -1144,7 +1144,7 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 	try {
 
 		// Start the new HTTP stream using the parameters currently specified by the settings
-		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
+		std::unique_ptr<pvrstream> stream = httpstream::create(streamurl.c_str());
 		log_notice(__func__, ": streaming channel ", vchannel, " via tuner device url ", streamurl.c_str());
 
 		return stream;
@@ -1879,7 +1879,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("direct_tuning_allow_drm", &bvalue)) g_settings.direct_tuning_allow_drm = bvalue;
-			if(g_addon->GetSetting("stream_read_chunk_size_v2", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
+			if(g_addon->GetSetting("stream_read_chunk_size_v3", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
 			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 
 			// Create the global guicallbacks instance
@@ -2399,13 +2399,14 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 	// stream_read_chunk_size
 	//
-	else if(strcmp(name, "stream_read_chunk_size_v2") == 0) {
+	else if(strcmp(name, "stream_read_chunk_size_v3") == 0) {
 
 		int nvalue = *reinterpret_cast<int const*>(value);
 		if(nvalue != g_settings.stream_read_chunk_size) {
 
 			g_settings.stream_read_chunk_size = nvalue;
-			log_notice(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
+			if(g_settings.stream_read_chunk_size == 0) log_info(__func__, ": setting stream_read_chunk_size changed to Automatic");
+			else log_info(__func__, ": setting stream_read_chunk_size changed to ", nvalue, " bytes");
 		}
 	}
 
@@ -4278,13 +4279,13 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		bool use_tuner_http = (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http);
 
 		// Attempt to create the stream from the storage engine via HTTP if available
-		if(use_storage_http) g_pvrstream = openlivestream_storage_http(dbhandle, settings, channelid, vchannel);
+		if(use_storage_http) g_pvrstream = openlivestream_storage_http(dbhandle, channelid, vchannel);
 		
 		// Attempt to create the stream from the tuner via HTTP if available
-		if((!g_pvrstream) && (use_tuner_http)) g_pvrstream = openlivestream_tuner_http(dbhandle, settings, channelid, vchannel);
+		if((!g_pvrstream) && (use_tuner_http)) g_pvrstream = openlivestream_tuner_http(dbhandle, channelid, vchannel);
 		
 		// Attempt to create the stream from the tuner via RTP/UDP (always available)
-		if(!g_pvrstream) g_pvrstream = openlivestream_tuner_device(dbhandle, settings, channelid, vchannel);
+		if(!g_pvrstream) g_pvrstream = openlivestream_tuner_device(dbhandle, channelid, vchannel);
 
 		// If none of the above methods generated a valid stream, there is nothing left to try
 		if(!g_pvrstream) throw string_exception(__func__, ": unable to create a valid stream instance for channel ", vchannel);
@@ -4562,13 +4563,11 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* properties)
 
 PVR_ERROR GetStreamReadChunkSize(int* chunksize)
 {
-	if(chunksize == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
+	// Only report this as implemented if not set to 'Automatic'
+	int stream_read_chunk_size = copy_settings().stream_read_chunk_size;
+	if(stream_read_chunk_size == 0) return PVR_ERROR_NOT_IMPLEMENTED;
 
-	assert(g_pvrstream);
-	if(!g_pvrstream) return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
-
-	// Report the chunk size value reported by the stream instance
-	*chunksize = static_cast<int>(g_pvrstream->chunksize());
+	*chunksize = stream_read_chunk_size;
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
@@ -4602,7 +4601,7 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
-			g_pvrstream = httpstream::create(streamurl.c_str(), settings.stream_read_chunk_size);
+			g_pvrstream = httpstream::create(streamurl.c_str());
 
 			// For recorded streams, set the start and end times based on the recording metadata. Don't use the
 			// start time value in PVR_RECORDING; that may have been altered for display purposes

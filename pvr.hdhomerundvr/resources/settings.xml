@@ -360,18 +360,17 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="stream_read_chunk_size_v2" type="integer" label="30114" help="30524">
+        <setting id="stream_read_chunk_size_v3" type="integer" label="30114" help="30524">
           <level>0</level>
-          <default>4096</default>
+          <default>0</default>
           <constraints>
             <options>
-              <option label="30218">0</option>
-              <option label="30219">1024</option>
-              <option label="30220">2048</option>
+              <option label="30240">0</option>
               <option label="30221">4096</option>
               <option label="30222">8192</option>
               <option label="30223">16384</option>
               <option label="30229">32768</option>
+              <option label="30239">65536</option>
             </options>
           </constraints>
           <control type="spinner" format="integer"/>

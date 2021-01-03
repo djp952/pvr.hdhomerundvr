@@ -48,11 +48,6 @@ public:
 	// Flag indicating if the stream allows seek operations
 	virtual bool canseek(void) const = 0;
 
-	// chunksize
-	//
-	// Gets the stream chunk size
-	virtual size_t chunksize(void) const = 0;
-
 	// close
 	//
 	// Closes the stream
