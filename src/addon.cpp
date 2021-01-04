@@ -2648,7 +2648,7 @@ PVR_ERROR addon::GetCapabilities(kodi::addon::PVRCapabilities& capabilities)
 
 PVR_ERROR addon::GetChannelGroupsAmount(int& amount)
 {
-	amount = 4;		// "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	amount = 5;		// "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;		
 }
@@ -2668,10 +2668,11 @@ PVR_ERROR addon::GetChannelGroupMembers(kodi::addon::PVRChannelGroup const& grou
 	// Wait until the channel information has been discovered the first time
 	wait_for_channels();
 
-	// Determine which group enumerator to use for the operation, there are only four to
-	// choose from: "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	// Determine which group enumerator to use for the operation, there are only five to
+	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.GetGroupName().c_str(), "Favorite channels") == 0) enumerator = enumerate_favorite_channelids;
+	else if(strcmp(group.GetGroupName().c_str(), "HEVC channels") == 0) enumerator = enumerate_hevc_channelids;
 	else if(strcmp(group.GetGroupName().c_str(), "HD channels") == 0) enumerator = enumerate_hd_channelids;
 	else if(strcmp(group.GetGroupName().c_str(), "SD channels") == 0) enumerator = enumerate_sd_channelids;
 	else if(strcmp(group.GetGroupName().c_str(), "Demo channels") == 0) enumerator = enumerate_demo_channelids;
@@ -2716,7 +2717,8 @@ PVR_ERROR addon::GetChannelGroupMembers(kodi::addon::PVRChannelGroup const& grou
 
 PVR_ERROR addon::GetChannelGroups(bool radio, kodi::addon::PVRChannelGroupsResultSet& results)
 {
-	kodi::addon::PVRChannelGroup	favorites;			// Favorite channels
+	kodi::addon::PVRChannelGroup	favoritechannels;	// Favorite channels
+	kodi::addon::PVRChannelGroup	hevcchannels;		// HEVC channels
 	kodi::addon::PVRChannelGroup	hdchannels;			// HD channels
 	kodi::addon::PVRChannelGroup	sdchannels;			// SD channels
 	kodi::addon::PVRChannelGroup	demochannels;		// Demo channels
@@ -2724,8 +2726,11 @@ PVR_ERROR addon::GetChannelGroups(bool radio, kodi::addon::PVRChannelGroupsResul
 	// The PVR doesn't support radio channel groups
 	if(radio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
-	favorites.SetGroupName("Favorite channels");
-	results.Add(favorites);
+	favoritechannels.SetGroupName("Favorite channels");
+	results.Add(favoritechannels);
+
+	hevcchannels.SetGroupName("HEVC channels");
+	results.Add(hevcchannels);
 
 	hdchannels.SetGroupName("HD channels");
 	results.Add(hdchannels);
