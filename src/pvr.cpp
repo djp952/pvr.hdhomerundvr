@@ -3069,7 +3069,7 @@ PVR_ERROR GetEPGTagStreamProperties(EPG_TAG const* /*tag*/, PVR_NAMED_VALUE* /*p
 
 int GetChannelGroupsAmount(void)
 {
-	return 4;		// "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	return 5;		// "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
 }
 
 //---------------------------------------------------------------------------
@@ -3096,6 +3096,10 @@ PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool radio)
 
 	// Favorite Channels
 	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Favorite channels");
+	g_pvr->TransferChannelGroup(handle, &group);
+
+	// HEVC Channels
+	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "HEVC channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
 	// HD Channels
@@ -3133,9 +3137,10 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	wait_for_channels();
 
 	// Determine which group enumerator to use for the operation, there are only four to
-	// choose from: "Favorite Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.strGroupName, "Favorite channels") == 0) enumerator = enumerate_favorite_channelids;
+	else if(strcmp(group.strGroupName, "HEVC channels") == 0) enumerator = enumerate_hevc_channelids;
 	else if(strcmp(group.strGroupName, "HD channels") == 0) enumerator = enumerate_hd_channelids;
 	else if(strcmp(group.strGroupName, "SD channels") == 0) enumerator = enumerate_sd_channelids;
 	else if(strcmp(group.strGroupName, "Demo channels") == 0) enumerator = enumerate_demo_channelids;

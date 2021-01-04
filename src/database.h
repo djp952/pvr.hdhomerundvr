@@ -280,6 +280,11 @@ void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_ch
 // Enumerates channels marked as 'HD' in the lineups
 void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
 
+// enumerate_hevc_channelids
+//
+// Enumerates channels marked as HEVC/H.265 in the lineups
+void enumerate_hevc_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
+
 // enumerate_listings
 //
 // Enumerates the available listings in the database
