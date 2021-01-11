@@ -1443,7 +1443,7 @@ void addon::wait_for_timers(void) noexcept
 ADDON_STATUS addon::Create(void)
 {
 	// Store the EPG maximum time frame specified during addon initialization
-	m_epgmaxtime.store(EpgMaxDays());
+	m_epgmaxtime.store(EpgMaxFutureDays());
 
 	try {
 
@@ -4014,23 +4014,38 @@ int64_t addon::SeekRecordedStream(int64_t position, int whence)
 }
 
 //-----------------------------------------------------------------------------
-// addon::SetEPGTimeFrame (CInstancePVRClient)
+// addon::SetEPGMaxFutureDays (CInstancePVRClient)
 //
-// Tell the client the time frame to use when notifying epg events back to Kodi
+// Tell the client the future time frame to use when notifying epg events back to Kodi
 //
 // Arguments:
 //
 //	days	- number of days from "now", or EPG_TIMEFRAME_UNLIMITED
 
-PVR_ERROR addon::SetEPGTimeFrame(int days)
+PVR_ERROR addon::SetEPGMaxFutureDays(int futureDays)
 {
-	if(days == m_epgmaxtime.load()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	if(futureDays == m_epgmaxtime.load()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
-	m_epgmaxtime.store(days);
+	m_epgmaxtime.store(futureDays);
 
 	log_info(__func__, ": EPG time frame has changed -- schedule guide listings update");
 	m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, false, std::placeholders::_1));
 
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//-----------------------------------------------------------------------------
+// addon::SetEPGMaxPastDays (CInstancePVRClient)
+//
+// Tell the client the past time frame to use when notifying epg events back to Kodi
+//
+// Arguments:
+//
+//	days	- number of days before "now", or EPG_TIMEFRAME_UNLIMITED
+
+PVR_ERROR addon::SetEPGMaxPastDays(int /*pastDays*/)
+{
+	// The terms of use for the EPG do not allow for past information to be retrieved
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 

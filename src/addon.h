@@ -290,10 +290,15 @@ public:
 	// Seek in a recorded stream
 	int64_t SeekRecordedStream(int64_t position, int whence) override;
 
-	// SetEPGTimeFrame
+	// SetEPGMaxFutureDays
 	//
-	// Tell the client the time frame to use when notifying epg events back to Kodi
-	PVR_ERROR SetEPGTimeFrame(int days) override;
+	// Tell the client the future time frame to use when notifying epg events back to Kodi
+	PVR_ERROR SetEPGMaxFutureDays(int futureDays) override;
+
+	// SetEPGMaxPastDays
+	//
+	// Tell the client the past time frame to use when notifying epg events back to Kodi
+	PVR_ERROR SetEPGMaxPastDays(int pastDays) override;
 
 	// SetRecordingLastPlayedPosition
 	//
