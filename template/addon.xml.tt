@@ -8,7 +8,7 @@
 		<import addon="kodi.binary.global.general" version="1.0.5"/>
 		<import addon="kodi.binary.global.filesystem" version="1.1.6"/>
 		<import addon="kodi.binary.global.gui" version="5.15.0"/>
-		<import addon="kodi.binary.instance.pvr" version="7.0.2"/>
+		<import addon="kodi.binary.instance.pvr" version="7.1.0"/>
 	</requires>
 	<extension point="kodi.pvrclient" needs_configuration="false" library_<#= this.Host.ResolveParameterValue("", "", "libraryplatform") #>="<#= this.Host.ResolveParameterValue("", "", "libraryname") #>"/>
 <# if(!String.IsNullOrEmpty(this.Host.ResolveParameterValue("", "", "repomanifest"))) { #>	<extension point="xbmc.addon.repository">
