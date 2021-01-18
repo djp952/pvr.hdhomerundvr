@@ -3,6 +3,7 @@ v3.4.0 (2021.01.xx)
   - Change "DVR stream read operation minimum size" advanced option to default to "Automatic" and allow for an updated range of 4KiB to 64KiB
   - Add "HEVC Channels" channel group
   - Replace forward slash characters with hyphen characters in Recorded TV folder names to work around Kodi limitation
+  - Trigger an XMLTV reload operation during startup if there are missing channel(s) in the Electronic Program Guide (EPG) listings
 
 v3.3.4 (2020.12.09)
   - Update SQLite database engine to version 3.34.0

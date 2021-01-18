@@ -805,8 +805,6 @@ void addon::start_discovery(void) noexcept
 		// and in the order in which they will needed by the Kodi callback functions
 		std::call_once(m_discovery_started, [&]() {
 
-			bool lineupschanged = false;			// Flag if lineups have changed
-
 			// Create a copy of the current addon settings structure
 			struct settings settings = copy_settings();
 
@@ -815,14 +813,14 @@ void addon::start_discovery(void) noexcept
 
 			// Schedule the initial discovery tasks to execute as soon as possible
 			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
-			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { discover_lineups(cancel, lineupschanged); });
+			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed;  discover_lineups(cancel, changed); });
 			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
 			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
 			m_scheduler.add(&addon::startup_alerts_task, this);
-			m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, lineupschanged, std::placeholders::_1));
+			m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
 			m_scheduler.add(UPDATE_DEVICES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
