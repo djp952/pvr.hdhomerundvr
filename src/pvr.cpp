@@ -368,7 +368,7 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	false,			// bSupportsChannelSettings
 	true,			// bHandlesInputStream
 	false,			// bHandlesDemuxing
-	false,			// bSupportsRecordingPlayCount
+	true,			// bSupportsRecordingPlayCount
 	true,			// bSupportsLastPlayedPosition
 	true,			// bSupportsRecordingEdl
 	false,			// bSupportsRecordingsRename
@@ -3480,9 +3480,13 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			recording.iDuration = item.duration;
 			assert(recording.iDuration > 0);
 
+			// iPlayCount
+			//
+			recording.iPlayCount = (item.lastposition == std::numeric_limits<uint32_t>::max()) ? 1 : 0;
+
 			// iLastPlayedPosition
 			//
-			recording.iLastPlayedPosition = item.lastposition;
+			recording.iLastPlayedPosition = (item.lastposition == std::numeric_limits<uint32_t>::max()) ? 0 : item.lastposition;
 
 			// iChannelUid
 			recording.iChannelUid = item.channelid.value;
@@ -3585,9 +3589,19 @@ PVR_ERROR SetRecordingLifetime(PVR_RECORDING const* /*recording*/)
 //	recording	- The recording to change the play count
 //	playcount	- Play count
 
-PVR_ERROR SetRecordingPlayCount(PVR_RECORDING const& /*recording*/, int /*playcount*/)
+PVR_ERROR SetRecordingPlayCount(PVR_RECORDING const& recording, int playcount)
 {
-	return PVR_ERROR::PVR_ERROR_NOT_IMPLEMENTED;
+	try { 
+		
+		// Only handle a play count change to zero here, indicating the recording is being marked as unwatched, in this
+		// case there will no follow-up call to SetRecordingLastPlayedPosition
+		if(playcount == 0) set_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId, 0);
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------
@@ -3602,14 +3616,18 @@ PVR_ERROR SetRecordingPlayCount(PVR_RECORDING const& /*recording*/, int /*playco
 
 PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int lastposition)
 {
-	try {
-		
-		set_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId, lastposition);
-		return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	try { 
+	
+		// If the last played position is -1, or if it's zero with a positive play count, mark as watched
+		bool const watched = ((lastposition < 0) || ((lastposition == 0) && (recording.iPlayCount > 0)));
+		set_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId,
+			watched ? std::numeric_limits<uint32_t>::max() : static_cast<uint32_t>(lastposition));
 	}
 
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
 //---------------------------------------------------------------------------

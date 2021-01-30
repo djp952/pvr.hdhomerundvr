@@ -153,7 +153,7 @@ struct recording {
 	char const*			thumbnailpath;
 	int64_t				recordingtime;
 	int					duration;
-	int					lastposition;
+	uint32_t			lastposition;
 	union channelid		channelid;
 	char const*			category;
 };

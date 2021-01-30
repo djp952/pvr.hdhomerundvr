@@ -315,7 +315,7 @@ static void bind_parameter(sqlite3_stmt* statement, int& paramindex, int32_t val
 
 static void bind_parameter(sqlite3_stmt* statement, int& paramindex, uint32_t value)
 {
-	int result = sqlite3_bind_int(statement, paramindex++, static_cast<int32_t>(value));
+	int result = sqlite3_bind_int64(statement, paramindex++, static_cast<int64_t>(value));
 	if(result != SQLITE_OK) throw sqlite_exception(result);
 }
 
@@ -1910,7 +1910,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
 			item.recordingtime = sqlite3_column_int64(statement, 14);
 			item.duration = sqlite3_column_int(statement, 15);
-			item.lastposition = sqlite3_column_int(statement, 16);
+			item.lastposition = static_cast<uint32_t>(sqlite3_column_int64(statement, 16));
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 17));
 			item.category = reinterpret_cast<char const*>(sqlite3_column_text(statement, 18));
 
@@ -2682,10 +2682,10 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 //	instance		- Database instance
 //	recordingid		- Recording identifier (command url)
 
-int get_recording_lastposition(sqlite3* instance, char const* recordingid)
+uint32_t get_recording_lastposition(sqlite3* instance, char const* recordingid)
 {
 	sqlite3_stmt*				statement;				// Database query statement
-	int							resume = 0;				// Recording resume position
+	uint32_t					resume = 0;				// Recording resume position
 	time_t						discovered = 0;			// Recording discovery time
 	std::string					seriesid;				// Recording series identifier
 	int							result;					// Result from SQLite function call
@@ -2707,7 +2707,7 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 		// Execute the query; there should be at most one row returned
 		if(sqlite3_step(statement) == SQLITE_ROW) {
 
-			resume = sqlite3_column_int(statement, 0);
+			resume = static_cast<uint32_t>(sqlite3_column_int64(statement, 0));
 			discovered = sqlite3_column_int(statement, 1);
 
 			char const* value = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
@@ -2726,7 +2726,7 @@ int get_recording_lastposition(sqlite3* instance, char const* recordingid)
 	discover_series_recordings(instance, seriesid.c_str());
 
 	// Retrieve the updated resume position for the recording
-	return execute_scalar_int(instance, "select coalesce(json_extract(data, '$.Resume'), 0) as resume from recording where recordingid like ?1 limit 1", recordingid);
+	return static_cast<uint32_t>(execute_scalar_int64(instance, "select coalesce(json_extract(data, '$.Resume'), 0) as resume from recording where recordingid like ?1 limit 1", recordingid));
 }
 
 //---------------------------------------------------------------------------
@@ -3258,12 +3258,9 @@ void set_discovered(sqlite3* instance, char const* type, time_t discovered)
 //	recordingid		- Recording identifier (command url)
 //	lastposition	- Last position to be stored
 
-void set_recording_lastposition(sqlite3* instance, char const* recordingid, int lastposition)
+void set_recording_lastposition(sqlite3* instance, char const* recordingid, uint32_t lastposition)
 {
 	if((instance == nullptr) || (recordingid == nullptr)) return;
-
-	// Kodi will send a position value of -1 if the recording ended by playing it to the end
-	if(lastposition < 0) lastposition = 0;
 
 	// Update the specified recording on the storage device
 	execute_non_query(instance, "select json_get(json_extract(data, '$.CmdURL') || '&cmd=set&Resume=' || ?2, 'post') from recording "
