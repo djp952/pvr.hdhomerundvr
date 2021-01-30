@@ -300,6 +300,11 @@ public:
 	// Tell the client the past time frame to use when notifying epg events back to Kodi
 	PVR_ERROR SetEPGMaxPastDays(int pastDays) override;
 
+	// SetRecordingPlayCount
+	//
+	// Set the play count of a recording on the backend
+	PVR_ERROR SetRecordingPlayCount(kodi::addon::PVRRecording const& recording, int count) override;
+
 	// SetRecordingLastPlayedPosition
 	//
 	// Set the last watched position of a recording on the backend

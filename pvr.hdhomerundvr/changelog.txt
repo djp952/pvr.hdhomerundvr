@@ -1,8 +1,9 @@
 v3.4.0 (2021.01.xx)
   - Update SQLite database engine to version 3.34.1
   - Add "Export discovery diagnostic data" PVR Client Specific setting
-  - Change "DVR stream read operation minimum size" advanced option to default to "Automatic" and allow for an updated range of 4KiB to 64KiB
   - Add "HEVC Channels" channel group
+  - Add support for persistance of Recorded TV watched/unwatched (play count) flags
+  - Change "DVR stream read operation minimum size" advanced option to default to "Automatic" and allow for an updated range of 4KiB to 64KiB
   - Replace forward slash characters with hyphen characters in Recorded TV folder names to work around Kodi limitation
   - Trigger an XMLTV reload operation during startup if there are missing channel(s) in the Electronic Program Guide (EPG) listings
 

@@ -2263,7 +2263,7 @@ PVR_ERROR addon::CallChannelMenuHook(kodi::addon::PVRMenuhook const& menuhook, k
 //	menuhook	- The hook being invoked
 //	item		- The item referenced by the hook
 
-PVR_ERROR addon::CallRecordingMenuHook(kodi::addon::PVRMenuhook const& menuhook, kodi::addon::PVRRecording const & item)
+PVR_ERROR addon::CallRecordingMenuHook(kodi::addon::PVRMenuhook const& menuhook, kodi::addon::PVRRecording const& item)
 {
 	try {
 
@@ -2629,6 +2629,7 @@ PVR_ERROR addon::GetCapabilities(kodi::addon::PVRCapabilities& capabilities)
 	capabilities.SetSupportsTimers(true);
 	capabilities.SetSupportsChannelGroups(true);
 	capabilities.SetHandlesInputStream(true);
+	capabilities.SetSupportsRecordingPlayCount(true);
 	capabilities.SetSupportsLastPlayedPosition(true);
 	capabilities.SetSupportsRecordingEdl(true);
 
@@ -3231,9 +3232,13 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 			recording.SetDuration(item.duration);
 			assert(recording.GetDuration() > 0);
 
+			// PlayCount
+			//
+			recording.SetPlayCount((item.lastposition == std::numeric_limits<uint32_t>::max()) ? 1 : 0);
+
 			// LastPlayedPosition
 			//
-			recording.SetLastPlayedPosition(item.lastposition);
+			recording.SetLastPlayedPosition((item.lastposition == std::numeric_limits<uint32_t>::max()) ? 0 : item.lastposition);
 
 			// ChannelUid
 			recording.SetChannelUid(item.channelid.value);
@@ -4048,6 +4053,31 @@ PVR_ERROR addon::SetEPGMaxPastDays(int /*pastDays*/)
 }
 
 //-----------------------------------------------------------------------------
+// addon::SetRecordingPlayCount  (CInstancePVRClient)
+//
+// Set the play count of a recording on the backend
+//
+// Arguments:
+//
+//	recording			- Recording to set the last played position for
+//	count				- Updated play count for the recording
+
+PVR_ERROR addon::SetRecordingPlayCount(kodi::addon::PVRRecording const& recording, int count)
+{
+	try { 
+		
+		// Only handle a play count change to zero here, indicating the recording is being marked as unwatched, in this
+		// case there will no follow-up call to SetRecordingLastPlayedPosition
+		if(count == 0) set_recording_lastposition(connectionpool::handle(m_connpool), recording.GetRecordingId().c_str(), 0);
+	}
+
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//-----------------------------------------------------------------------------
 // addon::SetRecordingLastPlayedPosition (CInstancePVRClient)
 //
 // Set the last watched position of a recording on the backend
@@ -4059,7 +4089,14 @@ PVR_ERROR addon::SetEPGMaxPastDays(int /*pastDays*/)
 
 PVR_ERROR addon::SetRecordingLastPlayedPosition(kodi::addon::PVRRecording const& recording, int lastplayedposition)
 {
-	try { set_recording_lastposition(connectionpool::handle(m_connpool), recording.GetRecordingId().c_str(), lastplayedposition); }
+	try { 
+	
+		// If the last played position is -1, or if it's zero with a positive play count, mark as watched
+		bool const watched = ((lastplayedposition < 0) || ((lastplayedposition == 0) && (recording.GetPlayCount() > 0)));
+		set_recording_lastposition(connectionpool::handle(m_connpool), recording.GetRecordingId().c_str(), 
+			watched ? std::numeric_limits<uint32_t>::max() : static_cast<uint32_t>(lastplayedposition));
+	}
+
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 
