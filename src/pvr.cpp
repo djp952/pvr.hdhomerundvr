@@ -78,18 +78,18 @@
 // MENUHOOK_XXXXXX
 //
 // Menu hook identifiers
-#define MENUHOOK_RECORD_DELETERERECORD					2
-#define MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY			3
-#define MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY			4
-#define MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY		6
-#define MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY	7
-#define MENUHOOK_CHANNEL_DISABLE						9
-#define MENUHOOK_CHANNEL_ADDFAVORITE					10
-#define MENUHOOK_CHANNEL_REMOVEFAVORITE					11
-#define MENUHOOK_SETTING_SHOWDEVICENAMES				12
-#define MENUHOOK_SETTING_TRIGGERLISTINGDISCOVERY		13
-#define MENUHOOK_SETTING_SHOWRECENTERRORS				14
-#define MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS	15
+constexpr auto MENUHOOK_RECORD_DELETERERECORD					= 2;
+constexpr auto MENUHOOK_SETTING_TRIGGERDEVICEDISCOVERY			= 3;
+constexpr auto MENUHOOK_SETTING_TRIGGERLINEUPDISCOVERY			= 4;
+constexpr auto MENUHOOK_SETTING_TRIGGERRECORDINGDISCOVERY		= 6;
+constexpr auto MENUHOOK_SETTING_TRIGGERRECORDINGRULEDISCOVERY	= 7;
+constexpr auto MENUHOOK_CHANNEL_DISABLE							= 9;
+constexpr auto MENUHOOK_CHANNEL_ADDFAVORITE						= 10;
+constexpr auto MENUHOOK_CHANNEL_REMOVEFAVORITE					= 11;
+constexpr auto MENUHOOK_SETTING_SHOWDEVICENAMES					= 12;
+constexpr auto MENUHOOK_SETTING_TRIGGERLISTINGDISCOVERY			= 13;
+constexpr auto MENUHOOK_SETTING_SHOWRECENTERRORS				= 14;
+constexpr auto MENUHOOK_SETTING_GENERATEDISCOVERYDIAGNOSTICS	= 15;
 
 //---------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -2810,7 +2810,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try { 
 			
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = item.data.channel.iUniqueId;
 
 			// Set the channel visibility to disabled (red x) and kick off a lineup discovery task
@@ -2832,7 +2832,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try { 
 			
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = item.data.channel.iUniqueId;
 
 			// Set the channel visibility to favorite (yellow star) and kick off a lineup discovery task
@@ -2854,7 +2854,7 @@ PVR_ERROR CallMenuHook(PVR_MENUHOOK const& menuhook, PVR_MENUHOOK_DATA const& it
 
 		try { 
 			
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = item.data.channel.iUniqueId;
 
 			// Set the channel visibility to favorite (gray star) and kick off a lineup discovery task
@@ -2893,7 +2893,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	struct addon_settings settings = copy_settings();
 
 	// Retrieve the channel identifier from the PVR_CHANNEL structure
-	union channelid channelid;
+	union channelid channelid{};
 	channelid.value = channel.iUniqueId;
 
 	try {
@@ -4029,7 +4029,7 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 		//
 		else if((timer.iTimerType == timer_type::datetimeonlyrule) || (timer.iTimerType == timer_type::epgdatetimeonlyrule)) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
 
 			// Get the seriesid for the recording rule; if one has been specified as part of the timer request use it.
@@ -4264,7 +4264,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 	}
 
 	// The only interesting thing about PVR_CHANNEL is the channel id
-	union channelid channelid;
+	union channelid channelid{};
 	channelid.value = channel.iUniqueId;
 
 	// Generate a string version of the channel number to represent the virtual channel number

@@ -324,7 +324,7 @@ void clean_filename(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 void decode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
-	union channelid			channelid;			// Encoded channel identifier
+	union channelid			channelid{};		// Encoded channel identifier
 
 	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid arguments", -1);
 	
@@ -395,7 +395,7 @@ void encode_channel_id(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if((sscanf(str, "%d.%d", &channel, &subchannel) == 2) || (sscanf(str, "%d", &channel) == 1)) {
 
 		// Construct the channel identifier by setting the bit field components
-		union channelid channelid;
+		union channelid channelid{};
 		channelid.parts.channel = channel;
 		channelid.parts.subchannel = subchannel;
 
