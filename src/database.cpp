@@ -1218,7 +1218,7 @@ void enumerate_channels(sqlite3* instance, bool prependnumbers, bool showdrm, en
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			struct channel item;
+			struct channel item{};
 			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.iconurl = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
@@ -1267,7 +1267,7 @@ void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			
 			callback(channelid);
@@ -1358,7 +1358,7 @@ void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channe
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			
 			callback(channelid);
@@ -1442,7 +1442,7 @@ void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback c
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			struct device_name device_name;
+			struct device_name device_name{};
 			device_name.name = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			
 			callback(device_name);
@@ -1489,7 +1489,7 @@ void enumerate_favorite_channelids(sqlite3* instance, bool showdrm, enumerate_ch
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			
 			callback(channelid);
@@ -1576,7 +1576,7 @@ void enumerate_hd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			
 			callback(channelid);
@@ -1623,7 +1623,7 @@ void enumerate_hevc_channelids(sqlite3* instance, bool showdrm, enumerate_channe
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 
 			callback(channelid);
@@ -1701,7 +1701,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 		// Process each row returned from the query
 		while((result == SQLITE_ROW) && (cancel == false)) {
 
-			struct listing item;
+			struct listing item{};
 			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
@@ -1793,7 +1793,7 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 		// Process each row returned from the query
 		while((result == SQLITE_ROW) && (cancel == false)) {
 
-			struct listing item;
+			struct listing item{};
 			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.broadcastid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));
@@ -1893,7 +1893,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 		result = sqlite3_step(statement);
 		while(result == SQLITE_ROW) {
 
-			struct recording item;
+			struct recording item{};
 			item.recordingid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
@@ -1967,7 +1967,7 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			struct recordingrule item;
+			struct recordingrule item{};
 			item.recordingruleid = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			item.type = static_cast<recordingrule_type>(sqlite3_column_int(statement, 1));
 			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
@@ -2024,7 +2024,7 @@ void enumerate_sd_channelids(sqlite3* instance, bool showdrm, enumerate_channeli
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			
 			callback(channelid);
@@ -2074,7 +2074,7 @@ void enumerate_series(sqlite3* instance, char const* deviceauth, char const* tit
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			struct series item;
+			struct series item{};
 			item.title = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			item.seriesid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
 
@@ -2145,7 +2145,7 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			struct timer item;
+			struct timer item{};
 			item.recordingruleid = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
 			item.parenttype = static_cast<enum recordingrule_type>(sqlite3_column_int(statement, 1));
 			item.timerid = static_cast<unsigned int>(sqlite3_column_int(statement, 2));

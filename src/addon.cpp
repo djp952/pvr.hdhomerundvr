@@ -2145,7 +2145,7 @@ PVR_ERROR addon::AddTimer(kodi::addon::PVRTimer const& timer)
 		//
 		else if((timer.GetTimerType() == timer_type::datetimeonlyrule) || (timer.GetTimerType() == timer_type::epgdatetimeonlyrule)) {
 
-			union channelid channelid;
+			union channelid channelid{};
 			channelid.value = (timer.GetClientChannelUid() == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.GetClientChannelUid();
 
 			// Get the seriesid for the recording rule; if one has been specified as part of the timer request use it.
@@ -2209,7 +2209,7 @@ PVR_ERROR addon::CallChannelMenuHook(kodi::addon::PVRMenuhook const& menuhook, k
 {
 	try {
 
-		union channelid channelid;							// Opaque channel unique identifier
+		union channelid channelid{};						// Opaque channel unique identifier
 		channelid.value = item.GetUniqueId();				// Retrieve the opaque unique identifier
 
 		// MENUHOOK_CHANNEL_DISABLE
@@ -2902,7 +2902,7 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 	struct settings settings = copy_settings();
 
 	// Convert the channel identifier back into a channelid
-	union channelid channelid;
+	union channelid channelid{};
 	channelid.value = channelUid;
 
 	try {
@@ -3753,7 +3753,7 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 	}
 
 	// The only interesting thing about PVR_CHANNEL is the channel id
-	union channelid channelid;
+	union channelid channelid{};
 	channelid.value = channel.GetUniqueId();
 
 	// Generate a string version of the channel number to represent the virtual channel number

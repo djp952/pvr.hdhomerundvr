@@ -314,7 +314,7 @@ void scheduler::start(void)
 			while((m_stop.test(false) == true) && (!m_queue.empty()) && (!m_paused) && (m_queue.top().due <= std::chrono::system_clock::now())) {
 
 				// Make a copy of the functor and remove the task from the queue
-				auto functor = m_queue.top().task;
+				auto functor(m_queue.top().task);
 				m_queue.pop();
 
 				// Acquire the task mutex to prevent race condition with now()
