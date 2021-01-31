@@ -642,7 +642,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>18.9.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20201023-0655c2c7-Leia-x64</KodiAppx>
+      <KodiAppx>Kodi-18.9-Leia_18.9.0.0_x64</KodiAppx>
       <ZukiAppx>kodi-18.9-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
@@ -658,7 +658,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).appx')" Importance="high" Text="Downloading $(KodiAppx).appx ..."/>
-    <Exec Condition="!Exists('tmp\$(KodiAppx).appx')" Command="curl http://mirrors.kodi.tv/nightlies/windows/uwp64/Leia/$(KodiAppx).appx -L -o tmp\$(KodiAppx).appx " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiAppx).appx')" Command="curl https://mirrors.kodi.tv/releases/windows/UWP/$(KodiAppx).appx -L -o tmp\$(KodiAppx).appx " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).appx /l /d out\$(KodiAppx)" ContinueOnError="false"/>

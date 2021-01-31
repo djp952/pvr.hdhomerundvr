@@ -3594,7 +3594,7 @@ PVR_ERROR SetRecordingPlayCount(PVR_RECORDING const& recording, int playcount)
 	try { 
 		
 		// Only handle a play count change to zero here, indicating the recording is being marked as unwatched, in this
-		// case there will no follow-up call to SetRecordingLastPlayedPosition
+		// case there will be no follow-up call to SetRecordingLastPlayedPosition
 		if(playcount == 0) set_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId, 0);
 	}
 
