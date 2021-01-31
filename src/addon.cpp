@@ -4067,7 +4067,7 @@ PVR_ERROR addon::SetRecordingPlayCount(kodi::addon::PVRRecording const& recordin
 	try { 
 		
 		// Only handle a play count change to zero here, indicating the recording is being marked as unwatched, in this
-		// case there will no follow-up call to SetRecordingLastPlayedPosition
+		// case there will be no follow-up call to SetRecordingLastPlayedPosition
 		if(count == 0) set_recording_lastposition(connectionpool::handle(m_connpool), recording.GetRecordingId().c_str(), 0);
 	}
 
