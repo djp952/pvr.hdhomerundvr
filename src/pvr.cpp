@@ -1228,9 +1228,9 @@ static void start_discovery(void) noexcept
 			// Schedule the initial discovery tasks to execute as soon as possible
 			g_scheduler.add(now + milliseconds(1), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
 			g_scheduler.add(now + milliseconds(2), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
-			g_scheduler.add(now + milliseconds(3), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
-			g_scheduler.add(now + milliseconds(4), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
-			g_scheduler.add(now + milliseconds(5), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			g_scheduler.add(now + milliseconds(3), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			g_scheduler.add(now + milliseconds(4), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
+			g_scheduler.add(now + milliseconds(5), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
 			g_scheduler.add(now + milliseconds(6), startup_alerts_task);
@@ -1743,9 +1743,10 @@ static void wait_for_timers(void) noexcept
 		// Ensure that the discovery operations have been started
 		start_discovery();
 
-		// TIMERS -> { DEVICES + LINEUPS + RECORDING RULES + EPISODES }
+		// TIMERS -> { DEVICES + LINEUPS + RECORDINGS + RECORDING RULES + EPISODES }
 		g_discovered_devices.wait_until_equals(true);
 		g_discovered_lineups.wait_until_equals(true);
+		g_discovered_recordings.wait_until_equals(true);
 		g_discovered_recordingrules.wait_until_equals(true);
 		g_discovered_episodes.wait_until_equals(true);
 	}
@@ -5027,9 +5028,9 @@ void OnSystemWake()
 		// Schedule the normal update tasks for everything in an appropriate order
 		g_scheduler.add(now + milliseconds(1), update_devices_task);
 		g_scheduler.add(now + milliseconds(2), update_lineups_task);
-		g_scheduler.add(now + milliseconds(3), update_recordingrules_task);
-		g_scheduler.add(now + milliseconds(4), update_episodes_task);
-		g_scheduler.add(now + milliseconds(5), update_recordings_task);
+		g_scheduler.add(now + milliseconds(3), update_recordings_task);
+		g_scheduler.add(now + milliseconds(4), update_recordingrules_task);
+		g_scheduler.add(now + milliseconds(5), update_episodes_task);
 
 		// A listings update may have been scheduled by update_lineups_task with a channel check set;
 		// adding it again may override that task, so perform a missing channel check here as well
