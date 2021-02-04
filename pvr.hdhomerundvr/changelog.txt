@@ -1,3 +1,6 @@
+v3.4.1 (2021.02.xx)
+  - Fix bug that allowed startup tasks to execute out of order on systems with a low precision system clock
+
 v3.4.0 (2021.01.30)
   - Update libhdhomerun library to version 20201023
   - Update SQLite database engine to version 3.34.1

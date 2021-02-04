@@ -1205,6 +1205,8 @@ static std::string select_tuner(std::vector<std::string> const& possibilities)
 // Performs a one-time discovery startup operation
 static void start_discovery(void) noexcept
 {
+	using namespace std::chrono;
+
 	static std::once_flag	once;			// std::call_once flag
 
 	try {
@@ -1216,26 +1218,30 @@ static void start_discovery(void) noexcept
 			// Create a copy of the current addon settings structure
 			struct addon_settings settings = copy_settings();
 
+			// Systems with a low precision system_clock implementation may run the tasks out of order,
+			// account for this by using a base time with a unique millisecond offset during scheduling
+			auto now = system_clock::now();
+
 			// Schedule a task to wait for the network to become available
-			g_scheduler.add(std::bind(wait_for_network_task, 10, std::placeholders::_1));
+			g_scheduler.add(now, std::bind(wait_for_network_task, 10, std::placeholders::_1));
 
 			// Schedule the initial discovery tasks to execute as soon as possible
-			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
-			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
-			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
-			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
-			g_scheduler.add([](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			g_scheduler.add(now + milliseconds(1), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
+			g_scheduler.add(now + milliseconds(2), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
+			g_scheduler.add(now + milliseconds(3), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
+			g_scheduler.add(now + milliseconds(4), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
+			g_scheduler.add(now + milliseconds(5), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
-			g_scheduler.add(startup_alerts_task);
-			g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
+			g_scheduler.add(now + milliseconds(6), startup_alerts_task);
+			g_scheduler.add(now + milliseconds(7), std::bind(update_listings_task, false, true, std::placeholders::_1));
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
-			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), update_devices_task);
-			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_lineups_interval), update_lineups_task);
-			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordingrules_interval), update_recordingrules_task);
-			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_episodes_interval), update_episodes_task);
-			g_scheduler.add(std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordings_interval), update_recordings_task);
+			g_scheduler.add(system_clock::now() + seconds(settings.discover_devices_interval), update_devices_task);
+			g_scheduler.add(system_clock::now() + seconds(settings.discover_lineups_interval), update_lineups_task);
+			g_scheduler.add(system_clock::now() + seconds(settings.discover_recordingrules_interval), update_recordingrules_task);
+			g_scheduler.add(system_clock::now() + seconds(settings.discover_episodes_interval), update_episodes_task);
+			g_scheduler.add(system_clock::now() + seconds(settings.discover_recordings_interval), update_recordings_task);
 		});
 	}
 
@@ -5001,6 +5007,8 @@ void OnSystemSleep()
 
 void OnSystemWake()
 {
+	using namespace std::chrono;
+
 	// CAUTION: This function will be called on a different thread than the main PVR
 	// callback functions -- do not attempt to manipulate any in-progress streams
 
@@ -5009,19 +5017,23 @@ void OnSystemWake()
 		g_scheduler.stop();					// Ensure scheduler has been stopped
 		g_scheduler.clear();				// Ensure there are no pending tasks
 
+		// Systems with a low precision system_clock implementation may run the tasks out of order,
+		// account for this by using a base time with a unique millisecond offset during scheduling
+		auto now = system_clock::now();
+
 		// Schedule a task to wait for the network to become available
-		g_scheduler.add(std::bind(wait_for_network_task, 60, std::placeholders::_1));
+		g_scheduler.add(now, std::bind(wait_for_network_task, 60, std::placeholders::_1));
 
 		// Schedule the normal update tasks for everything in an appropriate order
-		g_scheduler.add(update_devices_task);
-		g_scheduler.add(update_lineups_task);
-		g_scheduler.add(update_recordingrules_task);
-		g_scheduler.add(update_episodes_task);
-		g_scheduler.add(update_recordings_task);
+		g_scheduler.add(now + milliseconds(1), update_devices_task);
+		g_scheduler.add(now + milliseconds(2), update_lineups_task);
+		g_scheduler.add(now + milliseconds(3), update_recordingrules_task);
+		g_scheduler.add(now + milliseconds(4), update_episodes_task);
+		g_scheduler.add(now + milliseconds(5), update_recordings_task);
 
 		// A listings update may have been scheduled by update_lineups_task with a channel check set;
 		// adding it again may override that task, so perform a missing channel check here as well
-		g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
+		g_scheduler.add(now + milliseconds(6), std::bind(update_listings_task, false, true, std::placeholders::_1));
 
 		// Restart the task scheduler
 		g_scheduler.start();
