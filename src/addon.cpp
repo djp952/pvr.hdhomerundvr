@@ -820,9 +820,9 @@ void addon::start_discovery(void) noexcept
 			// Schedule the initial discovery tasks to execute as soon as possible
 			m_scheduler.add(now + milliseconds(1), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
 			m_scheduler.add(now + milliseconds(2), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
-			m_scheduler.add(now + milliseconds(3), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
-			m_scheduler.add(now + milliseconds(4), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
-			m_scheduler.add(now + milliseconds(5), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			m_scheduler.add(now + milliseconds(3), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			m_scheduler.add(now + milliseconds(4), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
+			m_scheduler.add(now + milliseconds(5), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
 			m_scheduler.add(now + milliseconds(6), &addon::startup_alerts_task, this);
@@ -1420,9 +1420,10 @@ void addon::wait_for_timers(void) noexcept
 		// Ensure that the discovery operations have been started
 		start_discovery();
 
-		// TIMERS -> { DEVICES + LINEUPS + RECORDING RULES + EPISODES }
+		// TIMERS -> { DEVICES + LINEUPS + RECORDINGS + RECORDING RULES + EPISODES }
 		m_discovered_devices.wait_until_equals(true);
 		m_discovered_lineups.wait_until_equals(true);
+		m_discovered_recordings.wait_until_equals(true);
 		m_discovered_recordingrules.wait_until_equals(true);
 		m_discovered_episodes.wait_until_equals(true);
 	}
@@ -3723,9 +3724,9 @@ PVR_ERROR addon::OnSystemWake(void)
 		// Schedule the normal update tasks for everything in an appropriate order
 		m_scheduler.add(UPDATE_DEVICES_TASK, now + milliseconds(1), &addon::update_devices_task, this);
 		m_scheduler.add(UPDATE_LINEUPS_TASK, now + milliseconds(2), &addon::update_lineups_task, this);
-		m_scheduler.add(UPDATE_RECORDINGRULES_TASK, now + milliseconds(3), &addon::update_recordingrules_task, this);
-		m_scheduler.add(UPDATE_EPISODES_TASK, now + milliseconds(4), &addon::update_episodes_task, this);
-		m_scheduler.add(UPDATE_RECORDINGS_TASK, now + milliseconds(5), &addon::update_recordings_task, this);
+		m_scheduler.add(UPDATE_RECORDINGS_TASK, now + milliseconds(3), &addon::update_recordings_task, this);
+		m_scheduler.add(UPDATE_RECORDINGRULES_TASK, now + milliseconds(4), &addon::update_recordingrules_task, this);
+		m_scheduler.add(UPDATE_EPISODES_TASK, now + milliseconds(5), &addon::update_episodes_task, this);
 
 		// A listings update may have been scheduled by update_lineups_task with a channel check set;
 		// adding it again may override that task, so perform a missing channel check here as well
