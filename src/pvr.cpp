@@ -1467,14 +1467,14 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 		}
 
 		// Trigger a channel update; the metadata (name, icon, etc) may have changed
-		if(cancel.test(true) == false) {
+		if(changed && (cancel.test(true) == false)) {
 
 			log_notice(__func__, ": triggering channel update");
 			g_pvr->TriggerChannelUpdate();
 		}
 
-		// Enumerate all of the listings in the database and (re)send them to Kodi
-		if(cancel.test(true) == false) {
+		// Enumerate all of the listings in the database and send them to Kodi
+		if(changed && (cancel.test(true) == false)) {
 
 			log_notice(__func__, ": execute electronic program guide update");
 
