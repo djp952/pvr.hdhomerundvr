@@ -799,6 +799,8 @@ std::string addon::select_tuner(std::vector<std::string> const& possibilities)
 
 void addon::start_discovery(void) noexcept
 {
+	using namespace std::chrono;
+
 	try {
 
 		// Initial discovery schedules all the individual discoveries to occur as soon as possible
@@ -808,26 +810,30 @@ void addon::start_discovery(void) noexcept
 			// Create a copy of the current addon settings structure
 			struct settings settings = copy_settings();
 
+			// Systems with a low precision system_clock implementation may run the tasks out of order,
+			// account for this by using a base time with a unique millisecond offset during scheduling
+			auto now = system_clock::now();
+
 			// Schedule a task to wait for the network to become available
-			m_scheduler.add(std::bind(&addon::wait_for_network_task, this, 10, std::placeholders::_1));
+			m_scheduler.add(now, std::bind(&addon::wait_for_network_task, this, 10, std::placeholders::_1));
 
 			// Schedule the initial discovery tasks to execute as soon as possible
-			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
-			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed;  discover_lineups(cancel, changed); });
-			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
-			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
-			m_scheduler.add([&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			m_scheduler.add(now + milliseconds(1), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
+			m_scheduler.add(now + milliseconds(2), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
+			m_scheduler.add(now + milliseconds(3), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
+			m_scheduler.add(now + milliseconds(4), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
+			m_scheduler.add(now + milliseconds(5), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
-			m_scheduler.add(&addon::startup_alerts_task, this);
-			m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
+			m_scheduler.add(now + milliseconds(6), &addon::startup_alerts_task, this);
+			m_scheduler.add(UPDATE_LISTINGS_TASK, now + milliseconds(7), std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
-			m_scheduler.add(UPDATE_DEVICES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
-			m_scheduler.add(UPDATE_LINEUPS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_lineups_interval), &addon::update_lineups_task, this);
-			m_scheduler.add(UPDATE_RECORDINGRULES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordingrules_interval), &addon::update_recordingrules_task, this);
-			m_scheduler.add(UPDATE_EPISODES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_episodes_interval), &addon::update_episodes_task, this);
-			m_scheduler.add(UPDATE_RECORDINGS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordings_interval), &addon::update_recordings_task, this);
+			m_scheduler.add(UPDATE_DEVICES_TASK, system_clock::now() + seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
+			m_scheduler.add(UPDATE_LINEUPS_TASK, system_clock::now() + seconds(settings.discover_lineups_interval), &addon::update_lineups_task, this);
+			m_scheduler.add(UPDATE_RECORDINGRULES_TASK, system_clock::now() + seconds(settings.discover_recordingrules_interval), &addon::update_recordingrules_task, this);
+			m_scheduler.add(UPDATE_EPISODES_TASK, system_clock::now() + seconds(settings.discover_episodes_interval), &addon::update_episodes_task, this);
+			m_scheduler.add(UPDATE_RECORDINGS_TASK, system_clock::now() + seconds(settings.discover_recordings_interval), &addon::update_recordings_task, this);
 		});
 	}
 
@@ -3697,6 +3703,8 @@ PVR_ERROR addon::OnSystemSleep(void)
 
 PVR_ERROR addon::OnSystemWake(void)
 {
+	using namespace std::chrono;
+
 	// CAUTION: This function will be called on a different thread than the main PVR
 	// callback functions -- do not attempt to manipulate any in-progress streams
 
@@ -3705,19 +3713,23 @@ PVR_ERROR addon::OnSystemWake(void)
 		m_scheduler.stop();					// Ensure scheduler has been stopped
 		m_scheduler.clear();				// Ensure there are no pending tasks
 
+		// Systems with a low precision system_clock implementation may run the tasks out of order,
+		// account for this by using a base time with a unique millisecond offset during scheduling
+		auto now = system_clock::now();
+
 		// Schedule a task to wait for the network to become available
-		m_scheduler.add(std::bind(&addon::wait_for_network_task, this, 60, std::placeholders::_1));
+		m_scheduler.add(now, std::bind(&addon::wait_for_network_task, this, 60, std::placeholders::_1));
 
 		// Schedule the normal update tasks for everything in an appropriate order
-		m_scheduler.add(UPDATE_DEVICES_TASK, &addon::update_devices_task, this);
-		m_scheduler.add(UPDATE_LINEUPS_TASK, &addon::update_lineups_task, this);
-		m_scheduler.add(UPDATE_RECORDINGRULES_TASK, &addon::update_recordingrules_task, this);
-		m_scheduler.add(UPDATE_EPISODES_TASK, &addon::update_episodes_task, this);
-		m_scheduler.add(UPDATE_RECORDINGS_TASK, &addon::update_recordings_task, this);
+		m_scheduler.add(UPDATE_DEVICES_TASK, now + milliseconds(1), &addon::update_devices_task, this);
+		m_scheduler.add(UPDATE_LINEUPS_TASK, now + milliseconds(2), &addon::update_lineups_task, this);
+		m_scheduler.add(UPDATE_RECORDINGRULES_TASK, now + milliseconds(3), &addon::update_recordingrules_task, this);
+		m_scheduler.add(UPDATE_EPISODES_TASK, now + milliseconds(4), &addon::update_episodes_task, this);
+		m_scheduler.add(UPDATE_RECORDINGS_TASK, now + milliseconds(5), &addon::update_recordings_task, this);
 
 		// A listings update may have been scheduled by update_lineups_task with a channel check set;
 		// adding it again may override that task, so perform a missing channel check here as well
-		m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
+		m_scheduler.add(UPDATE_LISTINGS_TASK, now + milliseconds(6), std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
 
 		// Restart the task scheduler
 		m_scheduler.start();
