@@ -588,7 +588,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>19.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20210128-02930acd-master-x86</KodiAppx>
+      <KodiAppx>Kodi-20210202-0c9370c0-master-x86</KodiAppx>
       <ZukiAppx>kodi-19.0-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
@@ -629,7 +629,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>19.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20210128-02930acd-master-x64</KodiAppx>
+      <KodiAppx>Kodi-20210202-0c9370c0-master-x64</KodiAppx>
       <ZukiAppx>kodi-19.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
@@ -670,7 +670,7 @@
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
       <AppxVersionCode>19.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20210128-02930acd-master-arm</KodiAppx>
+      <KodiAppx>Kodi-20210202-0c9370c0-master-arm</KodiAppx>
       <ZukiAppx>kodi-19.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
