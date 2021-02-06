@@ -122,6 +122,7 @@ template<typename... _args> static void log_notice(_args&&... args);
 // Scheduled Tasks
 //
 static void startup_alerts_task(scalar_condition<bool> const& cancel);
+static void startup_complete_task(scalar_condition<bool> const& cancel);
 static void update_devices_task(scalar_condition<bool> const& cancel);
 static void update_episodes_task(scalar_condition<bool> const& cancel);
 static void update_lineups_task(scalar_condition<bool> const& cancel);
@@ -477,6 +478,11 @@ static addon_settings g_settings = {
 //
 // Synchronization object to serialize access to addon settings
 static std::mutex g_settings_lock;
+
+// g_startup_complete
+//
+// Flag indicating that all startup tasks have been completed
+static std::atomic<bool> g_startup_complete{ false };
 
 // g_stream_starttime
 //
@@ -1235,6 +1241,7 @@ static void start_discovery(void) noexcept
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
 			g_scheduler.add(now + milliseconds(6), startup_alerts_task);
 			g_scheduler.add(now + milliseconds(7), std::bind(update_listings_task, false, true, std::placeholders::_1));
+			g_scheduler.add(now + milliseconds(8), startup_complete_task);
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
 			g_scheduler.add(system_clock::now() + seconds(settings.discover_devices_interval), update_devices_task);
@@ -1274,8 +1281,8 @@ static void startup_alerts_task(scalar_condition<bool> const& /*cancel*/)
 			if(!g_addon->FileExists(alertfile.c_str(), false)) {
 
 				// Issue the alert about the DVR subscription requirement
-				g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required", 
-					"Access to Electronic Program Guide (EPG) listings requires an active HDHomeRun DVR Service subscription.", "", 
+				g_gui->Dialog_OK_ShowAndGetInput("DVR Service Subscription Required",
+					"Access to Electronic Program Guide (EPG) listings requires an active HDHomeRun DVR Service subscription.", "",
 					"https://www.silicondust.com/dvr-service/");
 
 				// Write the tag file to storage to prevent the message from showing again
@@ -1283,6 +1290,14 @@ static void startup_alerts_task(scalar_condition<bool> const& /*cancel*/)
 			}
 		}
 	}
+}
+
+// startup_complete_task (local)
+//
+// Scheduled task implementation to indicate startup has completed
+static void startup_complete_task(scalar_condition<bool> const& /*cancel*/)
+{
+	g_startup_complete.store(true);
 }
 
 // update_devices_task (local)
