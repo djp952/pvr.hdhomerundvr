@@ -927,7 +927,7 @@ static void log_message(ADDON::addon_log_t level, _args&&... args)
 	const size_t MAX_ERROR_LOG = 10;	// Maximum entries to store in error log
 
 	std::ostringstream stream;
-	int unpack[] = {0, ( static_cast<void>(stream << args), 0 ) ... };
+	int unpack[] = {0, ( static_cast<void>(stream << std::boolalpha << args), 0 ) ... };
 	(void)unpack;
 
 	if(g_addon) g_addon->Log(level, stream.str().c_str());
@@ -1891,35 +1891,35 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			log_notice(__func__, ": g_settings.channel_name_source                = ", static_cast<int>(g_settings.channel_name_source));
 			log_notice(__func__, ": g_settings.delete_datetime_rules_after        = ", g_settings.delete_datetime_rules_after);
 			log_notice(__func__, ": g_settings.deviceauth_stale_after             = ", g_settings.deviceauth_stale_after);
-			log_notice(__func__, ": g_settings.direct_tuning_allow_drm            = ", (g_settings.direct_tuning_allow_drm) ? "true" : "false");
+			log_notice(__func__, ": g_settings.direct_tuning_allow_drm            = ", g_settings.direct_tuning_allow_drm);
 			log_notice(__func__, ": g_settings.direct_tuning_protocol             = ", static_cast<int>(g_settings.direct_tuning_protocol));
-			log_notice(__func__, ": g_settings.disable_backend_channel_logos      = ", (g_settings.disable_backend_channel_logos) ? "true" : "false");
-			log_notice(__func__, ": g_settings.disable_recording_categories       = ", (g_settings.disable_recording_categories) ? "true" : "false");
+			log_notice(__func__, ": g_settings.disable_backend_channel_logos      = ", g_settings.disable_backend_channel_logos);
+			log_notice(__func__, ": g_settings.disable_recording_categories       = ", g_settings.disable_recording_categories);
 			log_notice(__func__, ": g_settings.discover_devices_interval          = ", g_settings.discover_devices_interval);
 			log_notice(__func__, ": g_settings.discover_episodes_interval         = ", g_settings.discover_episodes_interval);
 			log_notice(__func__, ": g_settings.discover_lineups_interval          = ", g_settings.discover_lineups_interval);
 			log_notice(__func__, ": g_settings.discover_recordingrules_interval   = ", g_settings.discover_recordingrules_interval);
-			log_notice(__func__, ": g_settings.discover_recordings_after_playback = ", (g_settings.discover_recordings_after_playback) ? "true" : "false");
+			log_notice(__func__, ": g_settings.discover_recordings_after_playback = ", g_settings.discover_recordings_after_playback);
 			log_notice(__func__, ": g_settings.discover_recordings_interval       = ", g_settings.discover_recordings_interval);
-			log_notice(__func__, ": g_settings.enable_recording_edl               = ", (g_settings.enable_recording_edl) ? "true" : "false");
-			log_notice(__func__, ": g_settings.generate_repeat_indicators         = ", (g_settings.generate_repeat_indicators) ? "true" : "false");
-			log_notice(__func__, ": g_settings.pause_discovery_while_streaming    = ", (g_settings.pause_discovery_while_streaming) ? "true" : "false");
-			log_notice(__func__, ": g_settings.prepend_channel_numbers            = ", (g_settings.prepend_channel_numbers) ? "true" : "false");
-			log_notice(__func__, ": g_settings.recording_edl_cut_as_comskip       = ", (g_settings.recording_edl_cut_as_comskip) ? "true" : "false");
+			log_notice(__func__, ": g_settings.enable_recording_edl               = ", g_settings.enable_recording_edl);
+			log_notice(__func__, ": g_settings.generate_repeat_indicators         = ", g_settings.generate_repeat_indicators);
+			log_notice(__func__, ": g_settings.pause_discovery_while_streaming    = ", g_settings.pause_discovery_while_streaming);
+			log_notice(__func__, ": g_settings.prepend_channel_numbers            = ", g_settings.prepend_channel_numbers);
+			log_notice(__func__, ": g_settings.recording_edl_cut_as_comskip       = ", g_settings.recording_edl_cut_as_comskip);
 			log_notice(__func__, ": g_settings.recording_edl_end_padding          = ", g_settings.recording_edl_end_padding);
 			log_notice(__func__, ": g_settings.recording_edl_folder               = ", g_settings.recording_edl_folder);
 			log_notice(__func__, ": g_settings.recording_edl_folder_2             = ", g_settings.recording_edl_folder_2);
 			log_notice(__func__, ": g_settings.recording_edl_folder_3             = ", g_settings.recording_edl_folder_3);
-			log_notice(__func__, ": g_settings.recording_edl_folder_is_flat       = ", (g_settings.recording_edl_folder_is_flat) ? "true" : "false");
+			log_notice(__func__, ": g_settings.recording_edl_folder_is_flat       = ", g_settings.recording_edl_folder_is_flat);
 			log_notice(__func__, ": g_settings.recording_edl_start_padding        = ", g_settings.recording_edl_start_padding);
-			log_notice(__func__, ": g_settings.show_drm_protected_channels        = ", (g_settings.show_drm_protected_channels) ? "true" : "false");
+			log_notice(__func__, ": g_settings.show_drm_protected_channels        = ", g_settings.show_drm_protected_channels);
 			log_notice(__func__, ": g_settings.stream_read_chunk_size             = ", g_settings.stream_read_chunk_size);
-			log_notice(__func__, ": g_settings.use_actual_timer_times             = ", (g_settings.use_actual_timer_times) ? "true" : "false");
-			log_notice(__func__, ": g_settings.use_airdate_as_recordingdate       = ", (g_settings.use_airdate_as_recordingdate) ? "true" : "false");
-			log_notice(__func__, ": g_settings.use_backend_genre_strings          = ", (g_settings.use_backend_genre_strings) ? "true" : "false");
-			log_notice(__func__, ": g_settings.use_direct_tuning                  = ", (g_settings.use_direct_tuning) ? "true" : "false");
-			log_notice(__func__, ": g_settings.use_episode_number_as_title        = ", (g_settings.use_episode_number_as_title) ? "true" : "false");
-			log_notice(__func__, ": g_settings.use_http_discovery                 = ", (g_settings.use_http_device_discovery) ? "true" : "false");
+			log_notice(__func__, ": g_settings.use_actual_timer_times             = ", g_settings.use_actual_timer_times);
+			log_notice(__func__, ": g_settings.use_airdate_as_recordingdate       = ", g_settings.use_airdate_as_recordingdate);
+			log_notice(__func__, ": g_settings.use_backend_genre_strings          = ", g_settings.use_backend_genre_strings);
+			log_notice(__func__, ": g_settings.use_direct_tuning                  = ", g_settings.use_direct_tuning);
+			log_notice(__func__, ": g_settings.use_episode_number_as_title        = ", g_settings.use_episode_number_as_title);
+			log_notice(__func__, ": g_settings.use_http_discovery                 = ", g_settings.use_http_device_discovery);
 
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
@@ -2154,7 +2154,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.pause_discovery_while_streaming) {
 
 			g_settings.pause_discovery_while_streaming = bvalue;
-			log_notice(__func__, ": setting pause_discovery_while_streaming changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting pause_discovery_while_streaming changed to ", bvalue);
 		}
 	}
 
@@ -2166,7 +2166,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.prepend_channel_numbers) {
 
 			g_settings.prepend_channel_numbers = bvalue;
-			log_notice(__func__, ": setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
+			log_notice(__func__, ": setting prepend_channel_numbers changed to ", bvalue, " -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
 		}
 	}
@@ -2179,7 +2179,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_episode_number_as_title) {
 
 			g_settings.use_episode_number_as_title = bvalue;
-			log_notice(__func__, ": setting use_episode_number_as_title changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_notice(__func__, ": setting use_episode_number_as_title changed to ", bvalue, " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2192,7 +2192,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.discover_recordings_after_playback) {
 
 			g_settings.discover_recordings_after_playback = bvalue;
-			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting discover_recordings_after_playback changed to ", bvalue);
 		}
 	}
 
@@ -2204,7 +2204,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_backend_genre_strings) {
 
 			g_settings.use_backend_genre_strings = bvalue;
-			log_notice(__func__, ": setting use_backend_genre_strings changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting use_backend_genre_strings changed to ", bvalue);
 		}
 	}
 
@@ -2216,7 +2216,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.show_drm_protected_channels) {
 
 			g_settings.show_drm_protected_channels = bvalue;
-			log_notice(__func__, ": setting show_drm_protected_channels changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_notice(__func__, ": setting show_drm_protected_channels changed to ", bvalue, " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -2244,7 +2244,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.disable_recording_categories) {
 
 			g_settings.disable_recording_categories = bvalue;
-			log_notice(__func__, ": setting disable_recording_categories changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_notice(__func__, ": setting disable_recording_categories changed to ", bvalue, " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2257,7 +2257,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.generate_repeat_indicators) {
 
 			g_settings.generate_repeat_indicators = bvalue;
-			log_notice(__func__, ": setting generate_repeat_indicators changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_notice(__func__, ": setting generate_repeat_indicators changed to ", bvalue, " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2270,7 +2270,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_airdate_as_recordingdate) {
 
 			g_settings.use_airdate_as_recordingdate = bvalue;
-			log_notice(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_notice(__func__, ": setting use_airdate_as_recordingdate changed to ", bvalue, " -- trigger recording update");
 			g_pvr->TriggerRecordingUpdate();
 		}
 	}
@@ -2283,7 +2283,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_actual_timer_times) {
 
 			g_settings.use_actual_timer_times = bvalue;
-			log_notice(__func__, ": setting use_actual_timer_times changed to ", (bvalue) ? "true" : "false", " -- trigger timer update");
+			log_notice(__func__, ": setting use_actual_timer_times changed to ", bvalue, " -- trigger timer update");
 			g_pvr->TriggerTimerUpdate();
 		}
 	}
@@ -2296,7 +2296,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.disable_backend_channel_logos) {
 
 			g_settings.disable_backend_channel_logos = bvalue;
-			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel and channel group updates");
 			g_pvr->TriggerChannelUpdate();
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
@@ -2393,7 +2393,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_http_device_discovery) {
 
 			g_settings.use_http_device_discovery = bvalue;
-			log_notice(__func__, ": setting use_http_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device update");
+			log_notice(__func__, ": setting use_http_device_discovery changed to ", bvalue, " -- schedule device update");
 
 			// Reschedule the device update task to run as soon as possible
 			g_scheduler.add(update_devices_task);
@@ -2408,7 +2408,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.use_direct_tuning) {
 
 			g_settings.use_direct_tuning = bvalue;
-			log_notice(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting use_direct_tuning changed to ", bvalue);
 		}
 	}
 
@@ -2432,7 +2432,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.direct_tuning_allow_drm) {
 
 			g_settings.direct_tuning_allow_drm = bvalue;
-			log_notice(__func__, ": setting direct_tuning_allow_drm changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting direct_tuning_allow_drm changed to ", bvalue);
 		}
 	}
 
@@ -2472,7 +2472,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.enable_recording_edl) {
 
 			g_settings.enable_recording_edl = bvalue;
-			log_notice(__func__, ": setting enable_recording_edl changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting enable_recording_edl changed to ", bvalue);
 		}
 	}
 
@@ -2517,7 +2517,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.recording_edl_folder_is_flat) {
 
 			g_settings.recording_edl_folder_is_flat = bvalue;
-			log_notice(__func__, ": setting recording_edl_folder_is_flat changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting recording_edl_folder_is_flat changed to ", bvalue);
 		}
 	}
 
@@ -2529,7 +2529,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.recording_edl_cut_as_comskip) {
 
 			g_settings.recording_edl_cut_as_comskip = bvalue;
-			log_notice(__func__, ": setting recording_edl_cut_as_comskip changed to ", (bvalue) ? "true" : "false");
+			log_notice(__func__, ": setting recording_edl_cut_as_comskip changed to ", bvalue);
 		}
 	}
 
@@ -4363,9 +4363,9 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 			// Log some additional information about the stream for diagnostic purposes
 			log_notice(__func__, ": mediatype = ", g_pvrstream->mediatype());
-			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek());
 			log_notice(__func__, ": length    = ", g_pvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime());
 			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
 		}
 
@@ -4672,9 +4672,9 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 
 			// Log some additional information about the stream for diagnostic purposes
 			log_notice(__func__, ": mediatype = ", g_pvrstream->mediatype());
-			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek() ? "true" : "false");
+			log_notice(__func__, ": canseek   = ", g_pvrstream->canseek());
 			log_notice(__func__, ": length    = ", g_pvrstream->length());
-			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime() ? "true" : "false");
+			log_notice(__func__, ": realtime  = ", g_pvrstream->realtime());
 			log_notice(__func__, ": starttime = ", g_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&g_stream_starttime)), "\n"), " (local)");
 			log_notice(__func__, ": endtime   = ", g_stream_endtime, " (epoch) = ", strtok(asctime(localtime(&g_stream_endtime)), "\n"), " (local)");
 		}
