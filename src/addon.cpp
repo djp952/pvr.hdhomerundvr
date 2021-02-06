@@ -134,10 +134,13 @@ void addon::discover_devices(scalar_condition<bool> const& /*cancel*/, bool& cha
 {
 	changed = false;						// Initialize [ref] argument
 
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
 	// Create a copy of the current addon settings structure
 	struct settings settings = copy_settings();
 
-	log_info(__func__, ": initiated local network device discovery (method: ", settings.use_http_device_discovery ? "http" : "broadcast", ")");
+	log_info_if(trace, __func__, ": initiated local network device discovery (method: ", settings.use_http_device_discovery ? "http" : "broadcast", ")");
 
 	try {
 
@@ -150,7 +153,14 @@ void addon::discover_devices(scalar_condition<bool> const& /*cancel*/, bool& cha
 		// Discover the devices on the local network and check for changes
 		auto caller = __func__;
 		::discover_devices(dbhandle, settings.use_http_device_discovery, changed);
-		enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_info(caller, ": discovered: ", device_name.name); });
+
+		// Log the device information if starting up or changes were detected
+		if(trace || changed) {
+
+			enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void { log_info(caller, ": discovered: ", device_name.name); });
+			log_warning_if(!has_storage_engine(dbhandle), __func__, ": no storage engine devices were discovered; recording discovery is disabled");
+			log_warning_if(!has_dvr_authorization(dbhandle), __func__, ": no tuners with a valid DVR authorization were discovered; recording rule and electronic program guide discovery are disabled");
+		}
 
 		// Set the discovery time for the device information
 		set_discovered(dbhandle, "devices", time(nullptr));
@@ -176,7 +186,10 @@ void addon::discover_episodes(scalar_condition<bool> const&, bool& changed)
 {
 	changed = false;						// Initialize [ref] argument
 
-	log_info(__func__, ": initiated recording rule episode discovery");
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
+	log_info_if(trace, __func__, ": initiated recording rule episode discovery");
 
 	try {
 
@@ -188,7 +201,7 @@ void addon::discover_episodes(scalar_condition<bool> const&, bool& changed)
 
 		// Discover the recording rule episode information associated with all of the authorized devices
 		if(authorization.length() != 0) ::discover_episodes(dbhandle, authorization.c_str(), changed);
-		else log_info(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule episode discovery");
+		else log_info_if(trace, __func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule episode discovery");
 
 		// Set the discovery time for the episode information
 		set_discovered(dbhandle, "episodes", time(nullptr));
@@ -214,7 +227,10 @@ void addon::discover_lineups(scalar_condition<bool> const&, bool& changed)
 {
 	changed = false;						// Initialize [ref] argument
 
-	log_info(__func__, ": initiated local tuner device lineup discovery");
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
+	log_info_if(trace, __func__, ": initiated local tuner device lineup discovery");
 
 	try {
 
@@ -251,7 +267,10 @@ void addon::discover_listings(scalar_condition<bool> const&, bool& changed)
 	// Create a copy of the current addon settings structure
 	struct settings settings = copy_settings();
 
-	log_info(__func__, ": initiated listing discovery");
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
+	log_info_if(trace, __func__, ": initiated listing discovery");
 
 	try {
 
@@ -266,7 +285,7 @@ void addon::discover_listings(scalar_condition<bool> const&, bool& changed)
 			if(authorization.length() != 0) ::discover_listings(dbhandle, authorization.c_str(), changed);
 		}
 
-		else log_info(__func__, ": no tuners with valid DVR authorization were discovered; skipping listing discovery");
+		else log_info_if(trace, __func__, ": no tuners with valid DVR authorization were discovered; skipping listing discovery");
 
 		// Set the discovery time for the listing information
 		set_discovered(dbhandle, "listings", time(nullptr));
@@ -295,7 +314,10 @@ void addon::discover_recordingrules(scalar_condition<bool> const&, bool& changed
 	// Create a copy of the current addon settings structure
 	struct settings settings = copy_settings();
 
-	log_info(__func__, ": initiated recording rule discovery");
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
+	log_info_if(trace, __func__, ": initiated recording rule discovery");
 
 	try {
 
@@ -319,7 +341,7 @@ void addon::discover_recordingrules(scalar_condition<bool> const&, bool& changed
 
 		}
 
-		else log_info(__func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule discovery");
+		else log_info_if(trace, __func__, ": no tuners with valid DVR authorization were discovered; skipping recording rule discovery");
 
 		// Set the discovery time for the recordingrule information
 		set_discovered(dbhandle, "recordingrules", time(nullptr));
@@ -345,7 +367,10 @@ void addon::discover_recordings(scalar_condition<bool> const&, bool& changed)
 {
 	changed = false;						// Initialize [ref] argument
 
-	log_info(__func__, ": initiated local storage device recording discovery");
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
+	log_info_if(trace, __func__, ": initiated local storage device recording discovery");
 
 	try {
 
@@ -534,6 +559,22 @@ void addon::log_debug(_args&&... args)
 }
 
 //---------------------------------------------------------------------------
+// addon::log_debug_if (private)
+//
+// Variadic method of writing a LOG_DEBUG entry into the Kodi application log
+//
+// Arguments:
+//
+//	flag	- Flag indicating if the information should be logged
+//	args	- Variadic argument list
+
+template<typename... _args>
+void addon::log_debug_if(bool flag, _args&&... args)
+{
+	if(flag) log_message(AddonLog::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
+}
+
+//---------------------------------------------------------------------------
 // addon::log_error (private)
 //
 // Variadic method of writing a LOG_ERROR entry into the Kodi application log
@@ -549,6 +590,22 @@ void addon::log_error(_args&&... args)
 }
 
 //---------------------------------------------------------------------------
+// addon::log_error_if (private)
+//
+// Variadic method of writing a LOG_ERROR entry into the Kodi application log
+//
+// Arguments:
+//
+//	flag	- Flag indicating if the information should be logged
+//	args	- Variadic argument list
+
+template<typename... _args>
+void addon::log_error_if(bool flag, _args&&... args)
+{
+	if(flag) log_message(AddonLog::ADDON_LOG_ERROR, std::forward<_args>(args)...);
+}
+
+//---------------------------------------------------------------------------
 // addon::log_info (private)
 //
 // Variadic method of writing a LOG_INFO entry into the Kodi application log
@@ -561,6 +618,22 @@ template<typename... _args>
 void addon::log_info(_args&&... args)
 {
 	log_message(AddonLog::ADDON_LOG_INFO, std::forward<_args>(args)...);
+}
+
+//---------------------------------------------------------------------------
+// addon::log_info_if (private)
+//
+// Variadic method of writing a LOG_INFO entry into the Kodi application log
+//
+// Arguments:
+//
+//	flag	- Flag indicating if the information should be logged
+//	args	- Variadic argument list
+
+template<typename... _args>
+void addon::log_info_if(bool flag, _args&&... args)
+{
+	if(flag) log_message(AddonLog::ADDON_LOG_INFO, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -616,6 +689,22 @@ template<typename... _args>
 void addon::log_warning(_args&&... args)
 {
 	log_message(AddonLog::ADDON_LOG_WARNING, std::forward<_args>(args)...);
+}
+
+//---------------------------------------------------------------------------
+// addon::log_warning_if (private)
+//
+// Variadic method of writing a LOG_WARNING entry into the Kodi application log
+//
+// Arguments:
+//
+//	flag	- Flag indicating if the information should be logged
+//	args	- Variadic argument list
+
+template<typename... _args>
+void addon::log_warning_if(bool flag, _args&&... args)
+{
+	if(flag) log_message(AddonLog::ADDON_LOG_WARNING, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -942,12 +1031,7 @@ void addon::update_devices_task(scalar_condition<bool> const& cancel)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
-	if(cancel.test(true) == false) {
-
-		log_info(__func__, ": scheduling next device update to initiate in ", settings.discover_devices_interval, " seconds");
-		m_scheduler.add(UPDATE_DEVICES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
-	}
-
+	if(cancel.test(true) == false) m_scheduler.add(UPDATE_DEVICES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
 	else log_info(__func__, ": device update task was cancelled");
 }
 
@@ -987,12 +1071,7 @@ void addon::update_episodes_task(scalar_condition<bool> const& cancel)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
-	if(cancel.test(true) == false) {
-
-		log_info(__func__, ": scheduling next recording rule episode update to initiate in ", settings.discover_episodes_interval, " seconds");
-		m_scheduler.add(UPDATE_EPISODES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_episodes_interval), &addon::update_episodes_task, this);
-	}
-
+	if(cancel.test(true) == false) m_scheduler.add(UPDATE_EPISODES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_episodes_interval), &addon::update_episodes_task, this);
 	else log_info(__func__, ": recording rule episode update task was cancelled");
 }
 
@@ -1045,12 +1124,7 @@ void addon::update_lineups_task(scalar_condition<bool> const& cancel)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
-	if(cancel.test(true) == false) {
-
-		log_info(__func__, ": scheduling next lineup update to initiate in ", settings.discover_lineups_interval, " seconds");
-		m_scheduler.add(UPDATE_LINEUPS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_lineups_interval), &addon::update_lineups_task, this);
-	}
-
+	if(cancel.test(true) == false) m_scheduler.add(UPDATE_LINEUPS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_lineups_interval), &addon::update_lineups_task, this);
 	else log_info(__func__, ": lineup update task was cancelled");
 }
 
@@ -1208,13 +1282,8 @@ void addon::update_listings_task(bool force, bool checkchannels, scalar_conditio
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
-	if(cancel.test(true) == false) {
-
-		log_info(__func__, ": scheduling next listing update to initiate in ", nextdiscovery - now, " seconds");
-		m_scheduler.add(UPDATE_LISTINGS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(nextdiscovery - now), 
-			std::bind(&addon::update_listings_task, this, false, false, std::placeholders::_1));
-	}
-
+	if(cancel.test(true) == false) m_scheduler.add(UPDATE_LISTINGS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(nextdiscovery - now), 
+		std::bind(&addon::update_listings_task, this, false, false, std::placeholders::_1));
 	else log_info(__func__, ": listing update task was cancelled");
 }
 
@@ -1262,13 +1331,8 @@ void addon::update_recordingrules_task(scalar_condition<bool> const& cancel)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
-	if(cancel.test(true) == false) {
-
-		log_info(__func__, ": scheduling next recording rule update to initiate in ", settings.discover_recordingrules_interval, " seconds");
-		m_scheduler.add(UPDATE_RECORDINGRULES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordingrules_interval), 
-			&addon::update_recordingrules_task, this);
-	}
-
+	if(cancel.test(true) == false) m_scheduler.add(UPDATE_RECORDINGRULES_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordingrules_interval), 
+		&addon::update_recordingrules_task, this);
 	else log_info(__func__, ": recording rule update task was cancelled");
 }
 
@@ -1308,13 +1372,8 @@ void addon::update_recordings_task(scalar_condition<bool> const& cancel)
 	catch(...) { handle_generalexception(__func__); }
 
 	// Schedule the next periodic invocation of this task to occur at the caclulated interval
-	if(cancel.test(true) == false) {
-
-		log_info(__func__, ": scheduling next recording update to initiate in ", settings.discover_recordings_interval, " seconds");
-		m_scheduler.add(UPDATE_RECORDINGS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordings_interval), 
-			&addon::update_recordings_task, this);
-	}
-
+	if(cancel.test(true) == false) m_scheduler.add(UPDATE_RECORDINGS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(settings.discover_recordings_interval), 
+		&addon::update_recordings_task, this);
 	else log_info(__func__, ": recording update task was cancelled");
 }
 

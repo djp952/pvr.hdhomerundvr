@@ -352,10 +352,14 @@ private:
 	// Log Helpers
 	//
 	template<typename... _args> void log_debug(_args&&... args);
+	template<typename... _args> void log_debug_if(bool flag, _args&&... args);
 	template<typename... _args> void log_error(_args&&... args);
+	template<typename... _args> void log_error_if(bool flag, _args&&... args);
 	template<typename... _args> void log_info(_args&&... args);
+	template<typename... _args> void log_info_if(bool flag, _args&&... args);
 	template<typename... _args> void log_message(AddonLog level, _args&&... args);
 	template<typename... _args> void log_warning(_args&&... args);
+	template<typename... _args> void log_warning_if(bool flag, _args&&... args);
 
 	// Network Helpers
 	//

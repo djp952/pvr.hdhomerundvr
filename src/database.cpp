@@ -2969,6 +2969,22 @@ bool has_missing_guide_channels(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// has_storage_engine
+//
+// Gets a flag indicating if any devices are storage engines
+//
+// Arguments:
+//
+//	instance		- SQLite database instance
+
+bool has_storage_engine(sqlite3* instance)
+{
+	if(instance == nullptr) return false;
+
+	return (execute_scalar_int(instance, "select exists(select deviceid from device where json_extract(device.data, '$.StorageURL') is not null)") != 0);
+}
+
+//---------------------------------------------------------------------------
 // modify_recordingrule
 //
 // Modifies an existing recording rule

@@ -422,6 +422,11 @@ bool has_dvr_authorization(sqlite3* instance);
 // Gets a flag indicating if any channels are missing from the guide data
 bool has_missing_guide_channels(sqlite3* instance);
 
+// has_storage_engine
+//
+// Gets a flag indicating if any devices have storage engine capabilities
+bool has_storage_engine(sqlite3* instance);
+
 // modify_recordingrule
 //
 // Modifies an existing recording rule
