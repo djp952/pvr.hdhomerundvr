@@ -1887,6 +1887,40 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("stream_read_chunk_size_v3", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
 			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 
+			// Log the setting values; these are for diagnostic purposes just use the raw values
+			log_notice(__func__, ": g_settings.channel_name_source                = ", static_cast<int>(g_settings.channel_name_source));
+			log_notice(__func__, ": g_settings.delete_datetime_rules_after        = ", g_settings.delete_datetime_rules_after);
+			log_notice(__func__, ": g_settings.deviceauth_stale_after             = ", g_settings.deviceauth_stale_after);
+			log_notice(__func__, ": g_settings.direct_tuning_allow_drm            = ", (g_settings.direct_tuning_allow_drm) ? "true" : "false");
+			log_notice(__func__, ": g_settings.direct_tuning_protocol             = ", static_cast<int>(g_settings.direct_tuning_protocol));
+			log_notice(__func__, ": g_settings.disable_backend_channel_logos      = ", (g_settings.disable_backend_channel_logos) ? "true" : "false");
+			log_notice(__func__, ": g_settings.disable_recording_categories       = ", (g_settings.disable_recording_categories) ? "true" : "false");
+			log_notice(__func__, ": g_settings.discover_devices_interval          = ", g_settings.discover_devices_interval);
+			log_notice(__func__, ": g_settings.discover_episodes_interval         = ", g_settings.discover_episodes_interval);
+			log_notice(__func__, ": g_settings.discover_lineups_interval          = ", g_settings.discover_lineups_interval);
+			log_notice(__func__, ": g_settings.discover_recordingrules_interval   = ", g_settings.discover_recordingrules_interval);
+			log_notice(__func__, ": g_settings.discover_recordings_after_playback = ", (g_settings.discover_recordings_after_playback) ? "true" : "false");
+			log_notice(__func__, ": g_settings.discover_recordings_interval       = ", g_settings.discover_recordings_interval);
+			log_notice(__func__, ": g_settings.enable_recording_edl               = ", (g_settings.enable_recording_edl) ? "true" : "false");
+			log_notice(__func__, ": g_settings.generate_repeat_indicators         = ", (g_settings.generate_repeat_indicators) ? "true" : "false");
+			log_notice(__func__, ": g_settings.pause_discovery_while_streaming    = ", (g_settings.pause_discovery_while_streaming) ? "true" : "false");
+			log_notice(__func__, ": g_settings.prepend_channel_numbers            = ", (g_settings.prepend_channel_numbers) ? "true" : "false");
+			log_notice(__func__, ": g_settings.recording_edl_cut_as_comskip       = ", (g_settings.recording_edl_cut_as_comskip) ? "true" : "false");
+			log_notice(__func__, ": g_settings.recording_edl_end_padding          = ", g_settings.recording_edl_end_padding);
+			log_notice(__func__, ": g_settings.recording_edl_folder               = ", g_settings.recording_edl_folder);
+			log_notice(__func__, ": g_settings.recording_edl_folder_2             = ", g_settings.recording_edl_folder_2);
+			log_notice(__func__, ": g_settings.recording_edl_folder_3             = ", g_settings.recording_edl_folder_3);
+			log_notice(__func__, ": g_settings.recording_edl_folder_is_flat       = ", (g_settings.recording_edl_folder_is_flat) ? "true" : "false");
+			log_notice(__func__, ": g_settings.recording_edl_start_padding        = ", g_settings.recording_edl_start_padding);
+			log_notice(__func__, ": g_settings.show_drm_protected_channels        = ", (g_settings.show_drm_protected_channels) ? "true" : "false");
+			log_notice(__func__, ": g_settings.stream_read_chunk_size             = ", g_settings.stream_read_chunk_size);
+			log_notice(__func__, ": g_settings.use_actual_timer_times             = ", (g_settings.use_actual_timer_times) ? "true" : "false");
+			log_notice(__func__, ": g_settings.use_airdate_as_recordingdate       = ", (g_settings.use_airdate_as_recordingdate) ? "true" : "false");
+			log_notice(__func__, ": g_settings.use_backend_genre_strings          = ", (g_settings.use_backend_genre_strings) ? "true" : "false");
+			log_notice(__func__, ": g_settings.use_direct_tuning                  = ", (g_settings.use_direct_tuning) ? "true" : "false");
+			log_notice(__func__, ": g_settings.use_episode_number_as_title        = ", (g_settings.use_episode_number_as_title) ? "true" : "false");
+			log_notice(__func__, ": g_settings.use_http_discovery                 = ", (g_settings.use_http_device_discovery) ? "true" : "false");
+
 			// Create the global guicallbacks instance
 			g_gui.reset(new CHelper_libKODI_guilib());
 			if(!g_gui->RegisterMe(handle)) throw string_exception(__func__, ": failed to register gui addon handle (CHelper_libKODI_guilib::RegisterMe)");
