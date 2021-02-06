@@ -577,7 +577,7 @@ void addon::log_message(AddonLog level, _args&&... args)
 	const size_t MAX_ERROR_LOG = 10;	// Maximum entries to store in error log
 
 	std::ostringstream stream;
-	int unpack[] = { 0, (static_cast<void>(stream << args), 0) ... };
+	int unpack[] = { 0, (static_cast<void>(stream << std::boolalpha << args), 0) ... };
 	(void)unpack;
 
 	kodi::Log(level, stream.str().c_str());
@@ -1526,35 +1526,35 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.channel_name_source                = ", static_cast<int>(m_settings.channel_name_source));
 			log_info(__func__, ": m_settings.delete_datetime_rules_after        = ", m_settings.delete_datetime_rules_after);
 			log_info(__func__, ": m_settings.deviceauth_stale_after             = ", m_settings.deviceauth_stale_after);
-			log_info(__func__, ": m_settings.direct_tuning_allow_drm            = ", (m_settings.direct_tuning_allow_drm) ? "true" : "false");
+			log_info(__func__, ": m_settings.direct_tuning_allow_drm            = ", m_settings.direct_tuning_allow_drm);
 			log_info(__func__, ": m_settings.direct_tuning_protocol             = ", static_cast<int>(m_settings.direct_tuning_protocol));
-			log_info(__func__, ": m_settings.disable_backend_channel_logos      = ", (m_settings.disable_backend_channel_logos) ? "true" : "false");
-			log_info(__func__, ": m_settings.disable_recording_categories       = ", (m_settings.disable_recording_categories) ? "true" : "false");
+			log_info(__func__, ": m_settings.disable_backend_channel_logos      = ", m_settings.disable_backend_channel_logos);
+			log_info(__func__, ": m_settings.disable_recording_categories       = ", m_settings.disable_recording_categories);
 			log_info(__func__, ": m_settings.discover_devices_interval          = ", m_settings.discover_devices_interval);
 			log_info(__func__, ": m_settings.discover_episodes_interval         = ", m_settings.discover_episodes_interval);
 			log_info(__func__, ": m_settings.discover_lineups_interval          = ", m_settings.discover_lineups_interval);
 			log_info(__func__, ": m_settings.discover_recordingrules_interval   = ", m_settings.discover_recordingrules_interval);
-			log_info(__func__, ": m_settings.discover_recordings_after_playback = ", (m_settings.discover_recordings_after_playback) ? "true" : "false");
+			log_info(__func__, ": m_settings.discover_recordings_after_playback = ", m_settings.discover_recordings_after_playback);
 			log_info(__func__, ": m_settings.discover_recordings_interval       = ", m_settings.discover_recordings_interval);
-			log_info(__func__, ": m_settings.enable_recording_edl               = ", (m_settings.enable_recording_edl) ? "true" : "false");
-			log_info(__func__, ": m_settings.generate_repeat_indicators         = ", (m_settings.generate_repeat_indicators) ? "true" : "false");
-			log_info(__func__, ": m_settings.pause_discovery_while_streaming    = ", (m_settings.pause_discovery_while_streaming) ? "true" : "false");
-			log_info(__func__, ": m_settings.prepend_channel_numbers            = ", (m_settings.prepend_channel_numbers) ? "true" : "false");
-			log_info(__func__, ": m_settings.recording_edl_cut_as_comskip       = ", (m_settings.recording_edl_cut_as_comskip) ? "true" : "false");
+			log_info(__func__, ": m_settings.enable_recording_edl               = ", m_settings.enable_recording_edl);
+			log_info(__func__, ": m_settings.generate_repeat_indicators         = ", m_settings.generate_repeat_indicators);
+			log_info(__func__, ": m_settings.pause_discovery_while_streaming    = ", m_settings.pause_discovery_while_streaming);
+			log_info(__func__, ": m_settings.prepend_channel_numbers            = ", m_settings.prepend_channel_numbers);
+			log_info(__func__, ": m_settings.recording_edl_cut_as_comskip       = ", m_settings.recording_edl_cut_as_comskip);
 			log_info(__func__, ": m_settings.recording_edl_end_padding          = ", m_settings.recording_edl_end_padding);
 			log_info(__func__, ": m_settings.recording_edl_folder               = ", m_settings.recording_edl_folder);
 			log_info(__func__, ": m_settings.recording_edl_folder_2             = ", m_settings.recording_edl_folder_2);
 			log_info(__func__, ": m_settings.recording_edl_folder_3             = ", m_settings.recording_edl_folder_3);
-			log_info(__func__, ": m_settings.recording_edl_folder_is_flat       = ", (m_settings.recording_edl_folder_is_flat) ? "true" : "false");
+			log_info(__func__, ": m_settings.recording_edl_folder_is_flat       = ", m_settings.recording_edl_folder_is_flat);
 			log_info(__func__, ": m_settings.recording_edl_start_padding        = ", m_settings.recording_edl_start_padding);
-			log_info(__func__, ": m_settings.show_drm_protected_channels        = ", (m_settings.show_drm_protected_channels) ? "true" : "false");
+			log_info(__func__, ": m_settings.show_drm_protected_channels        = ", m_settings.show_drm_protected_channels);
 			log_info(__func__, ": m_settings.stream_read_chunk_size             = ", m_settings.stream_read_chunk_size);
-			log_info(__func__, ": m_settings.use_actual_timer_times             = ", (m_settings.use_actual_timer_times) ? "true" : "false");
-			log_info(__func__, ": m_settings.use_airdate_as_recordingdate       = ", (m_settings.use_airdate_as_recordingdate) ? "true" : "false");
-			log_info(__func__, ": m_settings.use_backend_genre_strings          = ", (m_settings.use_backend_genre_strings) ? "true" : "false");
-			log_info(__func__, ": m_settings.use_direct_tuning                  = ", (m_settings.use_direct_tuning) ? "true" : "false");
-			log_info(__func__, ": m_settings.use_episode_number_as_title        = ", (m_settings.use_episode_number_as_title) ? "true" : "false");
-			log_info(__func__, ": m_settings.use_http_discovery                 = ", (m_settings.use_http_device_discovery) ? "true" : "false");
+			log_info(__func__, ": m_settings.use_actual_timer_times             = ", m_settings.use_actual_timer_times);
+			log_info(__func__, ": m_settings.use_airdate_as_recordingdate       = ", m_settings.use_airdate_as_recordingdate);
+			log_info(__func__, ": m_settings.use_backend_genre_strings          = ", m_settings.use_backend_genre_strings);
+			log_info(__func__, ": m_settings.use_direct_tuning                  = ", m_settings.use_direct_tuning);
+			log_info(__func__, ": m_settings.use_episode_number_as_title        = ", m_settings.use_episode_number_as_title);
+			log_info(__func__, ": m_settings.use_http_discovery                 = ", m_settings.use_http_device_discovery);
 
 			// Register the PVR_MENUHOOK_RECORDING category menu hooks
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_RECORD_DELETERERECORD, 30302, PVR_MENUHOOK_RECORDING));
@@ -1674,7 +1674,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.pause_discovery_while_streaming) {
 
 			m_settings.pause_discovery_while_streaming = bvalue;
-			log_info(__func__, ": setting pause_discovery_while_streaming changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting pause_discovery_while_streaming changed to ", bvalue);
 		}
 	}
 
@@ -1686,7 +1686,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.prepend_channel_numbers) {
 
 			m_settings.prepend_channel_numbers = bvalue;
-			log_info(__func__, ": setting prepend_channel_numbers changed to ", (bvalue) ? "true" : "false", " -- trigger channel update");
+			log_info(__func__, ": setting prepend_channel_numbers changed to ", bvalue, " -- trigger channel update");
 			TriggerChannelUpdate();
 		}
 	}
@@ -1699,7 +1699,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.use_episode_number_as_title) {
 
 			m_settings.use_episode_number_as_title = bvalue;
-			log_info(__func__, ": setting use_episode_number_as_title changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting use_episode_number_as_title changed to ", bvalue, " -- trigger recording update");
 			TriggerRecordingUpdate();
 		}
 	}
@@ -1712,7 +1712,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.discover_recordings_after_playback) {
 
 			m_settings.discover_recordings_after_playback = bvalue;
-			log_info(__func__, ": setting discover_recordings_after_playback changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting discover_recordings_after_playback changed to ", bvalue);
 		}
 	}
 
@@ -1724,7 +1724,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.use_backend_genre_strings) {
 
 			m_settings.use_backend_genre_strings = bvalue;
-			log_info(__func__, ": setting use_backend_genre_strings changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting use_backend_genre_strings changed to ", bvalue);
 		}
 	}
 
@@ -1736,7 +1736,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.show_drm_protected_channels) {
 
 			m_settings.show_drm_protected_channels = bvalue;
-			log_info(__func__, ": setting show_drm_protected_channels changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_info(__func__, ": setting show_drm_protected_channels changed to ", bvalue, " -- trigger channel and channel group updates");
 			TriggerChannelUpdate();
 			TriggerChannelGroupsUpdate();
 		}
@@ -1764,7 +1764,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.disable_recording_categories) {
 
 			m_settings.disable_recording_categories = bvalue;
-			log_info(__func__, ": setting disable_recording_categories changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting disable_recording_categories changed to ", bvalue, " -- trigger recording update");
 			TriggerRecordingUpdate();
 		}
 	}
@@ -1777,7 +1777,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.generate_repeat_indicators) {
 
 			m_settings.generate_repeat_indicators = bvalue;
-			log_info(__func__, ": setting generate_repeat_indicators changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting generate_repeat_indicators changed to ", bvalue, " -- trigger recording update");
 			TriggerRecordingUpdate();
 		}
 	}
@@ -1790,7 +1790,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.use_airdate_as_recordingdate) {
 
 			m_settings.use_airdate_as_recordingdate = bvalue;
-			log_info(__func__, ": setting use_airdate_as_recordingdate changed to ", (bvalue) ? "true" : "false", " -- trigger recording update");
+			log_info(__func__, ": setting use_airdate_as_recordingdate changed to ", bvalue, " -- trigger recording update");
 			TriggerRecordingUpdate();
 		}
 	}
@@ -1803,7 +1803,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.use_actual_timer_times) {
 
 			m_settings.use_actual_timer_times = bvalue;
-			log_info(__func__, ": setting use_actual_timer_times changed to ", (bvalue) ? "true" : "false", " -- trigger timer update");
+			log_info(__func__, ": setting use_actual_timer_times changed to ", bvalue, " -- trigger timer update");
 			TriggerTimerUpdate();
 		}
 	}
@@ -1816,7 +1816,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.disable_backend_channel_logos) {
 
 			m_settings.disable_backend_channel_logos = bvalue;
-			log_info(__func__, ": setting disable_backend_channel_logos changed to ", (bvalue) ? "true" : "false", " -- trigger channel and channel group updates");
+			log_info(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel and channel group updates");
 			TriggerChannelUpdate();
 			TriggerChannelGroupsUpdate();
 		}
@@ -1913,7 +1913,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.use_http_device_discovery) {
 
 			m_settings.use_http_device_discovery = bvalue;
-			log_info(__func__, ": setting use_http_device_discovery changed to ", (bvalue) ? "true" : "false", " -- schedule device update");
+			log_info(__func__, ": setting use_http_device_discovery changed to ", bvalue, " -- schedule device update");
 
 			// Reschedule the device update task to run as soon as possible
 			m_scheduler.add(UPDATE_DEVICES_TASK, &addon::update_devices_task, this);
@@ -1928,7 +1928,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.use_direct_tuning) {
 
 			m_settings.use_direct_tuning = bvalue;
-			log_info(__func__, ": setting use_direct_tuning changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting use_direct_tuning changed to ", bvalue);
 		}
 	}
 
@@ -1952,7 +1952,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.direct_tuning_allow_drm) {
 
 			m_settings.direct_tuning_allow_drm = bvalue;
-			log_info(__func__, ": setting direct_tuning_allow_drm changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting direct_tuning_allow_drm changed to ", bvalue);
 		}
 	}
 
@@ -1992,7 +1992,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.enable_recording_edl) {
 
 			m_settings.enable_recording_edl = bvalue;
-			log_info(__func__, ": setting enable_recording_edl changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting enable_recording_edl changed to ", bvalue);
 		}
 	}
 
@@ -2004,7 +2004,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(strvalue != m_settings.recording_edl_folder) {
 
 			m_settings.recording_edl_folder = strvalue;
-			log_info(__func__, ": setting recording_edl_folder changed to ", strvalue.c_str());
+			log_info(__func__, ": setting recording_edl_folder changed to ", strvalue);
 		}
 	}
 
@@ -2016,7 +2016,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(strvalue != m_settings.recording_edl_folder_2) {
 
 			m_settings.recording_edl_folder_2 = strvalue;
-			log_info(__func__, ": setting recording_edl_folder_2 changed to ", strvalue.c_str());
+			log_info(__func__, ": setting recording_edl_folder_2 changed to ", strvalue);
 		}
 	}
 
@@ -2028,7 +2028,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(strvalue != m_settings.recording_edl_folder_3) {
 
 			m_settings.recording_edl_folder_3 = strvalue;
-			log_info(__func__, ": setting recording_edl_folder_3 changed to ", strvalue.c_str());
+			log_info(__func__, ": setting recording_edl_folder_3 changed to ", strvalue);
 		}
 	}
 
@@ -2040,7 +2040,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.recording_edl_folder_is_flat) {
 
 			m_settings.recording_edl_folder_is_flat = bvalue;
-			log_info(__func__, ": setting recording_edl_folder_is_flat changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting recording_edl_folder_is_flat changed to ", bvalue);
 		}
 	}
 
@@ -2052,7 +2052,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.recording_edl_cut_as_comskip) {
 
 			m_settings.recording_edl_cut_as_comskip = bvalue;
-			log_info(__func__, ": setting recording_edl_cut_as_comskip changed to ", (bvalue) ? "true" : "false");
+			log_info(__func__, ": setting recording_edl_cut_as_comskip changed to ", bvalue);
 		}
 	}
 
@@ -3845,9 +3845,9 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 
 			// Log some additional information about the stream for diagnostic purposes
 			log_info(__func__, ": mediatype = ", m_pvrstream->mediatype());
-			log_info(__func__, ": canseek   = ", m_pvrstream->canseek() ? "true" : "false");
+			log_info(__func__, ": canseek   = ", m_pvrstream->canseek());
 			log_info(__func__, ": length    = ", m_pvrstream->length());
-			log_info(__func__, ": realtime  = ", m_pvrstream->realtime() ? "true" : "false");
+			log_info(__func__, ": realtime  = ", m_pvrstream->realtime());
 			log_info(__func__, ": starttime = ", m_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&m_stream_starttime)), "\n"), " (local)");
 		}
 
@@ -3905,9 +3905,9 @@ bool addon::OpenRecordedStream(kodi::addon::PVRRecording const& recording)
 
 			// Log some additional information about the stream for diagnostic purposes
 			log_info(__func__, ": mediatype = ", m_pvrstream->mediatype());
-			log_info(__func__, ": canseek   = ", m_pvrstream->canseek() ? "true" : "false");
+			log_info(__func__, ": canseek   = ", m_pvrstream->canseek());
 			log_info(__func__, ": length    = ", m_pvrstream->length());
-			log_info(__func__, ": realtime  = ", m_pvrstream->realtime() ? "true" : "false");
+			log_info(__func__, ": realtime  = ", m_pvrstream->realtime());
 			log_info(__func__, ": starttime = ", m_stream_starttime, " (epoch) = ", strtok(asctime(localtime(&m_stream_starttime)), "\n"), " (local)");
 			log_info(__func__, ": endtime   = ", m_stream_endtime, " (epoch) = ", strtok(asctime(localtime(&m_stream_endtime)), "\n"), " (local)");
 		}
