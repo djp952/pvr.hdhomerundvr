@@ -2,6 +2,7 @@ v3.4.1 (2021.02.xx)
   - Fix bug that allowed startup tasks to execute out of order on systems with a low precision system clock
   - Fix bug that caused all EPG data to be resent to Kodi during startup regardless of a detected change to the data
   - Fix bug that caused "Timer Deleted" toast messages for timers associated with an existing recording
+  - Reduce the amount of discovery event logging
 
 v3.4.0 (2021.01.30)
   - Update libhdhomerun library to version 20201023
