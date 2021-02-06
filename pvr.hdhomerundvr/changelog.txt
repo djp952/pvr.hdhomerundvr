@@ -1,4 +1,5 @@
-v3.4.1 (2021.02.xx)
+v4.4.1 (2021.02.06)
+  - Increment major version number to allow for in-place updates when Kodi version changes
   - Fix bug that allowed startup tasks to execute out of order on systems with a low precision system clock
   - Fix bug that caused all EPG data to be resent to Kodi during startup regardless of a detected change to the data
   - Fix bug that caused "Timer Deleted" toast messages for timers associated with an existing recording
