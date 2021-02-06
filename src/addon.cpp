@@ -1522,6 +1522,40 @@ ADDON_STATUS addon::Create(void)
 			m_settings.stream_read_chunk_size = kodi::GetSettingInt("stream_read_chunk_size_v3", 0);							// Automatic
 			m_settings.deviceauth_stale_after = kodi::GetSettingInt("deviceauth_stale_after_v2", 72000);						// 20 hours
 
+			// Log the setting values; these are for diagnostic purposes just use the raw values
+			log_info(__func__, ": m_settings.channel_name_source                = ", static_cast<int>(m_settings.channel_name_source));
+			log_info(__func__, ": m_settings.delete_datetime_rules_after        = ", m_settings.delete_datetime_rules_after);
+			log_info(__func__, ": m_settings.deviceauth_stale_after             = ", m_settings.deviceauth_stale_after);
+			log_info(__func__, ": m_settings.direct_tuning_allow_drm            = ", (m_settings.direct_tuning_allow_drm) ? "true" : "false");
+			log_info(__func__, ": m_settings.direct_tuning_protocol             = ", static_cast<int>(m_settings.direct_tuning_protocol));
+			log_info(__func__, ": m_settings.disable_backend_channel_logos      = ", (m_settings.disable_backend_channel_logos) ? "true" : "false");
+			log_info(__func__, ": m_settings.disable_recording_categories       = ", (m_settings.disable_recording_categories) ? "true" : "false");
+			log_info(__func__, ": m_settings.discover_devices_interval          = ", m_settings.discover_devices_interval);
+			log_info(__func__, ": m_settings.discover_episodes_interval         = ", m_settings.discover_episodes_interval);
+			log_info(__func__, ": m_settings.discover_lineups_interval          = ", m_settings.discover_lineups_interval);
+			log_info(__func__, ": m_settings.discover_recordingrules_interval   = ", m_settings.discover_recordingrules_interval);
+			log_info(__func__, ": m_settings.discover_recordings_after_playback = ", (m_settings.discover_recordings_after_playback) ? "true" : "false");
+			log_info(__func__, ": m_settings.discover_recordings_interval       = ", m_settings.discover_recordings_interval);
+			log_info(__func__, ": m_settings.enable_recording_edl               = ", (m_settings.enable_recording_edl) ? "true" : "false");
+			log_info(__func__, ": m_settings.generate_repeat_indicators         = ", (m_settings.generate_repeat_indicators) ? "true" : "false");
+			log_info(__func__, ": m_settings.pause_discovery_while_streaming    = ", (m_settings.pause_discovery_while_streaming) ? "true" : "false");
+			log_info(__func__, ": m_settings.prepend_channel_numbers            = ", (m_settings.prepend_channel_numbers) ? "true" : "false");
+			log_info(__func__, ": m_settings.recording_edl_cut_as_comskip       = ", (m_settings.recording_edl_cut_as_comskip) ? "true" : "false");
+			log_info(__func__, ": m_settings.recording_edl_end_padding          = ", m_settings.recording_edl_end_padding);
+			log_info(__func__, ": m_settings.recording_edl_folder               = ", m_settings.recording_edl_folder);
+			log_info(__func__, ": m_settings.recording_edl_folder_2             = ", m_settings.recording_edl_folder_2);
+			log_info(__func__, ": m_settings.recording_edl_folder_3             = ", m_settings.recording_edl_folder_3);
+			log_info(__func__, ": m_settings.recording_edl_folder_is_flat       = ", (m_settings.recording_edl_folder_is_flat) ? "true" : "false");
+			log_info(__func__, ": m_settings.recording_edl_start_padding        = ", m_settings.recording_edl_start_padding);
+			log_info(__func__, ": m_settings.show_drm_protected_channels        = ", (m_settings.show_drm_protected_channels) ? "true" : "false");
+			log_info(__func__, ": m_settings.stream_read_chunk_size             = ", m_settings.stream_read_chunk_size);
+			log_info(__func__, ": m_settings.use_actual_timer_times             = ", (m_settings.use_actual_timer_times) ? "true" : "false");
+			log_info(__func__, ": m_settings.use_airdate_as_recordingdate       = ", (m_settings.use_airdate_as_recordingdate) ? "true" : "false");
+			log_info(__func__, ": m_settings.use_backend_genre_strings          = ", (m_settings.use_backend_genre_strings) ? "true" : "false");
+			log_info(__func__, ": m_settings.use_direct_tuning                  = ", (m_settings.use_direct_tuning) ? "true" : "false");
+			log_info(__func__, ": m_settings.use_episode_number_as_title        = ", (m_settings.use_episode_number_as_title) ? "true" : "false");
+			log_info(__func__, ": m_settings.use_http_discovery                 = ", (m_settings.use_http_device_discovery) ? "true" : "false");
+
 			// Register the PVR_MENUHOOK_RECORDING category menu hooks
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_RECORD_DELETERERECORD, 30302, PVR_MENUHOOK_RECORDING));
 
@@ -1716,7 +1750,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(nvalue != static_cast<int>(m_settings.channel_name_source)) {
 
 			m_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
-			log_info(__func__, ": setting channel_name_source changed --trigger channel and channel group updates");
+			log_info(__func__, ": setting channel_name_source changed -- trigger channel and channel group updates");
 			TriggerChannelUpdate();
 			TriggerChannelGroupsUpdate();
 		}
