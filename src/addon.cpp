@@ -89,7 +89,8 @@ addon::addon() : m_discovered_devices{ false },
 	m_epgmaxtime{ EPG_TIMEFRAME_UNLIMITED }, 
 	m_randomengine(static_cast<unsigned int>(time(nullptr))),
 	m_scheduler([&](std::exception const& ex) -> void { handle_stdexception("scheduled task", ex); }),
-	m_settings{}, 
+	m_settings{},
+	m_startup_complete{ false },
 	m_stream_starttime(0), 
 	m_stream_endtime(0) {}
 
@@ -827,6 +828,7 @@ void addon::start_discovery(void) noexcept
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
 			m_scheduler.add(now + milliseconds(6), &addon::startup_alerts_task, this);
 			m_scheduler.add(UPDATE_LISTINGS_TASK, now + milliseconds(7), std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
+			m_scheduler.add(now + milliseconds(8), &addon::startup_complete_task, this);
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
 			m_scheduler.add(UPDATE_DEVICES_TASK, system_clock::now() + seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
@@ -882,6 +884,20 @@ void addon::startup_alerts_task(scalar_condition<bool> const& /*cancel*/)
 			}
 		}
 	}
+}
+
+//---------------------------------------------------------------------------
+// addon::startup_complete_task (private)
+//
+// Scheduled task implementation to indicate startup has completed
+//
+// Arguments:
+//
+//	cancel		- Condition variable used to cancel the operation
+
+void addon::startup_complete_task(scalar_condition<bool> const& /*cancel*/)
+{
+	m_startup_complete.store(true);
 }
 
 //-----------------------------------------------------------------------------

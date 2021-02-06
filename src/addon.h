@@ -365,6 +365,7 @@ private:
 	// Scheduled Tasks
 	//
 	void startup_alerts_task(scalar_condition<bool> const& cancel);
+	void startup_complete_task(scalar_condition<bool> const& cancel);
 	void update_devices_task(scalar_condition<bool> const& cancel);
 	void update_episodes_task(scalar_condition<bool> const& cancel);
 	void update_lineups_task(scalar_condition<bool> const& cancel);
@@ -414,6 +415,7 @@ private:
 	scheduler						m_scheduler;					// Background task scheduler
 	struct settings					m_settings;						// Custom addon settings
 	mutable std::mutex				m_settings_lock;				// Synchronization object
+	std::atomic<bool>				m_startup_complete;				// Startup completed flag
 	time_t							m_stream_starttime;				// Current stream start time
 	time_t							m_stream_endtime;				// Current stream end time
 };
