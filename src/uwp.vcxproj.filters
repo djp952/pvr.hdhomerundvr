@@ -747,6 +747,12 @@
     <ClInclude Include="..\depends\libcurl\src\lib\hsts.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\c-hyper.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\http_aws_sigv4.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1414,6 +1420,12 @@
     </ClCompile>
     <ClCompile Include="sqlext\zipfile.c">
       <Filter>Source Files\sqlext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\c-hyper.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\http_aws_sigv4.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
