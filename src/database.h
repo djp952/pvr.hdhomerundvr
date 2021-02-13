@@ -289,7 +289,7 @@ void enumerate_hevc_channelids(sqlite3* instance, bool showdrm, enumerate_channe
 //
 // Enumerates the available listings in the database
 void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_listings_callback const& callback);
-void enumerate_listings(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_listings_callback const& callback);
+void enumerate_listings(sqlite3* instance, bool showdrm, union channelid channelid, time_t starttime, time_t endtime, enumerate_listings_callback const& callback);
 
 // enumerate_recordings
 //

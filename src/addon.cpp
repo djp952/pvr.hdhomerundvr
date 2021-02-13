@@ -3025,7 +3025,8 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 	try {
 
 		// Enumerate all of the listings in the database for this channel and time frame
-		enumerate_listings(connectionpool::handle(m_connpool), channelid, start, end, [&](struct listing const& item, bool&) -> void {
+		enumerate_listings(connectionpool::handle(m_connpool), settings.show_drm_protected_channels, channelid, start, end,
+			[&](struct listing const& item, bool&) -> void {
 
 			kodi::addon::PVREPGTag epgtag;					// PVREPGTag to be transferred to Kodi
 
