@@ -1739,12 +1739,13 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 // Arguments:
 //
 //	instance	- Database instance
+//	showdrm		- Flag if DRM channels should be enumerated
 //	channelid	- Channel to be enumerated
 //	starttime	- Starting time to be queried
 //	endtime		- Ending time to be queried
 //	callback	- Callback function
 
-void enumerate_listings(sqlite3* instance, union channelid channelid, time_t starttime, time_t endtime, enumerate_listings_callback const& callback)
+void enumerate_listings(sqlite3* instance, bool showdrm, union channelid channelid, time_t starttime, time_t endtime, enumerate_listings_callback const& callback)
 {
 	sqlite3_stmt*			statement;				// SQL statement to execute
 	int						result;					// Result from SQLite function
@@ -1753,7 +1754,9 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 	if(instance == nullptr) return;
 
 	// seriesid | title | broadcastid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | starrating
-	auto sql = "select listing.seriesid as seriesid, "
+	auto sql = "with allchannels(number) as "
+		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where coalesce(json_extract(entry.value, '$.DRM'), 0) = ?1) "
+		"select listing.seriesid as seriesid, "
 		"listing.title as title, "
 		"fnv_hash(encode_channel_id(guide.number), listing.starttime, listing.endtime) as broadcastid, "
 		"listing.starttime as starttime, "
@@ -1771,8 +1774,9 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 		"listing.isnew as isnew, "
 		"decode_star_rating(listing.starrating) as starrating "
 		"from listing inner join guide on listing.channelid = guide.channelid "
+		"inner join allchannels on guide.number = allchannels.number "
 		"left outer join genremap on listing.primarygenre like genremap.genre "
-		"where guide.number = decode_channel_id(?1) and listing.starttime >= ?2 and listing.endtime <= ?3";
+		"where guide.number = decode_channel_id(?2) and listing.starttime >= ?3 and listing.endtime <= ?4";
 
 	// Prepare the statement
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -1781,9 +1785,10 @@ void enumerate_listings(sqlite3* instance, union channelid channelid, time_t sta
 	try {
 
 		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, channelid.value);
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, static_cast<int>(starttime));
-		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(endtime));
+		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 2, channelid.value);
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 3, static_cast<int>(starttime));
+		if(result == SQLITE_OK) result = sqlite3_bind_int(statement, 4, static_cast<int>(endtime));
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the SQL statement

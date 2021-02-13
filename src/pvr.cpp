@@ -2971,7 +2971,8 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 	try {
 
 		// Enumerate all of the listings in the database for this channel and time frame
-		enumerate_listings(connectionpool::handle(g_connpool), channelid, start, end, [&](struct listing const& item, bool&) -> void {
+		enumerate_listings(connectionpool::handle(g_connpool), settings.show_drm_protected_channels, channelid, start, end,
+			[&](struct listing const& item, bool&) -> void {
 
 			EPG_TAG			epgtag;						// EPG_TAG to be transferred to Kodi
 			std::string		episodename;				// Temporary string for the episode name
