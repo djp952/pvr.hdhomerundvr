@@ -3688,7 +3688,10 @@ PVR_ERROR SetRecordingPlayCount(PVR_RECORDING const& recording, int playcount)
 
 PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int lastposition)
 {
-	try { 
+	// Wait until the recording information has been discovered the first time
+	wait_for_recordings();
+
+	try {
 	
 		// If the last played position is -1, or if it's zero with a positive play count, mark as watched
 		bool const watched = ((lastposition < 0) || ((lastposition == 0) && (recording.iPlayCount > 0)));
@@ -3713,6 +3716,9 @@ PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int las
 
 int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 {
+	// Wait until the recording information has been discovered the first time
+	wait_for_recordings();
+
 	try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
