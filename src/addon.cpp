@@ -1096,15 +1096,9 @@ void addon::update_lineups_task(scalar_condition<bool> const& cancel)
 		// Update the backend channel lineup information
 		if(cancel.test(true) == false) discover_lineups(cancel, changed);
 
-		// Changes to the channel lineups affects the PVR channel and channel group information,
+		// Changes to the channel lineups affects the PVR channel group information,
 		// and may require a listings update if new channels were added to the lineup
 		if(changed) {
-
-			if(cancel.test(true) == false) {
-
-				log_info(__func__, ": lineup discovery data changed -- trigger channel update");
-				TriggerChannelUpdate();
-			}
 
 			if(cancel.test(true) == false) {
 
@@ -1811,8 +1805,7 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.show_drm_protected_channels) {
 
 			m_settings.show_drm_protected_channels = bvalue;
-			log_info(__func__, ": setting show_drm_protected_channels changed to ", bvalue, " -- trigger channel and channel group updates");
-			TriggerChannelUpdate();
+			log_info(__func__, ": setting show_drm_protected_channels changed to ", bvalue, " -- trigger channel group update");
 			TriggerChannelGroupsUpdate();
 		}
 	}
@@ -1825,9 +1818,8 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(nvalue != static_cast<int>(m_settings.channel_name_source)) {
 
 			m_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
-			log_info(__func__, ": setting channel_name_source changed -- trigger channel and channel group updates");
+			log_info(__func__, ": setting channel_name_source changed -- trigger channel update");
 			TriggerChannelUpdate();
-			TriggerChannelGroupsUpdate();
 		}
 	}
 
@@ -1891,9 +1883,8 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.disable_backend_channel_logos) {
 
 			m_settings.disable_backend_channel_logos = bvalue;
-			log_info(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel and channel group updates");
+			log_info(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel update");
 			TriggerChannelUpdate();
-			TriggerChannelGroupsUpdate();
 		}
 	}
 

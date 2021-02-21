@@ -1,6 +1,7 @@
 v4.4.2 (2021.03.xx)
   - Update cURL library to version 7.75.0
   - Fix race condition that could cause a "Database is locked" error to be logged during Kodi startup
+  - Fix bug that could cause unnecessary triggering of both channel and channel group updates
 
 v4.4.1 (2021.02.06)
   - Increment major version number to allow for in-place updates when Kodi version changes
