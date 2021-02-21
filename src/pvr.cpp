@@ -1434,15 +1434,9 @@ static void update_lineups_task(scalar_condition<bool> const& cancel)
 		// Update the backend channel lineup information
 		if(cancel.test(true) == false) discover_lineups(cancel, changed);
 
-		// Changes to the channel lineups affects the PVR channel and channel group information,
+		// Changes to the channel lineups affects the PVR channel group information,
 		// and may require a listings update if new channels were added to the lineup
 		if(changed) {
-
-			if(cancel.test(true) == false) {
-
-				log_notice(__func__, ": lineup discovery data changed -- trigger channel update");
-				g_pvr->TriggerChannelUpdate();
-			}
 
 			if(cancel.test(true) == false) {
 
@@ -2247,8 +2241,7 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.show_drm_protected_channels) {
 
 			g_settings.show_drm_protected_channels = bvalue;
-			log_notice(__func__, ": setting show_drm_protected_channels changed to ", bvalue, " -- trigger channel and channel group updates");
-			g_pvr->TriggerChannelUpdate();
+			log_notice(__func__, ": setting show_drm_protected_channels changed to ", bvalue, " -- trigger channel group update");
 			g_pvr->TriggerChannelGroupsUpdate();
 		}
 	}
@@ -2261,9 +2254,8 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(nvalue != static_cast<int>(g_settings.channel_name_source)) {
 
 			g_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
-			log_notice(__func__, ": setting channel_name_source changed --trigger channel and channel group updates");
+			log_notice(__func__, ": setting channel_name_source changed -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
-			g_pvr->TriggerChannelGroupsUpdate();
 		}
 	}
 
@@ -2327,9 +2319,8 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.disable_backend_channel_logos) {
 
 			g_settings.disable_backend_channel_logos = bvalue;
-			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel and channel group updates");
+			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel update");
 			g_pvr->TriggerChannelUpdate();
-			g_pvr->TriggerChannelGroupsUpdate();
 		}
 	}
 
