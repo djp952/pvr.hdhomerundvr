@@ -298,6 +298,122 @@ void addon::discover_listings(scalar_condition<bool> const&, bool& changed)
 }
 
 //---------------------------------------------------------------------------
+// addon::discover_mappings (private)
+//
+// Helper function used to execute a channel mapping discovery operation
+//
+// Arguments:
+//
+//	cancel		- Condition variable used to cancel the operation
+//	changed		- Reference to a flag indicating that the discovery information has changed
+
+void addon::discover_mappings(scalar_condition<bool> const&, bool& changed)
+{
+	channelranges_t		cable_mappings;			// Discovered radio mappings
+	channelranges_t		ota_mappings;			// Discovered radio mappings
+
+	changed = false;							// Initialize [ref] argument
+
+	// Create a copy of the current addon settings structure
+	struct settings settings = copy_settings();
+
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (m_startup_complete.load() == false);
+
+	log_info_if(trace, __func__, ": initiated channel mapping discovery");
+	
+	// Ignore the operation if the specified file doesn't exist
+	if(kodi::vfs::FileExists(settings.radio_channel_mapping_file)) {
+
+		kodi::vfs::CFile mappingfile;
+		if(mappingfile.OpenFile(settings.radio_channel_mapping_file)) {
+
+			log_info(__func__, ": processing channel mapping file: ", settings.radio_channel_mapping_file);
+
+			std::string line;								// Current line of text from the file
+			int linenumber = 0;								// Current line number within the file
+
+			while(mappingfile.ReadLine(line)) {
+
+				++linenumber;								// Increment the line number
+
+				union channelid start = {};					// Starting channel identifier
+				union channelid end = {};					// Ending channel identifier
+				unsigned int start_channel = 0;				// Starting channel number
+				unsigned int start_subchannel = 0;			// Starting subchannel number
+				unsigned int end_channel = 0;				// Ending channel number
+				unsigned int end_subchannel = 0;			// Ending subchannel number
+
+				// Scan the line using the OTA range format first
+				int result = sscanf(line.c_str(), "%u.%u-%u.%u", &start_channel, &start_subchannel, &end_channel, &end_subchannel);
+				
+				// OTA RANGE: CHANNEL.SUBCHANNEL-CHANNEL.SUBCHANNEL
+				if(result == 4) {
+
+					start.parts.channel = start_channel;
+					start.parts.subchannel = start_subchannel;
+					end.parts.channel = end_channel;
+					end.parts.subchannel = end_channel;
+					ota_mappings.push_back({ start, end });
+				}
+
+				// OTA: CHANNEL.SUBCHANNEL
+				else if(result == 2) {
+
+					start.parts.channel = start_channel;
+					start.parts.subchannel = start_subchannel;
+					ota_mappings.push_back({ start, start });
+				}
+
+				// CABLE
+				else if(result == 1) {
+
+					// Rescan the line to detect if this is a single channel or a range
+					result = sscanf(line.c_str(), "%u-%u", &start_channel, &end_channel);
+
+					// CABLE RANGE: CHANNEL-CHANNEL
+					if(result == 2) {
+
+						start.parts.channel = start_channel;
+						end.parts.channel = end_channel;
+						cable_mappings.push_back({ start, end });
+					}
+
+					// CABLE: CHANNEL
+					else if(result == 1) {
+
+						start.parts.channel = start_channel;
+						cable_mappings.push_back({ start, start });
+					}
+				}
+
+				// If the line failed to parse log an error with the line number for the user
+				else log_error(__func__, ": invalid channel mapping entry detected at line #", linenumber);
+			}
+
+			mappingfile.Close();
+		}
+
+		else log_error(__func__, ": unable to open channel mapping file: ", settings.radio_channel_mapping_file);
+	}
+
+	std::unique_lock<std::mutex> lock(m_radiomappings_lock);
+
+	// Check each of the new channel mapping ranges against the existing ones and swap them if different
+
+	bool cable_changed = ((cable_mappings.size() != m_radiomappings_cable.size()) || (!std::equal(cable_mappings.begin(), cable_mappings.end(), m_radiomappings_cable.begin(),
+		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+	if(cable_changed) m_radiomappings_cable.swap(cable_mappings);
+
+	bool ota_changed = ((ota_mappings.size() != m_radiomappings_ota.size()) || (!std::equal(ota_mappings.begin(), ota_mappings.end(), m_radiomappings_ota.begin(),
+		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+	if(ota_changed) m_radiomappings_ota.swap(ota_mappings);
+
+	// Set the changed flag for the caller if either set of channel mappings changed
+	changed = (cable_changed || ota_changed);
+}
+
+//---------------------------------------------------------------------------
 // addon::discover_recordingrules (private)
 //
 // Helper function used to execute a backend recording rule discovery operation
@@ -541,6 +657,30 @@ bool addon::ipv4_network_available(void)
 	return false;				// No interfaces were both UP and RUNNING
 
 #endif	// defined(_WINDOWS) || defined(WINAPI_FAMILY)
+}
+
+//---------------------------------------------------------------------------
+// addon::is_channel_radio (private)
+//
+// Determines if a channel has been mapped as a radio channel
+//
+// Arguments:
+//
+//	lock		- Held lock instance
+//	channelid	- Channel identifier to check against the mappings
+
+bool addon::is_channel_radio(std::unique_lock<std::mutex> const& lock, union channelid const& channelid) const
+{
+	assert(lock.owns_lock());
+	if(!lock.owns_lock()) throw std::invalid_argument("lock");
+
+	// CABLE
+	if(channelid.parts.subchannel == 0) return std::any_of(m_radiomappings_cable.cbegin(), m_radiomappings_cable.cend(),
+		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+
+	// OTA
+	else return std::any_of(m_radiomappings_ota.cbegin(), m_radiomappings_ota.cend(),
+		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
 }
 
 //---------------------------------------------------------------------------
@@ -909,15 +1049,16 @@ void addon::start_discovery(void) noexcept
 
 			// Schedule the initial discovery tasks to execute as soon as possible
 			m_scheduler.add(now + milliseconds(1), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
-			m_scheduler.add(now + milliseconds(2), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
-			m_scheduler.add(now + milliseconds(3), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
-			m_scheduler.add(now + milliseconds(4), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
-			m_scheduler.add(now + milliseconds(5), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
+			m_scheduler.add(now + milliseconds(2), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_mappings(cancel, changed); });
+			m_scheduler.add(now + milliseconds(3), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
+			m_scheduler.add(now + milliseconds(4), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			m_scheduler.add(now + milliseconds(5), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
+			m_scheduler.add(now + milliseconds(6), [&](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
-			m_scheduler.add(now + milliseconds(6), &addon::startup_alerts_task, this);
-			m_scheduler.add(UPDATE_LISTINGS_TASK, now + milliseconds(7), std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
-			m_scheduler.add(now + milliseconds(8), &addon::startup_complete_task, this);
+			m_scheduler.add(now + milliseconds(7), &addon::startup_alerts_task, this);
+			m_scheduler.add(UPDATE_LISTINGS_TASK, now + milliseconds(8), std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
+			m_scheduler.add(now + milliseconds(9), &addon::startup_complete_task, this);
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
 			m_scheduler.add(UPDATE_DEVICES_TASK, system_clock::now() + seconds(settings.discover_devices_interval), &addon::update_devices_task, this);
@@ -1086,31 +1227,40 @@ void addon::update_episodes_task(scalar_condition<bool> const& cancel)
 
 void addon::update_lineups_task(scalar_condition<bool> const& cancel)
 {
-	bool		changed = false;			// Flag if the discovery data changed
+	bool		mappingschanged = false;		// Flag if the discovery data changed
+	bool		lineupschanged = false;			// Flag if the discovery data changed
 
 	// Create a copy of the current addon settings structure
 	struct settings settings = copy_settings();
 
 	try {
 
+		// Update the channel mapping information
+		if(cancel.test(true) == false) discover_mappings(cancel, mappingschanged);
+
 		// Update the backend channel lineup information
-		if(cancel.test(true) == false) discover_lineups(cancel, changed);
+		if(cancel.test(true) == false) discover_lineups(cancel, lineupschanged);
 
-		// Changes to the channel lineups affects the PVR channel group information,
-		// and may require a listings update if new channels were added to the lineup
-		if(changed) {
+		// Changes to either the mappings or the lineups requires a channel group update
+		if((cancel.test(true) == false) && (mappingschanged || lineupschanged)) {
 
-			if(cancel.test(true) == false) {
+			log_info(__func__, ": lineup discovery or channel mapping data changed -- trigger channel group update");
+			TriggerChannelGroupsUpdate();
+		}
 
-				log_info(__func__, ": lineup discovery data changed -- trigger channel group update");
-				TriggerChannelGroupsUpdate();
-			}
+		// Changes to the mappings require a recording update
+		if((cancel.test(true) == false) && mappingschanged) {
 
-			if(cancel.test(true) == false) {
+			log_info(__func__, ": channel mapping data changed -- trigger recording update");
+			TriggerRecordingUpdate();
+		}
 
-				log_info(__func__, ": lineup discovery data changed -- schedule guide listings update");
-				m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
-			}
+
+		// Changes to the lineups may require an update to the listings if new channels were added
+		if((cancel.test(true) == false) && lineupschanged) {
+
+			log_info(__func__, ": lineup discovery data changed -- schedule guide listings update");
+			m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
 		}
 	}
 
@@ -1588,6 +1738,8 @@ ADDON_STATUS addon::Create(void)
 			m_settings.use_direct_tuning = kodi::GetSettingBoolean("use_direct_tuning", false);
 			m_settings.direct_tuning_protocol = kodi::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
 			m_settings.direct_tuning_allow_drm = kodi::GetSettingBoolean("direct_tuning_allow_drm", false);
+			m_settings.enable_radio_channel_mapping = kodi::GetSettingBoolean("enable_radio_channel_mapping", false);
+			m_settings.radio_channel_mapping_file = kodi::GetSettingString("radio_channel_mapping_file");
 			m_settings.stream_read_chunk_size = kodi::GetSettingInt("stream_read_chunk_size_v3", 0);							// Automatic
 			m_settings.deviceauth_stale_after = kodi::GetSettingInt("deviceauth_stale_after_v2", 72000);						// 20 hours
 
@@ -1605,10 +1757,12 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.discover_recordingrules_interval   = ", m_settings.discover_recordingrules_interval);
 			log_info(__func__, ": m_settings.discover_recordings_after_playback = ", m_settings.discover_recordings_after_playback);
 			log_info(__func__, ": m_settings.discover_recordings_interval       = ", m_settings.discover_recordings_interval);
+			log_info(__func__, ": m_settings.enable_radio_channel_mapping       = ", m_settings.enable_radio_channel_mapping);
 			log_info(__func__, ": m_settings.enable_recording_edl               = ", m_settings.enable_recording_edl);
 			log_info(__func__, ": m_settings.generate_repeat_indicators         = ", m_settings.generate_repeat_indicators);
 			log_info(__func__, ": m_settings.pause_discovery_while_streaming    = ", m_settings.pause_discovery_while_streaming);
 			log_info(__func__, ": m_settings.prepend_channel_numbers            = ", m_settings.prepend_channel_numbers);
+			log_info(__func__, ": m_settings.radio_channel_mapping_file         = ", m_settings.radio_channel_mapping_file);
 			log_info(__func__, ": m_settings.recording_edl_cut_as_comskip       = ", m_settings.recording_edl_cut_as_comskip);
 			log_info(__func__, ": m_settings.recording_edl_end_padding          = ", m_settings.recording_edl_end_padding);
 			log_info(__func__, ": m_settings.recording_edl_folder               = ", m_settings.recording_edl_folder);
@@ -2019,6 +2173,33 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 
 			m_settings.direct_tuning_allow_drm = bvalue;
 			log_info(__func__, ": setting direct_tuning_allow_drm changed to ", bvalue);
+		}
+	}
+
+	// enable_radio_channel_mapping
+	//
+	else if(settingName == "enable_radio_channel_mapping") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.enable_radio_channel_mapping) {
+
+			m_settings.enable_radio_channel_mapping = bvalue;
+			log_info(__func__, ": setting enable_radio_channel_mapping changed to ", bvalue, " -- trigger channel group and recording updates");
+			TriggerChannelGroupsUpdate();
+			TriggerRecordingUpdate();
+		}
+	}
+
+	// radio_channel_mapping_file
+	//
+	else if(settingName == "radio_channel_mapping_file") {
+
+		std::string strvalue = settingValue.GetString();
+		if(strvalue != m_settings.radio_channel_mapping_file) {
+
+			m_settings.radio_channel_mapping_file = strvalue;
+			log_info(__func__, ": setting radio_channel_mapping_file changed to ", strvalue, " -- schedule channel lineup update");
+			m_scheduler.add(UPDATE_LINEUPS_TASK, &addon::update_lineups_task, this);
 		}
 	}
 
@@ -2732,6 +2913,7 @@ PVR_ERROR addon::GetCapabilities(kodi::addon::PVRCapabilities& capabilities)
 {
 	capabilities.SetSupportsEPG(true);
 	capabilities.SetSupportsTV(true);
+	capabilities.SetSupportsRadio(true);
 	capabilities.SetSupportsRecordings(true);
 	capabilities.SetSupportsTimers(true);
 	capabilities.SetSupportsChannelGroups(true);
@@ -2774,6 +2956,9 @@ PVR_ERROR addon::GetChannelGroupMembers(kodi::addon::PVRChannelGroup const& grou
 	// Wait until the channel information has been discovered the first time
 	wait_for_channels();
 
+	// There are no radio channel groups
+	if(group.GetIsRadio()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+
 	// Determine which group enumerator to use for the operation, there are only five to
 	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
@@ -2791,17 +2976,24 @@ PVR_ERROR addon::GetChannelGroupMembers(kodi::addon::PVRChannelGroup const& grou
 
 	try {
 
+		std::unique_lock<std::mutex> lock(m_radiomappings_lock);		// Prevent updates to the mappings
+
 		// Enumerate all of the channels in the specified group
 		enumerator(connectionpool::handle(m_connpool), settings.show_drm_protected_channels, [&](union channelid const& item) -> void {
 
-			// Create and initialize a PVRChannelGroupMember instance for the enumerated channel
-			kodi::addon::PVRChannelGroupMember member;
-			member.SetGroupName(group.GetGroupName());
-			member.SetChannelUniqueId(item.value);
-			member.SetChannelNumber(static_cast<int>(item.parts.channel));
-			member.SetSubChannelNumber(static_cast<int>(item.parts.subchannel));
+			// Determine if this channel should be mapped as a Radio channel instead of a TV channel
+			bool isradiochannel = (settings.enable_radio_channel_mapping && is_channel_radio(lock, item));
+			if(!isradiochannel) {
 
-			results.Add(member);
+				// Create and initialize a PVRChannelGroupMember instance for the enumerated channel
+				kodi::addon::PVRChannelGroupMember member;
+				member.SetGroupName(group.GetGroupName());
+				member.SetChannelUniqueId(item.value);
+				member.SetChannelNumber(static_cast<int>(item.parts.channel));
+				member.SetSubChannelNumber(static_cast<int>(item.parts.subchannel));
+
+				results.Add(member);
+			}
 		});
 	}
 
@@ -2862,9 +3054,6 @@ PVR_ERROR addon::GetChannelGroups(bool radio, kodi::addon::PVRChannelGroupsResul
 
 PVR_ERROR addon::GetChannels(bool radio, kodi::addon::PVRChannelsResultSet& results)
 {
-	// The PVR doesn't support radio channels
-	if(radio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
-
 	// Wait until the channel information has been discovered the first time
 	wait_for_channels();
 
@@ -2873,39 +3062,48 @@ PVR_ERROR addon::GetChannels(bool radio, kodi::addon::PVRChannelsResultSet& resu
 
 	try {
 
+		std::unique_lock<std::mutex> lock(m_radiomappings_lock);		// Prevent updates to the mappings
+
 		// Enumerate all of the channels in the database
 		enumerate_channels(connectionpool::handle(m_connpool), settings.prepend_channel_numbers, settings.show_drm_protected_channels, 
 			settings.channel_name_source, [&](struct channel const& item) -> void {
 
-			kodi::addon::PVRChannel channel;				// PVRChannel to be transferred to Kodi
+			// Determine if this channel should be mapped as a Radio channel instead of a TV channel
+			bool isradiochannel = (settings.enable_radio_channel_mapping && is_channel_radio(lock, item.channelid));
 
-			// UniqueId (required)
-			channel.SetUniqueId(item.channelid.value);
+			// Only transfer the channel to Kodi if it matches the current category (TV/Radio)
+			if(isradiochannel == radio) {
 
-			// IsRadio (required)
-			channel.SetIsRadio(false);
+				kodi::addon::PVRChannel channel;				// PVRChannel to be transferred to Kodi
 
-			// ChannelNumber
-			channel.SetChannelNumber(item.channelid.parts.channel);
+				// UniqueId (required)
+				channel.SetUniqueId(item.channelid.value);
 
-			// SubChannelNumber
-			channel.SetSubChannelNumber(item.channelid.parts.subchannel);
+				// IsRadio (required)
+				channel.SetIsRadio(isradiochannel);
 
-			// ChannelName
-			if(item.channelname != nullptr) channel.SetChannelName(item.channelname);
+				// ChannelNumber
+				channel.SetChannelNumber(item.channelid.parts.channel);
 
-			// InputFormat
-			channel.SetMimeType("video/mp2t");
+				// SubChannelNumber
+				channel.SetSubChannelNumber(item.channelid.parts.subchannel);
 
-			// EncryptionSystem
-			//
-			// This is used to flag a channel as DRM to prevent it from being streamed
-			channel.SetEncryptionSystem((item.drm) ? std::numeric_limits<unsigned int>::max() : 0);
+				// ChannelName
+				if(item.channelname != nullptr) channel.SetChannelName(item.channelname);
 
-			// IconPath
-			if((settings.disable_backend_channel_logos == false) && (item.iconurl != nullptr)) channel.SetIconPath(item.iconurl);
+				// InputFormat
+				channel.SetMimeType("video/mp2t");
 
-			results.Add(channel);
+				// EncryptionSystem
+				//
+				// This is used to flag a channel as DRM to prevent it from being streamed
+				channel.SetEncryptionSystem((item.drm) ? std::numeric_limits<unsigned int>::max() : 0);
+
+				// IconPath
+				if((settings.disable_backend_channel_logos == false) && (item.iconurl != nullptr)) channel.SetIconPath(item.iconurl);
+
+				results.Add(channel);
+			}
 		});
 	}
 	
@@ -3269,10 +3467,16 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 
 	try {
 
+		std::unique_lock<std::mutex> lock(m_radiomappings_lock);		// Prevent updates to the mappings
+
 		// Enumerate all of the recordings in the database
-		enumerate_recordings(connectionpool::handle(m_connpool), settings.use_episode_number_as_title, settings.disable_recording_categories, [&](struct recording const& item) -> void {
+		enumerate_recordings(connectionpool::handle(m_connpool), settings.use_episode_number_as_title, settings.disable_recording_categories, 
+			[&](struct recording const& item) -> void {
 
 			kodi::addon::PVRRecording	recording;			// PVRRecording to be transferred to Kodi
+
+			// Determine if the channel should be mapped as a Radio channel instead of a TV channel
+			bool isradiochannel = (settings.enable_radio_channel_mapping && is_channel_radio(lock, item.channelid));
 
 			// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and firstairing is *not* set, flag it as a repeat
 			bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.firstairing == 0));
@@ -3355,7 +3559,8 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 			recording.SetChannelUid(item.channelid.value);
 
 			// ChannelType
-			recording.SetChannelType(PVR_RECORDING_CHANNEL_TYPE::PVR_RECORDING_CHANNEL_TYPE_TV);
+			recording.SetChannelType((isradiochannel) ? PVR_RECORDING_CHANNEL_TYPE::PVR_RECORDING_CHANNEL_TYPE_RADIO :
+				PVR_RECORDING_CHANNEL_TYPE::PVR_RECORDING_CHANNEL_TYPE_TV);
 
 			// FirstAired
 			//

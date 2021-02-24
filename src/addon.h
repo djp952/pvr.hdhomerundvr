@@ -321,6 +321,19 @@ private:
 	addon& operator=(addon const&)=delete;
 
 	//-------------------------------------------------------------------------
+	// Data Types
+
+	// channelrange_t
+	//
+	// pair<> of channelids indicating a lower and upper boundary
+	using channelrange_t = std::pair<union channelid, union channelid>;
+
+	// channelranges_t
+	//
+	// Defines a vector<> used to collect ranges of channel identifiers
+	using channelranges_t = std::vector<channelrange_t>;
+
+	//-------------------------------------------------------------------------
 	// Private Member Functions
 
 	// Destroy
@@ -334,6 +347,7 @@ private:
 	void discover_episodes(scalar_condition<bool> const& cancel, bool& changed);
 	void discover_lineups(scalar_condition<bool> const& cancel, bool& changed);
 	void discover_listings(scalar_condition<bool> const& cancel, bool& changed);
+	void discover_mappings(scalar_condition<bool> const& cancel, bool& changed);
 	void discover_recordingrules(scalar_condition<bool> const& cancel, bool& changed);
 	void discover_recordings(scalar_condition<bool> const& cancel, bool& changed);
 	void start_discovery(void) noexcept;
@@ -360,6 +374,10 @@ private:
 	template<typename... _args> void log_message(AddonLog level, _args&&... args);
 	template<typename... _args> void log_warning(_args&&... args);
 	template<typename... _args> void log_warning_if(bool flag, _args&&... args);
+
+	// Mapping helpers
+	//
+	bool is_channel_radio(std::unique_lock<std::mutex> const& lock, union channelid const& channelid) const;
 
 	// Network Helpers
 	//
@@ -413,8 +431,11 @@ private:
 	std::once_flag					m_discovery_started;			// Discovery started flag
 	std::atomic<int>				m_epgmaxtime;					// Maximum EPG time frame
 	std::deque<std::string>			m_errorlog;						// Recent error log
-	std::mutex						m_errorlog_lock;				// Synchronization object
+	mutable std::mutex				m_errorlog_lock;				// Synchronization object
 	std::unique_ptr<pvrstream>		m_pvrstream;					// Active PVR stream instance
+	channelranges_t					m_radiomappings_cable;			// Ranges of radio channels
+	channelranges_t					m_radiomappings_ota;			// Ranges of radio channels
+	mutable std::mutex				m_radiomappings_lock;			// Synchronization object
 	std::default_random_engine		m_randomengine;					// Pseudo-random number generator 
 	scheduler						m_scheduler;					// Background task scheduler
 	struct settings					m_settings;						// Custom addon settings
