@@ -160,6 +160,14 @@ msgctxt "#30141"
 msgid "Report actual start and end times for upcoming timers"
 msgstr ""
 
+msgctxt "#30142"
+msgid "Enable Radio channel mappings"
+msgstr ""
+
+msgctxt "#30143"
+msgid "Radio channel mapping file"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -445,7 +453,7 @@ msgid "Specifies the primary base path to search for Recorded TV Edit Decision L
 msgstr ""
 
 msgctxt "#30518"
-msgid "When set to ON only the base path(s) will be searched for Edit Decision List (EDL) files.  When set to OFF Edit Decision List (EDL) files must be located in a subdirectory that matches the series name as displayed in Kodi."
+msgid "When set to ON only the base path(s) will be searched for Edit Decision List (EDL) files. When set to OFF Edit Decision List (EDL) files must be located in a subdirectory that matches the series name as displayed in Kodi."
 msgstr ""
 
 msgctxt "#30519"
@@ -510,5 +518,13 @@ msgstr ""
 
 msgctxt "#30536"
 msgid "When set to ON any specified reording rule (Kodi Timer Rule) start and end time padding will be applied to recording rule episodes (Kodi Timers)."
+msgstr ""
+
+msgctxt "#30537"
+msgid "When set to ON any channel numbers/ranges specified in the Radio channel mapping file will be moved from TV to Radio in Kodi."
+msgstr ""
+
+msgctxt "#30538"
+msgid "Specifies the path to the Radio channel mapping file. This is a text file that lists either individual channel numbers ("4.1", "1800") or a range of channel numbers ("4.1-4.3", "1800-1899") to be moved from TV to Radio in Kodi. List one channel number or one channel range in each line of the file."
 msgstr ""
 

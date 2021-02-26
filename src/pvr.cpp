@@ -101,6 +101,7 @@ static void discover_devices(scalar_condition<bool> const& cancel, bool& changed
 static void discover_episodes(scalar_condition<bool> const& cancel, bool& changed);
 static void discover_lineups(scalar_condition<bool> const& cancel, bool& changed);
 static void discover_listings(scalar_condition<bool> const& cancel, bool& changed);
+static void discover_mappings(scalar_condition<bool> const& cancel, bool& changed);
 static void discover_recordingrules(scalar_condition<bool> const& cancel, bool& changed);
 static void discover_recordings(scalar_condition<bool> const& cancel, bool& changed);
 
@@ -120,6 +121,10 @@ template<typename... _args> static void log_error_if(bool flag, _args&&... args)
 template<typename... _args>	static void log_message(ADDON::addon_log_t level, _args&&... args);
 template<typename... _args> static void log_notice(_args&&... args);
 template<typename... _args> static void log_notice_if(bool flag, _args&&... args);
+
+// Mapping helpers
+//
+static bool is_channel_radio(std::unique_lock<std::mutex> const& lock, union channelid const& channelid);
 
 // Scheduled Tasks
 //
@@ -146,6 +151,16 @@ static void wait_for_recordings(void) noexcept;
 //---------------------------------------------------------------------------
 // TYPE DECLARATIONS
 //---------------------------------------------------------------------------
+
+// channelrange_t
+//
+// pair<> of channelids indicating a lower and upper boundary
+using channelrange_t = std::pair<union channelid, union channelid>;
+
+// channelranges_t
+//
+// Defines a vector<> used to collect ranges of channel identifiers
+using channelranges_t = std::vector<channelrange_t>;
 
 // duplicate_prevention
 //
@@ -294,6 +309,16 @@ struct addon_settings {
 	// Indicates that requests to stream DRM channels should be allowed
 	bool direct_tuning_allow_drm;
 
+	// enable_radio_channel_mapping
+	//
+	// Flag indicating that a radio channel mapping should be used
+	bool enable_radio_channel_mapping;
+
+	// radio_channel_mapping_file
+	//
+	// Path to the radio channel mapping file, if present
+	std::string radio_channel_mapping_file;
+
 	// stream_read_chunk_size
 	//
 	// Indicates the minimum number of bytes to return from a stream read
@@ -362,7 +387,7 @@ static const PVR_ADDON_CAPABILITIES g_capabilities = {
 	true,			// bSupportsEPG
 	false,			// bSupportsEPGEdl
 	true,			// bSupportsTV
-	false,			// bSupportsRadio
+	true,			// bSupportsRadio
 	true,			// bSupportsRecordings
 	false,			// bSupportsRecordingsUndelete
 	true,			// bSupportsTimers
@@ -427,6 +452,21 @@ static std::unique_ptr<CHelper_libXBMC_pvr> g_pvr;
 // DVR stream buffer instance
 static std::unique_ptr<pvrstream> g_pvrstream;
 
+// g_radiomappings_cable
+//
+// Ranges of cable channels to be mapped as radio
+static channelranges_t g_radiomappings_cable;
+
+// g_radiomappings_ota
+//
+// Ranges of OTA channels to be mapped as radio
+static channelranges_t g_radiomappings_ota;
+
+// g_radiomappings_lock
+//
+// Synchronization object used to serialize access to the radio mappings
+static std::mutex g_radiomappings_lock;
+
 // g_randomengine
 //
 // Global pseudo-random number generator engine
@@ -464,6 +504,8 @@ static addon_settings g_settings = {
 	false,						// use_direct_tuning
 	tuning_protocol::http,		// direct_tuning_protocol
 	false,						// direct_tuning_allow_drm
+	false,						// enable_radio_channel_mapping
+	"",							// radio_channel_mapping_file
 	0,							// stream_read_chunk_size				automatic
 	72000,						// deviceauth_stale_after				default = 20 hours
 	false,						// enable_recording_edl
@@ -809,6 +851,115 @@ static void discover_listings(scalar_condition<bool> const&, bool& changed)
 	catch(...) { g_discovered_listings = true; throw; }
 }
 
+// discover_mappings (local)
+//
+// Helper function used to execute a channel mapping discovery operation
+static void discover_mappings(scalar_condition<bool> const&, bool& changed)
+{
+	channelranges_t		cable_mappings;			// Discovered radio mappings
+	channelranges_t		ota_mappings;			// Discovered radio mappings
+
+	changed = false;							// Initialize [ref] argument
+
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
+	// Only produce trace-level logging if the addon is starting up or the data has changed
+	bool const trace = (g_startup_complete.load() == false);
+
+	log_notice_if(trace, __func__, ": initiated channel mapping discovery");
+	
+	// Ignore the operation if the specified file doesn't exist
+	if(g_addon->FileExists(settings.radio_channel_mapping_file.c_str(), false)) {
+
+		void* mappingfile = g_addon->OpenFile(settings.radio_channel_mapping_file.c_str(), 0);
+		if(mappingfile != nullptr) {
+
+			log_notice(__func__, ": processing channel mapping file: ", settings.radio_channel_mapping_file);
+
+			std::unique_ptr<char[]> line(new char[2 KiB]);		// Current line of text from the file
+			int linenumber = 0;									// Current line number within the file
+
+			while(g_addon->ReadFileString(mappingfile, &line[0], 2 KiB)) {
+
+				++linenumber;									// Increment the line number
+
+				union channelid start = {};						// Starting channel identifier
+				union channelid end = {};						// Ending channel identifier
+				unsigned int start_channel = 0;					// Starting channel number
+				unsigned int start_subchannel = 0;				// Starting subchannel number
+				unsigned int end_channel = 0;					// Ending channel number
+				unsigned int end_subchannel = 0;				// Ending subchannel number
+
+				// Scan the line using the OTA range format first
+				int result = sscanf(&line[0], "%u.%u-%u.%u", &start_channel, &start_subchannel, &end_channel, &end_subchannel);
+				
+				// OTA RANGE: CHANNEL.SUBCHANNEL-CHANNEL.SUBCHANNEL
+				if(result == 4) {
+
+					start.parts.channel = start_channel;
+					start.parts.subchannel = start_subchannel;
+					end.parts.channel = end_channel;
+					end.parts.subchannel = end_channel;
+					ota_mappings.push_back({ start, end });
+				}
+
+				// OTA: CHANNEL.SUBCHANNEL
+				else if(result == 2) {
+
+					start.parts.channel = start_channel;
+					start.parts.subchannel = start_subchannel;
+					ota_mappings.push_back({ start, start });
+				}
+
+				// CABLE
+				else if(result == 1) {
+
+					// Rescan the line to detect if this is a single channel or a range
+					result = sscanf(&line[0], "%u-%u", &start_channel, &end_channel);
+
+					// CABLE RANGE: CHANNEL-CHANNEL
+					if(result == 2) {
+
+						start.parts.channel = start_channel;
+						end.parts.channel = end_channel;
+						cable_mappings.push_back({ start, end });
+					}
+
+					// CABLE: CHANNEL
+					else if(result == 1) {
+
+						start.parts.channel = start_channel;
+						cable_mappings.push_back({ start, start });
+					}
+				}
+
+				// If the line failed to parse log an error with the line number for the user
+				else log_error(__func__, ": invalid channel mapping entry detected at line #", linenumber);
+			}
+
+			g_addon->CloseFile(mappingfile);
+		}
+
+		else log_error(__func__, ": unable to open channel mapping file: ", settings.radio_channel_mapping_file);
+	}
+
+	std::unique_lock<std::mutex> lock(g_radiomappings_lock);
+
+	// Check each of the new channel mapping ranges against the existing ones and swap them if different
+
+	bool cable_changed = ((cable_mappings.size() != g_radiomappings_cable.size()) || (!std::equal(cable_mappings.begin(), cable_mappings.end(), g_radiomappings_cable.begin(),
+		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+	if(cable_changed) g_radiomappings_cable.swap(cable_mappings);
+
+	bool ota_changed = ((ota_mappings.size() != g_radiomappings_ota.size()) || (!std::equal(ota_mappings.begin(), ota_mappings.end(), g_radiomappings_ota.begin(),
+		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+	if(ota_changed) g_radiomappings_ota.swap(ota_mappings);
+
+	// Set the changed flag for the caller if either set of channel mappings changed
+	changed = (cable_changed || ota_changed);
+}
+
 // discover_recordingrules (local)
 //
 // Helper function used to execute a backend recording rule discovery operation
@@ -1110,6 +1261,23 @@ static bool ipv4_network_available(void)
 #endif	// defined(_WINDOWS) || defined(WINAPI_FAMILY)
 }
 
+// is_channel_radio (local)
+//
+// Determines if a channel has been mapped as a radio channel
+static bool is_channel_radio(std::unique_lock<std::mutex> const& lock, union channelid const& channelid)
+{
+	assert(lock.owns_lock());
+	if(!lock.owns_lock()) throw std::invalid_argument("lock");
+
+	// CABLE
+	if(channelid.parts.subchannel == 0) return std::any_of(g_radiomappings_cable.cbegin(), g_radiomappings_cable.cend(),
+		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+
+	// OTA
+	else return std::any_of(g_radiomappings_ota.cbegin(), g_radiomappings_ota.cend(),
+		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+}
+
 // openlivestream_storage_http (local)
 //
 // Attempts to open a live stream via HTTP from an available storage engine
@@ -1278,15 +1446,16 @@ static void start_discovery(void) noexcept
 
 			// Schedule the initial discovery tasks to execute as soon as possible
 			g_scheduler.add(now + milliseconds(1), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_devices(cancel, changed); });
-			g_scheduler.add(now + milliseconds(2), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
-			g_scheduler.add(now + milliseconds(3), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
-			g_scheduler.add(now + milliseconds(4), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
-			g_scheduler.add(now + milliseconds(5), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
+			g_scheduler.add(now + milliseconds(2), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_mappings(cancel, changed); });
+			g_scheduler.add(now + milliseconds(3), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_lineups(cancel, changed); });
+			g_scheduler.add(now + milliseconds(4), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordings(cancel, changed); });
+			g_scheduler.add(now + milliseconds(5), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_recordingrules(cancel, changed); });
+			g_scheduler.add(now + milliseconds(6), [](scalar_condition<bool> const& cancel) -> void { bool changed; discover_episodes(cancel, changed); });
 
 			// Schedule the startup alert and listing update tasks to occur after the initial discovery tasks have completed
-			g_scheduler.add(now + milliseconds(6), startup_alerts_task);
-			g_scheduler.add(now + milliseconds(7), std::bind(update_listings_task, false, true, std::placeholders::_1));
-			g_scheduler.add(now + milliseconds(8), startup_complete_task);
+			g_scheduler.add(now + milliseconds(7), startup_alerts_task);
+			g_scheduler.add(now + milliseconds(8), std::bind(update_listings_task, false, true, std::placeholders::_1));
+			g_scheduler.add(now + milliseconds(9), startup_complete_task);
 
 			// Schedule the remaining update tasks to run at the intervals specified in the addon settings
 			g_scheduler.add(system_clock::now() + seconds(settings.discover_devices_interval), update_devices_task);
@@ -1424,31 +1593,40 @@ static void update_episodes_task(scalar_condition<bool> const& cancel)
 // Scheduled task implementation to update the channel lineups
 static void update_lineups_task(scalar_condition<bool> const& cancel)
 {
-	bool		changed = false;			// Flag if the discovery data changed
+	bool		mappingschanged = false;		// Flag if the discovery data changed
+	bool		lineupschanged = false;			// Flag if the discovery data changed
 
 	// Create a copy of the current addon settings structure
 	struct addon_settings settings = copy_settings();
 
 	try {
 
+		// Update the channel mapping information
+		if(cancel.test(true) == false) discover_mappings(cancel, mappingschanged);
+
 		// Update the backend channel lineup information
-		if(cancel.test(true) == false) discover_lineups(cancel, changed);
+		if(cancel.test(true) == false) discover_lineups(cancel, lineupschanged);
 
-		// Changes to the channel lineups affects the PVR channel group information,
-		// and may require a listings update if new channels were added to the lineup
-		if(changed) {
+		// Changes to either the mappings or the lineups requires a channel group update
+		if((cancel.test(true) == false) && (mappingschanged || lineupschanged)) {
 
-			if(cancel.test(true) == false) {
+			log_notice(__func__, ": lineup discovery or channel mapping data changed -- trigger channel group update");
+			g_pvr->TriggerChannelGroupsUpdate();
+		}
 
-				log_notice(__func__, ": lineup discovery data changed -- trigger channel group update");
-				g_pvr->TriggerChannelGroupsUpdate();
-			}
+		// Changes to the mappings require a recording update
+		if((cancel.test(true) == false) && mappingschanged) {
 
-			if(cancel.test(true) == false) {
+			log_notice(__func__, ": channel mapping data changed -- trigger recording update");
+			g_pvr->TriggerRecordingUpdate();
+		}
 
-				log_notice(__func__, ": lineup discovery data changed -- schedule guide listings update");
-				g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
-			}
+
+		// Changes to the lineups may require an update to the listings if new channels were added
+		if((cancel.test(true) == false) && lineupschanged) {
+
+			log_notice(__func__, ": lineup discovery data changed -- schedule guide listings update");
+			g_scheduler.add(std::bind(update_listings_task, false, true, std::placeholders::_1));
 		}
 	}
 
@@ -1909,6 +2087,8 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("direct_tuning_allow_drm", &bvalue)) g_settings.direct_tuning_allow_drm = bvalue;
+			if(g_addon->GetSetting("enable_radio_channel_mapping", &bvalue)) g_settings.enable_radio_channel_mapping = bvalue;
+			if(g_addon->GetSetting("radio_channel_mapping_file", strvalue)) g_settings.radio_channel_mapping_file.assign(strvalue);
 			if(g_addon->GetSetting("stream_read_chunk_size_v3", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
 			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 
@@ -1926,10 +2106,12 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			log_notice(__func__, ": g_settings.discover_recordingrules_interval   = ", g_settings.discover_recordingrules_interval);
 			log_notice(__func__, ": g_settings.discover_recordings_after_playback = ", g_settings.discover_recordings_after_playback);
 			log_notice(__func__, ": g_settings.discover_recordings_interval       = ", g_settings.discover_recordings_interval);
+			log_notice(__func__, ": g_settings.enable_radio_channel_mapping       = ", g_settings.enable_radio_channel_mapping);
 			log_notice(__func__, ": g_settings.enable_recording_edl               = ", g_settings.enable_recording_edl);
 			log_notice(__func__, ": g_settings.generate_repeat_indicators         = ", g_settings.generate_repeat_indicators);
 			log_notice(__func__, ": g_settings.pause_discovery_while_streaming    = ", g_settings.pause_discovery_while_streaming);
 			log_notice(__func__, ": g_settings.prepend_channel_numbers            = ", g_settings.prepend_channel_numbers);
+			log_notice(__func__, ": g_settings.radio_channel_mapping_file         = ", g_settings.radio_channel_mapping_file);
 			log_notice(__func__, ": g_settings.recording_edl_cut_as_comskip       = ", g_settings.recording_edl_cut_as_comskip);
 			log_notice(__func__, ": g_settings.recording_edl_end_padding          = ", g_settings.recording_edl_end_padding);
 			log_notice(__func__, ": g_settings.recording_edl_folder               = ", g_settings.recording_edl_folder);
@@ -2416,8 +2598,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.use_http_device_discovery = bvalue;
 			log_notice(__func__, ": setting use_http_device_discovery changed to ", bvalue, " -- schedule device update");
-
-			// Reschedule the device update task to run as soon as possible
 			g_scheduler.add(update_devices_task);
 		}
 	}
@@ -2458,6 +2638,32 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
+	// enable_radio_channel_mapping
+	//
+	else if(strcmp(name, "enable_radio_channel_mapping") == 0) {
+
+	bool bvalue = *reinterpret_cast<bool const*>(value);
+	if(bvalue != g_settings.enable_radio_channel_mapping) {
+
+			g_settings.enable_radio_channel_mapping = bvalue;
+			log_notice(__func__, ": setting enable_radio_channel_mapping changed to ", bvalue, " -- trigger channel group and recording updates");
+			g_pvr->TriggerChannelGroupsUpdate();
+			g_pvr->TriggerRecordingUpdate();
+		}
+	}
+
+	// radio_channel_mapping_file
+	//
+	else if(strcmp(name, "radio_channel_mapping_file") == 0) {
+
+		if(strcmp(g_settings.radio_channel_mapping_file.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.radio_channel_mapping_file.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting radio_channel_mapping_file changed to ", g_settings.radio_channel_mapping_file.c_str(), " -- schedule channel lineup update");
+			g_scheduler.add(update_lineups_task);
+		}
+	}
+
 	// stream_read_chunk_size
 	//
 	else if(strcmp(name, "stream_read_chunk_size_v3") == 0) {
@@ -2480,8 +2686,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.deviceauth_stale_after = nvalue;
 			log_notice(__func__, ": setting deviceauth_stale_after changed to ", nvalue, " seconds -- schedule device discovery");
-
-			// Reschedule the device discovery task to run as soon as possible
 			g_scheduler.add(update_devices_task);
 		}
 	}
@@ -3198,6 +3402,9 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	// Wait until the channel information has been discovered the first time
 	wait_for_channels();
 
+	// There are no radio channel groups
+	if(group.bIsRadio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+
 	// Determine which group enumerator to use for the operation, there are only four to
 	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
@@ -3215,26 +3422,33 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 
 	try {
 
+		std::unique_lock<std::mutex> lock(g_radiomappings_lock);		// Prevent updates to the mappings
+
 		// Enumerate all of the channels in the specified group
 		enumerator(connectionpool::handle(g_connpool), settings.show_drm_protected_channels, [&](union channelid const& item) -> void {
 
-			PVR_CHANNEL_GROUP_MEMBER member;						// PVR_CHANNEL_GROUP_MEMORY to send
-			memset(&member, 0, sizeof(PVR_CHANNEL_GROUP_MEMBER));	// Initialize the structure
+			// Determine if this channel should be mapped as a Radio channel instead of a TV channel
+			bool isradiochannel = (settings.enable_radio_channel_mapping && is_channel_radio(lock, item));
+			if(!isradiochannel) {
 
-			// strGroupName (required)
-			snprintf(member.strGroupName, std::extent<decltype(member.strGroupName)>::value, "%s", group.strGroupName);
+				PVR_CHANNEL_GROUP_MEMBER member;						// PVR_CHANNEL_GROUP_MEMORY to send
+				memset(&member, 0, sizeof(PVR_CHANNEL_GROUP_MEMBER));	// Initialize the structure
 
-			// iChannelUniqueId (required)
-			member.iChannelUniqueId = item.value;
+				// strGroupName (required)
+				snprintf(member.strGroupName, std::extent<decltype(member.strGroupName)>::value, "%s", group.strGroupName);
 
-			// iChannelNumber
-			member.iChannelNumber = static_cast<int>(item.parts.channel);
+				// iChannelUniqueId (required)
+				member.iChannelUniqueId = item.value;
 
-			// iSubChannelNumber
-			member.iSubChannelNumber = static_cast<int>(item.parts.subchannel);
+				// iChannelNumber
+				member.iChannelNumber = static_cast<int>(item.parts.channel);
 
-			// Transfer the generated PVR_CHANNEL_GROUP_MEMBER structure over to Kodi
-			g_pvr->TransferChannelGroupMember(handle, &member);
+				// iSubChannelNumber
+				member.iSubChannelNumber = static_cast<int>(item.parts.subchannel);
+
+				// Transfer the generated PVR_CHANNEL_GROUP_MEMBER structure over to Kodi
+				g_pvr->TransferChannelGroupMember(handle, &member);
+			}
 		});
 	}
 
@@ -3296,9 +3510,6 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 
 	if(handle == nullptr) return PVR_ERROR::PVR_ERROR_INVALID_PARAMETERS;
 
-	// The PVR doesn't support radio channels
-	if(radio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
-
 	// Wait until the channel information has been discovered the first time
 	wait_for_channels();
 
@@ -3307,41 +3518,50 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool radio)
 
 	try {
 
+		std::unique_lock<std::mutex> lock(g_radiomappings_lock);		// Prevent updates to the mappings
+
 		// Enumerate all of the channels in the database
 		enumerate_channels(connectionpool::handle(g_connpool), settings.prepend_channel_numbers, settings.show_drm_protected_channels, settings.channel_name_source, [&](struct channel const& item) -> void {
 
-			PVR_CHANNEL channel;								// PVR_CHANNEL to be transferred to Kodi
-			memset(&channel, 0, sizeof(PVR_CHANNEL));			// Initialize the structure
+			// Determine if this channel should be mapped as a Radio channel instead of a TV channel
+			bool isradiochannel = (settings.enable_radio_channel_mapping && is_channel_radio(lock, item.channelid));
 
-			// iUniqueId (required)
-			channel.iUniqueId = item.channelid.value;
+			// Only transfer the channel to Kodi if it matches the current category (TV/Radio)
+			if(isradiochannel == radio) {
 
-			// bIsRadio (required)
-			channel.bIsRadio = false;
+				PVR_CHANNEL channel;								// PVR_CHANNEL to be transferred to Kodi
+				memset(&channel, 0, sizeof(PVR_CHANNEL));			// Initialize the structure
 
-			// iChannelNumber
-			channel.iChannelNumber = item.channelid.parts.channel;
+				// iUniqueId (required)
+				channel.iUniqueId = item.channelid.value;
 
-			// iSubChannelNumber
-			channel.iSubChannelNumber = item.channelid.parts.subchannel;
+				// bIsRadio (required)
+				channel.bIsRadio = isradiochannel;
 
-			// strChannelName
-			if(item.channelname != nullptr) snprintf(channel.strChannelName, std::extent<decltype(channel.strChannelName)>::value, "%s", item.channelname);
+				// iChannelNumber
+				channel.iChannelNumber = item.channelid.parts.channel;
 
-			// strInputFormat
-			snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/mp2t");
+				// iSubChannelNumber
+				channel.iSubChannelNumber = item.channelid.parts.subchannel;
 
-			// iEncryptionSystem
-			//
-			// This is used to flag a channel as DRM to prevent it from being streamed
-			channel.iEncryptionSystem = (item.drm) ? std::numeric_limits<unsigned int>::max() : 0;
+				// strChannelName
+				if(item.channelname != nullptr) snprintf(channel.strChannelName, std::extent<decltype(channel.strChannelName)>::value, "%s", item.channelname);
 
-			// strIconPath
-			if((settings.disable_backend_channel_logos == false) && (item.iconurl != nullptr))
-				snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
+				// strInputFormat
+				snprintf(channel.strInputFormat, std::extent<decltype(channel.strInputFormat)>::value, "video/mp2t");
 
-			// Transfer the PVR_CHANNEL structure over to Kodi
-			g_pvr->TransferChannelEntry(handle, &channel);
+				// iEncryptionSystem
+				//
+				// This is used to flag a channel as DRM to prevent it from being streamed
+				channel.iEncryptionSystem = (item.drm) ? std::numeric_limits<unsigned int>::max() : 0;
+
+				// strIconPath
+				if((settings.disable_backend_channel_logos == false) && (item.iconurl != nullptr))
+					snprintf(channel.strIconPath, std::extent<decltype(channel.strIconPath)>::value, "%s", item.iconurl);
+
+				// Transfer the PVR_CHANNEL structure over to Kodi
+				g_pvr->TransferChannelEntry(handle, &channel);
+			}
 		});
 	}
 	
@@ -3455,11 +3675,16 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 
 	try {
 
+		std::unique_lock<std::mutex> lock(g_radiomappings_lock);		// Prevent updates to the mappings
+
 		// Enumerate all of the recordings in the database
 		enumerate_recordings(connectionpool::handle(g_connpool), settings.use_episode_number_as_title, settings.disable_recording_categories, [&](struct recording const& item) -> void {
 
 			PVR_RECORDING recording;							// PVR_RECORDING to be transferred to Kodi
 			memset(&recording, 0, sizeof(PVR_RECORDING));		// Initialize the structure
+
+			// Determine if the channel should be mapped as a Radio channel instead of a TV channel
+			bool isradiochannel = (settings.enable_radio_channel_mapping && is_channel_radio(lock, item.channelid));
 
 			// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and firstairing is *not* set, flag it as a repeat
 			bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.firstairing == 0));
@@ -3556,7 +3781,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			recording.iChannelUid = item.channelid.value;
 
 			// channelType
-			recording.channelType = PVR_RECORDING_CHANNEL_TYPE_TV;
+			recording.channelType = (isradiochannel) ? PVR_RECORDING_CHANNEL_TYPE_RADIO : PVR_RECORDING_CHANNEL_TYPE_TV;
 
 			//  Transfer the generated PVR_RECORDING structure over to Kodi 
 			g_pvr->TransferRecordingEntry(handle, &recording);

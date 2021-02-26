@@ -360,6 +360,27 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="enable_radio_channel_mapping" type="boolean" label="30142" help="30537">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
+        <setting id="radio_channel_mapping_file" type="path" parent="enable_radio_channel_mapping" label="30143" help="30538">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+            <writable>false</writable>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="enable_radio_channel_mapping">true</dependency>
+          </dependencies>
+          <control type="button" format="file">
+            <heading>30143</heading>
+          </control>
+        </setting>
+
         <setting id="stream_read_chunk_size_v3" type="integer" label="30114" help="30524">
           <level>0</level>
           <default>0</default>
