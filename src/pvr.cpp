@@ -693,6 +693,23 @@ static std::string g_userpath;
 // HELPER FUNCTIONS
 //---------------------------------------------------------------------------
 
+// adjust_originalairdate (inline)
+//
+// Adjusts an original air date time_t to account for Kodi localizing it
+inline time_t adjust_originalairdate(time_t originalairdate)
+{
+	struct tm tm = {};
+	time_t epoch = originalairdate;
+
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+	gmtime_s(&tm, &epoch);
+#else
+	gmtime_r(&epoch, &tm);
+#endif
+
+	return mktime(&tm);
+}
+
 // copy_settings (inline)
 //
 // Atomically creates a copy of the global addon_settings structure
@@ -949,11 +966,11 @@ static void discover_mappings(scalar_condition<bool> const&, bool& changed)
 	// Check each of the new channel mapping ranges against the existing ones and swap them if different
 
 	bool cable_changed = ((cable_mappings.size() != g_radiomappings_cable.size()) || (!std::equal(cable_mappings.begin(), cable_mappings.end(), g_radiomappings_cable.begin(),
-		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+		[](channelrange_t const& lhs, channelrange_t const& rhs) { return lhs.first.value == rhs.first.value && lhs.second.value == rhs.second.value; })));
 	if(cable_changed) g_radiomappings_cable.swap(cable_mappings);
 
 	bool ota_changed = ((ota_mappings.size() != g_radiomappings_ota.size()) || (!std::equal(ota_mappings.begin(), ota_mappings.end(), g_radiomappings_ota.begin(),
-		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+		[](channelrange_t const& lhs, channelrange_t const& rhs) { return lhs.first.value == rhs.first.value && lhs.second.value == rhs.second.value; })));
 	if(ota_changed) g_radiomappings_ota.swap(ota_mappings);
 
 	// Set the changed flag for the caller if either set of channel mappings changed
@@ -1271,11 +1288,11 @@ static bool is_channel_radio(std::unique_lock<std::mutex> const& lock, union cha
 
 	// CABLE
 	if(channelid.parts.subchannel == 0) return std::any_of(g_radiomappings_cable.cbegin(), g_radiomappings_cable.cend(),
-		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+		[&](channelrange_t const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
 
 	// OTA
 	else return std::any_of(g_radiomappings_ota.cbegin(), g_radiomappings_ota.cend(),
-		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+		[&](channelrange_t const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
 }
 
 // openlivestream_storage_http (local)
@@ -1751,7 +1768,7 @@ static void update_listings_task(bool force, bool checkchannels, scalar_conditio
 					// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
 					// unless series/episode information is available
 					if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
-						epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+						epgtag.firstAired = adjust_originalairdate(item.originalairdate);
 				}
 			
 				// iSeriesNumber
@@ -3222,7 +3239,7 @@ PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, PVR_CHANNEL const& channel, time
 				// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
 				// unless series/episode information is available
 				if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
-					epgtag.firstAired = static_cast<time_t>(item.originalairdate);
+					epgtag.firstAired = adjust_originalairdate(item.originalairdate);
 			}
 
 			// iSeriesNumber
@@ -3747,22 +3764,9 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			recording.recordingTime = static_cast<time_t>(item.recordingtime);
 			if((item.category != nullptr) && (settings.use_airdate_as_recordingdate) && (item.originalairdate > 0)) {
 
-				// Only apply use_airdate_as_recordindate to items with a program type of "EP" or "SH"
-				if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
-
-					// The UTC time_t has to have the system timezone offset applied to it before reporting it as
-					// originalairdate is always a date value with no time component
-					struct tm tm { 0 };
-					time_t epoch = static_cast<time_t>(item.originalairdate);
-
-				#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
-					gmtime_s(&tm, &epoch);
-				#else
-					gmtime_r(&epoch, &tm);
-				#endif
-
-					recording.recordingTime = mktime(&tm);
-				}
+				// Only apply use_airdate_as_recordingdate to items with a program type of "EP" or "SH"
+				if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)))
+					recording.recordingTime = adjust_originalairdate(item.originalairdate);
 			}
 
 			// iDuration
