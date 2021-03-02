@@ -64,6 +64,7 @@
 #include "devicestream.h"
 #include "httpstream.h"
 #include "pvrstream.h"
+#include "radiofilter.h"
 #include "scalar_condition.h"
 #include "scheduler.h"
 #include "sqlite_exception.h"

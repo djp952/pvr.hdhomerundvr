@@ -106,6 +106,7 @@ LOCAL_SRC_FILES := \
 	src/dbextension.cpp \
 	src/devicestream.cpp \
 	src/httpstream.cpp \
+	src/radiofilter.cpp \
 	src/pvr.cpp \
 	src/scheduler.cpp \
 	src/sqlite_exception.cpp \
