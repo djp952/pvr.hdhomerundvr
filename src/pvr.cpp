@@ -310,16 +310,6 @@ struct addon_settings {
 	// Indicates that requests to stream DRM channels should be allowed
 	bool direct_tuning_allow_drm;
 
-	// enable_radio_channel_mapping
-	//
-	// Flag indicating that a radio channel mapping should be used
-	bool enable_radio_channel_mapping;
-
-	// radio_channel_mapping_file
-	//
-	// Path to the radio channel mapping file, if present
-	std::string radio_channel_mapping_file;
-
 	// stream_read_chunk_size
 	//
 	// Indicates the minimum number of bytes to return from a stream read
@@ -369,6 +359,21 @@ struct addon_settings {
 	//
 	// Indicates the number of milliseconds to subtract to an EDL end value
 	int recording_edl_end_padding;
+
+	// enable_radio_channel_mapping
+	//
+	// Flag indicating that a radio channel mapping should be used
+	bool enable_radio_channel_mapping;
+
+	// radio_channel_mapping_file
+	//
+	// Path to the radio channel mapping file, if present
+	std::string radio_channel_mapping_file;
+
+	// block_radio_channel_video_streams
+	//
+	// Flag to suppress the video streams for mapped radio channels
+	bool block_radio_channel_video_streams;
 };
 
 //---------------------------------------------------------------------------
@@ -505,8 +510,6 @@ static addon_settings g_settings = {
 	false,						// use_direct_tuning
 	tuning_protocol::http,		// direct_tuning_protocol
 	false,						// direct_tuning_allow_drm
-	false,						// enable_radio_channel_mapping
-	"",							// radio_channel_mapping_file
 	0,							// stream_read_chunk_size				automatic
 	72000,						// deviceauth_stale_after				default = 20 hours
 	false,						// enable_recording_edl
@@ -517,6 +520,9 @@ static addon_settings g_settings = {
 	false,						// recording_edl_cut_as_comskip
 	0,							// recording_edl_start_padding
 	0,							// recording_edl_end_padding
+	false,						// enable_radio_channel_mapping
+	"",							// radio_channel_mapping_file
+	false,						// block_radio_channel_video_streams
 };
 
 // g_settings_lock
@@ -2100,17 +2106,21 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			if(g_addon->GetSetting("recording_edl_start_padding", &nvalue)) g_settings.recording_edl_start_padding = nvalue;
 			if(g_addon->GetSetting("recording_edl_end_padding", &nvalue)) g_settings.recording_edl_end_padding = nvalue;
 
+			// Load the Radio Channel settings
+			if(g_addon->GetSetting("enable_radio_channel_mapping", &bvalue)) g_settings.enable_radio_channel_mapping = bvalue;
+			if(g_addon->GetSetting("radio_channel_mapping_file", strvalue)) g_settings.radio_channel_mapping_file.assign(strvalue);
+			if(g_addon->GetSetting("block_radio_channel_video_streams", &bvalue)) g_settings.block_radio_channel_video_streams = bvalue;
+
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_http_device_discovery", &bvalue)) g_settings.use_http_device_discovery = bvalue;
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("direct_tuning_allow_drm", &bvalue)) g_settings.direct_tuning_allow_drm = bvalue;
-			if(g_addon->GetSetting("enable_radio_channel_mapping", &bvalue)) g_settings.enable_radio_channel_mapping = bvalue;
-			if(g_addon->GetSetting("radio_channel_mapping_file", strvalue)) g_settings.radio_channel_mapping_file.assign(strvalue);
 			if(g_addon->GetSetting("stream_read_chunk_size_v3", &nvalue)) g_settings.stream_read_chunk_size = nvalue;
 			if(g_addon->GetSetting("deviceauth_stale_after_v2", &nvalue)) g_settings.deviceauth_stale_after = nvalue;
 
 			// Log the setting values; these are for diagnostic purposes just use the raw values
+			log_notice(__func__, ": g_settings.block_radio_channel_video_streams  = ", g_settings.block_radio_channel_video_streams);
 			log_notice(__func__, ": g_settings.channel_name_source                = ", static_cast<int>(g_settings.channel_name_source));
 			log_notice(__func__, ": g_settings.delete_datetime_rules_after        = ", g_settings.delete_datetime_rules_after);
 			log_notice(__func__, ": g_settings.deviceauth_stale_after             = ", g_settings.deviceauth_stale_after);
@@ -2656,32 +2666,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		}
 	}
 
-	// enable_radio_channel_mapping
-	//
-	else if(strcmp(name, "enable_radio_channel_mapping") == 0) {
-
-	bool bvalue = *reinterpret_cast<bool const*>(value);
-	if(bvalue != g_settings.enable_radio_channel_mapping) {
-
-			g_settings.enable_radio_channel_mapping = bvalue;
-			log_notice(__func__, ": setting enable_radio_channel_mapping changed to ", bvalue, " -- trigger channel group and recording updates");
-			g_pvr->TriggerChannelGroupsUpdate();
-			g_pvr->TriggerRecordingUpdate();
-		}
-	}
-
-	// radio_channel_mapping_file
-	//
-	else if(strcmp(name, "radio_channel_mapping_file") == 0) {
-
-		if(strcmp(g_settings.radio_channel_mapping_file.c_str(), reinterpret_cast<char const*>(value)) != 0) {
-
-			g_settings.radio_channel_mapping_file.assign(reinterpret_cast<char const*>(value));
-			log_notice(__func__, ": setting radio_channel_mapping_file changed to ", g_settings.radio_channel_mapping_file.c_str(), " -- schedule channel lineup update");
-			g_scheduler.add(update_lineups_task);
-		}
-	}
-
 	// stream_read_chunk_size
 	//
 	else if(strcmp(name, "stream_read_chunk_size_v3") == 0) {
@@ -2798,6 +2782,44 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 
 			g_settings.recording_edl_end_padding = nvalue;
 			log_notice(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
+		}
+	}
+
+	// enable_radio_channel_mapping
+	//
+	else if(strcmp(name, "enable_radio_channel_mapping") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.enable_radio_channel_mapping) {
+
+			g_settings.enable_radio_channel_mapping = bvalue;
+			log_notice(__func__, ": setting enable_radio_channel_mapping changed to ", bvalue, " -- trigger channel group and recording updates");
+			g_pvr->TriggerChannelGroupsUpdate();
+			g_pvr->TriggerRecordingUpdate();
+		}
+	}
+
+	// radio_channel_mapping_file
+	//
+	else if(strcmp(name, "radio_channel_mapping_file") == 0) {
+
+		if(strcmp(g_settings.radio_channel_mapping_file.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.radio_channel_mapping_file.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting radio_channel_mapping_file changed to ", g_settings.radio_channel_mapping_file.c_str(), " -- schedule channel lineup update");
+			g_scheduler.add(update_lineups_task);
+		}
+	}
+
+	// block_radio_channel_video_streams
+	//
+	else if(strcmp(name, "block_radio_channel_video_streams") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.block_radio_channel_video_streams) {
+
+			g_settings.block_radio_channel_video_streams = bvalue;
+			log_notice(__func__, ": setting block_radio_channel_video_streams changed to ", bvalue);
 		}
 	}
 
@@ -4611,6 +4633,13 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 		// If none of the above methods generated a valid stream, there is nothing left to try
 		if(!g_pvrstream) throw string_exception(__func__, ": unable to create a valid stream instance for channel ", vchannel);
 
+		// If this is a radio channel, check to see if the user wants to remove the video stream(s)
+		if(channel.bIsRadio && g_settings.enable_radio_channel_mapping && g_settings.block_radio_channel_video_streams) {
+
+			log_notice(__func__, ": channel is marked as radio, applying MPEG-TS video stream filter");
+			g_pvrstream = radiofilter::create(std::move(g_pvrstream));
+		}
+
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) g_scheduler.pause();
 
@@ -4923,6 +4952,14 @@ bool OpenRecordedStream(PVR_RECORDING const& recording)
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_notice(__func__, ": streaming recording '", recording.strTitle, "' via url ", streamurl.c_str());
 			g_pvrstream = httpstream::create(streamurl.c_str());
+
+			// If this is a radio channel, check to see if the user wants to remove the video stream(s)
+			if(recording.channelType == PVR_RECORDING_CHANNEL_TYPE::PVR_RECORDING_CHANNEL_TYPE_RADIO &&
+				g_settings.enable_radio_channel_mapping && g_settings.block_radio_channel_video_streams) {
+
+				log_notice(__func__, ": channel is marked as radio, applying MPEG-TS video stream filter");
+				g_pvrstream = radiofilter::create(std::move(g_pvrstream));
+			}
 
 			// For recorded streams, set the start and end times based on the recording metadata. Don't use the
 			// start time value in PVR_RECORDING; that may have been altered for display purposes

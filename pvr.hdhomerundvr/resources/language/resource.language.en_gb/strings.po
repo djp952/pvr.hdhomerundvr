@@ -36,6 +36,10 @@ msgctxt "#30004"
 msgid "Interface"
 msgstr ""
 
+msgctxt "#30005"
+msgid "Radio Channels"
+msgstr ""
+
 msgctxt "#30100"
 msgid "Pause discovery tasks while streaming"
 msgstr ""
@@ -166,6 +170,10 @@ msgstr ""
 
 msgctxt "#30143"
 msgid "Radio channel mapping file"
+msgstr ""
+
+msgctxt "#30144"
+msgid "Suppress video streams during playback"
 msgstr ""
 
 msgctxt "#30201"
@@ -526,5 +534,9 @@ msgstr ""
 
 msgctxt "#30538"
 msgid "Specifies the path to the Radio channel mapping file. This is a text file that lists either individual channel numbers ("4.1", "1800") or a range of channel numbers ("4.1-4.3", "1800-1899") to be moved from TV to Radio in Kodi. List one channel number or one channel range in each line of the file."
+msgstr ""
+
+msgctxt "#30539"
+msgid "When set to ON any video streams associated with a mapped Radio channel will be suppressed during playback."
 msgstr ""
 

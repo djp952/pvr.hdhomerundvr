@@ -2,7 +2,7 @@ v3.5.0 (2021.03.xx)
   - Update cURL library to version 7.75.0
   - Fix race condition that could cause a "Database is locked" error to be logged during Kodi startup
   - Fix bug that could cause unnecessary triggering of both channel and channel group updates
-  - Add "Enable Radio channel mappings" and "Radio channel mapping file" advanced options
+  - Add new "Radio Channels" settings category and associated options to enable radio channel mapping
   - Adjust reported Electronic Program Guide (EPG) original air values based on the system time zone
 
 v3.4.1 (2021.02.06)
