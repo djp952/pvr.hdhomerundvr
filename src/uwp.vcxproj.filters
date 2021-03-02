@@ -753,6 +753,9 @@
     <ClInclude Include="..\depends\libcurl\src\lib\http_aws_sigv4.h">
       <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="radiofilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1426,6 +1429,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\http_aws_sigv4.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="radiofilter.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

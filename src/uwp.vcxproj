@@ -443,6 +443,7 @@
     <ClInclude Include="http_exception.h" />
     <ClInclude Include="pvrstream.h" />
     <ClInclude Include="pvrtypes.h" />
+    <ClInclude Include="radiofilter.h" />
     <ClInclude Include="scalar_condition.h" />
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="sqlite_exception.h" />
@@ -5537,6 +5538,7 @@
     <ClCompile Include="dbextension.cpp" />
     <ClCompile Include="devicestream.cpp" />
     <ClCompile Include="httpstream.cpp" />
+    <ClCompile Include="radiofilter.cpp" />
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="sqlext\uuid.c">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4244</DisableSpecificWarnings>

@@ -55,6 +55,7 @@
 #include "database.h"
 #include "devicestream.h"
 #include "httpstream.h"
+#include "radiofilter.h"
 #include "string_exception.h"
 #include "sqlite_exception.h"
 
@@ -402,11 +403,11 @@ void addon::discover_mappings(scalar_condition<bool> const&, bool& changed)
 	// Check each of the new channel mapping ranges against the existing ones and swap them if different
 
 	bool cable_changed = ((cable_mappings.size() != m_radiomappings_cable.size()) || (!std::equal(cable_mappings.begin(), cable_mappings.end(), m_radiomappings_cable.begin(),
-		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+		[](channelrange_t const& lhs, channelrange_t const& rhs) { return lhs.first.value == rhs.first.value && lhs.second.value == rhs.second.value; })));
 	if(cable_changed) m_radiomappings_cable.swap(cable_mappings);
 
 	bool ota_changed = ((ota_mappings.size() != m_radiomappings_ota.size()) || (!std::equal(ota_mappings.begin(), ota_mappings.end(), m_radiomappings_ota.begin(),
-		[](auto const& l, auto const& r) { return l.first.value == r.first.value && l.second.value == r.second.value; })));
+		[](channelrange_t const& lhs, channelrange_t const& rhs) { return lhs.first.value == rhs.first.value && lhs.second.value == rhs.second.value; })));
 	if(ota_changed) m_radiomappings_ota.swap(ota_mappings);
 
 	// Set the changed flag for the caller if either set of channel mappings changed
@@ -676,11 +677,11 @@ bool addon::is_channel_radio(std::unique_lock<std::mutex> const& lock, union cha
 
 	// CABLE
 	if(channelid.parts.subchannel == 0) return std::any_of(m_radiomappings_cable.cbegin(), m_radiomappings_cable.cend(),
-		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+		[&](channelrange_t const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
 
 	// OTA
 	else return std::any_of(m_radiomappings_ota.cbegin(), m_radiomappings_ota.cend(),
-		[&](auto const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
+		[&](channelrange_t const& range) { return ((channelid.value >= range.first.value) && (channelid.value <= range.second.value)); });
 }
 
 //---------------------------------------------------------------------------
@@ -3147,9 +3148,9 @@ PVR_ERROR addon::GetChannelsAmount(int& amount)
 //	channel		- channel to get the stream properties for
 //	properties	- properties required to play the stream
 
-PVR_ERROR addon::GetChannelStreamProperties(kodi::addon::PVRChannel const& /*channel*/, std::vector<kodi::addon::PVRStreamProperty>& properties)
+PVR_ERROR addon::GetChannelStreamProperties(kodi::addon::PVRChannel const& channel, std::vector<kodi::addon::PVRStreamProperty>& properties)
 {
-	properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, "video/mp2t");
+	properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, channel.GetMimeType());
 	properties.emplace_back(PVR_STREAM_PROPERTY_ISREALTIMESTREAM, "true");
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
