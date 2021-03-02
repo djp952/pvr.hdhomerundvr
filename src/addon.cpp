@@ -1734,17 +1734,21 @@ ADDON_STATUS addon::Create(void)
 			m_settings.recording_edl_start_padding = kodi::GetSettingInt("recording_edl_start_padding", 0);
 			m_settings.recording_edl_end_padding = kodi::GetSettingInt("recording_edl_end_padding", 0);
 
+			// Load the Radio Channel settings
+			m_settings.enable_radio_channel_mapping = kodi::GetSettingBoolean("enable_radio_channel_mapping", false);
+			m_settings.radio_channel_mapping_file = kodi::GetSettingString("radio_channel_mapping_file");
+			m_settings.block_radio_channel_video_streams = kodi::GetSettingBoolean("block_radio_channel_video_streams", false);
+
 			// Load the advanced settings
 			m_settings.use_http_device_discovery = kodi::GetSettingBoolean("use_http_device_discovery", false);
 			m_settings.use_direct_tuning = kodi::GetSettingBoolean("use_direct_tuning", false);
 			m_settings.direct_tuning_protocol = kodi::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
 			m_settings.direct_tuning_allow_drm = kodi::GetSettingBoolean("direct_tuning_allow_drm", false);
-			m_settings.enable_radio_channel_mapping = kodi::GetSettingBoolean("enable_radio_channel_mapping", false);
-			m_settings.radio_channel_mapping_file = kodi::GetSettingString("radio_channel_mapping_file");
 			m_settings.stream_read_chunk_size = kodi::GetSettingInt("stream_read_chunk_size_v3", 0);							// Automatic
 			m_settings.deviceauth_stale_after = kodi::GetSettingInt("deviceauth_stale_after_v2", 72000);						// 20 hours
 
 			// Log the setting values; these are for diagnostic purposes just use the raw values
+			log_info(__func__, ": m_settings.block_radio_channel_video_streams  = ", m_settings.block_radio_channel_video_streams);
 			log_info(__func__, ": m_settings.channel_name_source                = ", static_cast<int>(m_settings.channel_name_source));
 			log_info(__func__, ": m_settings.delete_datetime_rules_after        = ", m_settings.delete_datetime_rules_after);
 			log_info(__func__, ": m_settings.deviceauth_stale_after             = ", m_settings.deviceauth_stale_after);
@@ -2177,33 +2181,6 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		}
 	}
 
-	// enable_radio_channel_mapping
-	//
-	else if(settingName == "enable_radio_channel_mapping") {
-
-		bool bvalue = settingValue.GetBoolean();
-		if(bvalue != m_settings.enable_radio_channel_mapping) {
-
-			m_settings.enable_radio_channel_mapping = bvalue;
-			log_info(__func__, ": setting enable_radio_channel_mapping changed to ", bvalue, " -- trigger channel group and recording updates");
-			TriggerChannelGroupsUpdate();
-			TriggerRecordingUpdate();
-		}
-	}
-
-	// radio_channel_mapping_file
-	//
-	else if(settingName == "radio_channel_mapping_file") {
-
-		std::string strvalue = settingValue.GetString();
-		if(strvalue != m_settings.radio_channel_mapping_file) {
-
-			m_settings.radio_channel_mapping_file = strvalue;
-			log_info(__func__, ": setting radio_channel_mapping_file changed to ", strvalue, " -- schedule channel lineup update");
-			m_scheduler.add(UPDATE_LINEUPS_TASK, &addon::update_lineups_task, this);
-		}
-	}
-
 	// stream_read_chunk_size
 	//
 	else if(settingName == "stream_read_chunk_size_v3") {
@@ -2325,6 +2302,45 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 
 			m_settings.recording_edl_end_padding = nvalue;
 			log_info(__func__, ": setting recording_edl_end_padding changed to ", nvalue, " milliseconds");
+		}
+	}
+
+	// enable_radio_channel_mapping
+	//
+	else if(settingName == "enable_radio_channel_mapping") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.enable_radio_channel_mapping) {
+
+			m_settings.enable_radio_channel_mapping = bvalue;
+			log_info(__func__, ": setting enable_radio_channel_mapping changed to ", bvalue, " -- trigger channel group and recording updates");
+			TriggerChannelGroupsUpdate();
+			TriggerRecordingUpdate();
+		}
+	}
+
+	// radio_channel_mapping_file
+	//
+	else if(settingName == "radio_channel_mapping_file") {
+
+		std::string strvalue = settingValue.GetString();
+		if(strvalue != m_settings.radio_channel_mapping_file) {
+
+			m_settings.radio_channel_mapping_file = strvalue;
+			log_info(__func__, ": setting radio_channel_mapping_file changed to ", strvalue, " -- schedule channel lineup update");
+			m_scheduler.add(UPDATE_LINEUPS_TASK, &addon::update_lineups_task, this);
+		}
+	}
+
+	// block_radio_channel_video_streams
+	//
+	else if(settingName == "block_radio_channel_video_streams") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.block_radio_channel_video_streams) {
+
+			m_settings.block_radio_channel_video_streams = bvalue;
+			log_info(__func__, ": setting block_radio_channel_video_streams changed to ", bvalue);
 		}
 	}
 
@@ -4110,6 +4126,13 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 		// If none of the above methods generated a valid stream, there is nothing left to try
 		if(!m_pvrstream) throw string_exception(__func__, ": unable to create a valid stream instance for channel ", vchannel);
 
+		// If this is a radio channel, check to see if the user wants to remove the video stream(s)
+		if(channel.GetIsRadio() && m_settings.enable_radio_channel_mapping && m_settings.block_radio_channel_video_streams) {
+
+			log_info(__func__, ": channel is marked as radio, applying MPEG-TS video stream filter");
+			m_pvrstream = radiofilter::create(std::move(m_pvrstream));
+		}
+
 		// Pause the scheduler if the user wants that functionality disabled during streaming
 		if(settings.pause_discovery_while_streaming) m_scheduler.pause();
 
@@ -4173,6 +4196,14 @@ bool addon::OpenRecordedStream(kodi::addon::PVRRecording const& recording)
 			// Start the new recording stream using the tuning parameters currently specified by the settings
 			log_info(__func__, ": streaming recording '", recording.GetTitle().c_str(), "' via url ", streamurl.c_str());
 			m_pvrstream = httpstream::create(streamurl.c_str());
+
+			// If this is a radio channel, check to see if the user wants to remove the video stream(s)
+			if(recording.GetChannelType() == PVR_RECORDING_CHANNEL_TYPE::PVR_RECORDING_CHANNEL_TYPE_RADIO && 
+				m_settings.enable_radio_channel_mapping && m_settings.block_radio_channel_video_streams) {
+
+				log_info(__func__, ": channel is marked as radio, applying MPEG-TS video stream filter");
+				m_pvrstream = radiofilter::create(std::move(m_pvrstream));
+			}
 
 			// For recorded streams, set the start and end times based on the recording metadata. Don't use the
 			// start time value in PVR_RECORDING; that may have been altered for display purposes

@@ -199,16 +199,6 @@ struct settings {
 	// Indicates that requests to stream DRM channels should be allowed
 	bool direct_tuning_allow_drm;
 
-	// enable_radio_channel_mapping
-	//
-	// Flag indicating that a radio channel mapping should be used
-	bool enable_radio_channel_mapping;
-
-	// radio_channel_mapping_file
-	//
-	// Path to the radio channel mapping file, if present
-	std::string radio_channel_mapping_file;
-
 	// stream_read_chunk_size
 	//
 	// Indicates the minimum number of bytes to return from a stream read
@@ -258,6 +248,21 @@ struct settings {
 	//
 	// Indicates the number of milliseconds to subtract to an EDL end value
 	int recording_edl_end_padding;
+
+	// enable_radio_channel_mapping
+	//
+	// Flag indicating that a radio channel mapping should be used
+	bool enable_radio_channel_mapping;
+
+	// radio_channel_mapping_file
+	//
+	// Path to the radio channel mapping file, if present
+	std::string radio_channel_mapping_file;
+
+	// block_radio_channel_video_streams
+	//
+	// Flag to suppress the video streams for mapped radio channels
+	bool block_radio_channel_video_streams;
 };
 
 //---------------------------------------------------------------------------
