@@ -3957,7 +3957,11 @@ PVR_ERROR SetRecordingLastPlayedPosition(PVR_RECORDING const& recording, int las
 
 int GetRecordingLastPlayedPosition(PVR_RECORDING const& recording)
 {
-	try { return get_recording_lastposition(connectionpool::handle(g_connpool), recording.strRecordingId); }
+	// NOTE: There is a race condition during startup with this function if Kodi asks for this information
+	// while a startup task like XMLTV listing discovery is still executing which can cause SQLITE_BUSY.
+	// Avoid this condition by only allowing a refresh of the information if startup has fully completed.
+
+	try { return get_recording_lastposition(connectionpool::handle(g_connpool), g_startup_complete.load(), recording.strRecordingId); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, -1); }
 	catch(...) { return handle_generalexception(__func__, -1); }
 }
