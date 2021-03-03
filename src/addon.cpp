@@ -3451,9 +3451,6 @@ PVR_ERROR addon::GetRecordingEdl(kodi::addon::PVRRecording const& recording, std
 
 PVR_ERROR addon::GetRecordingLastPlayedPosition(kodi::addon::PVRRecording const& recording, int& position)
 {
-	// Wait until the recording information has been discovered the first time
-	wait_for_recordings();
-
 	try { position = get_recording_lastposition(connectionpool::handle(m_connpool), recording.GetRecordingId().c_str()); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
@@ -4443,10 +4440,7 @@ PVR_ERROR addon::SetRecordingPlayCount(kodi::addon::PVRRecording const& recordin
 
 PVR_ERROR addon::SetRecordingLastPlayedPosition(kodi::addon::PVRRecording const& recording, int lastplayedposition)
 {
-	// Wait until the recording information has been discovered the first time
-	wait_for_recordings();
-
-	try {
+	try { 
 	
 		// If the last played position is -1, or if it's zero with a positive play count, mark as watched
 		bool const watched = ((lastplayedposition < 0) || ((lastplayedposition == 0) && (recording.GetPlayCount() > 0)));
