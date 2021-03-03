@@ -2685,9 +2685,10 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 // Arguments:
 //
 //	instance		- Database instance
+//	allowdiscover	- Flag that will allow a refresh of the data via discovery
 //	recordingid		- Recording identifier (command url)
 
-uint32_t get_recording_lastposition(sqlite3* instance, char const* recordingid)
+uint32_t get_recording_lastposition(sqlite3* instance, bool allowdiscover, char const* recordingid)
 {
 	sqlite3_stmt*				statement;				// Database query statement
 	uint32_t					resume = 0;				// Recording resume position
@@ -2728,7 +2729,7 @@ uint32_t get_recording_lastposition(sqlite3* instance, char const* recordingid)
 	if((discovered == 0) || (discovered >= (time(nullptr) - 30))) return resume;
 
 	// The discovery information is stale, perform a discovery for the series to refresh the information
-	discover_series_recordings(instance, seriesid.c_str());
+	if(allowdiscover) discover_series_recordings(instance, seriesid.c_str());
 
 	// Retrieve the updated resume position for the recording
 	return static_cast<uint32_t>(execute_scalar_int64(instance, "select coalesce(json_extract(data, '$.Resume'), 0) as resume from recording where recordingid like ?1 limit 1", recordingid));

@@ -3451,7 +3451,11 @@ PVR_ERROR addon::GetRecordingEdl(kodi::addon::PVRRecording const& recording, std
 
 PVR_ERROR addon::GetRecordingLastPlayedPosition(kodi::addon::PVRRecording const& recording, int& position)
 {
-	try { position = get_recording_lastposition(connectionpool::handle(m_connpool), recording.GetRecordingId().c_str()); }
+	// NOTE: There is a race condition during startup with this function if Kodi asks for this information
+	// while a startup task like XMLTV listing discovery is still executing which can cause SQLITE_BUSY.
+	// Avoid this condition by only allowing a refresh of the information if startup has fully completed.
+
+	try { position = get_recording_lastposition(connectionpool::handle(m_connpool), m_startup_complete.load(), recording.GetRecordingId().c_str()); }
 	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_FAILED); }
 	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_FAILED); }
 

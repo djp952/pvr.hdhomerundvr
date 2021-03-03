@@ -365,7 +365,7 @@ std::string get_recording_filename(sqlite3* instance, char const* recordingid, b
 // get_recording_lastposition
 //
 // Gets the last played position for a specific recording
-uint32_t get_recording_lastposition(sqlite3* instance, char const* recordingid);
+uint32_t get_recording_lastposition(sqlite3* instance, bool allowdiscover, char const* recordingid);
 
 // get_recording_stream_url
 //
