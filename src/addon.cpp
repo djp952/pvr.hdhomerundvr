@@ -67,6 +67,7 @@ ADDONCREATOR(addon)
 
 // Scheduled Task Names
 //
+char const* addon::EPG_TIMEFRAME_CHANGED_TASK	= "epg_timeframe_changed_task";
 char const* addon::UPDATE_DEVICES_TASK			= "update_devices_task";
 char const* addon::UPDATE_EPISODES_TASK			= "update_episodes_task";
 char const* addon::UPDATE_LINEUPS_TASK			= "update_lineups_task";
@@ -505,6 +506,33 @@ void addon::discover_recordings(scalar_condition<bool> const&, bool& changed)
 
 	// Set the scalar_condition on exception before re-throwing it
 	catch(...) { m_discovered_recordings = true; throw; }
+}
+
+//-----------------------------------------------------------------------------
+// addon::epg_timeframe_changed_task (private)
+//
+// Scheduled task implementation to deal with an EPG timeframe change
+//
+// Arguments:
+//
+//	cancel		- Condition variable used to cancel the operation
+
+void addon::epg_timeframe_changed_task(scalar_condition<bool> const& cancel)
+{
+	try {
+	
+		// Push all of the listing information available in the database based
+		// on the updated timeframe over to Kodi
+		push_listings(cancel);
+
+		// A change in the EPG timeframe will also require an update to the timers
+		// since they are filtered by that timeframe; trigger an update
+		log_info(__func__, ": trigger timer update");
+		TriggerTimerUpdate();
+	}
+
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+	catch(...) { handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
@@ -970,6 +998,106 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::hand
 }
 
 //---------------------------------------------------------------------------
+// addon::push_listings (private)
+//
+// Pushes the current set of guide listings to Kodi asynchronously
+//
+// Arguments:
+//
+//	cancel		- Condition variable used to cancel the operation
+
+void addon::push_listings(scalar_condition<bool> const& cancel)
+{
+	// Create a copy of the current addon settings structure
+	struct settings settings = copy_settings();
+
+	log_info(__func__, ": begin asynchronous electronic program guide update");
+
+	enumerate_listings(connectionpool::handle(m_connpool), settings.show_drm_protected_channels, m_epgmaxtime.load(),
+		[&](struct listing const& item, bool& cancelenum) -> void {
+
+		kodi::addon::PVREPGTag epgtag;				// PVREPGTag to be transferred to Kodi
+
+		// Abort the enumeration if the cancellation scalar_condition has been set
+		if(cancel.test(true) == true) { cancelenum = true; return; }
+
+		// UniqueBroadcastId (required)
+		assert(item.broadcastid > EPG_TAG_INVALID_UID);
+		epgtag.SetUniqueBroadcastId(item.broadcastid);
+
+		// UniqueChannelId (required)
+		epgtag.SetUniqueChannelId(item.channelid);
+
+		// Title (required)
+		if(item.title == nullptr) return;
+		epgtag.SetTitle(item.title);
+
+		// StartTime (required)
+		epgtag.SetStartTime(static_cast<time_t>(item.starttime));
+
+		// EndTime (required)
+		epgtag.SetEndTime(static_cast<time_t>(item.endtime));
+
+		// Plot
+		if(item.synopsis != nullptr) epgtag.SetPlot(item.synopsis);
+
+		// Year
+		//
+		// Only report for program type "MV" (Movies)
+		if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) epgtag.SetYear(item.year);
+
+		// IconPath
+		if(item.iconurl != nullptr) epgtag.SetIconPath(item.iconurl);
+
+		// GenreType
+		epgtag.SetGenreType((settings.use_backend_genre_strings) ? EPG_GENRE_USE_STRING : item.genretype);
+
+		// GenreDescription
+		if((settings.use_backend_genre_strings) && (item.genres != nullptr)) epgtag.SetGenreDescription(item.genres);
+
+		// FirstAired
+		//
+		// Only report for program types "EP" (Series Episode) and "SH" (Show)
+		if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
+
+			// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+			// unless series/episode information is available
+			if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
+				if(item.originalairdate != nullptr) epgtag.SetFirstAired(item.originalairdate);
+		}
+
+		// SeriesNumber
+		epgtag.SetSeriesNumber(item.seriesnumber);
+
+		// EpisodeNumber
+		epgtag.SetEpisodeNumber(item.episodenumber);
+
+		// EpisodePartNumber
+		epgtag.SetEpisodePartNumber(EPG_TAG_INVALID_SERIES_EPISODE);
+
+		// EpisodeName
+		if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
+
+		// Flags
+		epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES);
+
+		// SeriesLink
+		if(item.seriesid != nullptr) epgtag.SetSeriesLink(item.seriesid);
+
+		// StarRating
+		epgtag.SetStarRating(item.starrating);
+
+		// Transfer the EPG_TAG structure over to Kodi
+		EpgEventStateChange(epgtag, EPG_EVENT_STATE::EPG_EVENT_UPDATED);
+	});
+
+	// This can be a long-running operation; add a log message to indicate when it finished so that
+	// it can be detected as a potential performance issue to be addressed in the future
+	if(cancel.test(false) == true) log_info(__func__, ": asynchronous electronic program guide update complete");
+	else log_info(__func__, ": asynchronous electronic program guide update was cancelled");
+}
+
+//---------------------------------------------------------------------------
 // addon::select_tuner (private)
 //
 // Selects an available tuner device from a list of possibilities
@@ -1330,96 +1458,8 @@ void addon::update_listings_task(bool force, bool checkchannels, scalar_conditio
 			TriggerChannelUpdate();
 		}
 
-		// Enumerate all of the listings in the database and send them to Kodi
-		if(changed && (cancel.test(true) == false)) {
-
-			log_info(__func__, ": execute electronic program guide update");
-
-			enumerate_listings(connectionpool::handle(m_connpool), settings.show_drm_protected_channels, m_epgmaxtime.load(), 
-				[&](struct listing const& item, bool& cancelenum) -> void {
-
-				kodi::addon::PVREPGTag epgtag;				// PVREPGTag to be transferred to Kodi
-
-				// Abort the enumeration if the cancellation scalar_condition has been set
-				if(cancel.test(true) == true) { cancelenum = true; return; }
-
-				// UniqueBroadcastId (required)
-				assert(item.broadcastid > EPG_TAG_INVALID_UID);
-				epgtag.SetUniqueBroadcastId(item.broadcastid);
-
-				// UniqueChannelId (required)
-				epgtag.SetUniqueChannelId(item.channelid);
-
-				// Title (required)
-				if(item.title == nullptr) return;
-				epgtag.SetTitle(item.title);
-
-				// StartTime (required)
-				epgtag.SetStartTime(static_cast<time_t>(item.starttime));
-
-				// EndTime (required)
-				epgtag.SetEndTime(static_cast<time_t>(item.endtime));
-
-				// Plot
-				if(item.synopsis != nullptr) epgtag.SetPlot(item.synopsis);
-
-				// Year
-				//
-				// Only report for program type "MV" (Movies)
-				if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) epgtag.SetYear(item.year);
-
-				// IconPath
-				if(item.iconurl != nullptr) epgtag.SetIconPath(item.iconurl);
-
-				// GenreType
-				epgtag.SetGenreType((settings.use_backend_genre_strings) ? EPG_GENRE_USE_STRING : item.genretype);
-
-				// GenreDescription
-				if((settings.use_backend_genre_strings) && (item.genres != nullptr)) epgtag.SetGenreDescription(item.genres);
-
-				// FirstAired
-				//
-				// Only report for program types "EP" (Series Episode) and "SH" (Show)
-				if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
-
-					// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-					// unless series/episode information is available
-					if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
-						if(item.originalairdate != nullptr) epgtag.SetFirstAired(item.originalairdate);
-				}
-
-				// SSeriesNumber
-				epgtag.SetSeriesNumber(item.seriesnumber);
-
-				// EpisodeNumber
-				epgtag.SetEpisodeNumber(item.episodenumber);
-
-				// EpisodePartNumber
-				epgtag.SetEpisodePartNumber(EPG_TAG_INVALID_SERIES_EPISODE);
-
-				// EpisodeName
-				if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
-
-				// Flags
-				epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES);
-
-				// SeriesLink
-				if(item.seriesid != nullptr) epgtag.SetSeriesLink(item.seriesid);
-
-				// StarRating
-				epgtag.SetStarRating(item.starrating);
-
-				// Transfer the EPG_TAG structure over to Kodi
-				EpgEventStateChange(epgtag, EPG_EVENT_STATE::EPG_EVENT_UPDATED);
-			});
-
-			// Trigger a timer update after the guide information has been updated
-			if(cancel.test(true) == false) {
-
-				log_info(__func__, ": triggering timer update");
-				TriggerTimerUpdate();
-			}
-		}
+		// Push all of the updated listings in the database over to Kodi
+		if(changed && (cancel.test(true) == false)) push_listings(cancel);
 	}
 
 	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 
@@ -4381,18 +4421,15 @@ int64_t addon::SeekRecordedStream(int64_t position, int whence)
 
 PVR_ERROR addon::SetEPGMaxFutureDays(int futureDays)
 {
-	if(futureDays == m_epgmaxtime.load()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+	int epgmaxtime = m_epgmaxtime.load();
+	if(futureDays == epgmaxtime) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
 	m_epgmaxtime.store(futureDays);
 
-	//
-	// TODO: There needs to be a new task to push listings; update_listings_task won't
-	// do it anymore if nothing has changed, which will typically be the case here
-	//
-
-	// Changes to the EPG maximum time value need to trigger a timer update
-	log_info(__func__, ": EPG time frame has changed -- trigger timer update");
-	TriggerTimerUpdate();
+	// The addon will receive this notification the instant the user has changed this setting; provide a 5-second
+	// delay before actually pushing new data or triggering any updates to allow it to 'settle'
+	log_info(__func__, ": EPG future days setting has been changed -- trigger guide listing and timer updates in 5 seconds");
+	m_scheduler.add(EPG_TIMEFRAME_CHANGED_TASK, std::chrono::system_clock::now() + std::chrono::seconds(5), &addon::epg_timeframe_changed_task, this);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }

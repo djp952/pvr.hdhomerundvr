@@ -350,6 +350,7 @@ private:
 	void discover_mappings(scalar_condition<bool> const& cancel, bool& changed);
 	void discover_recordingrules(scalar_condition<bool> const& cancel, bool& changed);
 	void discover_recordings(scalar_condition<bool> const& cancel, bool& changed);
+	void push_listings(scalar_condition<bool> const& cancel);
 	void start_discovery(void) noexcept;
 	void wait_for_devices(void) noexcept;
 	void wait_for_channels(void) noexcept;
@@ -386,6 +387,7 @@ private:
 
 	// Scheduled Tasks
 	//
+	void epg_timeframe_changed_task(scalar_condition<bool> const& cancel);
 	void startup_alerts_task(scalar_condition<bool> const& cancel);
 	void startup_complete_task(scalar_condition<bool> const& cancel);
 	void update_devices_task(scalar_condition<bool> const& cancel);
@@ -398,6 +400,7 @@ private:
 
 	// Scheduled Task Names
 	//
+	static char const* EPG_TIMEFRAME_CHANGED_TASK;
 	static char const* UPDATE_DEVICES_TASK;
 	static char const* UPDATE_EPISODES_TASK;
 	static char const* UPDATE_LINEUPS_TASK;
