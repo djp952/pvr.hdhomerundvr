@@ -516,7 +516,7 @@ void addon::discover_recordings(scalar_condition<bool> const&, bool& changed)
 //
 //	function		- Name of the function where the exception was thrown
 
-void addon::handle_generalexception(char const* function)
+void addon::handle_generalexception(char const* function) const
 {
 	log_error(function, " failed due to an exception");
 }
@@ -532,7 +532,7 @@ void addon::handle_generalexception(char const* function)
 //	result			- Result code to return
 
 template<typename _result>
-_result addon::handle_generalexception(char const* function, _result result)
+_result addon::handle_generalexception(char const* function, _result result) const
 {
 	handle_generalexception(function);
 	return result;
@@ -548,7 +548,7 @@ _result addon::handle_generalexception(char const* function, _result result)
 //	function		- Name of the function where the exception was thrown
 //	exception		- std::exception that was thrown
 
-void addon::handle_stdexception(char const* function, std::exception const& ex)
+void addon::handle_stdexception(char const* function, std::exception const& ex) const
 {
 	log_error(function, " failed due to an exception: ", ex.what());
 }
@@ -565,7 +565,7 @@ void addon::handle_stdexception(char const* function, std::exception const& ex)
 //	result			- Result code to return
 
 template<typename _result>
-_result addon::handle_stdexception(char const* function, std::exception const& ex, _result result)
+_result addon::handle_stdexception(char const* function, std::exception const& ex, _result result) const
 {
 	handle_stdexception(function, ex);
 	return result;
@@ -580,7 +580,7 @@ _result addon::handle_stdexception(char const* function, std::exception const& e
 //
 //	NONE
 
-bool addon::ipv4_network_available(void)
+bool addon::ipv4_network_available(void) const
 {
 #if defined(_WINDOWS) || defined(WINAPI_FAMILY)
 
@@ -694,7 +694,7 @@ bool addon::is_channel_radio(std::unique_lock<std::mutex> const& lock, union cha
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_debug(_args&&... args)
+void addon::log_debug(_args&&... args) const
 {
 	log_message(AddonLog::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
 }
@@ -710,7 +710,7 @@ void addon::log_debug(_args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_debug_if(bool flag, _args&&... args)
+void addon::log_debug_if(bool flag, _args&&... args) const
 {
 	if(flag) log_message(AddonLog::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
 }
@@ -725,7 +725,7 @@ void addon::log_debug_if(bool flag, _args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_error(_args&&... args)
+void addon::log_error(_args&&... args) const
 {
 	log_message(AddonLog::ADDON_LOG_ERROR, std::forward<_args>(args)...);
 }
@@ -741,7 +741,7 @@ void addon::log_error(_args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_error_if(bool flag, _args&&... args)
+void addon::log_error_if(bool flag, _args&&... args) const
 {
 	if(flag) log_message(AddonLog::ADDON_LOG_ERROR, std::forward<_args>(args)...);
 }
@@ -756,7 +756,7 @@ void addon::log_error_if(bool flag, _args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_info(_args&&... args)
+void addon::log_info(_args&&... args) const
 {
 	log_message(AddonLog::ADDON_LOG_INFO, std::forward<_args>(args)...);
 }
@@ -772,7 +772,7 @@ void addon::log_info(_args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_info_if(bool flag, _args&&... args)
+void addon::log_info_if(bool flag, _args&&... args) const
 {
 	if(flag) log_message(AddonLog::ADDON_LOG_INFO, std::forward<_args>(args)...);
 }
@@ -787,7 +787,7 @@ void addon::log_info_if(bool flag, _args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_message(AddonLog level, _args&&... args)
+void addon::log_message(AddonLog level, _args&&... args) const
 {
 	const size_t MAX_ERROR_LOG = 10;	// Maximum entries to store in error log
 
@@ -827,7 +827,7 @@ void addon::log_message(AddonLog level, _args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_warning(_args&&... args)
+void addon::log_warning(_args&&... args) const
 {
 	log_message(AddonLog::ADDON_LOG_WARNING, std::forward<_args>(args)...);
 }
@@ -843,7 +843,7 @@ void addon::log_warning(_args&&... args)
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_warning_if(bool flag, _args&&... args)
+void addon::log_warning_if(bool flag, _args&&... args) const
 {
 	if(flag) log_message(AddonLog::ADDON_LOG_WARNING, std::forward<_args>(args)...);
 }
@@ -859,7 +859,7 @@ void addon::log_warning_if(bool flag, _args&&... args)
 //	channelid	- Channel identifier
 //	vchannel	- Virtual channel number
 
-std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
+std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel) const
 {
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
@@ -898,7 +898,7 @@ std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::ha
 //	channelid	- Channel identifier
 //	vchannel	- Virtual channel number
 
-std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
+std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel) const
 {
 	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
 
@@ -935,7 +935,7 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::ha
 //	channelid	- Channel identifier
 //	vchannel	- Virtual channel number
 
-std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel)
+std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel) const
 {
 	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
 
@@ -978,7 +978,7 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::hand
 //
 //	possibilities	- vector<> of possible tuners to select from
 
-std::string addon::select_tuner(std::vector<std::string> const& possibilities)
+std::string addon::select_tuner(std::vector<std::string> const& possibilities) const
 {
 	std::string					tunerid;			// Selected tuner identifier
 

@@ -358,22 +358,22 @@ private:
 
 	// Exception Helpers
 	//
-	void handle_generalexception(char const* function);
-	template<typename _result> _result handle_generalexception(char const* function, _result result);
-	void handle_stdexception(char const* function, std::exception const& ex);
-	template<typename _result> _result handle_stdexception(char const* function, std::exception const& ex, _result result);
+	void handle_generalexception(char const* function) const;
+	template<typename _result> _result handle_generalexception(char const* function, _result result) const;
+	void handle_stdexception(char const* function, std::exception const& ex) const;
+	template<typename _result> _result handle_stdexception(char const* function, std::exception const& ex, _result result) const;
 
 	// Log Helpers
 	//
-	template<typename... _args> void log_debug(_args&&... args);
-	template<typename... _args> void log_debug_if(bool flag, _args&&... args);
-	template<typename... _args> void log_error(_args&&... args);
-	template<typename... _args> void log_error_if(bool flag, _args&&... args);
-	template<typename... _args> void log_info(_args&&... args);
-	template<typename... _args> void log_info_if(bool flag, _args&&... args);
-	template<typename... _args> void log_message(AddonLog level, _args&&... args);
-	template<typename... _args> void log_warning(_args&&... args);
-	template<typename... _args> void log_warning_if(bool flag, _args&&... args);
+	template<typename... _args> void log_debug(_args&&... args) const;
+	template<typename... _args> void log_debug_if(bool flag, _args&&... args) const;
+	template<typename... _args> void log_error(_args&&... args) const;
+	template<typename... _args> void log_error_if(bool flag, _args&&... args) const;
+	template<typename... _args> void log_info(_args&&... args) const;
+	template<typename... _args> void log_info_if(bool flag, _args&&... args) const;
+	template<typename... _args> void log_message(AddonLog level, _args&&... args) const;
+	template<typename... _args> void log_warning(_args&&... args) const;
+	template<typename... _args> void log_warning_if(bool flag, _args&&... args) const;
 
 	// Mapping helpers
 	//
@@ -381,8 +381,8 @@ private:
 
 	// Network Helpers
 	//
-	bool ipv4_network_available(void);
-	std::string select_tuner(std::vector<std::string> const& possibilities);
+	bool ipv4_network_available(void) const;
+	std::string select_tuner(std::vector<std::string> const& possibilities) const;
 
 	// Scheduled Tasks
 	//
@@ -412,11 +412,11 @@ private:
 	// Stream Helpers
 	//
 	std::unique_ptr<pvrstream> openlivestream_storage_http(connectionpool::handle const& dbhandle,
-		union channelid channelid, char const* vchannel);
+		union channelid channelid, char const* vchannel) const;
 	std::unique_ptr<pvrstream> openlivestream_tuner_device(connectionpool::handle const& dbhandle,
-		union channelid channelid, char const* vchannel);
+		union channelid channelid, char const* vchannel) const;
 	std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::handle const& dbhandle,
-		union channelid channelid, char const* vchannel);
+		union channelid channelid, char const* vchannel) const;
 
 	//-------------------------------------------------------------------------
 	// Member Variables
@@ -430,7 +430,7 @@ private:
 	scalar_condition<bool>			m_discovered_recordings;		// Discovery flag
 	std::once_flag					m_discovery_started;			// Discovery started flag
 	std::atomic<int>				m_epgmaxtime;					// Maximum EPG time frame
-	std::deque<std::string>			m_errorlog;						// Recent error log
+	mutable std::deque<std::string>	m_errorlog;						// Recent error log
 	mutable std::mutex				m_errorlog_lock;				// Synchronization object
 	std::unique_ptr<pvrstream>		m_pvrstream;					// Active PVR stream instance
 	channelranges_t					m_radiomappings_cable;			// Ranges of radio channels
