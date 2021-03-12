@@ -5295,8 +5295,14 @@ PVR_ERROR SetEPGTimeFrame(int days)
 
 	g_epgmaxtime.store(days);
 
-	log_notice(__func__, ": EPG time frame has changed -- schedule guide listings update");
-	g_scheduler.add(std::bind(update_listings_task, false, false, std::placeholders::_1));
+	//
+	// TODO: There needs to be a new task to push listings; update_listings_task won't
+	// do it anymore if nothing has changed, which will typically be the case here
+	//
+
+	// Changes to the EPG maximum time value need to trigger a timer update
+	log_notice(__func__, ": EPG time frame has changed -- trigger timer update");
+	g_pvr->TriggerTimerUpdate();
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
