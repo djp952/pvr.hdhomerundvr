@@ -1256,7 +1256,6 @@ void addon::update_lineups_task(scalar_condition<bool> const& cancel)
 			TriggerRecordingUpdate();
 		}
 
-
 		// Changes to the lineups may require an update to the listings if new channels were added
 		if((cancel.test(true) == false) && lineupschanged) {
 
@@ -4386,8 +4385,14 @@ PVR_ERROR addon::SetEPGMaxFutureDays(int futureDays)
 
 	m_epgmaxtime.store(futureDays);
 
-	log_info(__func__, ": EPG time frame has changed -- schedule guide listings update");
-	m_scheduler.add(UPDATE_LISTINGS_TASK, std::bind(&addon::update_listings_task, this, false, false, std::placeholders::_1));
+	//
+	// TODO: There needs to be a new task to push listings; update_listings_task won't
+	// do it anymore if nothing has changed, which will typically be the case here
+	//
+
+	// Changes to the EPG maximum time value need to trigger a timer update
+	log_info(__func__, ": EPG time frame has changed -- trigger timer update");
+	TriggerTimerUpdate();
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
