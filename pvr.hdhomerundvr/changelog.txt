@@ -1,4 +1,5 @@
 v3.5.0 (2021.03.xx)
+  - Update SQLite database engine to version 3.35.0
   - Update cURL library to version 7.75.0
   - Fix bug that could cause unnecessary triggering of both channel and channel group updates
   - Fix race condition that could cause a "Database is locked" error to be logged during Kodi startup
