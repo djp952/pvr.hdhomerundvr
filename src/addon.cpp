@@ -1079,7 +1079,7 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 		if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
 
 		// Flags
-		epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES);
+		epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES | ((item.isnew) ? EPG_TAG_FLAG_IS_NEW : 0));
 
 		// SeriesLink
 		if(item.seriesid != nullptr) epgtag.SetSeriesLink(item.seriesid);
@@ -3337,7 +3337,7 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 			if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
 
 			// Flags
-			epgtag.SetFlags(EPG_TAG_FLAG::EPG_TAG_FLAG_IS_SERIES);
+			epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES | ((item.isnew) ? EPG_TAG_FLAG_IS_NEW : 0));
 
 			// SeriesLink
 			if(item.seriesid != nullptr) epgtag.SetSeriesLink(item.seriesid);

@@ -5,6 +5,7 @@ v4.5.0 (2021.03.xx)
   - Fix race condition that could cause a "Database is locked" error to be logged during Kodi startup
   - Fix bug preventing Electronic Program Guide (EPG) data from updating when Kodi Guide 'Future days to display' setting has changed
   - Fix bug preventing timers and timer rules from updating when Kodi Guide 'Future days to display' setting has changed
+  - Fix bug preventing Electronic Program Guide (EPG) entries from being flagged as 'New'
   - Add new "Radio Channels" settings category and associated options to enable radio channel mapping
 
 v4.4.1 (2021.02.06)
