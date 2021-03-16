@@ -1,11 +1,12 @@
 v4.5.0 (2021.03.xx)
-  - Update SQLite database engine to version 3.35.0
+  - Update SQLite database engine to version 3.35.1
   - Update cURL library to version 7.75.0
   - Fix bug that could cause unnecessary triggering of both channel and channel group updates
   - Fix race condition that could cause a "Database is locked" error to be logged during Kodi startup
   - Fix bug preventing Electronic Program Guide (EPG) data from updating when Kodi Guide 'Future days to display' setting has changed
   - Fix bug preventing timers and timer rules from updating when Kodi Guide 'Future days to display' setting has changed
-  - Fix bug preventing Electronic Program Guide (EPG) entries from being flagged as 'New'
+  - Fix bug preventing Electronic Program Guide (EPG) entries from being flagged as new
+  - Omit reporting of new indicator for programs of type News/Current Affairs unless a specific season/episode is specified
   - Add new "Radio Channels" settings category and associated options to enable radio channel mapping
 
 v4.4.1 (2021.02.06)

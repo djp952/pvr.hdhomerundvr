@@ -1079,7 +1079,16 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 		if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
 
 		// Flags
-		epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES | ((item.isnew) ? EPG_TAG_FLAG_IS_NEW : 0));
+		//
+		// Only report EPG_TAG_FLAG_IS_NEW for program types "EP" (Series Episode) and "SH" (Show)
+		unsigned int flags = EPG_TAG_FLAG_IS_SERIES;
+		if((item.isnew) && (item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
+
+			// Special case: don't report EPG_TAG_FLAG_IS_NEW for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+			// unless series/episode information is available
+			if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1))) flags |= EPG_TAG_FLAG_IS_NEW;
+		}
+		epgtag.SetFlags(flags);
 
 		// SeriesLink
 		if(item.seriesid != nullptr) epgtag.SetSeriesLink(item.seriesid);
@@ -3337,7 +3346,16 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 			if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
 
 			// Flags
-			epgtag.SetFlags(EPG_TAG_FLAG_IS_SERIES | ((item.isnew) ? EPG_TAG_FLAG_IS_NEW : 0));
+			//
+			// Only report EPG_TAG_FLAG_IS_NEW for program types "EP" (Series Episode) and "SH" (Show)
+			unsigned int flags = EPG_TAG_FLAG_IS_SERIES;
+			if((item.isnew) && (item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
+
+				// Special case: don't report EPG_TAG_FLAG_IS_NEW for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
+				// unless series/episode information is available
+				if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1))) flags |= EPG_TAG_FLAG_IS_NEW;
+			}
+			epgtag.SetFlags(flags);
 
 			// SeriesLink
 			if(item.seriesid != nullptr) epgtag.SetSeriesLink(item.seriesid);
