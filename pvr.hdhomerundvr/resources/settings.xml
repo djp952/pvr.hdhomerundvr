@@ -81,7 +81,13 @@
           </constraints>
           <control type="spinner" format="integer"/>
         </setting>
-        
+
+        <setting id="generate_epg_repeat_indicators" type="boolean" label="30145" help="30540">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
         <setting id="disable_recording_categories" type="boolean" label="30135" help="30530">
           <level>0</level>
           <default>false</default>

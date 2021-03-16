@@ -7,6 +7,8 @@ v4.5.0 (2021.03.xx)
   - Fix bug preventing timers and timer rules from updating when Kodi Guide 'Future days to display' setting has changed
   - Fix bug preventing Electronic Program Guide (EPG) entries from being flagged as new
   - Omit reporting of new indicator for programs of type News/Current Affairs unless a specific season/episode is specified
+  - Rename "Append repeat indicators to applicable recording names" Interface option to "Append repeat indicators to Recorded TV episode names"
+  - Add new "Append repeat indicators to EPG episode names" Interface option
   - Add new "Radio Channels" settings category and associated options to enable radio channel mapping
 
 v4.4.1 (2021.02.06)

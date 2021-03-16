@@ -67,7 +67,7 @@ ADDONCREATOR(addon)
 
 // Scheduled Task Names
 //
-char const* addon::EPG_TIMEFRAME_CHANGED_TASK	= "epg_timeframe_changed_task";
+char const* addon::PUSH_LISTINGS_TASK			= "push_listings_task";
 char const* addon::UPDATE_DEVICES_TASK			= "update_devices_task";
 char const* addon::UPDATE_EPISODES_TASK			= "update_episodes_task";
 char const* addon::UPDATE_LINEUPS_TASK			= "update_lineups_task";
@@ -506,33 +506,6 @@ void addon::discover_recordings(scalar_condition<bool> const&, bool& changed)
 
 	// Set the scalar_condition on exception before re-throwing it
 	catch(...) { m_discovered_recordings = true; throw; }
-}
-
-//-----------------------------------------------------------------------------
-// addon::epg_timeframe_changed_task (private)
-//
-// Scheduled task implementation to deal with an EPG timeframe change
-//
-// Arguments:
-//
-//	cancel		- Condition variable used to cancel the operation
-
-void addon::epg_timeframe_changed_task(scalar_condition<bool> const& cancel)
-{
-	try {
-	
-		// Push all of the listing information available in the database based
-		// on the updated timeframe over to Kodi
-		push_listings(cancel);
-
-		// A change in the EPG timeframe will also require an update to the timers
-		// since they are filtered by that timeframe; trigger an update
-		log_info(__func__, ": trigger timer update");
-		TriggerTimerUpdate();
-	}
-
-	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
-	catch(...) { handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
@@ -1021,6 +994,9 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 		// Abort the enumeration if the cancellation scalar_condition has been set
 		if(cancel.test(true) == true) { cancelenum = true; return; }
 
+		// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and isnew is *not* set, flag it as a repeat
+		bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.isnew == false));
+
 		// UniqueBroadcastId (required)
 		assert(item.broadcastid > EPG_TAG_INVALID_UID);
 		epgtag.SetUniqueBroadcastId(item.broadcastid);
@@ -1076,7 +1052,12 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 		epgtag.SetEpisodePartNumber(EPG_TAG_INVALID_SERIES_EPISODE);
 
 		// EpisodeName
-		if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
+		if(item.episodename != nullptr) {
+
+			// If the setting to generate repeat indicators is set, append to the episode name as appropriate
+			std::string episodename = std::string(item.episodename) + std::string(((isrepeat) && (settings.generate_epg_repeat_indicators)) ? " [R]" : "");
+			epgtag.SetEpisodeName(episodename);
+		}
 
 		// Flags
 		//
@@ -1104,6 +1085,32 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 	// it can be detected as a potential performance issue to be addressed in the future
 	if(cancel.test(false) == true) log_info(__func__, ": asynchronous electronic program guide update complete");
 	else log_info(__func__, ": asynchronous electronic program guide update was cancelled");
+}
+
+//-----------------------------------------------------------------------------
+// addon::push_listings_task (private)
+//
+// Scheduled task implementation to push the current listings to Kodi
+//
+// Arguments:
+//
+//	cancel		- Condition variable used to cancel the operation
+
+void addon::push_listings_task(scalar_condition<bool> const& cancel)
+{
+	try {
+
+		// Push all of the listing information available in the database based
+		// on the updated timeframe over to Kodi
+		push_listings(cancel);
+
+		// A change in the EPG timeframe will also require an update to the timers
+		// since they are filtered by that timeframe; trigger an update
+		log_info(__func__, ": trigger timer update");
+		TriggerTimerUpdate();
+	}
+
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); } 	catch(...) { handle_generalexception(__func__); }
 }
 
 //---------------------------------------------------------------------------
@@ -1760,6 +1767,7 @@ ADDON_STATUS addon::Create(void)
 			m_settings.use_episode_number_as_title = kodi::GetSettingBoolean("use_episode_number_as_title", false);
 			m_settings.use_backend_genre_strings = kodi::GetSettingBoolean("use_backend_genre_strings", false);
 			m_settings.channel_name_source = kodi::GetSettingEnum("channel_name_source", channel_name_source::xmltv);
+			m_settings.generate_epg_repeat_indicators = kodi::GetSettingBoolean("generate_epg_repeat_indicators", false);
 			m_settings.disable_recording_categories = kodi::GetSettingBoolean("disable_recording_categories", false);
 			m_settings.generate_repeat_indicators = kodi::GetSettingBoolean("generate_repeat_indicators", false);
 			m_settings.use_airdate_as_recordingdate = kodi::GetSettingBoolean("use_airdate_as_recordingdate", false);
@@ -1812,6 +1820,7 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.discover_recordings_interval       = ", m_settings.discover_recordings_interval);
 			log_info(__func__, ": m_settings.enable_radio_channel_mapping       = ", m_settings.enable_radio_channel_mapping);
 			log_info(__func__, ": m_settings.enable_recording_edl               = ", m_settings.enable_recording_edl);
+			log_info(__func__, ": m_settings.generate_epg_repeat_indicators     = ", m_settings.generate_epg_repeat_indicators);
 			log_info(__func__, ": m_settings.generate_repeat_indicators         = ", m_settings.generate_repeat_indicators);
 			log_info(__func__, ": m_settings.pause_discovery_while_streaming    = ", m_settings.pause_discovery_while_streaming);
 			log_info(__func__, ": m_settings.prepend_channel_numbers            = ", m_settings.prepend_channel_numbers);
@@ -2027,6 +2036,19 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 			m_settings.channel_name_source = static_cast<enum channel_name_source>(nvalue);
 			log_info(__func__, ": setting channel_name_source changed -- trigger channel update");
 			TriggerChannelUpdate();
+		}
+	}
+
+	// generate_epg_repeat_indicators
+	//
+	else if(settingName == "generate_epg_repeat_indicators") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.generate_epg_repeat_indicators) {
+
+			m_settings.generate_epg_repeat_indicators = bvalue;
+			log_info(__func__, ": setting generate_epg_repeat_indicators changed to ", bvalue, " -- schedule guide listing push");
+			m_scheduler.add(PUSH_LISTINGS_TASK, &addon::push_listings_task, this);
 		}
 	}
 
@@ -3287,6 +3309,9 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 			// Don't send EPG entries with start/end times outside the requested range
 			if((item.starttime > end) || (item.endtime < start)) return;
 
+			// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and isnew is *not* set, flag it as a repeat
+			bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.isnew == false));
+
 			// UniqueBroadcastId (required)
 			epgtag.SetUniqueBroadcastId(item.broadcastid);
 
@@ -3343,7 +3368,12 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 			epgtag.SetEpisodePartNumber(-1);
 
 			// EpisodeName
-			if(item.episodename != nullptr) epgtag.SetEpisodeName(item.episodename);
+			if(item.episodename != nullptr) {
+
+				// If the setting to generate repeat indicators is set, append to the episode name as appropriate
+				std::string episodename = std::string(item.episodename) + std::string(((isrepeat) && (settings.generate_epg_repeat_indicators)) ? " [R]" : "");
+				epgtag.SetEpisodeName(episodename);
+			}
 
 			// Flags
 			//
@@ -3569,8 +3599,7 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 
 				char strEpisodeName[PVR_ADDON_NAME_STRING_LENGTH]{};
 
-				snprintf(strEpisodeName, std::extent<decltype(strEpisodeName)>::value, "%s%s", item.episodename, 
-					((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : "");
+				snprintf(strEpisodeName, std::extent<decltype(strEpisodeName)>::value, "%s%s", item.episodename, ((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : "");
 				recording.SetEpisodeName(strEpisodeName);
 			}
 
@@ -4447,7 +4476,7 @@ PVR_ERROR addon::SetEPGMaxFutureDays(int futureDays)
 	// The addon will receive this notification the instant the user has changed this setting; provide a 5-second
 	// delay before actually pushing new data or triggering any updates to allow it to 'settle'
 	log_info(__func__, ": EPG future days setting has been changed -- trigger guide listing and timer updates in 5 seconds");
-	m_scheduler.add(EPG_TIMEFRAME_CHANGED_TASK, std::chrono::system_clock::now() + std::chrono::seconds(5), &addon::epg_timeframe_changed_task, this);
+	m_scheduler.add(PUSH_LISTINGS_TASK, std::chrono::system_clock::now() + std::chrono::seconds(5), &addon::push_listings_task, this);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }

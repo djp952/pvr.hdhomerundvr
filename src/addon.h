@@ -387,7 +387,7 @@ private:
 
 	// Scheduled Tasks
 	//
-	void epg_timeframe_changed_task(scalar_condition<bool> const& cancel);
+	void push_listings_task(scalar_condition<bool> const& cancel);
 	void startup_alerts_task(scalar_condition<bool> const& cancel);
 	void startup_complete_task(scalar_condition<bool> const& cancel);
 	void update_devices_task(scalar_condition<bool> const& cancel);
@@ -400,7 +400,7 @@ private:
 
 	// Scheduled Task Names
 	//
-	static char const* EPG_TIMEFRAME_CHANGED_TASK;
+	static char const* PUSH_LISTINGS_TASK;
 	static char const* UPDATE_DEVICES_TASK;
 	static char const* UPDATE_EPISODES_TASK;
 	static char const* UPDATE_LINEUPS_TASK;

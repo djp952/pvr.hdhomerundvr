@@ -124,6 +124,11 @@ struct settings {
 	// Indicates the preferred source to use for channel naming purposes
 	enum channel_name_source channel_name_source;
 
+	// generate_epg_repeat_indicators
+	//
+	// Flag indicating that a repeat indicator should be appended to EPG episode names
+	bool generate_epg_repeat_indicators;
+
 	// disable_recording_categories
 	//
 	// Flag indicating that the category of a recording should be ignored
@@ -131,7 +136,7 @@ struct settings {
 
 	// generate_repeat_indicators
 	//
-	// Flag indicating that a repeat indicator should be appended to episode names
+	// Flag indicating that a repeat indicator should be appended to Recorded TV episode names
 	bool generate_repeat_indicators;
 
 	// use_airdate_as_recordingdate
