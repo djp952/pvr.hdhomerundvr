@@ -1,4 +1,4 @@
-v4.5.0 (2021.03.xx)
+v4.5.0 (2021.03.16)
   - Update SQLite database engine to version 3.35.1
   - Update cURL library to version 7.75.0
   - Fix bug that could cause unnecessary triggering of both channel and channel group updates
