@@ -1,3 +1,6 @@
+v3.5.1 (2021.04.xx)
+  - Update SQLite database engine to version 3.35.2
+
 v3.5.0 (2021.03.16)
   - Update SQLite database engine to version 3.35.1
   - Update cURL library to version 7.75.0
