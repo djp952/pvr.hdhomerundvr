@@ -64,6 +64,12 @@ sudo apt-get install cmake clang llvm-dev libxml2-dev libssl-dev libbz2-dev zlib
 git clone https://github.com/tpoechtrager/osxcross --depth=1
 cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh
+osxcross/build_compiler_rt.sh
+sudo mkdir -p /usr/lib/llvm-6.0/lib/clang/6.0.0/include
+sudo mkdir -p /usr/lib/llvm-6.0/lib/clang/6.0.0/lib/darwin
+sudo cp -rv $(pwd)/osxcross/build/compiler-rt/compiler-rt/include/sanitizer /usr/lib/llvm-6.0/lib/clang/6.0.0/include
+sudo cp -v $(pwd)/osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.a /usr/lib/llvm-6.0/lib/clang/6.0.0/lib/darwin
+sudo cp -v $(pwd)/osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dylib /usr/lib/llvm-6.0/lib/clang/6.0.0/lib/darwin
 ```
    
 ## BUILD KODI ADDON PACKAGES
