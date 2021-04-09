@@ -4169,7 +4169,10 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 			timer.iClientChannelUid = static_cast<int>(item.channelid.value);
 
 			// startTime
-			timer.startTime = (item.type == recordingrule_type::datetimeonly) ? static_cast<time_t>(item.datetimeonly) : now;
+			timer.startTime = (item.type == recordingrule_type::datetimeonly) ? static_cast<time_t>(item.datetimeonly) : 0;
+
+			// endTime
+			timer.endTime = std::numeric_limits<int32_t>::max();
 
 			// bStartAnyTime
 			timer.bStartAnyTime = (item.type == recordingrule_type::series);
@@ -4192,6 +4195,9 @@ PVR_ERROR GetTimers(ADDON_HANDLE handle)
 
 			// firstDay
 			if(item.type == recordingrule_type::datetimeonly) timer.firstDay = static_cast<time_t>(item.datetimeonly);
+
+			// iWeekdays
+			timer.iWeekdays = ((item.type == recordingrule_type::series) ? PVR_WEEKDAY_ALLDAYS : PVR_WEEKDAY_NONE);
 
 			// iPreventDuplicateEpisodes
 			if(item.type == recordingrule_type::series) {
