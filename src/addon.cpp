@@ -3829,7 +3829,10 @@ PVR_ERROR addon::GetTimers(kodi::addon::PVRTimersResultSet& results)
 			timer.SetClientChannelUid(static_cast<int>(item.channelid.value));
 
 			// StartTime
-			timer.SetStartTime((item.type == recordingrule_type::datetimeonly) ? static_cast<time_t>(item.datetimeonly) : now);
+			timer.SetStartTime((item.type == recordingrule_type::datetimeonly) ? static_cast<time_t>(item.datetimeonly) : 0);
+
+			// EndTime
+			timer.SetEndTime(std::numeric_limits<int32_t>::max());
 
 			// StartAnyTime
 			timer.SetStartAnyTime((item.type == recordingrule_type::series));
@@ -3851,6 +3854,9 @@ PVR_ERROR addon::GetTimers(kodi::addon::PVRTimersResultSet& results)
 
 			// FirstDay
 			if(item.type == recordingrule_type::datetimeonly) timer.SetFirstDay(static_cast<time_t>(item.datetimeonly));
+
+			// Weekdays
+			timer.SetWeekdays((item.type == recordingrule_type::series) ? PVR_WEEKDAYS::PVR_WEEKDAY_ALLDAYS : PVR_WEEKDAYS::PVR_WEEKDAY_NONE);
 
 			// PreventDuplicateEpisodes
 			if(item.type == recordingrule_type::series) {
