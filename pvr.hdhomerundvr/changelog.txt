@@ -1,5 +1,6 @@
 v3.5.2 (2021.05.xx)
   - Update SQLite database engine to version 3.35.5
+  - Prevent recording rule padding values from exceeding specified limits (1 hour for start padding, 3 hours for end padding)
 
 v3.5.1 (2021.04.09)
   - Update SQLite database engine to version 3.35.4

@@ -4365,8 +4365,8 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			recordingrule.channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
 			recordingrule.recentonly = (timer.iPreventDuplicateEpisodes == duplicate_prevention::recentonly);
 			recordingrule.afteroriginalairdateonly = (timer.iPreventDuplicateEpisodes == duplicate_prevention::newonly) ? now : 0;
-			recordingrule.startpadding = (timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60;
-			recordingrule.endpadding = (timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60;
+			recordingrule.startpadding = std::min((timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min((timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60, 10800U);			// 3 hours max
 		}
 
 		// datetimeonlyrule / epgdatetimeonlyrule --> recordingrule_type::datetimeonly
@@ -4393,8 +4393,8 @@ PVR_ERROR AddTimer(PVR_TIMER const& timer)
 			recordingrule.seriesid = seriesid.c_str();
 			recordingrule.channelid = channelid;
 			recordingrule.datetimeonly = timer.startTime;
-			recordingrule.startpadding = (timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60;
-			recordingrule.endpadding = (timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60;
+			recordingrule.startpadding = std::min((timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min((timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60, 10800U);			// 3 hours max
 		}
 
 		// any other timer type is not supported
@@ -4538,8 +4538,8 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 			recordingrule.channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
 			recordingrule.recentonly = (timer.iPreventDuplicateEpisodes == duplicate_prevention::recentonly);
 			recordingrule.afteroriginalairdateonly = (timer.iPreventDuplicateEpisodes == duplicate_prevention::newonly) ? now : 0;
-			recordingrule.startpadding = (timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60;
-			recordingrule.endpadding = (timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60;
+			recordingrule.startpadding = std::min((timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min((timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60, 10800U);			// 3 hours max
 		}
 
 		// datetimeonlyrule / epgdatetimeonlyrule --> recordingrule_type::datetimeonly
@@ -4550,8 +4550,8 @@ PVR_ERROR UpdateTimer(PVR_TIMER const& timer)
 			recordingrule.recordingruleid = timer.iClientIndex;
 			recordingrule.type = recordingrule_type::datetimeonly;
 			recordingrule.channelid.value = (timer.iClientChannelUid == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.iClientChannelUid;
-			recordingrule.startpadding = (timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60;
-			recordingrule.endpadding = (timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60;
+			recordingrule.startpadding = std::min((timer.iMarginStart == 0) ? 30 : timer.iMarginStart * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min((timer.iMarginEnd == 0) ? 30 : timer.iMarginEnd * 60, 10800U);			// 3 hours max
 		}
 
 		// any other timer type is not supported

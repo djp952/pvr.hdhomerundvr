@@ -3018,8 +3018,8 @@ void modify_recordingrule(sqlite3* instance, char const* deviceauth, struct reco
 		"'&RecentOnly=' || case when ?3 is null then '0' else ?3 end || "
 		"'&ChannelOnly=' || case when ?4 is null then '' else decode_channel_id(?4) end || "
 		"'&AfterOriginalAirdateOnly=' || case when ?5 is null then '0' else strftime('%s', date(?5, 'unixepoch')) end || "
-		"'&StartPadding=' || case when ?6 is null then '30' else ?6 end || "
-		"'&EndPadding=' || case when ?7 is null then '30' else ?7 end))";	
+		"'&StartPadding=' || case when ?6 is null then '' else ?6 end || "
+		"'&EndPadding=' || case when ?7 is null then '' else ?7 end))";	
 	
 	// Prepare the query
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
