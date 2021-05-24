@@ -2512,8 +2512,8 @@ PVR_ERROR addon::AddTimer(kodi::addon::PVRTimer const& timer)
 			recordingrule.channelid.value = (timer.GetClientChannelUid() == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.GetClientChannelUid();
 			recordingrule.recentonly = (timer.GetPreventDuplicateEpisodes() == duplicate_prevention::recentonly);
 			recordingrule.afteroriginalairdateonly = (timer.GetPreventDuplicateEpisodes() == duplicate_prevention::newonly) ? now : 0;
-			recordingrule.startpadding = std::min((timer.GetMarginStart() == 0) ? 30 : timer.GetMarginStart() * 60, 3600U);		// 1 hour max
-			recordingrule.endpadding = std::min((timer.GetMarginEnd() == 0) ? 30 : timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
+			recordingrule.startpadding = std::min(timer.GetMarginStart() * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min(timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
 		}
 
 		// datetimeonlyrule / epgdatetimeonlyrule --> recordingrule_type::datetimeonly
@@ -2540,8 +2540,8 @@ PVR_ERROR addon::AddTimer(kodi::addon::PVRTimer const& timer)
 			recordingrule.seriesid = seriesid.c_str();
 			recordingrule.channelid = channelid;
 			recordingrule.datetimeonly = timer.GetStartTime();
-			recordingrule.startpadding = std::min((timer.GetMarginStart() == 0) ? 30 : timer.GetMarginStart() * 60, 3600U);		// 1 hour max
-			recordingrule.endpadding = std::min((timer.GetMarginEnd() == 0) ? 30 : timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
+			recordingrule.startpadding = std::min(timer.GetMarginStart() * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min(timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
 		}
 
 		// any other timer type is not supported
@@ -4594,8 +4594,8 @@ PVR_ERROR addon::UpdateTimer(kodi::addon::PVRTimer const& timer)
 			recordingrule.channelid.value = (timer.GetClientChannelUid() == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.GetClientChannelUid();
 			recordingrule.recentonly = (timer.GetPreventDuplicateEpisodes() == duplicate_prevention::recentonly);
 			recordingrule.afteroriginalairdateonly = (timer.GetPreventDuplicateEpisodes() == duplicate_prevention::newonly) ? now : 0;
-			recordingrule.startpadding = std::min((timer.GetMarginStart() == 0) ? 30 : timer.GetMarginStart() * 60, 3600U);		// 1 hour max
-			recordingrule.endpadding = std::min((timer.GetMarginEnd() == 0) ? 30 : timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
+			recordingrule.startpadding = std::min(timer.GetMarginStart() * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min(timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
 		}
 
 		// datetimeonlyrule / epgdatetimeonlyrule --> recordingrule_type::datetimeonly
@@ -4606,8 +4606,8 @@ PVR_ERROR addon::UpdateTimer(kodi::addon::PVRTimer const& timer)
 			recordingrule.recordingruleid = timer.GetClientIndex();
 			recordingrule.type = recordingrule_type::datetimeonly;
 			recordingrule.channelid.value = (timer.GetClientChannelUid() == PVR_TIMER_ANY_CHANNEL) ? 0 : timer.GetClientChannelUid();
-			recordingrule.startpadding = std::min((timer.GetMarginStart() == 0) ? 30 : timer.GetMarginStart() * 60, 3600U);		// 1 hour max
-			recordingrule.endpadding = std::min((timer.GetMarginEnd() == 0) ? 30 : timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
+			recordingrule.startpadding = std::min(timer.GetMarginStart() * 60, 3600U);		// 1 hour max
+			recordingrule.endpadding = std::min(timer.GetMarginEnd() * 60, 10800U);			// 3 hours max
 		}
 
 		// any other timer type is not supported
