@@ -4006,7 +4006,8 @@ PVR_ERROR addon::GetTimerTypes(std::vector<kodi::addon::PVRTimerType>& types)
 	// Timer type for EPG series rules
 	epgseriesrule.SetId(timer_type::epgseriesrule);
 	epgseriesrule.SetAttributes(PVR_TIMER_TYPE_IS_REPEATING | PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_RECORD_ONLY_NEW_EPISODES |
-		PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE | PVR_TIMER_TYPE_SUPPORTS_ANY_CHANNEL);
+		PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE | PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE |
+		PVR_TIMER_TYPE_SUPPORTS_ANY_CHANNEL);
 	epgseriesrule.SetDescription("Record Series");
 	epgseriesrule.SetPreventDuplicateEpisodes(preventDuplicates, duplicate_prevention::none);
 	types.emplace_back(std::move(epgseriesrule));
@@ -4015,7 +4016,8 @@ PVR_ERROR addon::GetTimerTypes(std::vector<kodi::addon::PVRTimerType>& types)
 	//
 	// Timer type for EPG date time only rules
 	epgdatetimeonlyrule.SetId(timer_type::epgdatetimeonlyrule);
-	epgdatetimeonlyrule.SetAttributes(PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE);
+	epgdatetimeonlyrule.SetAttributes(PVR_TIMER_TYPE_SUPPORTS_CHANNELS | PVR_TIMER_TYPE_SUPPORTS_START_END_MARGIN | PVR_TIMER_TYPE_REQUIRES_EPG_SERIES_ON_CREATE |
+		PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE);
 	epgdatetimeonlyrule.SetDescription("Record Once");
 	types.emplace_back(std::move(epgdatetimeonlyrule));
 
