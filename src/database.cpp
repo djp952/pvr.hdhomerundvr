@@ -1960,8 +1960,8 @@ void enumerate_recordingrules(sqlite3* instance, enumerate_recordingrules_callba
 		"coalesce(json_extract(data, '$.DateTimeOnly'), 0) as datetimeonly, "
 		"json_extract(data, '$.Title') as title, "
 		"json_extract(data, '$.Synopsis') as synopsis, "
-		"coalesce(json_extract(data, '$.StartPadding'), 30) as startpadding, "
-		"coalesce(json_extract(data, '$.EndPadding'), 30) as endpadding "
+		"coalesce(json_extract(data, '$.StartPadding'), 0) as startpadding, "
+		"coalesce(json_extract(data, '$.EndPadding'), 0) as endpadding "
 		"from recordingrule left outer join guidenumbers on json_extract(data, '$.ChannelOnly') = guidenumbers.guidenumber";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
@@ -2127,9 +2127,9 @@ void enumerate_timers(sqlite3* instance, int maxdays, enumerate_timers_callback 
 		"json_extract(value, '$.Title') as title, "
 		"json_extract(value, '$.Synopsis') as synopsis, "
 		"coalesce(case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then json_extract(recordingrule.data, '$.StartPadding') else "
-		"(select json_extract(recordingrule.data, '$.StartPadding') from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end, 30) as startpadding, "
+		"(select json_extract(recordingrule.data, '$.StartPadding') from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end, 0) as startpadding, "
 		"coalesce(case when json_extract(recordingrule.data, '$.DateTimeOnly') is not null then json_extract(recordingrule.data, '$.EndPadding') else "
-		"(select json_extract(recordingrule.data, '$.EndPadding') from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end, 30) as endpadding "
+		"(select json_extract(recordingrule.data, '$.EndPadding') from recordingrule where json_extract(recordingrule.data, '$.DateTimeOnly') is null and recordingrule.seriesid = episode.seriesid limit 1) end, 0) as endpadding "
 		"from episode, json_each(episode.data) "
 		"left outer join recordingrule on episode.seriesid = recordingrule.seriesid and json_extract(value, '$.StartTime') = json_extract(recordingrule.data, '$.DateTimeOnly') "
 		"left outer join guidenumbers on json_extract(value, '$.ChannelNumber') = guidenumbers.guidenumber "

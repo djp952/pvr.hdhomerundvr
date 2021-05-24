@@ -1,6 +1,7 @@
 v3.5.2 (2021.05.xx)
   - Update SQLite database engine to version 3.35.5
   - Prevent recording rule padding values from exceeding specified limits (1 hour for start padding, 3 hours for end padding)
+  - Fix bug that incorrectly set recording rule padding values to 30 seconds instead of zero seconds when specified as "0 min" in Kodi
 
 v3.5.1 (2021.04.09)
   - Update SQLite database engine to version 3.35.4
