@@ -1862,7 +1862,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// recordingid | title | episodename | firstairing | originalairdate | programtype | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | thumbnailpath | recordingtime | duration | lastposition | channelid
+	// recordingid | title | episodename | firstairing | originalairdate | programtype | seriesnumber | episodenumber | year | streamurl | directory | plot | channelname | iconpath | thumbnailpath | recordingtime | duration | lastposition | channelid
 	auto sql = "select recordingid, "
 		"case when ?1 then coalesce(json_extract(data, '$.EpisodeNumber'), json_extract(data, '$.Title')) else json_extract(data, '$.Title') end as title, "
 		"json_extract(data, '$.EpisodeTitle') as episodename, "
@@ -1876,6 +1876,7 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 		"case when ?2 or lower(coalesce(json_extract(data, '$.Category'), 'series')) in ('series', 'news', 'audio') then replace(json_extract(data, '$.Title'), '/', '-') else json_extract(data, '$.Category') end as directory, "
 		"json_extract(data, '$.Synopsis') as plot, "
 		"json_extract(data, '$.ChannelName') as channelname, "
+		"json_extract(data, '$.ChannelImageURL') as iconpath, "
 		"json_extract(data, '$.ImageURL') as thumbnailpath, "
 		"coalesce(json_extract(data, '$.RecordStartTime'), 0) as recordingtime, "
 		"coalesce(json_extract(data, '$.RecordEndTime'), 0) - coalesce(json_extract(data, '$.RecordStartTime'), 0) as duration, "
@@ -1912,12 +1913,13 @@ void enumerate_recordings(sqlite3* instance, bool episodeastitle, bool ignorecat
 			item.directory = reinterpret_cast<char const*>(sqlite3_column_text(statement, 10));
 			item.plot = reinterpret_cast<char const*>(sqlite3_column_text(statement, 11));
 			item.channelname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 12));
-			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
-			item.recordingtime = sqlite3_column_int64(statement, 14);
-			item.duration = sqlite3_column_int(statement, 15);
-			item.lastposition = static_cast<uint32_t>(sqlite3_column_int64(statement, 16));
-			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 17));
-			item.category = reinterpret_cast<char const*>(sqlite3_column_text(statement, 18));
+			item.iconpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 13));
+			item.thumbnailpath = reinterpret_cast<char const*>(sqlite3_column_text(statement, 14));
+			item.recordingtime = sqlite3_column_int64(statement, 15);
+			item.duration = sqlite3_column_int(statement, 16);
+			item.lastposition = static_cast<uint32_t>(sqlite3_column_int64(statement, 17));
+			item.channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 18));
+			item.category = reinterpret_cast<char const*>(sqlite3_column_text(statement, 19));
 
 			callback(item);							// Invoke caller-supplied callback
 			result = sqlite3_step(statement);		// Move to the next row in the result set

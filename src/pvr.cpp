@@ -3780,6 +3780,9 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			// strChannelName
 			if(item.channelname != nullptr) snprintf(recording.strChannelName, std::extent<decltype(recording.strChannelName)>::value, "%s", item.channelname);
 
+			// strIconPath
+			if(item.iconpath != nullptr) snprintf(recording.strIconPath, std::extent<decltype(recording.strIconPath)>::value, "%s", item.iconpath);
+
 			// strThumbnailPath
 			if(item.thumbnailpath != nullptr) snprintf(recording.strThumbnailPath, std::extent<decltype(recording.strThumbnailPath)>::value, "%s", item.thumbnailpath);
 
