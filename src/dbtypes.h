@@ -150,6 +150,7 @@ struct recording {
 	char const*			directory;
 	char const*			plot;
 	char const*			channelname;
+	char const*			iconpath;
 	char const*			thumbnailpath;
 	int64_t				recordingtime;
 	int					duration;

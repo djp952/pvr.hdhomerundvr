@@ -3632,6 +3632,9 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 			// ChannelName
 			if(item.channelname != nullptr) recording.SetChannelName(item.channelname);
 
+			// IconPath
+			if(item.iconpath != nullptr) recording.SetIconPath(item.iconpath);
+
 			// ThumbnailPath
 			if(item.thumbnailpath != nullptr) recording.SetThumbnailPath(item.thumbnailpath);
 
