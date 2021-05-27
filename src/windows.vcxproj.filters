@@ -759,6 +759,9 @@
     <ClInclude Include="..\depends\libcurl\src\lib\vtls\rustls.h">
       <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\lib\bufref.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -1441,6 +1444,9 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vauth\gsasl.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\bufref.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
