@@ -2112,8 +2112,9 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		if(bvalue != m_settings.disable_backend_channel_logos) {
 
 			m_settings.disable_backend_channel_logos = bvalue;
-			log_info(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel update");
+			log_info(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel and recording update");
 			TriggerChannelUpdate();
+			TriggerRecordingUpdate();
 		}
 	}
 
@@ -3633,7 +3634,7 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 			if(item.channelname != nullptr) recording.SetChannelName(item.channelname);
 
 			// IconPath
-			if(item.iconpath != nullptr) recording.SetIconPath(item.iconpath);
+			if((settings.disable_backend_channel_logos == false) && (item.iconpath != nullptr)) recording.SetIconPath(item.iconpath);
 
 			// ThumbnailPath
 			if(item.thumbnailpath != nullptr) recording.SetThumbnailPath(item.thumbnailpath);
