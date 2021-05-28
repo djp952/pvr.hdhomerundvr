@@ -2529,8 +2529,9 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		if(bvalue != g_settings.disable_backend_channel_logos) {
 
 			g_settings.disable_backend_channel_logos = bvalue;
-			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel update");
+			log_notice(__func__, ": setting disable_backend_channel_logos changed to ", bvalue, " -- trigger channel and recording update");
 			g_pvr->TriggerChannelUpdate();
+			g_pvr->TriggerRecordingUpdate();
 		}
 	}
 
@@ -3781,7 +3782,7 @@ PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 			if(item.channelname != nullptr) snprintf(recording.strChannelName, std::extent<decltype(recording.strChannelName)>::value, "%s", item.channelname);
 
 			// strIconPath
-			if(item.iconpath != nullptr) snprintf(recording.strIconPath, std::extent<decltype(recording.strIconPath)>::value, "%s", item.iconpath);
+			if((settings.disable_backend_channel_logos == false) && (item.iconpath != nullptr)) snprintf(recording.strIconPath, std::extent<decltype(recording.strIconPath)>::value, "%s", item.iconpath);
 
 			// strThumbnailPath
 			if(item.thumbnailpath != nullptr) snprintf(recording.strThumbnailPath, std::extent<decltype(recording.strThumbnailPath)>::value, "%s", item.thumbnailpath);
