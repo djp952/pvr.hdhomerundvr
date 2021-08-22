@@ -134,6 +134,11 @@ struct settings {
 	// Flag indicating that the category of a recording should be ignored
 	bool disable_recording_categories;
 
+	// disable_signal_status
+	//
+	// Flag indicating that the active tuner signal status should not be reported
+	bool disable_signal_status;
+
 	// generate_repeat_indicators
 	//
 	// Flag indicating that a repeat indicator should be appended to Recorded TV episode names

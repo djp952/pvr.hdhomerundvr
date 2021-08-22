@@ -209,7 +209,12 @@ public:
 	//
 	// Get the stream properties for a recording from the backend
 	PVR_ERROR GetRecordingStreamProperties(kodi::addon::PVRRecording const& recording, std::vector<kodi::addon::PVRStreamProperty>& properties) override;
-		
+
+	// GetSignalStatus
+	//
+	// Get the signal status of the stream that's currently open
+	PVR_ERROR GetSignalStatus(int channelUid, kodi::addon::PVRSignalStatus& signalStatus) override;
+
 	// GetStreamReadChunkSize
 	//
 	// Obtain the chunk size to use when reading streams

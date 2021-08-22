@@ -1769,6 +1769,7 @@ ADDON_STATUS addon::Create(void)
 			m_settings.channel_name_source = kodi::GetSettingEnum("channel_name_source", channel_name_source::xmltv);
 			m_settings.generate_epg_repeat_indicators = kodi::GetSettingBoolean("generate_epg_repeat_indicators", false);
 			m_settings.disable_recording_categories = kodi::GetSettingBoolean("disable_recording_categories", false);
+			m_settings.disable_signal_status = kodi::GetSettingBoolean("disable_signal_status", false);
 			m_settings.generate_repeat_indicators = kodi::GetSettingBoolean("generate_repeat_indicators", false);
 			m_settings.use_airdate_as_recordingdate = kodi::GetSettingBoolean("use_airdate_as_recordingdate", false);
 			m_settings.use_actual_timer_times = kodi::GetSettingBoolean("use_actual_timer_times", false);
@@ -1812,6 +1813,7 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.direct_tuning_protocol             = ", static_cast<int>(m_settings.direct_tuning_protocol));
 			log_info(__func__, ": m_settings.disable_backend_channel_logos      = ", m_settings.disable_backend_channel_logos);
 			log_info(__func__, ": m_settings.disable_recording_categories       = ", m_settings.disable_recording_categories);
+			log_info(__func__, ": m_settings.disable_signal_status              = ", m_settings.disable_signal_status);
 			log_info(__func__, ": m_settings.discover_devices_interval          = ", m_settings.discover_devices_interval);
 			log_info(__func__, ": m_settings.discover_episodes_interval         = ", m_settings.discover_episodes_interval);
 			log_info(__func__, ": m_settings.discover_lineups_interval          = ", m_settings.discover_lineups_interval);
@@ -2062,6 +2064,18 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 			m_settings.disable_recording_categories = bvalue;
 			log_info(__func__, ": setting disable_recording_categories changed to ", bvalue, " -- trigger recording update");
 			TriggerRecordingUpdate();
+		}
+	}
+
+	// disable_signal_status
+	//
+	else if(settingName == "disable_signal_status") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.disable_signal_status) {
+
+			m_settings.disable_signal_status = bvalue;
+			log_info(__func__, ": setting disable_signal_status changed to ", bvalue);
 		}
 	}
 
@@ -3739,6 +3753,59 @@ PVR_ERROR addon::GetRecordingStreamProperties(kodi::addon::PVRRecording const& r
 
 	properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, "video/mp2t");
 	properties.emplace_back(PVR_STREAM_PROPERTY_ISREALTIMESTREAM, (isrealtime) ? "true" : "false");
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//-----------------------------------------------------------------------------
+// addon::GetSignalStatus
+//
+// Get the signal status of the stream that's currently open
+//
+// Arguments:
+//
+//	channelUid		- Channel unique identifier
+//	signalStatus	- Receives the signal status information
+
+PVR_ERROR addon::GetSignalStatus(int channelUid, kodi::addon::PVRSignalStatus& signalStatus)
+{
+	// Create a copy of the current addon settings structure
+	struct settings settings = copy_settings();
+
+	// Convert the channel identifier back into a channelid
+	union channelid channelid {};
+	channelid.value = channelUid;
+
+	signalStatus.SetProviderName("SiliconDust HDHomeRun");	// Constant
+	signalStatus.SetAdapterStatus("Active");				// Constant
+
+	// If reporting is disabled, bypass the signal status check
+	if(settings.disable_signal_status) return PVR_ERROR::PVR_ERROR_NO_ERROR;
+
+	// Attempt to get the signal status from a tuner that is tuned to this channel
+	get_signal_status(connectionpool::handle(m_connpool), channelid, [&](struct signal_status const& item) -> void {
+
+		// ADAPTERNAME = deviceid:resource
+		std::string adaptername;
+		if(item.deviceid != nullptr) adaptername.append(item.deviceid);
+		if(item.resource != nullptr) adaptername.append(":").append(item.resource);
+		signalStatus.SetAdapterName(adaptername);
+
+		// SERVICENAME = friendlyname (modelnumber)
+		std::string servicename;
+		if(item.friendlyname != nullptr) servicename.append(item.friendlyname);
+		if(item.modelnumber != nullptr) servicename.append(" (").append(item.modelnumber).append(")");
+		signalStatus.SetServiceName(servicename);
+
+		// MUXNAME = vctname (vctnumber)
+		std::string muxname;
+		if(item.vctname != nullptr) muxname.append(item.vctname);
+		if(item.vctnumber != nullptr) muxname.append(" (").append(item.vctnumber).append(")");
+		signalStatus.SetMuxName(muxname);
+		
+		signalStatus.SetSignal(item.signalstrength * 655);		// Range: 0-65535
+		signalStatus.SetSNR(item.signalquality * 655);			// Range: 0-65535
+	});
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }

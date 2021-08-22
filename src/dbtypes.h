@@ -195,6 +195,21 @@ struct series {
 	char const*					seriesid;
 };
 
+// signal_status
+//
+// Information about a tuner signal status
+struct signal_status {
+
+	char const*					deviceid;
+	char const*					friendlyname;
+	char const*					modelnumber;
+	char const*					resource;
+	char const*					vctnumber;
+	char const*					vctname;
+	int							signalstrength;
+	int							signalquality;
+};
+
 // storage_space
 //
 // Information about the available storage space
