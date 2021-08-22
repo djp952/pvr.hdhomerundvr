@@ -92,6 +92,11 @@ using enumerate_series_callback = std::function<void(struct series const& series
 // Callback function passed to enumerate_timers
 using enumerate_timers_callback = std::function<void(struct timer const& timer)>;
 
+// signal_status_callback
+//
+// Callback function passed to get_signal_status_xxx functions
+using signal_status_callback = std::function<void(struct signal_status const& status)>;
+
 //---------------------------------------------------------------------------
 // connectionpool
 //
@@ -386,6 +391,11 @@ int get_recordingrule_count(sqlite3* instance);
 //
 // Gets the series identifier for the specified recording rule
 std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recordingruleid);
+
+// get_signal_status
+//
+// Gets the tuner signal status for a virtual channel from any tuner
+void get_signal_status(sqlite3* instance, union channelid channelid, signal_status_callback const& callback);
 
 // get_storage_stream_urls
 //

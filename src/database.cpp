@@ -2805,6 +2805,78 @@ std::string get_recordingrule_seriesid(sqlite3* instance, unsigned int recording
 }
 
 //---------------------------------------------------------------------------
+// get_signal_status
+//
+// Gets the tuner signal status for a virtual channel from any tuner
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	channelid		- Channel for which to get the status
+//	callback		- Callback to invoke on success
+
+void get_signal_status(sqlite3* instance, union channelid channelid, signal_status_callback const& callback)
+{
+	sqlite3_stmt*				statement;				// Database query statement
+	std::vector<std::string>	urls;					// Generated vector<> of URLs
+	int							result;					// Result from SQLite function call
+
+	if((instance == nullptr) || (callback == nullptr)) return;
+
+	// deviceid | resource | vctnumber | vctname | frequency | signalstrength | signalquality | symbolquality | targetip
+	auto sql = "with statusurls(deviceid, friendlyname, modelnumber, url) as "
+		"(select device.deviceid as deviceid, json_extract(device.data, '$.FriendlyName') as friendlyname, "
+		"json_extract(device.data, '$.ModelNumber') as modelnumber, json_extract(device.data, '$.BaseURL') || '/status.json' as url "
+		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
+		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1)) "
+		"select statusurls.deviceid as deviceid, "
+		"statusurls.friendlyname as friendlyname, "
+		"statusurls.modelnumber as modelnumber, "
+		"json_extract(data.value, '$.Resource') as resource, "
+		"json_extract(data.value, '$.VctNumber') as vctnumber, "
+		"json_extract(data.value, '$.VctName') as vctname, "
+		"json_extract(data.value, '$.SignalStrengthPercent') as signalstrength, "
+		"json_extract(data.value, '$.SignalQualityPercent') as signalquality "
+		"from statusurls, json_each(json_get(statusurls.url)) as data "
+		"where json_extract(data.value, '$.VctNumber') = decode_channel_id(?1) limit 1";
+
+	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
+	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+	try {
+
+		// Bind the query parameters
+		result = sqlite3_bind_int(statement, 1, channelid.value);
+		if(result != SQLITE_OK) throw sqlite_exception(result);
+
+		// Execute the SQL statement
+		result = sqlite3_step(statement);
+		if((result != SQLITE_DONE) && (result != SQLITE_ROW)) throw sqlite_exception(result, sqlite3_errmsg(instance));
+
+		// Process only the first row returned from the query
+		if(result == SQLITE_ROW) {
+			
+			struct signal_status status{};
+
+			status.deviceid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			status.friendlyname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 1));
+			status.modelnumber = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
+			status.resource = reinterpret_cast<char const*>(sqlite3_column_text(statement, 3));
+			status.vctnumber = reinterpret_cast<char const*>(sqlite3_column_text(statement, 4));
+			status.vctname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
+			status.signalstrength = sqlite3_column_int(statement, 6);
+			status.signalquality = sqlite3_column_int(statement, 7);
+
+			callback(status);
+		}
+
+		sqlite3_finalize(statement);				// Finalize the SQLite statement
+	}
+
+	catch(...) { sqlite3_finalize(statement); throw; }
+}
+
+//---------------------------------------------------------------------------
 // get_storage_stream_urls
 //
 // Generates a vector<> of possible storage stream URLs for the specified channel

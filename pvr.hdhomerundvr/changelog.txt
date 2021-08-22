@@ -1,5 +1,7 @@
-v4.5.3 (2021.08.xx)
+v4.6.0 (2021.08.xx)
   - Update SQLite database engine to version 3.36.0
+  - Add reporting of Live TV tuner signal status information
+  - Add new "Disable reporting of active Live TV tuner signal status" Interface option
 
 v4.5.2 (2021.05.27)
   - Update SQLite database engine to version 3.35.5
