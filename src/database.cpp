@@ -3044,8 +3044,10 @@ bool has_missing_guide_channels(sqlite3* instance)
 {
 	if(instance == nullptr) return false;
 
+	// Do not count any channels with a number >= 5000 ("Unknown") as missing guide data; the HDHomeRun device was unable to determine
+	// the PSIP information for this channel and as a result the guide data will never be available
 	return (execute_scalar_int(instance, "select 1 where exists(select json_extract(entry.value, '$.GuideNumber') as channelnumber "
-		"from lineup, json_each(lineup.data) as entry where channelnumber not in (select distinct(guide.number) from guide))") != 0);
+		"from lineup, json_each(lineup.data) as entry where (cast(channelnumber as real) < 5000.0) and (channelnumber not in(select distinct(guide.number) from guide)))") != 0);
 }
 
 //---------------------------------------------------------------------------
