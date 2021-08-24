@@ -2955,22 +2955,6 @@ PVR_ERROR addon::DeleteTimer(kodi::addon::PVRTimer const& timer, bool /*forceDel
 }
 
 //-----------------------------------------------------------------------------
-// addon::GetBackendHostname (CInstancePVRClient)
-//
-// Get the hostname of the pvr backend server
-//
-// Arguments:
-//
-//	hostname	- Set to the hostname of the backend server
-
-PVR_ERROR addon::GetBackendHostname(std::string& hostname)
-{
-	hostname.assign("api.hdhomerun.com");
-
-	return PVR_ERROR::PVR_ERROR_NO_ERROR;
-}
-
-//-----------------------------------------------------------------------------
 // addon::GetBackendName (CInstancePVRClient)
 //
 // Get the name reported by the backend that will be displayed in the UI
@@ -3253,6 +3237,22 @@ PVR_ERROR addon::GetChannelStreamProperties(kodi::addon::PVRChannel const& chann
 {
 	properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, channel.GetMimeType());
 	properties.emplace_back(PVR_STREAM_PROPERTY_ISREALTIMESTREAM, "true");
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//-----------------------------------------------------------------------------
+// addon::GetConnectionString (CInstancePVRClient)
+//
+// Get the connection string that will be displayed in the UI
+//
+// Arguments:
+//
+//	connection	- Set to the connection string
+
+PVR_ERROR addon::GetConnectionString(std::string& connection)
+{
+	connection.assign("api.hdhomerun.com");
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
