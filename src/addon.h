@@ -125,11 +125,6 @@ public:
 	// Delete a timer on the backend
 	PVR_ERROR DeleteTimer(kodi::addon::PVRTimer const& timer, bool forceDelete) override;
 		
-	// GetBackendHostname
-	//
-	// Get the hostname of the pvr backend server
-	PVR_ERROR GetBackendHostname(std::string& hostname) override;
-	
 	// GetBackendName
 	//
 	// Get the name reported by the backend that will be displayed in the UI
@@ -175,6 +170,11 @@ public:
 	// Get the stream properties for a channel from the backend
 	PVR_ERROR GetChannelStreamProperties(kodi::addon::PVRChannel const& channel, std::vector<kodi::addon::PVRStreamProperty>& properties) override;
 		
+	// GetConnectionString
+	//
+	// Get the connection string that will be displayed in the UI
+	PVR_ERROR GetConnectionString(std::string& connection) override;
+
 	// GetDriveSpace
 	//
 	// Gets the disk space reported by the backend
