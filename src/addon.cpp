@@ -3022,7 +3022,7 @@ PVR_ERROR addon::GetCapabilities(kodi::addon::PVRCapabilities& capabilities)
 
 PVR_ERROR addon::GetChannelGroupsAmount(int& amount)
 {
-	amount = 5;		// "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	amount = 4;		// "Favorite Channels", "HEVC Channels", "HD Channels", and "SD Channels"
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;		
 }
@@ -3045,14 +3045,13 @@ PVR_ERROR addon::GetChannelGroupMembers(kodi::addon::PVRChannelGroup const& grou
 	// There are no radio channel groups
 	if(group.GetIsRadio()) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
-	// Determine which group enumerator to use for the operation, there are only five to
-	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	// Determine which group enumerator to use for the operation, there are only four to
+	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", and "SD Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.GetGroupName().c_str(), "Favorite channels") == 0) enumerator = enumerate_favorite_channelids;
 	else if(strcmp(group.GetGroupName().c_str(), "HEVC channels") == 0) enumerator = enumerate_hevc_channelids;
 	else if(strcmp(group.GetGroupName().c_str(), "HD channels") == 0) enumerator = enumerate_hd_channelids;
 	else if(strcmp(group.GetGroupName().c_str(), "SD channels") == 0) enumerator = enumerate_sd_channelids;
-	else if(strcmp(group.GetGroupName().c_str(), "Demo channels") == 0) enumerator = enumerate_demo_channelids;
 
 	// If neither enumerator was selected, there isn't any work to do here
 	if(enumerator == nullptr) return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -3105,7 +3104,6 @@ PVR_ERROR addon::GetChannelGroups(bool radio, kodi::addon::PVRChannelGroupsResul
 	kodi::addon::PVRChannelGroup	hevcchannels;		// HEVC channels
 	kodi::addon::PVRChannelGroup	hdchannels;			// HD channels
 	kodi::addon::PVRChannelGroup	sdchannels;			// SD channels
-	kodi::addon::PVRChannelGroup	demochannels;		// Demo channels
 
 	// The PVR doesn't support radio channel groups
 	if(radio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -3121,9 +3119,6 @@ PVR_ERROR addon::GetChannelGroups(bool radio, kodi::addon::PVRChannelGroupsResul
 
 	sdchannels.SetGroupName("SD channels");
 	results.Add(sdchannels);
-
-	demochannels.SetGroupName("Demo channels");
-	results.Add(demochannels);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -4277,7 +4272,7 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 
 		// Determine if HTTP can be used from the storage engine and/or the tuner directly. Tuner HTTP can be used as a fallback
 		// for a failed storage stream or if use_direct_tuning is enabled and HTTP is the preferred protocol
-		bool use_storage_http = ((settings.use_direct_tuning == false) && (get_tuner_direct_channel_flag(dbhandle, channelid) == false));
+		bool use_storage_http = (settings.use_direct_tuning == false);
 		bool use_tuner_http = (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http);
 
 		// Attempt to create the stream from the storage engine via HTTP if available
