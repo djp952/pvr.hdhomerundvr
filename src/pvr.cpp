@@ -3376,7 +3376,7 @@ PVR_ERROR GetEPGTagStreamProperties(EPG_TAG const* /*tag*/, PVR_NAMED_VALUE* /*p
 
 int GetChannelGroupsAmount(void)
 {
-	return 5;		// "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	return 4;		// "Favorite Channels", "HEVC Channels", "HD Channels", and "SD Channels"
 }
 
 //---------------------------------------------------------------------------
@@ -3417,10 +3417,6 @@ PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool radio)
 	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "SD channels");
 	g_pvr->TransferChannelGroup(handle, &group);
 
-	// Demo Channels
-	snprintf(group.strGroupName, std::extent<decltype(group.strGroupName)>::value, "Demo channels");
-	g_pvr->TransferChannelGroup(handle, &group);
-
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
 
@@ -3447,13 +3443,12 @@ PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, PVR_CHANNEL_GROUP const& g
 	if(group.bIsRadio) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
 	// Determine which group enumerator to use for the operation, there are only four to
-	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", "SD Channels" and "Demo Channels"
+	// choose from: "Favorite Channels", "HEVC Channels", "HD Channels", and "SD Channels"
 	std::function<void(sqlite3*, bool, enumerate_channelids_callback)> enumerator = nullptr;
 	if(strcmp(group.strGroupName, "Favorite channels") == 0) enumerator = enumerate_favorite_channelids;
 	else if(strcmp(group.strGroupName, "HEVC channels") == 0) enumerator = enumerate_hevc_channelids;
 	else if(strcmp(group.strGroupName, "HD channels") == 0) enumerator = enumerate_hd_channelids;
 	else if(strcmp(group.strGroupName, "SD channels") == 0) enumerator = enumerate_sd_channelids;
-	else if(strcmp(group.strGroupName, "Demo channels") == 0) enumerator = enumerate_demo_channelids;
 
 	// If neither enumerator was selected, there isn't any work to do here
 	if(enumerator == nullptr) return PVR_ERROR::PVR_ERROR_NO_ERROR;
@@ -4626,7 +4621,7 @@ bool OpenLiveStream(PVR_CHANNEL const& channel)
 
 		// Determine if HTTP can be used from the storage engine and/or the tuner directly. Tuner HTTP can be used as a fallback
 		// for a failed storage stream or if use_direct_tuning is enabled and HTTP is the preferred protocol
-		bool use_storage_http = ((settings.use_direct_tuning == false) && (get_tuner_direct_channel_flag(dbhandle, channelid) == false));
+		bool use_storage_http = (settings.use_direct_tuning == false);
 		bool use_tuner_http = (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http);
 
 		// Attempt to create the stream from the storage engine via HTTP if available

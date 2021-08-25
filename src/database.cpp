@@ -776,7 +776,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
 		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
-			"json_get(json_extract(device.data, '$.LineupURL') || '?show=demo') as json from device where json_extract(device.data, '$.LineupURL') is not null");
+			"json_get(json_extract(device.data, '$.LineupURL')) as json from device where json_extract(device.data, '$.LineupURL') is not null");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -1316,53 +1316,6 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) callback(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
-	
-		sqlite3_finalize(statement);			// Finalize the SQLite statement
-	}
-
-	catch(...) { sqlite3_finalize(statement); throw; }
-}
-
-//---------------------------------------------------------------------------
-// enumerate_demo_channelids
-//
-// Enumerates the channels marked as 'Demo' in the lineups
-//
-// Arguments:
-//
-//	instance	- Database instance
-//	showdrm		- Flag to show DRM channels
-//	callback	- Callback function
-
-void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback)
-{
-	sqlite3_stmt*				statement;			// SQL statement to execute
-	int							result;				// Result from SQLite function
-	
-	if((instance == nullptr) || (callback == nullptr)) return;
-
-	// channelid
-	auto sql = "select distinct(encode_channel_id(json_extract(entry.value, '$.GuideNumber'))) as channelid "
-		"from lineup, json_each(lineup.data) as entry where json_extract(entry.value, '$.Demo') = 1 "
-		"and nullif(json_extract(entry.value, '$.DRM'), ?1) is null";
-
-	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
-	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
-
-	try {
-
-		// Bind the query parameters
-		result = sqlite3_bind_int(statement, 1, (showdrm) ? 1 : 0);
-		if(result != SQLITE_OK) throw sqlite_exception(result);
-
-		// Execute the query and iterate over all returned rows
-		while(sqlite3_step(statement) == SQLITE_ROW) {
-
-			union channelid channelid{};
-			channelid.value = static_cast<unsigned int>(sqlite3_column_int(statement, 0));
-			
-			callback(channelid);
-		}
 	
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
@@ -2459,7 +2412,7 @@ void generate_discovery_diagnostic_file(sqlite3* instance, char const* path)
 		// LINEUPS
 		//
 		try { execute_non_query(instance, "insert into discovery_diagnostics select 'lineup', device.deviceid, "
-			"ifnull(json_get(json_extract(device.data, '$.LineupURL') || '?show=demo'), 'null') "
+			"ifnull(json_get(json_extract(device.data, '$.LineupURL')), 'null') "
 			"from device where json_extract(device.data, '$.LineupURL') is not null "); }
 		catch(...) { /* DO NOTHING */ }
 
@@ -2889,25 +2842,6 @@ int get_tuner_count(sqlite3* instance)
 	if(instance == nullptr) return 0;
 
 	return execute_scalar_int(instance, "select count(deviceid) from device where json_extract(device.data, '$.LineupURL') is not null");
-}
-
-//---------------------------------------------------------------------------
-// get_tuner_direct_channel_flag
-//
-// Gets a flag indicating if a channel can only be streamed directly from a tuner device
-//
-// Arguments:
-//
-//	instance		- Database instance
-//	channelid		- Channel to be checked for tuner-direct only access
-
-bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid)
-{
-	if(instance == nullptr) return false;
-
-	return (execute_scalar_int(instance, "select coalesce((select json_extract(lineupdata.value, '$.Demo') as tuneronly "
-		"from lineup, json_each(lineup.data) as lineupdata "
-		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) and tuneronly is not null limit 1), 0)", channelid.value) != 0);
 }
 
 //---------------------------------------------------------------------------

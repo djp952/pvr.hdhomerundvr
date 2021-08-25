@@ -255,11 +255,6 @@ void enumerate_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_
 // Enumerates the tuners that can tune a specific channel
 void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enumerate_channeltuners_callback const& callback);
 
-// enumerate_demo_channelids
-//
-// Enumerates channels marked as 'Demo' in the lineups
-void enumerate_demo_channelids(sqlite3* instance, bool showdrm, enumerate_channelids_callback const& callback);
-
 // enumerate_device_names
 //
 // Enumerates the available device names
@@ -401,11 +396,6 @@ int get_timer_count(sqlite3* instance, int maxdays);
 //
 // Gets the number of tuner devices listed in the database
 int get_tuner_count(sqlite3* instance);
-
-// get_tuner_direct_channel_flag
-//
-// Gets a flag indicating if a channel can only be streamed directly from a tuner device
-bool get_tuner_direct_channel_flag(sqlite3* instance, union channelid channelid);
 
 // get_tuner_stream_url
 //
