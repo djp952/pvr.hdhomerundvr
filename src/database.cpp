@@ -776,7 +776,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
 		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
-			"json_get(json_extract(device.data, '$.LineupURL')) as json from device where json_extract(device.data, '$.LineupURL') is not null");
+			"json_get(json_extract(device.data, '$.LineupURL') || '?tuning') as json from device where json_extract(device.data, '$.LineupURL') is not null");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -2412,7 +2412,7 @@ void generate_discovery_diagnostic_file(sqlite3* instance, char const* path)
 		// LINEUPS
 		//
 		try { execute_non_query(instance, "insert into discovery_diagnostics select 'lineup', device.deviceid, "
-			"ifnull(json_get(json_extract(device.data, '$.LineupURL')), 'null') "
+			"ifnull(json_get(json_extract(device.data, '$.LineupURL') || '?tuning'), 'null') "
 			"from device where json_extract(device.data, '$.LineupURL') is not null "); }
 		catch(...) { /* DO NOTHING */ }
 
