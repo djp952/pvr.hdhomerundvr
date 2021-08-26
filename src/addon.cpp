@@ -3771,7 +3771,7 @@ PVR_ERROR addon::GetSignalStatus(int channelUid, kodi::addon::PVRSignalStatus& s
 	union channelid channelid {};
 	channelid.value = channelUid;
 
-	signalStatus.SetProviderName("SiliconDust HDHomeRun");	// Constant
+	signalStatus.SetServiceName("SiliconDust HDHomeRun");	// Constant
 	signalStatus.SetAdapterStatus("Active");				// Constant
 
 	// If reporting is disabled, bypass the signal status check
@@ -3780,26 +3780,46 @@ PVR_ERROR addon::GetSignalStatus(int channelUid, kodi::addon::PVRSignalStatus& s
 	// Attempt to get the signal status from a tuner that is tuned to this channel
 	get_signal_status(connectionpool::handle(m_connpool), channelid, [&](struct signal_status const& item) -> void {
 
-		// ADAPTERNAME = deviceid:resource
-		std::string adaptername;
-		if(item.deviceid != nullptr) adaptername.append(item.deviceid);
-		if(item.resource != nullptr) adaptername.append(":").append(item.resource);
-		signalStatus.SetAdapterName(adaptername);
+		try {
 
-		// SERVICENAME = friendlyname (modelnumber)
-		std::string servicename;
-		if(item.friendlyname != nullptr) servicename.append(item.friendlyname);
-		if(item.modelnumber != nullptr) servicename.append(" (").append(item.modelnumber).append(")");
-		signalStatus.SetServiceName(servicename);
+			// frequency
+			char frequency[64] = { 0 };
+			snprintf(frequency, std::extent<decltype(frequency)>::value, "%.0f MHz", (static_cast<float>(item.frequency) / 1000000.0f));
 
-		// MUXNAME = vctname (vctnumber)
-		std::string muxname;
-		if(item.vctname != nullptr) muxname.append(item.vctname);
-		if(item.vctnumber != nullptr) muxname.append(" (").append(item.vctnumber).append(")");
-		signalStatus.SetMuxName(muxname);
+			// program
+			char program[64] = { 0 };
+			snprintf(program, std::extent<decltype(program)>::value, "Program %d", item.program);
+
+			// ADAPTERNAME = deviceid (resource)
+			std::string adaptername;
+			if(item.deviceid != nullptr) adaptername.append(item.deviceid);
+			if(item.resource != nullptr) adaptername.append(" (").append(item.resource).append(")");
+			signalStatus.SetAdapterName(adaptername);
+
+			// PROVIDERNAME = friendlyname (modelnumber)
+			std::string providername;
+			if(item.friendlyname != nullptr) providername.append(item.friendlyname);
+			if(item.modelnumber != nullptr) providername.append(" (").append(item.modelnumber).append(")");
+			signalStatus.SetProviderName(providername);
+
+			// ADAPTERSTATUS = Active (frequency / program [modulation])
+			std::string adapterstatus;
+			adapterstatus.append("Active (").append(frequency).append(" / ").append(program);
+			if((item.modulation != nullptr) && (strcasecmp(item.modulation, "auto") != 0)) adapterstatus.append(" [").append(item.modulation).append("])");
+			else adapterstatus.append(")");
+			signalStatus.SetAdapterStatus(adapterstatus);
+
+			// MUXNAME = vctname (vctnumber)
+			std::string muxname;
+			if(item.vctname != nullptr) muxname.append(item.vctname);
+			if(item.vctnumber != nullptr) muxname.append(" (v").append(item.vctnumber).append(")");
+			signalStatus.SetMuxName(muxname);
+
+			signalStatus.SetSignal(item.signalstrength * 655);		// Range: 0-65535
+			signalStatus.SetSNR(item.signalquality * 655);			// Range: 0-65535
+		}
 		
-		signalStatus.SetSignal(item.signalstrength * 655);		// Range: 0-65535
-		signalStatus.SetSNR(item.signalquality * 655);			// Range: 0-65535
+		catch(...) { /* DO NOTHING */ }
 	});
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;

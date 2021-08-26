@@ -206,6 +206,9 @@ struct signal_status {
 	char const*					resource;
 	char const*					vctnumber;
 	char const*					vctname;
+	char const*					modulation;
+	int64_t						frequency;
+	int							program;
 	int							signalstrength;
 	int							signalquality;
 };
