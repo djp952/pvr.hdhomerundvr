@@ -2776,22 +2776,29 @@ void get_signal_status(sqlite3* instance, union channelid channelid, signal_stat
 
 	if((instance == nullptr) || (callback == nullptr)) return;
 
-	// deviceid | resource | vctnumber | vctname | frequency | signalstrength | signalquality | symbolquality | targetip
-	auto sql = "with statusurls(deviceid, friendlyname, modelnumber, url) as "
-		"(select device.deviceid as deviceid, json_extract(device.data, '$.FriendlyName') as friendlyname, "
-		"json_extract(device.data, '$.ModelNumber') as modelnumber, json_extract(device.data, '$.BaseURL') || '/status.json' as url "
+	// deviceid | friendlyname | modelnumber | resource | vctnumber | vctname | modulation | frequency | program | signalstrength | signalquality
+	auto sql = "with metadata(deviceid, friendlyname, modelnumber, modulation, program, url) as "
+		"(select device.deviceid as deviceid, "
+		"json_extract(device.data, '$.FriendlyName') as friendlyname, "
+		"json_extract(device.data, '$.ModelNumber') as modelnumber, "
+		"json_extract(lineupdata.value, '$.Modulation') as modulation, "
+		"json_extract(lineupdata.value, '$.ProgramNumber') as program, "
+		"json_extract(device.data, '$.BaseURL') || '/status.json' as url "
 		"from lineup inner join device using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1)) "
-		"select statusurls.deviceid as deviceid, "
-		"statusurls.friendlyname as friendlyname, "
-		"statusurls.modelnumber as modelnumber, "
-		"json_extract(data.value, '$.Resource') as resource, "
-		"json_extract(data.value, '$.VctNumber') as vctnumber, "
-		"json_extract(data.value, '$.VctName') as vctname, "
-		"json_extract(data.value, '$.SignalStrengthPercent') as signalstrength, "
-		"json_extract(data.value, '$.SignalQualityPercent') as signalquality "
-		"from statusurls, json_each(json_get(statusurls.url)) as data "
-		"where json_extract(data.value, '$.VctNumber') = decode_channel_id(?1) limit 1";
+		"select metadata.deviceid as deviceid, "
+		"metadata.friendlyname as friendlyname, "
+		"metadata.modelnumber as modelnumber, "
+		"json_extract(signaldata.value, '$.Resource') as resource, "
+		"json_extract(signaldata.value, '$.VctNumber') as vctnumber, "
+		"json_extract(signaldata.value, '$.VctName') as vctname, "
+		"metadata.modulation as modulation, "
+		"json_extract(signaldata.value, '$.Frequency') as frequency, "
+		"metadata.program as program, "
+		"json_extract(signaldata.value, '$.SignalStrengthPercent') as signalstrength, "
+		"json_extract(signaldata.value, '$.SignalQualityPercent') as signalquality "
+		"from metadata, json_each(json_get(metadata.url)) as signaldata "
+		"where json_extract(signaldata.value, '$.VctNumber') = decode_channel_id(?1) limit 1";
 
 	result = sqlite3_prepare_v2(instance, sql, -1, &statement, nullptr);
 	if(result != SQLITE_OK) throw sqlite_exception(result, sqlite3_errmsg(instance));
@@ -2817,8 +2824,11 @@ void get_signal_status(sqlite3* instance, union channelid channelid, signal_stat
 			status.resource = reinterpret_cast<char const*>(sqlite3_column_text(statement, 3));
 			status.vctnumber = reinterpret_cast<char const*>(sqlite3_column_text(statement, 4));
 			status.vctname = reinterpret_cast<char const*>(sqlite3_column_text(statement, 5));
-			status.signalstrength = sqlite3_column_int(statement, 6);
-			status.signalquality = sqlite3_column_int(statement, 7);
+			status.modulation = reinterpret_cast<char const*>(sqlite3_column_text(statement, 6));
+			status.frequency = sqlite3_column_int64(statement, 7);
+			status.program = sqlite3_column_int(statement, 8);
+			status.signalstrength = sqlite3_column_int(statement, 9);
+			status.signalquality = sqlite3_column_int(statement, 10);
 
 			callback(status);
 		}
