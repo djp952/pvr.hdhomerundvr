@@ -1,4 +1,4 @@
-v4.6.0 (2021.08.xx)
+v4.6.0 (2021.08.26)
   - Update SQLite database engine to version 3.36.0
   - Update cURL library to version 7.78.0
   - Fix bug causing full refresh of guide data during startup if there are 'Unknown' channels in the lineup
