@@ -55,12 +55,12 @@ using enumerate_channelids_callback = std::function<void(union channelid const& 
 // enumerate_channeltuners_callback
 //
 // Callback function passed to enumerate_channeltuners
-using enumerate_channeltuners_callback = std::function<void(char const* tuner)>;
+using enumerate_channeltuners_callback = std::function<void(struct channel_tuner const& channeltuner)>;
 
 // enumerate_device_names_callback
 //
 // Callback function passed to enumerate_device_names
-using enumerate_device_names_callback = std::function<void(struct device_name const& device_name)>;
+using enumerate_device_names_callback = std::function<void(struct device_name const& devicename)>;
 
 // enumerate_listings_callback
 //
@@ -426,6 +426,11 @@ bool has_missing_guide_channels(sqlite3* instance);
 //
 // Gets a flag indicating if any devices have storage engine capabilities
 bool has_storage_engine(sqlite3* instance);
+
+// is_channel_legacy_only
+//
+// Gets a flag indicating if a channel is only available via legacy devices
+bool is_channel_legacy_only(sqlite3* instance, union channelid channelid);
 
 // modify_recordingrule
 //

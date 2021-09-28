@@ -41,6 +41,16 @@ class devicestream : public pvrstream
 {
 public:
 
+	// tuner
+	//
+	// Structure used to define the possible tuners for a device stream
+	struct tuner {
+
+		std::string		tunerid;		// Tuner ID
+		std::string		frequency;		// Channel frequency
+		std::string		program;		// Channel program ID
+	};
+
 	// Destructor
 	//
 	virtual ~devicestream();
@@ -61,7 +71,7 @@ public:
 	// create (static)
 	//
 	// Factory method, creates a new devicestream instance
-	static std::unique_ptr<devicestream> create(std::vector<std::string> const& devices, char const* vchannel);
+	static std::unique_ptr<devicestream> create(std::vector<struct tuner> const& tuners);
 
 	// length
 	//
