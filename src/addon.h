@@ -388,7 +388,7 @@ private:
 	// Network Helpers
 	//
 	bool ipv4_network_available(void) const;
-	std::string select_tuner(std::vector<std::string> const& possibilities) const;
+	std::string select_http_tuner(std::vector<std::string> const& possibilities) const;
 
 	// Scheduled Tasks
 	//

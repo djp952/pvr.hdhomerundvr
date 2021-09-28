@@ -120,13 +120,9 @@ void devicestream::close(void)
 // Arguments:
 //
 //	devices		- vector<> of valid devices for the target stream
-//	vchannel	- Virtual channel number of the stream to create
 
-std::unique_ptr<devicestream> devicestream::create(std::vector<std::string> const& devices, char const* vchannel)
+std::unique_ptr<devicestream> devicestream::create(std::vector<struct tuner> const& tuners)
 {
-	assert(vchannel != nullptr);
-	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
-
 	// Allocate and initialize the device selector
 	struct hdhomerun_device_selector_t* selector = hdhomerun_device_selector_create(nullptr);
 	if(selector == nullptr) throw string_exception(__func__, ": hdhomerun_device_selector_create() failed");
@@ -134,9 +130,9 @@ std::unique_ptr<devicestream> devicestream::create(std::vector<std::string> cons
 	try {
 
 		// Add each of the possible device/tuner combinations to the selector
-		for(auto const& iterator : devices) {
+		for(auto const& iterator : tuners) {
 
-			struct hdhomerun_device_t* device = hdhomerun_device_create_from_str(iterator.c_str(), nullptr);
+			struct hdhomerun_device_t* device = hdhomerun_device_create_from_str(iterator.tunerid.c_str(), nullptr);
 			if(device == nullptr) throw string_exception(__func__, ": hdhomerun_device_create_from_str() failed");
 
 			hdhomerun_device_selector_add_device(selector, device);
@@ -146,11 +142,26 @@ std::unique_ptr<devicestream> devicestream::create(std::vector<std::string> cons
 		struct hdhomerun_device_t* selected = hdhomerun_device_selector_choose_and_lock(selector, nullptr);
 		if(selected == nullptr) throw string_exception(__func__, ": no devices are available to create the requested stream");
 
+		// Generate a DDDDDDDD-T string format from the selected device and tuner
+		char tunerid[64] = { 0 };
+		snprintf(tunerid, std::extent<decltype(tunerid)>::value, "%08X-%d", hdhomerun_device_get_device_id(selected), hdhomerun_device_get_tuner(selected));
+		
+		// Locate the selected tuner in the provided vector<>
+		auto const found = std::find_if(tuners.begin(), tuners.end(), [&](struct tuner const& item) -> bool { return strcasecmp(tunerid, item.tunerid.c_str()) == 0; });
+		if(found == tuners.cend()) throw string_exception(__func__, ": selected tuner ", tunerid, " was not located in the valid tuners list");
+
 		try { 
 			
-			// Attempt to set the virtual channel for the selected tuner
-			int result = hdhomerun_device_set_tuner_vchannel(selected, vchannel);
-			if(result != 1) { throw string_exception(__func__, ": unable to set virtual channel ", vchannel, " on device"); }
+			char channel[64] = { 0 };
+			snprintf(channel, std::extent<decltype(channel)>::value, "auto:%s", found->frequency.c_str());
+
+			// Attempt to set the channel for the selected tuner
+			int result = hdhomerun_device_set_tuner_channel(selected, channel);
+			if(result != 1) { throw string_exception(__func__, ": unable to set channel ", channel, " on device"); }
+
+			// Attempt to set the program filter for the selected tuner
+			result = hdhomerun_device_set_tuner_program(selected, found->program.c_str());
+			if(result != 1) { throw string_exception(__func__, ": unable to set program ", found->program, " on device"); }
 
 			// Create the device stream for the selected tuner
 			return std::unique_ptr<devicestream>(new devicestream(selector, selected)); 

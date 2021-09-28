@@ -901,19 +901,19 @@ std::unique_ptr<pvrstream> addon::openlivestream_storage_http(connectionpool::ha
 
 std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel) const
 {
-	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
+	std::vector<struct devicestream::tuner> tuners;				// vector<> of possible device tuners for the channel
 
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
 
 	// Create a collection of all the tuners that can possibly stream the requested channel
-	enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { devices.emplace_back(item); });
-	if(devices.size() == 0) { log_error(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
+	enumerate_channeltuners(dbhandle, channelid, [&](struct channel_tuner const& item) -> void { tuners.emplace_back(devicestream::tuner{ item.tunerid, item.frequency, item.program }); });
+	if(tuners.size() == 0) { log_error(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
 
 	try {
 
 		// Start the new RTP/UDP stream -- devicestream performs its own tuner selection based on the provided collection
-		std::unique_ptr<pvrstream> stream = devicestream::create(devices, vchannel);
+		std::unique_ptr<pvrstream> stream = devicestream::create(tuners);
 		log_info(__func__, ": streaming channel ", vchannel, " via tuner device rtp/udp broadcast");
 
 		return stream;
@@ -938,17 +938,17 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_device(connectionpool::ha
 
 std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::handle const& dbhandle, union channelid channelid, char const* vchannel) const
 {
-	std::vector<std::string>		devices;			// vector<> of possible device tuners for the channel
+	std::vector<std::string>		tuners;			// vector<> of possible device tuners for the channel
 
 	assert(vchannel != nullptr);
 	if((vchannel == nullptr) || (*vchannel == '\0')) throw std::invalid_argument("vchannel");
 
 	// Create a collection of all the tuners that can possibly stream the requested channel
-	enumerate_channeltuners(dbhandle, channelid, [&](char const* item) -> void { devices.emplace_back(item); });
-	if(devices.size() == 0) { log_error(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
+	enumerate_channeltuners(dbhandle, channelid, [&](struct channel_tuner const& item) -> void { if(item.islegacy == false) tuners.emplace_back(item.tunerid); });
+	if(tuners.size() == 0) { log_error(__func__, ": unable to find any possible tuner devices to stream channel ", vchannel); return nullptr; }
 
 	// A valid tuner device has to be selected from the available options
-	std::string selected = select_tuner(devices);
+	std::string selected = select_http_tuner(tuners);
 	if(selected.length() == 0) { log_error(__func__, ": no tuner devices are available to create the requested stream"); return nullptr; }
 
 	// Generate the URL required to stream the channel via the tuner over HTTP
@@ -965,7 +965,7 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::hand
 	}
 
 	// If the stream creation failed, log an error and return a null unique_ptr<> back to the caller, do not throw an exception
-	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, "via tuner device url ", streamurl.c_str(), ": ", ex.what()); }
+	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, " via tuner device url ", streamurl.c_str(), ": ", ex.what()); }
 
 	return nullptr;
 }
@@ -1114,15 +1114,15 @@ void addon::push_listings_task(scalar_condition<bool> const& cancel)
 }
 
 //---------------------------------------------------------------------------
-// addon::select_tuner (private)
+// addon::select_http_tuner (private)
 //
-// Selects an available tuner device from a list of possibilities
+// Selects an available HTTP tuner device from a list of possibilities
 //
 // Arguments:
 //
 //	possibilities	- vector<> of possible tuners to select from
 
-std::string addon::select_tuner(std::vector<std::string> const& possibilities) const
+std::string addon::select_http_tuner(std::vector<std::string> const& possibilities) const
 {
 	std::string					tunerid;			// Selected tuner identifier
 
@@ -4290,10 +4290,13 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 		// Pull a database connection out from the connection pool
 		connectionpool::handle dbhandle(m_connpool);
 
+		// Determine if the channel is only available via legacy tuner devices
+		bool legacy_only = is_channel_legacy_only(dbhandle, channelid);
+
 		// Determine if HTTP can be used from the storage engine and/or the tuner directly. Tuner HTTP can be used as a fallback
 		// for a failed storage stream or if use_direct_tuning is enabled and HTTP is the preferred protocol
-		bool use_storage_http = (settings.use_direct_tuning == false);
-		bool use_tuner_http = (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http);
+		bool use_storage_http = ((legacy_only == false) && (settings.use_direct_tuning == false));
+		bool use_tuner_http = ((legacy_only == false) && (use_storage_http || settings.direct_tuning_protocol == tuning_protocol::http));
 
 		// Attempt to create the stream from the storage engine via HTTP if available
 		if(use_storage_http) m_pvrstream = openlivestream_storage_http(dbhandle, channelid, vchannel);

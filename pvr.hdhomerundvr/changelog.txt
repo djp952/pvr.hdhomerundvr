@@ -1,3 +1,6 @@
+v4.7.0 (2021.10.xx)
+  - Add support for legacy HDHomeRun tuner devices
+
 v4.6.0 (2021.08.26)
   - Update SQLite database engine to version 3.36.0
   - Update cURL library to version 7.78.0
