@@ -590,7 +590,7 @@ static bool discover_devices_http(sqlite3* instance)
 		"cast(strftime('%s', 'now') as integer) as discovered, "
 		"null as dvrauthorized, "
 		"json_get(json_extract(discovery.value, '$.DiscoverURL')) as data from json_each(json_get('http://api.hdhomerun.com/discover')) as discovery");
-	execute_non_query(instance, "insert into discover_device select deviceid, discovered, dvrauthorized, data from discover_device_http where data is not null and json_extract(data, '$.Legacy') is null");
+	execute_non_query(instance, "insert into discover_device select deviceid, discovered, dvrauthorized, data from discover_device_http where data is not null");
 	execute_non_query(instance, "drop table discover_device_http");
 
 	// Update the DVR service authorization flag for each discovered tuner device
@@ -598,7 +598,7 @@ static bool discover_devices_http(sqlite3* instance)
 		"coalesce(url_encode(json_extract(data, '$.DeviceAuth')), '')), '$.DvrActive') where json_extract(data, '$.DeviceAuth') is not null");
 
 	// Determine if any tuner devices were discovered from the HTTP discovery query
-	return (execute_scalar_int(instance, "select count(deviceid) as numtuners from discover_device where json_extract(data, '$.LineupURL') is not null") > 0);
+	return execute_scalar_int(instance, "select count(deviceid) as numtuners from discover_device where json_extract(data, '$.LineupURL') is not null") > 0;
 }
 
 //---------------------------------------------------------------------------
@@ -776,7 +776,8 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
 		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
-			"json_get(json_extract(device.data, '$.LineupURL') || '?tuning') as json from device where json_extract(device.data, '$.LineupURL') is not null");
+			"json_get(replace(json_extract(device.data, '$.LineupURL') || '?tuning', 'https://', 'http://')) as json "
+			"from device where json_extract(device.data, '$.LineupURL') is not null");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
 		execute_non_query(instance, "begin immediate transaction");
@@ -1297,11 +1298,14 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 	
 	if((instance == nullptr) || (callback == nullptr)) return;
 	
-	// tunerid
-	auto sql = "with recursive tuners(deviceid, tunerid) as "
-		"(select deviceid, json_extract(device.data, '$.TunerCount') - 1 from device where json_extract(device.data, '$.LineupURL') is not null "
-		"union all select deviceid, tunerid - 1 from tuners where tunerid > 0) "
-		"select tuners.deviceid || '-' || tuners.tunerid as tunerid "
+	// tunerid | islegacy | frequency | program
+	auto sql = "with recursive tuners(deviceid, tunerid, islegacy) as "
+		"(select deviceid, json_extract(device.data, '$.TunerCount') - 1, coalesce(json_extract(device.data, '$.Legacy'), 0) from device "
+		"where json_extract(device.data, '$.LineupURL') is not null "
+		"union all select deviceid, tunerid - 1, islegacy from tuners where tunerid > 0) "
+		"select tuners.deviceid || '-' || tuners.tunerid as tunerid, tuners.islegacy as islegacy, "
+		"case when tuners.islegacy = 1 then get_legacy_channel_frequency(json_extract(lineupdata.value, '$.URL')) else coalesce(json_extract(lineupdata.value, '$.Frequency'), -1) end as frequency, "
+		"case when tuners.islegacy = 1 then get_legacy_channel_program(json_extract(lineupdata.value, '$.URL')) else coalesce(json_extract(lineupdata.value, '$.ProgramNumber'), -1) end as program "
 		"from tuners inner join lineup using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) order by tunerid desc";
 
@@ -1315,8 +1319,17 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 		if(result != SQLITE_OK) throw sqlite_exception(result);
 
 		// Execute the query and iterate over all returned rows
-		while(sqlite3_step(statement) == SQLITE_ROW) callback(reinterpret_cast<char const*>(sqlite3_column_text(statement, 0)));
-	
+		while(sqlite3_step(statement) == SQLITE_ROW) {
+
+			struct channel_tuner channeltuner {};
+			channeltuner.tunerid = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			channeltuner.islegacy = sqlite3_column_int(statement, 1) != 0;
+			channeltuner.frequency = reinterpret_cast<char const*>(sqlite3_column_text(statement, 2));
+			channeltuner.program = reinterpret_cast<char const*>(sqlite3_column_text(statement, 3));
+
+			callback(channeltuner);
+		}
+
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
 	}
 
@@ -1349,9 +1362,6 @@ static void enumerate_devices_broadcast(enumerate_devices_callback const& callba
 
 		// Only tuner and storage devices are supported
 		if((devices[index].device_type != HDHOMERUN_DEVICE_TYPE_TUNER) && (devices[index].device_type != HDHOMERUN_DEVICE_TYPE_STORAGE)) continue;
-
-		// Only non-legacy devices are supported
-		if(devices[index].is_legacy) continue;
 
 		// Only devices with a base URL string are supported
 		if(strlen(devices[index].base_url) == 0) continue;
@@ -1395,10 +1405,10 @@ void enumerate_device_names(sqlite3* instance, enumerate_device_names_callback c
 		// Execute the query and iterate over all returned rows
 		while(sqlite3_step(statement) == SQLITE_ROW) {
 
-			struct device_name device_name{};
-			device_name.name = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
+			struct device_name devicename{};
+			devicename.name = reinterpret_cast<char const*>(sqlite3_column_text(statement, 0));
 			
-			callback(device_name);
+			callback(devicename);
 		}
 	
 		sqlite3_finalize(statement);			// Finalize the SQLite statement
@@ -2412,7 +2422,7 @@ void generate_discovery_diagnostic_file(sqlite3* instance, char const* path)
 		// LINEUPS
 		//
 		try { execute_non_query(instance, "insert into discovery_diagnostics select 'lineup', device.deviceid, "
-			"ifnull(json_get(json_extract(device.data, '$.LineupURL') || '?tuning'), 'null') "
+			"ifnull(json_get(replace(json_extract(device.data, '$.LineupURL') || '?tuning', 'https://', 'http://')), 'null') "
 			"from device where json_extract(device.data, '$.LineupURL') is not null "); }
 		catch(...) { /* DO NOTHING */ }
 
@@ -2889,8 +2899,8 @@ bool has_dvr_authorization(sqlite3* instance)
 {
 	if(instance == nullptr) return false;
 
-	return (execute_scalar_int(instance, "select exists(select deviceid from device where json_extract(data, '$.DeviceAuth') is not null "
-		"and coalesce(dvrauthorized, 0) = 1)") != 0);
+	return execute_scalar_int(instance, "select exists(select deviceid from device where json_extract(data, '$.DeviceAuth') is not null "
+		"and coalesce(dvrauthorized, 0) = 1)") != 0;
 }
 
 //---------------------------------------------------------------------------
@@ -2908,11 +2918,11 @@ bool has_missing_guide_channels(sqlite3* instance)
 
 	// Do not count any channels with a number >= 5000 ("Unknown") as missing guide data; the HDHomeRun device was unable to determine
 	// the PSIP information for this channel and as a result the guide data will never be available
-	return (execute_scalar_int(instance, "select 1 where exists(select json_extract(entry.value, '$.GuideNumber') as channelnumber, "
+	return execute_scalar_int(instance, "select 1 where exists(select json_extract(entry.value, '$.GuideNumber') as channelnumber, "
 		"json_extract(entry.value, '$.GuideName') as channelname "
 		"from lineup, json_each(lineup.data) as entry "
 		"where(channelnumber not in(select distinct(guide.number) from guide)) and "
-		"((cast(channelnumber as real) < 5000.0) or (channelname not like 'unknown')))") != 0);
+		"((cast(channelnumber as real) < 5000.0) or (channelname not like 'unknown')))") != 0;
 }
 
 //---------------------------------------------------------------------------
@@ -2928,7 +2938,27 @@ bool has_storage_engine(sqlite3* instance)
 {
 	if(instance == nullptr) return false;
 
-	return (execute_scalar_int(instance, "select exists(select deviceid from device where json_extract(device.data, '$.StorageURL') is not null)") != 0);
+	return execute_scalar_int(instance, "select exists(select deviceid from device where json_extract(device.data, '$.StorageURL') is not null)") != 0;
+}
+
+//---------------------------------------------------------------------------
+// is_channel_legacy_only
+//
+// Gets a flag indicating if a channel is only available via legacy devices
+//
+// Arguments:
+//
+//	instance		- Database instance
+//	channelid		- Channel to check for legacy device access only
+
+bool is_channel_legacy_only(sqlite3* instance, union channelid channelid)
+{
+	if(instance == nullptr) return false;
+
+	// Determine if the channel is only available from devices flagged as legacy
+	return execute_scalar_int(instance, "select exists(select 1 from lineup inner join device using(deviceid), "
+		"json_each(lineup.data) as lineupdata where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) "
+		"and json_extract(device.data, '$.Legacy') is not null)", channelid.value) != 0;
 }
 
 //---------------------------------------------------------------------------

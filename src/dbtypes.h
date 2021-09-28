@@ -89,6 +89,17 @@ enum channel_name_source {
 	device				= 3,
 };
 
+// channel_tuner
+//
+// Defines a tuner that is capable of streaming a channel
+struct channel_tuner {
+
+	char const*			tunerid;
+	bool				islegacy;
+	char const*			frequency;
+	char const*			program;
+};
+
 // channel_visibility
 //
 // Flag indicating a channel's visibility
