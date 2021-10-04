@@ -1,5 +1,6 @@
 v4.7.0 (2021.10.xx)
   - Update cURL library to version 7.79.1
+  - Update libxml2 library to version 2.9.11
   - Add support for legacy HDHomeRun tuner devices
 
 v4.6.0 (2021.08.26)
