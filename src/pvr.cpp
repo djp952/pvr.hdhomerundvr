@@ -570,8 +570,8 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 		// preventDuplicateEpisodes
 		3, {
 			{ duplicate_prevention::none, "Record all episodes" },
-			{ duplicate_prevention::newonly, "Record only new episodes" },
-			{ duplicate_prevention::recentonly, "Record only recent episodes" }
+			{ duplicate_prevention::newonly, "Record new episodes only" },
+			{ duplicate_prevention::recentonly, "Record current season episodes only" }
 		}, 0,
 
 		0, { { 0, "" } }, 0,		// recordingGroup
@@ -620,8 +620,8 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 		// preventDuplicateEpisodes
 		3, {
 			{ duplicate_prevention::none, "Record all episodes" },
-			{ duplicate_prevention::newonly, "Record only new episodes" },
-			{ duplicate_prevention::recentonly, "Record only recent episodes" }
+			{ duplicate_prevention::newonly, "Record new episodes only" },
+			{ duplicate_prevention::recentonly, "Record current season episodes only" }
 		}, 0,
 
 		0, { { 0, "" } }, 0,		// recordingGroup
