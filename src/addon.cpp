@@ -4063,8 +4063,8 @@ PVR_ERROR addon::GetTimerTypes(std::vector<kodi::addon::PVRTimerType>& types)
 	// Define the possible duplicate prevention values for series rules
 	std::vector<kodi::addon::PVRTypeIntValue> preventDuplicates;
 	preventDuplicates.emplace_back(duplicate_prevention::none, "Record all episodes");
-	preventDuplicates.emplace_back(duplicate_prevention::newonly, "Record only new episodes");
-	preventDuplicates.emplace_back(duplicate_prevention::recentonly, "Record only recent episodes");
+	preventDuplicates.emplace_back(duplicate_prevention::newonly, "Record new episodes only");
+	preventDuplicates.emplace_back(duplicate_prevention::recentonly, "Record current season episodes only");
 
 	// seriesrule
 	//

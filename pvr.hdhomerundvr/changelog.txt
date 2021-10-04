@@ -2,6 +2,8 @@ v4.7.0 (2021.10.xx)
   - Update cURL library to version 7.79.1
   - Update libxml2 library to version 2.9.11
   - Add support for legacy HDHomeRun tuner devices
+  - Change timer rule duplicate prevention name 'Record only new episodes' to 'Record new episodes only'
+  - Change timer rule duplicate prevention name 'Record only recent episodes' to 'Record current season episodes only'
 
 v4.6.0 (2021.08.26)
   - Update SQLite database engine to version 3.36.0
