@@ -76,7 +76,7 @@ sudo cp -v $(pwd)/osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dyli
 **INITIALIZE SOURCE TREE AND DEPENDENCIES**
 * Open "Developer Command Prompt for VS2017"   
 ```
-git clone https://github.com/djp952/pvr.hdhomerundvr -b Matrix
+git clone https://github.com/djp952/pvr.hdhomerundvr -b Nexus
 cd pvr.hdhomerundvr
 git submodule update --init
 ```

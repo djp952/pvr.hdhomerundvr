@@ -29,7 +29,7 @@
     <DisplayVersion></DisplayVersion>         <!-- Set by AddonVersion Target; may override on the command line -->
     <Keystore></Keystore>                     <!-- Must be set on the command line -->
     <KeystorePassword></KeystorePassword>     <!-- Must be set on the command line -->
-    <KodiBaseline>matrix</KodiBaseline>
+    <KodiBaseline>nexus</KodiBaseline>
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
@@ -592,10 +592,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>19.1.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>20.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20210508-85e05228-Matrix-x86</KodiAppx>
-      <ZukiAppx>kodi-19.1-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20211004-e5abd64b-master-x86</KodiAppx>
+      <ZukiAppx>kodi-20.0-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -610,7 +610,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).msix')" Importance="high" Text="Downloading $(KodiAppx).msix ..."/>
-    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl https://mirrors.kodi.tv/test-builds/windows/uwp32/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl http://mirrors.kodi.tv/nightlies/windows/uwp32/master/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).msix /l /d out\$(KodiAppx)" ContinueOnError="false"/>
@@ -633,10 +633,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>19.1.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>20.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20210508-85e05228-Matrix-x64</KodiAppx>
-      <ZukiAppx>kodi-19.1-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20211004-e5abd64b-master-x64</KodiAppx>
+      <ZukiAppx>kodi-20.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -651,7 +651,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).msix')" Importance="high" Text="Downloading $(KodiAppx).msix ..."/>
-    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl https://mirrors.kodi.tv/test-builds/windows/uwp64/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl http://mirrors.kodi.tv/nightlies/windows/uwp64/master/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).msix /l /d out\$(KodiAppx)" ContinueOnError="false"/>
@@ -674,10 +674,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>19.1.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>20.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20210508-85e05228-Matrix-arm</KodiAppx>
-      <ZukiAppx>kodi-19.1-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20211004-e5abd64b-master-arm</KodiAppx>
+      <ZukiAppx>kodi-20.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -692,7 +692,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).msix')" Importance="high" Text="Downloading $(KodiAppx).msix ..."/>
-    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl https://mirrors.kodi.tv/test-builds/windows/uwp-arm/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl http://mirrors.kodi.tv/nightlies/windows/uwp-arm/master/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).msix /l /d out\$(KodiAppx)" ContinueOnError="false"/>

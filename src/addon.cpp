@@ -3007,6 +3007,7 @@ PVR_ERROR addon::GetCapabilities(kodi::addon::PVRCapabilities& capabilities)
 	capabilities.SetSupportsRecordingPlayCount(true);
 	capabilities.SetSupportsLastPlayedPosition(true);
 	capabilities.SetSupportsRecordingEdl(true);
+	capabilities.SetSupportsRecordingsDelete(true);
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
