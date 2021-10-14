@@ -583,6 +583,31 @@
 
   </Target>
 
+  <!-- BUILD: ANDROID-X86_64 -->
+  <Target Name="android-x86_64" DependsOnTargets="AddonVersion">
+
+    <Error Condition="'$(ANDROID_NDK_ROOT)' == ''" Text="Environment variable ANDROID_NDK_ROOT has not been set; see README.md"/>
+
+    <MakeDir Directories="out" ContinueOnError="false"/>
+    <MakeDir Directories="out\repository" ContinueOnError="false"/>
+    <Exec Command="&quot;$(ANDROID_NDK_ROOT)\ndk-build.cmd&quot; APP_ABI=x86_64 NDK_APPLICATION_MK=Application.mk NDK_PROJECT_PATH=. NDK_OUT=out\android-x86_64 NDK_LIBS_OUT=out\android-x86_64" ContinueOnError="false"/>
+    <Exec Command="TextTransform.exe template\addon.xml.tt -out tmp\addon-android-x86_64.xml -a !!platform!android-x86_64 -a !!libraryplatform!android -a !!libraryname!libhdhomerundvr.so -a !!changelogtxt!pvr.hdhomerundvr\changelog.txt -a &quot;!!displayversion!$(DisplayVersion)&quot; -a &quot;!!repomanifest!android-x86_64.xml.gz&quot;" ContinueOnError="false"/>
+    <XmlPeek XmlInputPath="tmp\addon-android-x86_64.xml" Query="/addon/@version">
+      <Output TaskParameter="Result" PropertyName="PeekedDisplayVersion"/>
+    </XmlPeek>
+    <Error Condition="'$(PeekedDisplayVersion)' != '$(DisplayVersion)'" Text="DisplayVersion build property was not properly applied to the addon.xml text template"/>
+    <Exec Command="$(ZipperExe) create out\zuki.pvr.hdhomerundvr-android-x86_64-$(KodiBaseline)-$(AddonVersion).zip manifest\android-x86_64.manifest -sha256" ContinueOnError="false"/>
+
+    <GetFileSize filename="out\zuki.pvr.hdhomerundvr-android-x86_64-$(KodiBaseline)-$(AddonVersion).zip">
+      <Output PropertyName="ZipFileSize" TaskParameter="size"/>
+    </GetFileSize>
+
+    <Exec Command="TextTransform.exe template\addons.xml.tt -out &quot;tmp\repo-android-x86_64.xml&quot; -a !!platform!android-x86_64 -a !!libraryplatform!android -a !!libraryname!libhdhhomerundvr.so -a &quot;!!displayversion!$(DisplayVersion)&quot; -a !!zipfilesize!$(ZipFileSize) -a !!zipfilename!zuki.pvr.hdhomerundvr-android-x86_64-$(KodiBaseline)-$(AddonVersion).zip" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;gzip -cf tmp/repo-android-x86_64.xml &gt; out/repository/android-x86_64.xml.gz&quot;" ContinueOnError="false"/>
+    <Exec Command="$(BashExe) -c &quot;pushd out/repository/ ; sha256sum android-x86_64.xml.gz &gt; android-x86_64.xml.gz.sha256 ; popd&quot;" ContinueOnError="false"/>
+
+  </Target>
+
   <!-- BUILD: UWPAPPX-WIN32 -->
   <Target Name="uwpappx-win32" DependsOnTargets="AddonVersion;uwp-win32">
 
@@ -712,7 +737,7 @@
   <Target Name="uwpappx" DependsOnTargets="uwpappx-win32;uwpappx-x64;uwpappx-arm"/>
   <Target Name="linux" DependsOnTargets="linux-i686;linux-x86_64;linux-armel;linux-armhf;linux-aarch64"/>
   <Target Name="osx" DependsOnTargets="osx-x86_64"/>
-  <Target Name="android" DependsOnTargets="android-arm;android-aarch64;android-x86"/>
+  <Target Name="android" DependsOnTargets="android-arm;android-aarch64;android-x86;android-x86_64"/>
 
   <!-- BUILD: ALL -->
   <Target Name="all" DependsOnTargets="windows;uwp;uwpappx;linux;osx;android"/>

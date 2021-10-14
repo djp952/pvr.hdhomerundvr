@@ -45,6 +45,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "manifest", "manifest", "{03
 		manifest\android-aarch64.manifest = manifest\android-aarch64.manifest
 		manifest\android-arm.manifest = manifest\android-arm.manifest
 		manifest\android-x86.manifest = manifest\android-x86.manifest
+		manifest\android-x86_64.manifest = manifest\android-x86_64.manifest
 		manifest\linux-aarch64.manifest = manifest\linux-aarch64.manifest
 		manifest\linux-armel.manifest = manifest\linux-armel.manifest
 		manifest\linux-armhf.manifest = manifest\linux-armhf.manifest

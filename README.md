@@ -113,6 +113,7 @@ Examples:
 | android-aarch64 | Android ARM64 | /t:android-aarch64 |
 | android-arm | Android ARM | /t:android-arm |
 | android-x86 | Android X86 | /t:android-x86 |
+| android-x86\_64 | Android X86\_64 | /t:android-x86\_64 |
 | linux-aarch64 | Linux ARM64 | /t:linux-aarch64 |
 | linux-armel | Linux ARM | /t:linux-armel |
 | linux-armhf | Linux ARM (hard float) | /t:linux-armhf |
