@@ -848,7 +848,7 @@ static void discover_listings(scalar_condition<bool> const&, bool& changed)
 	// Only produce trace-level logging if the addon is starting up or the data has changed
 	bool const trace = (g_startup_complete.load() == false);
 
-	log_notice(trace, __func__, ": initiated listing discovery");
+	log_notice_if(trace, __func__, ": initiated listing discovery");
 
 	try {
 
