@@ -697,7 +697,7 @@ bool addon::is_channel_radio(std::unique_lock<std::mutex> const& lock, union cha
 template<typename... _args>
 void addon::log_debug(_args&&... args) const
 {
-	log_message(AddonLog::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
+	log_message(ADDON_LOG::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -713,7 +713,7 @@ void addon::log_debug(_args&&... args) const
 template<typename... _args>
 void addon::log_debug_if(bool flag, _args&&... args) const
 {
-	if(flag) log_message(AddonLog::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
+	if(flag) log_message(ADDON_LOG::ADDON_LOG_DEBUG, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -728,7 +728,7 @@ void addon::log_debug_if(bool flag, _args&&... args) const
 template<typename... _args>
 void addon::log_error(_args&&... args) const
 {
-	log_message(AddonLog::ADDON_LOG_ERROR, std::forward<_args>(args)...);
+	log_message(ADDON_LOG::ADDON_LOG_ERROR, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -744,7 +744,7 @@ void addon::log_error(_args&&... args) const
 template<typename... _args>
 void addon::log_error_if(bool flag, _args&&... args) const
 {
-	if(flag) log_message(AddonLog::ADDON_LOG_ERROR, std::forward<_args>(args)...);
+	if(flag) log_message(ADDON_LOG::ADDON_LOG_ERROR, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -759,7 +759,7 @@ void addon::log_error_if(bool flag, _args&&... args) const
 template<typename... _args>
 void addon::log_info(_args&&... args) const
 {
-	log_message(AddonLog::ADDON_LOG_INFO, std::forward<_args>(args)...);
+	log_message(ADDON_LOG::ADDON_LOG_INFO, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -775,7 +775,7 @@ void addon::log_info(_args&&... args) const
 template<typename... _args>
 void addon::log_info_if(bool flag, _args&&... args) const
 {
-	if(flag) log_message(AddonLog::ADDON_LOG_INFO, std::forward<_args>(args)...);
+	if(flag) log_message(ADDON_LOG::ADDON_LOG_INFO, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -788,7 +788,7 @@ void addon::log_info_if(bool flag, _args&&... args) const
 //	args	- Variadic argument list
 
 template<typename... _args>
-void addon::log_message(AddonLog level, _args&&... args) const
+void addon::log_message(ADDON_LOG level, _args&&... args) const
 {
 	const size_t MAX_ERROR_LOG = 10;	// Maximum entries to store in error log
 
@@ -799,7 +799,7 @@ void addon::log_message(AddonLog level, _args&&... args) const
 	kodi::Log(level, stream.str().c_str());
 
 	// Write ADDON_LOG_ERROR level messages to an appropriate secondary log mechanism
-	if(level == AddonLog::ADDON_LOG_ERROR) {
+	if(level == ADDON_LOG::ADDON_LOG_ERROR) {
 
 	#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
 		std::string message = "ERROR: " + stream.str() + "\r\n";
@@ -830,7 +830,7 @@ void addon::log_message(AddonLog level, _args&&... args) const
 template<typename... _args>
 void addon::log_warning(_args&&... args) const
 {
-	log_message(AddonLog::ADDON_LOG_WARNING, std::forward<_args>(args)...);
+	log_message(ADDON_LOG::ADDON_LOG_WARNING, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -846,7 +846,7 @@ void addon::log_warning(_args&&... args) const
 template<typename... _args>
 void addon::log_warning_if(bool flag, _args&&... args) const
 {
-	if(flag) log_message(AddonLog::ADDON_LOG_WARNING, std::forward<_args>(args)...);
+	if(flag) log_message(ADDON_LOG::ADDON_LOG_WARNING, std::forward<_args>(args)...);
 }
 
 //---------------------------------------------------------------------------
@@ -1756,53 +1756,53 @@ ADDON_STATUS addon::Create(void)
 			}
 
 			// Load the general settings
-			m_settings.pause_discovery_while_streaming = kodi::GetSettingBoolean("pause_discovery_while_streaming", false);
-			m_settings.discover_recordings_after_playback = kodi::GetSettingBoolean("discover_recordings_after_playback", false);
-			m_settings.show_drm_protected_channels = kodi::GetSettingBoolean("show_drm_protected_channels", false);
-			m_settings.disable_backend_channel_logos = kodi::GetSettingBoolean("disable_backend_channel_logos", false);
-			m_settings.delete_datetime_rules_after = kodi::GetSettingInt("delete_datetime_rules_after_v2", 86400);				// 1 day
+			m_settings.pause_discovery_while_streaming = kodi::addon::GetSettingBoolean("pause_discovery_while_streaming", false);
+			m_settings.discover_recordings_after_playback = kodi::addon::GetSettingBoolean("discover_recordings_after_playback", false);
+			m_settings.show_drm_protected_channels = kodi::addon::GetSettingBoolean("show_drm_protected_channels", false);
+			m_settings.disable_backend_channel_logos = kodi::addon::GetSettingBoolean("disable_backend_channel_logos", false);
+			m_settings.delete_datetime_rules_after = kodi::addon::GetSettingInt("delete_datetime_rules_after_v2", 86400);				// 1 day
 
 			// Load the interface settings
-			m_settings.prepend_channel_numbers = kodi::GetSettingBoolean("prepend_channel_numbers", false);
-			m_settings.use_episode_number_as_title = kodi::GetSettingBoolean("use_episode_number_as_title", false);
-			m_settings.use_backend_genre_strings = kodi::GetSettingBoolean("use_backend_genre_strings", false);
-			m_settings.channel_name_source = kodi::GetSettingEnum("channel_name_source", channel_name_source::xmltv);
-			m_settings.generate_epg_repeat_indicators = kodi::GetSettingBoolean("generate_epg_repeat_indicators", false);
-			m_settings.disable_recording_categories = kodi::GetSettingBoolean("disable_recording_categories", false);
-			m_settings.disable_signal_status = kodi::GetSettingBoolean("disable_signal_status", false);
-			m_settings.generate_repeat_indicators = kodi::GetSettingBoolean("generate_repeat_indicators", false);
-			m_settings.use_airdate_as_recordingdate = kodi::GetSettingBoolean("use_airdate_as_recordingdate", false);
-			m_settings.use_actual_timer_times = kodi::GetSettingBoolean("use_actual_timer_times", false);
+			m_settings.prepend_channel_numbers = kodi::addon::GetSettingBoolean("prepend_channel_numbers", false);
+			m_settings.use_episode_number_as_title = kodi::addon::GetSettingBoolean("use_episode_number_as_title", false);
+			m_settings.use_backend_genre_strings = kodi::addon::GetSettingBoolean("use_backend_genre_strings", false);
+			m_settings.channel_name_source = kodi::addon::GetSettingEnum("channel_name_source", channel_name_source::xmltv);
+			m_settings.generate_epg_repeat_indicators = kodi::addon::GetSettingBoolean("generate_epg_repeat_indicators", false);
+			m_settings.disable_recording_categories = kodi::addon::GetSettingBoolean("disable_recording_categories", false);
+			m_settings.disable_signal_status = kodi::addon::GetSettingBoolean("disable_signal_status", false);
+			m_settings.generate_repeat_indicators = kodi::addon::GetSettingBoolean("generate_repeat_indicators", false);
+			m_settings.use_airdate_as_recordingdate = kodi::addon::GetSettingBoolean("use_airdate_as_recordingdate", false);
+			m_settings.use_actual_timer_times = kodi::addon::GetSettingBoolean("use_actual_timer_times", false);
 
 			// Load the discovery interval settings
-			m_settings.discover_devices_interval = kodi::GetSettingInt("discover_devices_interval_v2", 300);					// 5 minutes
-			m_settings.discover_episodes_interval = kodi::GetSettingInt("discover_episodes_interval_v2", 7200);					// 2 hours
-			m_settings.discover_lineups_interval = kodi::GetSettingInt("discover_lineups_interval_v2", 2700);					// 45 minutes
-			m_settings.discover_recordings_interval = kodi::GetSettingInt("discover_recordings_interval_v2", 600);				// 10 minutes
-			m_settings.discover_recordingrules_interval = kodi::GetSettingInt("discover_recordingrules_interval_v2", 7200);		// 2 hours
+			m_settings.discover_devices_interval = kodi::addon::GetSettingInt("discover_devices_interval_v2", 300);					// 5 minutes
+			m_settings.discover_episodes_interval = kodi::addon::GetSettingInt("discover_episodes_interval_v2", 7200);					// 2 hours
+			m_settings.discover_lineups_interval = kodi::addon::GetSettingInt("discover_lineups_interval_v2", 2700);					// 45 minutes
+			m_settings.discover_recordings_interval = kodi::addon::GetSettingInt("discover_recordings_interval_v2", 600);				// 10 minutes
+			m_settings.discover_recordingrules_interval = kodi::addon::GetSettingInt("discover_recordingrules_interval_v2", 7200);		// 2 hours
 
 			// Load the Edit Decision List (EDL) settings
-			m_settings.enable_recording_edl = kodi::GetSettingBoolean("enable_recording_edl", false);
-			m_settings.recording_edl_folder = kodi::GetSettingString("recording_edl_folder");
-			m_settings.recording_edl_folder_2 = kodi::GetSettingString("recording_edl_folder_2");
-			m_settings.recording_edl_folder_3 = kodi::GetSettingString("recording_edl_folder_3");
-			m_settings.recording_edl_folder_is_flat = kodi::GetSettingBoolean("recording_edl_folder_is_flat", false);
-			m_settings.recording_edl_cut_as_comskip = kodi::GetSettingBoolean("recording_edl_cut_as_comskip", false);
-			m_settings.recording_edl_start_padding = kodi::GetSettingInt("recording_edl_start_padding", 0);
-			m_settings.recording_edl_end_padding = kodi::GetSettingInt("recording_edl_end_padding", 0);
+			m_settings.enable_recording_edl = kodi::addon::GetSettingBoolean("enable_recording_edl", false);
+			m_settings.recording_edl_folder = kodi::addon::GetSettingString("recording_edl_folder");
+			m_settings.recording_edl_folder_2 = kodi::addon::GetSettingString("recording_edl_folder_2");
+			m_settings.recording_edl_folder_3 = kodi::addon::GetSettingString("recording_edl_folder_3");
+			m_settings.recording_edl_folder_is_flat = kodi::addon::GetSettingBoolean("recording_edl_folder_is_flat", false);
+			m_settings.recording_edl_cut_as_comskip = kodi::addon::GetSettingBoolean("recording_edl_cut_as_comskip", false);
+			m_settings.recording_edl_start_padding = kodi::addon::GetSettingInt("recording_edl_start_padding", 0);
+			m_settings.recording_edl_end_padding = kodi::addon::GetSettingInt("recording_edl_end_padding", 0);
 
 			// Load the Radio Channel settings
-			m_settings.enable_radio_channel_mapping = kodi::GetSettingBoolean("enable_radio_channel_mapping", false);
-			m_settings.radio_channel_mapping_file = kodi::GetSettingString("radio_channel_mapping_file");
-			m_settings.block_radio_channel_video_streams = kodi::GetSettingBoolean("block_radio_channel_video_streams", false);
+			m_settings.enable_radio_channel_mapping = kodi::addon::GetSettingBoolean("enable_radio_channel_mapping", false);
+			m_settings.radio_channel_mapping_file = kodi::addon::GetSettingString("radio_channel_mapping_file");
+			m_settings.block_radio_channel_video_streams = kodi::addon::GetSettingBoolean("block_radio_channel_video_streams", false);
 
 			// Load the advanced settings
-			m_settings.use_http_device_discovery = kodi::GetSettingBoolean("use_http_device_discovery", false);
-			m_settings.use_direct_tuning = kodi::GetSettingBoolean("use_direct_tuning", false);
-			m_settings.direct_tuning_protocol = kodi::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
-			m_settings.direct_tuning_allow_drm = kodi::GetSettingBoolean("direct_tuning_allow_drm", false);
-			m_settings.stream_read_chunk_size = kodi::GetSettingInt("stream_read_chunk_size_v3", 0);							// Automatic
-			m_settings.deviceauth_stale_after = kodi::GetSettingInt("deviceauth_stale_after_v2", 72000);						// 20 hours
+			m_settings.use_http_device_discovery = kodi::addon::GetSettingBoolean("use_http_device_discovery", false);
+			m_settings.use_direct_tuning = kodi::addon::GetSettingBoolean("use_direct_tuning", false);
+			m_settings.direct_tuning_protocol = kodi::addon::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
+			m_settings.direct_tuning_allow_drm = kodi::addon::GetSettingBoolean("direct_tuning_allow_drm", false);
+			m_settings.stream_read_chunk_size = kodi::addon::GetSettingInt("stream_read_chunk_size_v3", 0);							// Automatic
+			m_settings.deviceauth_stale_after = kodi::addon::GetSettingInt("deviceauth_stale_after_v2", 72000);						// 20 hours
 
 			// Log the setting values; these are for diagnostic purposes just use the raw values
 			log_info(__func__, ": m_settings.block_radio_channel_video_streams  = ", m_settings.block_radio_channel_video_streams);
@@ -1945,7 +1945,7 @@ void addon::Destroy(void) noexcept
 // Arguments:
 //
 
-ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingValue const& settingValue)
+ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::addon::CSettingValue const& settingValue)
 {
 	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 	std::unique_lock<std::mutex> settings_lock(m_settings_lock);
@@ -3629,10 +3629,10 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 			if(item.directory != nullptr) {
 
 				// Special cases: "movie", "sport", "special", and "news"
-				if(strcasecmp(item.directory, "movie") == 0) recording.SetDirectory(kodi::GetLocalizedString(30402));
-				else if(strcasecmp(item.directory, "sport") == 0) recording.SetDirectory(kodi::GetLocalizedString(30403));
-				else if(strcasecmp(item.directory, "special") == 0) recording.SetDirectory(kodi::GetLocalizedString(30404));
-				else if(strcasecmp(item.directory, "news") == 0) recording.SetDirectory(kodi::GetLocalizedString(30405));
+				if(strcasecmp(item.directory, "movie") == 0) recording.SetDirectory(kodi::addon::GetLocalizedString(30402));
+				else if(strcasecmp(item.directory, "sport") == 0) recording.SetDirectory(kodi::addon::GetLocalizedString(30403));
+				else if(strcasecmp(item.directory, "special") == 0) recording.SetDirectory(kodi::addon::GetLocalizedString(30404));
+				else if(strcasecmp(item.directory, "news") == 0) recording.SetDirectory(kodi::addon::GetLocalizedString(30405));
 
 				else recording.SetDirectory(item.directory);
 			}

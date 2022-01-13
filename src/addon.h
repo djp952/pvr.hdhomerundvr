@@ -45,7 +45,7 @@
 //
 // Implements the PVR addon instance
 
-class ATTRIBUTE_HIDDEN addon : public kodi::addon::CAddonBase, public kodi::addon::CInstancePVRClient
+class ATTR_DLL_LOCAL addon : public kodi::addon::CAddonBase, public kodi::addon::CInstancePVRClient
 {
 public:
 
@@ -69,7 +69,7 @@ public:
 	// SetSetting
 	//
 	// Notifies the addon that a setting has been changed
-	ADDON_STATUS SetSetting(std::string const& settingName, kodi::CSettingValue const& settingValue) override;
+	ADDON_STATUS SetSetting(std::string const& settingName, kodi::addon::CSettingValue const& settingValue) override;
 
 	//-------------------------------------------------------------------------
 	// CInstancePVRClient
@@ -377,7 +377,7 @@ private:
 	template<typename... _args> void log_error_if(bool flag, _args&&... args) const;
 	template<typename... _args> void log_info(_args&&... args) const;
 	template<typename... _args> void log_info_if(bool flag, _args&&... args) const;
-	template<typename... _args> void log_message(AddonLog level, _args&&... args) const;
+	template<typename... _args> void log_message(ADDON_LOG level, _args&&... args) const;
 	template<typename... _args> void log_warning(_args&&... args) const;
 	template<typename... _args> void log_warning_if(bool flag, _args&&... args) const;
 

@@ -3,10 +3,10 @@
 Unofficial Kodi HDHomeRun DVR PVR Client   
 ## [__USER DOCUMENTATION AND DOWNLOADS__](https://github.com/djp952/pvr.hdhomerundvr/wiki)   
    
-Copyright (C)2016-2021 Michael G. Brehm    
+Copyright (C)2016-2022 Michael G. Brehm    
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
-[__CURL__](https://curl.haxx.se/) - Copyright (C)1996-2021, Daniel Stenberg, daniel@haxx.se, and many contributors   
+[__CURL__](https://curl.haxx.se/) - Copyright (C)1996-2022, Daniel Stenberg, daniel@haxx.se, and many contributors   
 [__HTTP-STATUS-CODES-CPP__](https://github.com/j-ulrich/http-status-codes-cpp) - Copyright (C) Jochen Ulrich   
 [__LIBHDHOMERUN__](https://github.com/Silicondust/libhdhomerun) - Copyright (C)2005-2018 Silicondust USA Inc   
 [__LIBXML2__](http://xmlsoft.org/) - Copyright (C)1998-2012 Daniel Veillard   
@@ -15,8 +15,13 @@ Copyright (C)2016-2021 Michael G. Brehm
    
 ## BUILD ENVIRONMENT
 **REQUIRED COMPONENTS**   
-* Windows 10 x64 20H2 (19042)   
-* Visual Studio 2017 (Windows 10 SDK (10.0.17763.0), and C++ Universal Windows Platform Tools)   
+* Windows 10 x64 20H2 (19042) or later   
+* Visual Studio 2022 Community Edition or higher with:    
+     * Desktop Development with C++
+     * Universal Windows Platform Development
+     * Windows 10 SDK (10.0.18362.0)   
+     * C++ v142 Universal Windows Platform Tools   
+       
 * [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (WSL v1 recommended)   
 * [WSL Ubuntu 18.04 LTS Distro](https://www.microsoft.com/store/productId/9N9TNGVNDL3Q)   
 
@@ -74,7 +79,7 @@ sudo cp -v $(pwd)/osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dyli
    
 ## BUILD KODI ADDON PACKAGES
 **INITIALIZE SOURCE TREE AND DEPENDENCIES**
-* Open "Developer Command Prompt for VS2017"   
+* Open "Developer Command Prompt for VS2022"   
 ```
 git clone https://github.com/djp952/pvr.hdhomerundvr -b Nexus
 cd pvr.hdhomerundvr
@@ -82,7 +87,7 @@ git submodule update --init
 ```
    
 **BUILD ADDON TARGET PACKAGE(S)**   
-* Open "Developer Command Prompt for VS2017"   
+* Open "Developer Command Prompt for VS2022"   
 ```
 cd pvr.hdhomerundvr
 msbuild msbuild.proj [/t:target[;target...]] [/p:parameter=value[;parameter=value...]

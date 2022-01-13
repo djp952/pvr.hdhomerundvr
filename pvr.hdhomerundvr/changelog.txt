@@ -1,7 +1,5 @@
-v4.7.1 (2022.01.xx)
+v20.7.0 (2022.01.12)
   - Update SQLite database engine to version 3.37.0
-
-v4.7.0 (2021.10.12)
   - Update cURL library to version 7.79.1
   - Update libxml2 library to version 2.9.11
   - Add support for legacy HDHomeRun tuner devices
