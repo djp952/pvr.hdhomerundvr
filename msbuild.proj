@@ -24,7 +24,7 @@
 
   <PropertyGroup>
     <AddonVersion></AddonVersion>             <!-- Set by AddonVersion Target; may override on the command line -->
-    <BashExe>$(WINDIR)\Sysnative\bash.exe</BashExe>
+    <BashExe>$(WINDIR)\System32\bash.exe</BashExe>
     <Configuration>Release</Configuration>
     <DisplayVersion></DisplayVersion>         <!-- Set by AddonVersion Target; may override on the command line -->
     <Keystore></Keystore>                     <!-- Must be set on the command line -->
