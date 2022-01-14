@@ -1,3 +1,6 @@
+v20.7.1 (2022.02.XX)
+  - Update SQLite database engine to version 3.37.2
+
 v20.7.0 (2022.01.12)
   - Update SQLite database engine to version 3.37.0
   - Update cURL library to version 7.79.1
