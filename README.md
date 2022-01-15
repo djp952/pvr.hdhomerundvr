@@ -20,7 +20,7 @@ Copyright (C)2016-2022 Michael G. Brehm
      * Desktop Development with C++
      * Universal Windows Platform Development
      * Windows 10 SDK (10.0.18362.0)   
-     * C++ v142 Universal Windows Platform Tools   
+     * C++ v141 Universal Windows Platform Tools   
        
 * [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (WSL v1 recommended)   
 * [WSL Ubuntu 18.04 LTS Distro](https://www.microsoft.com/store/productId/9N9TNGVNDL3Q)   
