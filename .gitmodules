@@ -10,6 +10,9 @@
 [submodule "libhdhomerun"]
 	path = depends/libhdhomerun
 	url = https://github.com/djp952/libhdhomerun.git
+[submodule "libssl"]
+	path = depends/libssl
+	url = https://github.com/djp952/prebuilt-libssl.git
 [submodule "libxml2"]
 	path = depends/libxml2
 	url = https://github.com/djp952/prebuilt-libxml2.git

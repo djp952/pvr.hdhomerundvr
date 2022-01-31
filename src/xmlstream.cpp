@@ -123,6 +123,8 @@ xmlstream::xmlstream(char const* url, char const* useragent, CURLSH* share) : m_
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 5L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_CONNECTTIMEOUT, 10L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, false);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &xmlstream::curl_write);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_curlerr.get());
