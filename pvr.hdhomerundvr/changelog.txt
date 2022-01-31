@@ -1,6 +1,9 @@
-v3.7.1 (2022.02.xx)
+v3.8.0 (2022.02.xx)
+  - Add dependency on OpenSSL library version 3.0.1
   - Update SQLite database engine to version 3.37.2
   - Update cURL library to version 7.81.0
+  - Adapt to HDHomeRun backend API 20220127 TLS v1.2 requirements
+  - Change HTTP POST method to multipart/form-data when modifying backend recording rules
 
 v3.7.0 (2021.10.12)
   - Update cURL library to version 7.79.1
