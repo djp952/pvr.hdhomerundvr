@@ -686,7 +686,9 @@ void get_season_number(sqlite3_context* context, int argc, sqlite3_value** argv)
 static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
 	bool					post = false;			// Flag indicating an HTTP POST operation
+	bool					form = false;			// Flag indicating a form-based POST operation
 	std::string				postfields;				// HTTP post fields (optional)
+	curl_mime*				formdata = nullptr;		// HTTP form post data (optional)
 	long					responsecode = 200;		// HTTP response code
 	std::vector<uint8_t>	blob;					// HTTP response data buffer
 	rapidjson::Document		document;				// Resultant JSON document
@@ -704,7 +706,11 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if((argc >= 2) && (argv[1] != nullptr)) {
 
 		const char* method = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
-		if(method != nullptr) post = (strncasecmp(method, "POST", 4) == 0);
+		if(method != nullptr) {
+
+			post = (strncasecmp(method, "POST", 4) == 0);
+			form = (strncasecmp(method, "FORM", 4) == 0);
+		}
 	}
 
 	// Check for HTTP POST field data
@@ -745,9 +751,41 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	// Create an error message buffer that *may* contain more information on a failure result
 	char curlerr[CURL_ERROR_SIZE + 1] = {};
 
-	// Set the CURL options and execute the web request, switching to POST if indicated
+	// Create the form data to post for FORM operations by breaking up the post fields
+	if(form) {
+
+		// Initialize the form data object
+		formdata = curl_mime_init(curl);
+
+		// Split the post fields up into separate strings based on the ampersand(s)
+		std::vector<std::string> fields;
+		std::string::size_type prev_pos = 0, pos = 0;
+		while((pos = postfields.find('&', pos)) != std::string::npos) {
+
+			std::string substring(postfields.substr(prev_pos, pos - prev_pos));
+			fields.push_back(substring);
+			prev_pos = ++pos;
+		}
+
+		fields.push_back(postfields.substr(prev_pos, pos - prev_pos));
+
+		// Convert each entry in the vector<> into name/value pairs for cURL
+		for(std::string const& field : fields) {
+
+			std::string::size_type equalpos = field.find('=');
+			curl_mimepart* part = curl_mime_addpart(formdata);
+			if(part != nullptr) {
+
+				curl_mime_name(part, (equalpos != std::string::npos) ? field.substr(0, equalpos).c_str() : field.c_str());
+				curl_mime_data(part, (equalpos != std::string::npos) ? field.substr(equalpos + 1).c_str() : "", CURL_ZERO_TERMINATED);
+			}
+		}
+	}
+
+	// Set the CURL options and execute the web request, switching to POST/FORM if needed
 	CURLcode curlresult = curl_easy_setopt(curl, CURLOPT_URL, url);
 	if((post) && (curlresult == CURLE_OK)) curlresult = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields.c_str());
+	if((form) && (formdata != nullptr) && (curlresult == CURLE_OK)) curlresult = curl_easy_setopt(curl, CURLOPT_MIMEPOST, formdata);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_USERAGENT, g_useragent.c_str());
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "identity, gzip, deflate");
@@ -756,12 +794,17 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&blob));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlerr);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
+
+	// Release the form data if it was generated prior to calling curl_easy_cleanup()
+	if(formdata != nullptr) curl_mime_free(formdata);
 	curl_easy_cleanup(curl);
 
 	// Check if any of the above operations failed and return an error condition
@@ -887,6 +930,8 @@ void json_get_aggregate_final(sqlite3_context* context)
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<curl_writefunction>(write_function));
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&std::get<1>(*transfer)));
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
