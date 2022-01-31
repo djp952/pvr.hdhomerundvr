@@ -1,4 +1,4 @@
-v20.8.0 (2022.02.XX)
+v20.8.0 (2022.01.31)
   - Add dependency on OpenSSL library version 3.0.1
   - Update SQLite database engine to version 3.37.2
   - Update cURL library to version 7.81.0
