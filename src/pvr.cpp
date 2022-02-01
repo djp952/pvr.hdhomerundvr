@@ -1160,11 +1160,17 @@ static void log_message(ADDON::addon_log_t level, _args&&... args)
 #else
 		fprintf(stderr, "ERROR: %s\r\n", stream.str().c_str());
 #endif
+
 		// Maintain a list of the last MAX_ERROR_LOG error messages that can be exposed
 		// to the user without needing to reference the Kodi log file
+
+		time_t now = time(nullptr);
+		std::string nowstring(std::string(asctime(localtime(&now))));
+		nowstring = nowstring.substr(0, nowstring.length() - 1);			// Remove \n
+
 		std::unique_lock<std::mutex> lock(g_errorlog_lock);
 		while(g_errorlog.size() >= MAX_ERROR_LOG) g_errorlog.pop_front();
-		g_errorlog.push_back(stream.str());
+		g_errorlog.push_back(stream.str().append(" [").append(nowstring).append("]"));
 	}
 }
 
