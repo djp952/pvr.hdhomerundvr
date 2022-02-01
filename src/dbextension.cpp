@@ -687,6 +687,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
 	bool					post = false;			// Flag indicating an HTTP POST operation
 	bool					form = false;			// Flag indicating a form-based POST operation
+	std::string				methodstr;				// String representing the method being used
 	std::string				postfields;				// HTTP post fields (optional)
 	curl_mime*				formdata = nullptr;		// HTTP form post data (optional)
 	long					responsecode = 200;		// HTTP response code
@@ -712,6 +713,11 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 			form = (strncasecmp(method, "FORM", 4) == 0);
 		}
 	}
+
+	// Set up the method string for logging operations
+	if(post) methodstr.assign("post");
+	else if(form) methodstr.assign("form");
+	else methodstr.assign("get");
 
 	// Check for HTTP POST field data
 	if((argc >= 3) && (argv[2] != nullptr)) {
@@ -740,7 +746,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 #if defined(_WINDOWS) && defined(_DEBUG)
 	// Dump the target URL to the debugger on Windows _DEBUG builds to watch for URL duplication
 	char debugurl[512];
-	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s%s%s%s\r\n", __func__, (post) ? "post" : "get", url, (post) ? " [" : "", (post) ? postfields.c_str() : "", (post) ? "]" : "");
+	snprintf(debugurl, std::extent<decltype(debugurl)>::value, "%s (%s): %s%s%s%s\r\n", __func__, methodstr.c_str(), url, (post || form) ? " [" : "", (post || form) ? postfields.c_str() : "", (post || form) ? "]" : "");
 	OutputDebugStringA(debugurl);
 #endif
 
@@ -811,7 +817,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult != CURLE_OK) {
 
 		// Use sqlite3_mprintf to generate the formatted error message
-		auto message = sqlite3_mprintf("http %s request on [%s] failed with cURL error: %s", (post) ? "post" : "get", url, 
+		auto message = sqlite3_mprintf("http %s request on [%s] failed with cURL error: %s", methodstr.c_str(), url, 
 			(strlen(curlerr)) ? curlerr : curl_easy_strerror(curlresult));
 		sqlite3_result_error(context, message, -1);
 		return sqlite3_free(reinterpret_cast<void*>(message));
@@ -821,7 +827,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if((responsecode < 200) || (responsecode > 299)) {
 
 		// Use sqlite3_mprintf to generate the formatted error message
-		auto message = sqlite3_mprintf("http %s request on url [%s] failed with http response code %ld", (post) ? "post" : "get", url, responsecode);
+		auto message = sqlite3_mprintf("http %s request on url [%s] failed with http response code %ld", methodstr.c_str(), url, responsecode);
 		sqlite3_result_error(context, message, -1);
 		return sqlite3_free(reinterpret_cast<void*>(message));
 	}
