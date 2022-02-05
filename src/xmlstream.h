@@ -55,7 +55,8 @@ public:
 	// Factory method, creates a new httpstream instance
 	static std::unique_ptr<xmlstream> create(char const* url);
 	static std::unique_ptr<xmlstream> create(char const* url, char const* useragent);
-	static std::unique_ptr<xmlstream> create(char const* url, char const* useragent, CURLSH* share);
+	static std::unique_ptr<xmlstream> create(char const* url, char const* useragent, char const* proxy);
+	static std::unique_ptr<xmlstream> create(char const* url, char const* useragent, char const* proxy, CURLSH* share);
 
 	// read
 	//
@@ -74,7 +75,7 @@ private:
 
 	// Instance Constructor
 	//
-	xmlstream(char const* url, char const* useragent, CURLSH* share);
+	xmlstream(char const* url, char const* useragent, char const* proxy, CURLSH* share);
 
 	//-----------------------------------------------------------------------
 	// Private Member Functions

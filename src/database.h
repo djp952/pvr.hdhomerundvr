@@ -347,6 +347,11 @@ int get_channel_count(sqlite3* instance, bool showdrm);
 // Gets the timestamp of the last discovery for the specified type
 time_t get_discovered(sqlite3* instance, char const* type);
 
+// get_http_proxy
+//
+// Gets the currently set HTTP proxy server
+std::string get_http_proxy(sqlite3* instance);
+
 // get_recording_count
 //
 // Gets the number of available recordings in the database
@@ -442,6 +447,11 @@ void set_channel_visibility(sqlite3* instance, union channelid channelid, enum c
 //
 // Sets the timestamp of the last discovery for the specified type
 void set_discovered(sqlite3* instance, char const* type, time_t discovered);
+
+// set_http_proxy
+//
+// Sets the HTTP proxy server
+std::string set_http_proxy(sqlite3* instance, char const* proxy);
 
 // set_recording_lastposition
 //

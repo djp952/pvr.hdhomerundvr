@@ -295,6 +295,11 @@ struct addon_settings {
 	// Flag to discover devices via HTTP instead of local network broadcast
 	bool use_http_device_discovery;
 
+	// discovery_proxy_server
+	//
+	// Indicates the hostname and port of a proxy server for discovery operations
+	std::string discovery_proxy_server;
+
 	// use_direct_tuning
 	//
 	// Flag indicating that Live TV will be handled directly from the tuner(s)
@@ -507,6 +512,7 @@ static addon_settings g_settings = {
 	600,						// discover_recordings_interval			default = 10 minutes
 	7200,						// discover_recordingrules_interval		default = 2 hours
 	false,						// use_http_device_discovery
+	"",							// discovery_proxy_server
 	false,						// use_direct_tuning
 	tuning_protocol::http,		// direct_tuning_protocol
 	false,						// direct_tuning_allow_drm
@@ -2119,6 +2125,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_http_device_discovery", &bvalue)) g_settings.use_http_device_discovery = bvalue;
+			if(g_addon->GetSetting("discovery_proxy_server", strvalue)) g_settings.discovery_proxy_server.assign(strvalue);
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("direct_tuning_allow_drm", &bvalue)) g_settings.direct_tuning_allow_drm = bvalue;
@@ -2140,6 +2147,7 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			log_notice(__func__, ": g_settings.discover_recordingrules_interval   = ", g_settings.discover_recordingrules_interval);
 			log_notice(__func__, ": g_settings.discover_recordings_after_playback = ", g_settings.discover_recordings_after_playback);
 			log_notice(__func__, ": g_settings.discover_recordings_interval       = ", g_settings.discover_recordings_interval);
+			log_notice(__func__, ": g_settings.discovery_proxy_server             = ", g_settings.discovery_proxy_server);
 			log_notice(__func__, ": g_settings.enable_radio_channel_mapping       = ", g_settings.enable_radio_channel_mapping);
 			log_notice(__func__, ": g_settings.enable_recording_edl               = ", g_settings.enable_recording_edl);
 			log_notice(__func__, ": g_settings.generate_repeat_indicators         = ", g_settings.generate_repeat_indicators);
@@ -2286,6 +2294,10 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 						g_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), DATABASE_CONNECTIONPOOL_SIZE, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
 						log_notice(__func__, ": successfully recreated the PVR database");
 					}
+
+					// Set the proxy server to use for all HTTP discovery operations
+					std::string proxy = set_http_proxy(connectionpool::handle(g_connpool), g_settings.discovery_proxy_server.c_str());
+					if(!proxy.empty()) log_notice(__func__, ": discovery http proxy server set to ", proxy.c_str());
 
 					// Start the task scheduler
 					try { g_scheduler.start(); }
@@ -2622,6 +2634,21 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 		log_notice(__func__, ": setting discover_recordings_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 		g_scheduler.add(now + std::chrono::seconds(nvalue), update_recordings_task);
 	}
+	}
+
+	// discovery_proxy_server
+	//
+	else if(strcmp(name, "discovery_proxy_server") == 0) {
+
+		if(strcmp(g_settings.discovery_proxy_server.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.discovery_proxy_server.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting discovery_proxy_server changed to ", g_settings.discovery_proxy_server.c_str());
+
+			// This setting is implemented in the database layer
+			std::string proxy = set_http_proxy(connectionpool::handle(g_connpool), g_settings.discovery_proxy_server.c_str());
+			log_notice(__func__, ": discovery http proxy server set to ", (proxy.empty()) ? "(null)" : proxy.c_str());
+		}
 	}
 
 	// use_http_device_discovery

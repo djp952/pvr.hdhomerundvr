@@ -366,6 +366,15 @@
           <control type="toggle"/>
         </setting>
 
+        <setting id="discovery_proxy_server" type="string" label="30147" help="30542">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string" />
+        </setting>
+
         <setting id="use_direct_tuning" type="boolean" label="30111" help="30522">
           <level>0</level>
           <default>false</default>
