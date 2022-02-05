@@ -184,6 +184,10 @@ msgctxt "#30146"
 msgid "Disable reporting of active Live TV tuner signal status"
 msgstr ""
 
+msgctxt "#30147"
+msgid "Discovery HTTP proxy server"
+msgstr ""
+
 msgctxt "#30201"
 msgid "5 Minutes"
 msgstr ""
@@ -554,5 +558,9 @@ msgstr ""
 
 msgctxt "#30541"
 msgid "When set to ON the signal status information for the active Live TV tuner device will not be reported to Kodi when requested."
+msgstr ""
+
+msgctxt "#30542"
+msgid "Specifies the address of an HTTP proxy server to use for all discovery operations. Specify as either a dotted IPv4 host address or a host name followed by a colon and the port number (127.0.0.1:8888). If only a host address is specified a default port number of 1080 will be used."
 msgstr ""
 

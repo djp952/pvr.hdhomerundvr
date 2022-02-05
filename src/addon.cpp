@@ -1803,6 +1803,7 @@ ADDON_STATUS addon::Create(void)
 
 			// Load the advanced settings
 			m_settings.use_http_device_discovery = kodi::addon::GetSettingBoolean("use_http_device_discovery", false);
+			m_settings.discovery_proxy_server = kodi::addon::GetSettingString("discovery_proxy_server");
 			m_settings.use_direct_tuning = kodi::addon::GetSettingBoolean("use_direct_tuning", false);
 			m_settings.direct_tuning_protocol = kodi::addon::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
 			m_settings.direct_tuning_allow_drm = kodi::addon::GetSettingBoolean("direct_tuning_allow_drm", false);
@@ -1825,6 +1826,7 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.discover_recordingrules_interval   = ", m_settings.discover_recordingrules_interval);
 			log_info(__func__, ": m_settings.discover_recordings_after_playback = ", m_settings.discover_recordings_after_playback);
 			log_info(__func__, ": m_settings.discover_recordings_interval       = ", m_settings.discover_recordings_interval);
+			log_info(__func__, ": m_settings.discovery_proxy_server             = ", m_settings.discovery_proxy_server);
 			log_info(__func__, ": m_settings.enable_radio_channel_mapping       = ", m_settings.enable_radio_channel_mapping);
 			log_info(__func__, ": m_settings.enable_recording_edl               = ", m_settings.enable_recording_edl);
 			log_info(__func__, ": m_settings.generate_epg_repeat_indicators     = ", m_settings.generate_epg_repeat_indicators);
@@ -1882,6 +1884,10 @@ ADDON_STATUS addon::Create(void)
 				m_connpool = std::make_shared<connectionpool>(databasefileuri.c_str(), DATABASE_CONNECTIONPOOL_SIZE, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI);
 				log_info(__func__, ": successfully recreated the PVR database");
 			}
+
+			// Set the proxy server to use for all HTTP discovery operations
+			std::string proxy = set_http_proxy(connectionpool::handle(m_connpool), m_settings.discovery_proxy_server.c_str());
+			if(!proxy.empty()) log_info(__func__, ": discovery http proxy server set to ", proxy.c_str());
 
 			// Attempt to start the task scheduler
 			try { m_scheduler.start(); } 
@@ -2217,6 +2223,22 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::addon::CSet
 			m_settings.discover_recordings_interval = nvalue;
 			log_info(__func__, ": setting discover_recordings_interval changed -- rescheduling update task to initiate in ", nvalue, " seconds");
 			m_scheduler.add(UPDATE_RECORDINGS_TASK, now + std::chrono::seconds(nvalue), &addon::update_recordings_task, this);
+		}
+	}
+
+	// discovery_proxy_server
+	//
+	else if(settingName == "discovery_proxy_server") {
+
+		std::string strvalue = settingValue.GetString();
+		if(strvalue != m_settings.discovery_proxy_server) {
+
+			m_settings.discovery_proxy_server = strvalue;
+			log_info(__func__, ": setting discovery_proxy_server changed to ", strvalue);
+
+			// This setting is implemented in the database layer
+			std::string proxy = set_http_proxy(connectionpool::handle(m_connpool), m_settings.discovery_proxy_server.c_str());
+			log_info(__func__, ": discovery http proxy server set to ", (proxy.empty()) ? "(null)" : proxy.c_str());
 		}
 	}
 

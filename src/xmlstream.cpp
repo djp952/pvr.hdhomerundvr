@@ -81,9 +81,10 @@ static bool curl_multi_get_result(CURLM* multi, CURL* easy, CURLcode *result)
 //
 //	url				- URL of the stream to be opened
 //	useragent		- User-Agent string to specify for the connection
+//	proxy			- Proxy string to specify for the connection
 //	share			- CURLSH instance to use for the connection
 
-xmlstream::xmlstream(char const* url, char const* useragent, CURLSH* share) : m_buffersize(DEFAULT_RINGBUFFER_SIZE)
+xmlstream::xmlstream(char const* url, char const* useragent, char const* proxy, CURLSH* share) : m_buffersize(DEFAULT_RINGBUFFER_SIZE)
 {
 	size_t		available = 0;				// Amount of available ring buffer data
 
@@ -131,6 +132,7 @@ xmlstream::xmlstream(char const* url, char const* useragent, CURLSH* share) : m_
 
 			if((curlresult == CURLE_OK) && (useragent != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_USERAGENT, useragent);
 			if((curlresult == CURLE_OK) && (share != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_SHARE, share);
+			if((curlresult == CURLE_OK) && (proxy != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_PROXY, proxy);
 
 			if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
 
@@ -201,7 +203,7 @@ void xmlstream::close(void)
 
 std::unique_ptr<xmlstream> xmlstream::create(char const* url)
 {
-	return create(url, nullptr, nullptr);
+	return create(url, nullptr, nullptr, nullptr);
 }
 
 //---------------------------------------------------------------------------
@@ -216,7 +218,7 @@ std::unique_ptr<xmlstream> xmlstream::create(char const* url)
 
 std::unique_ptr<xmlstream> xmlstream::create(char const* url, char const* useragent)
 {
-	return create(url, useragent, nullptr);
+	return create(url, useragent, nullptr, nullptr);
 }
 
 //---------------------------------------------------------------------------
@@ -228,11 +230,28 @@ std::unique_ptr<xmlstream> xmlstream::create(char const* url, char const* userag
 //
 //	url				- URL of the stream to be opened
 //	useragent		- User-Agent string to specify for the connection
+//	proxy			- Proxy address to specify for the connection
+
+std::unique_ptr<xmlstream> xmlstream::create(char const* url, char const* useragent, char const* proxy)
+{
+	return create(url, useragent, proxy, nullptr);
+}
+
+//---------------------------------------------------------------------------
+// xmlstream::create (static)
+//
+// Factory method, creates a new xmlstream instance
+//
+// Arguments:
+//
+//	url				- URL of the stream to be opened
+//	useragent		- User-Agent string to specify for the connection
+//	proxy			- Proxy address to specify for the connection
 //	share			- CURLSH instance to use for the connection
 
-std::unique_ptr<xmlstream> xmlstream::create(char const* url, char const* useragent, CURLSH* share)
+std::unique_ptr<xmlstream> xmlstream::create(char const* url, char const* useragent, char const* proxy, CURLSH* share)
 {
-	return std::unique_ptr<xmlstream>(new xmlstream(url, useragent, share));
+	return std::unique_ptr<xmlstream>(new xmlstream(url, useragent, proxy, share));
 }
 
 //---------------------------------------------------------------------------
