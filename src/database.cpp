@@ -2593,6 +2593,22 @@ time_t get_discovered(sqlite3* instance, char const* type)
 }
 
 //---------------------------------------------------------------------------
+// get_http_proxy
+//
+// Gets the currently set HTTP proxy server
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+
+std::string get_http_proxy(sqlite3* instance)
+{
+	if(instance == nullptr) return std::string();
+
+	return execute_scalar_string(instance, "select get_http_proxy()");
+}
+
+//---------------------------------------------------------------------------
 // get_recording_count
 //
 // Gets the number of available recordings in the database
@@ -3320,6 +3336,22 @@ void set_discovered(sqlite3* instance, char const* type, time_t discovered)
 	if((instance == nullptr) || (type == nullptr)) return;
 
 	execute_non_query(instance, "replace into discovered values(?1, ?2)", type, static_cast<int>(discovered));
+}
+
+//---------------------------------------------------------------------------
+// set_http_proxy
+//
+// Sets the HTTP proxy server
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+
+std::string set_http_proxy(sqlite3* instance, char const* proxy)
+{
+	if(instance == nullptr) return std::string();
+
+	return execute_scalar_string(instance, "select set_http_proxy(?1)", proxy);
 }
 
 //---------------------------------------------------------------------------

@@ -194,6 +194,11 @@ struct settings {
 	// Flag to discover devices via HTTP instead of local network broadcast
 	bool use_http_device_discovery;
 
+	// discovery_proxy_server
+	//
+	// Indicates the hostname and port of a proxy server for discovery operations
+	std::string discovery_proxy_server;
+
 	// use_direct_tuning
 	//
 	// Flag indicating that Live TV will be handled directly from the tuner(s)

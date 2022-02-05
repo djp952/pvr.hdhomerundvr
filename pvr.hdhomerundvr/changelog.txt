@@ -1,6 +1,8 @@
 v4.8.1 (2022.02.xx)
-  - Add a date/time stamp to the end of messages stored in the error log
   - Fix HTTP query error messages reporting the multipart/form-data POST operation method as 'get'
+  - Add a date/time stamp to the end of messages stored in the error log
+  - Add new "Discovery HTTP proxy server" Advanced option
+  
 v4.8.0 (2022.01.31)
   - Add dependency on OpenSSL library version 3.0.1
   - Update SQLite database engine to version 3.37.2
