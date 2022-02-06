@@ -94,12 +94,6 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="disable_signal_status" type="boolean" label="30146" help="30541">
-          <level>0</level>
-          <default>false</default>
-          <control type="toggle"/>
-        </setting>
-
         <setting id="generate_repeat_indicators" type="boolean" label="30133" help="30528">
           <level>0</level>
           <default>false</default>
