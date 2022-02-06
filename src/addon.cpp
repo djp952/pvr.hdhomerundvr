@@ -1774,7 +1774,6 @@ ADDON_STATUS addon::Create(void)
 			m_settings.channel_name_source = kodi::addon::GetSettingEnum("channel_name_source", channel_name_source::xmltv);
 			m_settings.generate_epg_repeat_indicators = kodi::addon::GetSettingBoolean("generate_epg_repeat_indicators", false);
 			m_settings.disable_recording_categories = kodi::addon::GetSettingBoolean("disable_recording_categories", false);
-			m_settings.disable_signal_status = kodi::addon::GetSettingBoolean("disable_signal_status", false);
 			m_settings.generate_repeat_indicators = kodi::addon::GetSettingBoolean("generate_repeat_indicators", false);
 			m_settings.use_airdate_as_recordingdate = kodi::addon::GetSettingBoolean("use_airdate_as_recordingdate", false);
 			m_settings.use_actual_timer_times = kodi::addon::GetSettingBoolean("use_actual_timer_times", false);
@@ -1819,7 +1818,6 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.direct_tuning_protocol             = ", static_cast<int>(m_settings.direct_tuning_protocol));
 			log_info(__func__, ": m_settings.disable_backend_channel_logos      = ", m_settings.disable_backend_channel_logos);
 			log_info(__func__, ": m_settings.disable_recording_categories       = ", m_settings.disable_recording_categories);
-			log_info(__func__, ": m_settings.disable_signal_status              = ", m_settings.disable_signal_status);
 			log_info(__func__, ": m_settings.discover_devices_interval          = ", m_settings.discover_devices_interval);
 			log_info(__func__, ": m_settings.discover_episodes_interval         = ", m_settings.discover_episodes_interval);
 			log_info(__func__, ": m_settings.discover_lineups_interval          = ", m_settings.discover_lineups_interval);
@@ -2075,18 +2073,6 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::addon::CSet
 			m_settings.disable_recording_categories = bvalue;
 			log_info(__func__, ": setting disable_recording_categories changed to ", bvalue, " -- trigger recording update");
 			TriggerRecordingUpdate();
-		}
-	}
-
-	// disable_signal_status
-	//
-	else if(settingName == "disable_signal_status") {
-
-		bool bvalue = settingValue.GetBoolean();
-		if(bvalue != m_settings.disable_signal_status) {
-
-			m_settings.disable_signal_status = bvalue;
-			log_info(__func__, ": setting disable_signal_status changed to ", bvalue);
 		}
 	}
 
@@ -3801,9 +3787,6 @@ PVR_ERROR addon::GetSignalStatus(int channelUid, kodi::addon::PVRSignalStatus& s
 
 	signalStatus.SetServiceName("SiliconDust HDHomeRun");	// Constant
 	signalStatus.SetAdapterStatus("Active");				// Constant
-
-	// If reporting is disabled, bypass the signal status check
-	if(settings.disable_signal_status) return PVR_ERROR::PVR_ERROR_NO_ERROR;
 
 	// Attempt to get the signal status from a tuner that is tuned to this channel
 	get_signal_status(connectionpool::handle(m_connpool), channelid, [&](struct signal_status const& item) -> void {

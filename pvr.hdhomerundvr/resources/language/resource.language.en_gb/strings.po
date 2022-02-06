@@ -180,10 +180,6 @@ msgctxt "#30145"
 msgid "Append repeat indicators to EPG episode names"
 msgstr ""
 
-msgctxt "#30146"
-msgid "Disable reporting of active Live TV tuner signal status"
-msgstr ""
-
 msgctxt "#30147"
 msgid "Discovery HTTP proxy server"
 msgstr ""
@@ -554,10 +550,6 @@ msgstr ""
 
 msgctxt "#30540"
 msgid "When set to ON a repeat indicator of [R] will be appended to Electronic Program Guide (EPG) episode names if the episode is determined to be a repeat."
-msgstr ""
-
-msgctxt "#30541"
-msgid "When set to ON the signal status information for the active Live TV tuner device will not be reported to Kodi when requested."
 msgstr ""
 
 msgctxt "#30542"
