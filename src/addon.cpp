@@ -67,6 +67,7 @@ ADDONCREATOR(addon)
 
 // Scheduled Task Names
 //
+char const* addon::PROXY_CHANGED_TASK			= "proxy_changed_task";
 char const* addon::PUSH_LISTINGS_TASK			= "push_listings_task";
 char const* addon::UPDATE_DEVICES_TASK			= "update_devices_task";
 char const* addon::UPDATE_EPISODES_TASK			= "update_episodes_task";
@@ -94,7 +95,8 @@ addon::addon() : m_discovered_devices{ false },
 	m_settings{},
 	m_startup_complete{ false },
 	m_stream_starttime(0), 
-	m_stream_endtime(0) {}
+	m_stream_endtime(0),
+	m_useproxy{ false } {}
 
 //---------------------------------------------------------------------------
 // addon Destructor
@@ -975,6 +977,73 @@ std::unique_ptr<pvrstream> addon::openlivestream_tuner_http(connectionpool::hand
 	return nullptr;
 }
 
+//-----------------------------------------------------------------------------
+// addon::proxy_changed_task (private)
+//
+// Scheduled task implementation to rediscover all backend metadata from a proxy change
+//
+// Arguments:
+//
+//	cancel		- Condition variable used to cancel the operation
+
+void addon::proxy_changed_task(scalar_condition<bool> const& /*cancel*/)
+{
+	using namespace std::chrono;
+
+	// Create a copy of the current addon settings structure
+	struct settings settings = copy_settings();
+
+	// If the settings indicate no proxy server and one wasn't already in use do nothing
+	if((settings.use_proxy_server == false) && (m_useproxy.load() == false)) return;
+
+	try {
+
+		m_useproxy.store(settings.use_proxy_server);
+
+		if(m_useproxy.load() == true) {
+
+			// The proxy server is being enabled or the settings have changed
+			std::string proxy = set_http_proxy(connectionpool::handle(m_connpool),
+				settings.proxy_server_address.c_str(), settings.proxy_server_username.c_str(), settings.proxy_server_password.c_str());
+			log_info(__func__, ": discovery http proxy server set to ", (proxy.empty()) ? "(not set)" : proxy.c_str());
+		}
+
+		else {
+
+			// The proxy server is being disabled
+			set_http_proxy(connectionpool::handle(m_connpool), nullptr, nullptr, nullptr);
+			log_info(__func__, ": discovery http proxy server disabled");
+		}
+
+		// Enable trace-level discovery logging after the proxy server has changed
+		m_startup_complete.store(false);
+
+		// Systems with a low precision system_clock implementation may run the tasks out of order,
+		// account for this by using a base time with a unique millisecond offset during scheduling
+		auto now = system_clock::now();
+
+		// Schedule a task to wait for the network to become available
+		m_scheduler.add(now, std::bind(&addon::wait_for_network_task, this, 60, std::placeholders::_1));
+
+		// Schedule the normal update tasks for everything in an appropriate order
+		m_scheduler.add(UPDATE_DEVICES_TASK, now + milliseconds(1), &addon::update_devices_task, this);
+		m_scheduler.add(UPDATE_LINEUPS_TASK, now + milliseconds(2), &addon::update_lineups_task, this);
+		m_scheduler.add(UPDATE_RECORDINGS_TASK, now + milliseconds(3), &addon::update_recordings_task, this);
+		m_scheduler.add(UPDATE_RECORDINGRULES_TASK, now + milliseconds(4), &addon::update_recordingrules_task, this);
+		m_scheduler.add(UPDATE_EPISODES_TASK, now + milliseconds(5), &addon::update_episodes_task, this);
+
+		// A listings update may have been scheduled by update_lineups_task with a channel check set;
+		// adding it again may override that task, so perform a missing channel check here as well
+		m_scheduler.add(UPDATE_LISTINGS_TASK, now + milliseconds(6), std::bind(&addon::update_listings_task, this, false, true, std::placeholders::_1));
+
+		// Finally schedule a task to reset startup complete to stop trace-level logging during discovery
+		m_scheduler.add(now + milliseconds(7), &addon::startup_complete_task, this);
+	}
+
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+	catch(...) { handle_generalexception(__func__); }
+}
+
 //---------------------------------------------------------------------------
 // addon::push_listings (private)
 //
@@ -1802,7 +1871,9 @@ ADDON_STATUS addon::Create(void)
 
 			// Load the advanced settings
 			m_settings.use_http_device_discovery = kodi::GetSettingBoolean("use_http_device_discovery", false);
-			m_settings.discovery_proxy_server = kodi::GetSettingString("discovery_proxy_server");
+			m_settings.use_proxy_server = kodi::GetSettingBoolean("use_proxy_server", false);
+			m_settings.proxy_server_username = kodi::GetSettingString("proxy_server_username");
+			m_settings.proxy_server_password = kodi::GetSettingString("proxy_server_password");
 			m_settings.use_direct_tuning = kodi::GetSettingBoolean("use_direct_tuning", false);
 			m_settings.direct_tuning_protocol = kodi::GetSettingEnum("direct_tuning_protocol", tuning_protocol::http);
 			m_settings.direct_tuning_allow_drm = kodi::GetSettingBoolean("direct_tuning_allow_drm", false);
@@ -1824,13 +1895,17 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.discover_recordingrules_interval   = ", m_settings.discover_recordingrules_interval);
 			log_info(__func__, ": m_settings.discover_recordings_after_playback = ", m_settings.discover_recordings_after_playback);
 			log_info(__func__, ": m_settings.discover_recordings_interval       = ", m_settings.discover_recordings_interval);
-			log_info(__func__, ": m_settings.discovery_proxy_server             = ", m_settings.discovery_proxy_server);
 			log_info(__func__, ": m_settings.enable_radio_channel_mapping       = ", m_settings.enable_radio_channel_mapping);
 			log_info(__func__, ": m_settings.enable_recording_edl               = ", m_settings.enable_recording_edl);
 			log_info(__func__, ": m_settings.generate_epg_repeat_indicators     = ", m_settings.generate_epg_repeat_indicators);
 			log_info(__func__, ": m_settings.generate_repeat_indicators         = ", m_settings.generate_repeat_indicators);
 			log_info(__func__, ": m_settings.pause_discovery_while_streaming    = ", m_settings.pause_discovery_while_streaming);
 			log_info(__func__, ": m_settings.prepend_channel_numbers            = ", m_settings.prepend_channel_numbers);
+			log_info(__func__, ": m_settings.proxy_server_address               = ", m_settings.proxy_server_address);
+#ifdef _DEBUG
+			log_info(__func__, ": m_settings.proxy_server_password              = ", m_settings.proxy_server_password);
+#endif
+			log_info(__func__, ": m_settings.proxy_server_username              = ", m_settings.proxy_server_username);
 			log_info(__func__, ": m_settings.radio_channel_mapping_file         = ", m_settings.radio_channel_mapping_file);
 			log_info(__func__, ": m_settings.recording_edl_cut_as_comskip       = ", m_settings.recording_edl_cut_as_comskip);
 			log_info(__func__, ": m_settings.recording_edl_end_padding          = ", m_settings.recording_edl_end_padding);
@@ -1847,6 +1922,7 @@ ADDON_STATUS addon::Create(void)
 			log_info(__func__, ": m_settings.use_direct_tuning                  = ", m_settings.use_direct_tuning);
 			log_info(__func__, ": m_settings.use_episode_number_as_title        = ", m_settings.use_episode_number_as_title);
 			log_info(__func__, ": m_settings.use_http_discovery                 = ", m_settings.use_http_device_discovery);
+			log_info(__func__, ": m_settings.use_proxy_server                   = ", m_settings.use_proxy_server);
 
 			// Register the PVR_MENUHOOK_RECORDING category menu hooks
 			AddMenuHook(kodi::addon::PVRMenuhook(MENUHOOK_RECORD_DELETERERECORD, 30302, PVR_MENUHOOK_RECORDING));
@@ -1883,9 +1959,13 @@ ADDON_STATUS addon::Create(void)
 				log_info(__func__, ": successfully recreated the PVR database");
 			}
 
-			// Set the proxy server to use for all HTTP discovery operations
-			std::string proxy = set_http_proxy(connectionpool::handle(m_connpool), m_settings.discovery_proxy_server.c_str());
-			if(!proxy.empty()) log_info(__func__, ": discovery http proxy server set to ", proxy.c_str());
+			// Set the proxy server to use for all HTTP discovery operations if enabled
+			m_useproxy.store(m_settings.use_proxy_server);
+			if(m_useproxy.load() == true) {
+
+				std::string proxy = set_http_proxy(connectionpool::handle(m_connpool), m_settings.proxy_server_address.c_str(), m_settings.proxy_server_username.c_str(), m_settings.proxy_server_password.c_str());
+				if(!proxy.empty()) log_info(__func__, ": discovery http proxy server set to ", proxy.c_str());
+			}
 
 			// Attempt to start the task scheduler
 			try { m_scheduler.start(); } 
@@ -2212,22 +2292,6 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 		}
 	}
 
-	// discovery_proxy_server
-	//
-	else if(settingName == "discovery_proxy_server") {
-
-		std::string strvalue = settingValue.GetString();
-		if(strvalue != m_settings.discovery_proxy_server) {
-
-			m_settings.discovery_proxy_server = strvalue;
-			log_info(__func__, ": setting discovery_proxy_server changed to ", strvalue);
-
-			// This setting is implemented in the database layer
-			std::string proxy = set_http_proxy(connectionpool::handle(m_connpool), m_settings.discovery_proxy_server.c_str());
-			log_info(__func__, ": discovery http proxy server set to ", (proxy.empty()) ? "(null)" : proxy.c_str());
-		}
-	}
-
 	// use_http_device_discovery
 	//
 	else if(settingName == "use_http_device_discovery") {
@@ -2240,6 +2304,66 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::CSettingVal
 
 			// Reschedule the device update task to run as soon as possible
 			m_scheduler.add(UPDATE_DEVICES_TASK, &addon::update_devices_task, this);
+		}
+	}
+
+	// use_proxy_server
+	//
+	else if(settingName == "use_proxy_server") {
+
+		bool bvalue = settingValue.GetBoolean();
+		if(bvalue != m_settings.use_proxy_server) {
+
+			m_settings.use_proxy_server = bvalue;
+			log_info(__func__, ": setting use_proxy_server changed to ", bvalue, " -- schedule proxy change");
+
+			// Schedule the proxy changed task to run in 1 second to allow settings changes to settle out
+			m_scheduler.add(PROXY_CHANGED_TASK, now + std::chrono::seconds(1), &addon::proxy_changed_task, this);
+		}
+	}
+
+	// proxy_server_address
+	//
+	else if(settingName == "proxy_server_address") {
+
+		std::string strvalue = settingValue.GetString();
+		if(strvalue != m_settings.proxy_server_address) {
+
+			m_settings.proxy_server_address = strvalue;
+			log_info(__func__, ": setting proxy_server_address changed to ", strvalue, " -- schedule proxy change");
+
+			// Schedule the proxy changed task to run in 1 second to allow settings changes to settle out
+			m_scheduler.add(PROXY_CHANGED_TASK, now + std::chrono::seconds(1), &addon::proxy_changed_task, this);
+		}
+	}
+
+	// proxy_server_username
+	//
+	else if(settingName == "proxy_server_username") {
+
+		std::string strvalue = settingValue.GetString();
+		if(strvalue != m_settings.proxy_server_username) {
+
+			m_settings.proxy_server_username = strvalue;
+			log_info(__func__, ": setting proxy_server_username changed to ", strvalue, " -- schedule proxy change");
+
+			// Schedule the proxy changed task to run in 1 second to allow settings changes to settle out
+			m_scheduler.add(PROXY_CHANGED_TASK, now + std::chrono::seconds(1), &addon::proxy_changed_task, this);
+		}
+	}
+
+	// proxy_server_password
+	//
+	else if(settingName == "proxy_server_password") {
+
+		std::string strvalue = settingValue.GetString();
+		if(strvalue != m_settings.proxy_server_password) {
+
+			m_settings.proxy_server_password = strvalue;
+			log_info(__func__, ": setting proxy_server_password changed -- schedule proxy change");
+
+			// Schedule the proxy changed task to run in 1 second to allow settings changes to settle out
+			m_scheduler.add(PROXY_CHANGED_TASK, now + std::chrono::seconds(1), &addon::proxy_changed_task, this);
 		}
 	}
 

@@ -181,7 +181,19 @@ msgid "Append repeat indicators to EPG episode names"
 msgstr ""
 
 msgctxt "#30147"
-msgid "Discovery HTTP proxy server"
+msgid "Use HTTP proxy server for discovery operations"
+msgstr ""
+
+msgctxt "#30148"
+msgid "Address"
+msgstr ""
+
+msgctxt "#30149"
+msgid "User name"
+msgstr ""
+
+msgctxt "#30150"
+msgid "Password"
 msgstr ""
 
 msgctxt "#30201"
@@ -553,6 +565,18 @@ msgid "When set to ON a repeat indicator of [R] will be appended to Electronic P
 msgstr ""
 
 msgctxt "#30542"
-msgid "Specifies the address of an HTTP proxy server to use for all discovery operations. Specify as either a dotted IPv4 host address or a host name followed by a colon and the port number (127.0.0.1:8888). If only a host address is specified a default port number of 1080 will be used."
+msgid "When set to ON the specified HTTP proxy server will be used for all discovery operations."
+msgstr ""
+
+msgctxt "#30543"
+msgid "Specifies the HTTP proxy server address. Format as either a dotted IPv4 host address or a DNS host name followed by a colon and the port number (127.0.0.1:8888). If only a host address is specified a default port number of 1080 will be used."
+msgstr ""
+
+msgctxt "#30544"
+msgid "Specifies an optional user name for authenticating to the HTTP proxy server. Leave blank if the HTTP proxy server does not require authentication."
+msgstr ""
+
+msgctxt "#30545"
+msgid "Specifies an optional password for authenticating to the HTTP proxy server. Leave blank if no password is required for the specified user name."
 msgstr ""
 
