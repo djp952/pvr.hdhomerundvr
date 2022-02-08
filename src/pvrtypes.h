@@ -189,10 +189,25 @@ struct settings {
 	// Flag to discover devices via HTTP instead of local network broadcast
 	bool use_http_device_discovery;
 
-	// discovery_proxy_server
+	// use_proxy_server
 	//
-	// Indicates the hostname and port of a proxy server for discovery operations
-	std::string discovery_proxy_server;
+	// Flag indicating that a proxy server should be used
+	bool use_proxy_server;
+
+	// proxy_server_address
+	//
+	// Indicates the hostname and port of the proxy server
+	std::string proxy_server_address;
+
+	// proxy_server_username
+	//
+	// Indicates the username required for the proxy server
+	std::string proxy_server_username;
+
+	// proxy_server_password
+	//
+	// Indicates the password required for the proxy server
+	std::string proxy_server_password;
 
 	// use_direct_tuning
 	//

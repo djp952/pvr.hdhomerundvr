@@ -1,7 +1,7 @@
 v20.8.1 (2022.02.xx)
   - Fix HTTP query error messages reporting the multipart/form-data POST operation method as 'get'
   - Add a date/time stamp to the end of messages stored in the error log
-  - Add new "Discovery HTTP proxy server" Advanced option
+  - Add new "Use HTTP proxy server for discovery operations" Advanced option
   - Remove "Disable reporting of active Live TV tuner signal status" Interface option
 
 v20.8.0 (2022.01.31)

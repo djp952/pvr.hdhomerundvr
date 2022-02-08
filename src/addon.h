@@ -392,6 +392,7 @@ private:
 
 	// Scheduled Tasks
 	//
+	void proxy_changed_task(scalar_condition<bool> const& cancel);
 	void push_listings_task(scalar_condition<bool> const& cancel);
 	void startup_alerts_task(scalar_condition<bool> const& cancel);
 	void startup_complete_task(scalar_condition<bool> const& cancel);
@@ -405,6 +406,7 @@ private:
 
 	// Scheduled Task Names
 	//
+	static char const* PROXY_CHANGED_TASK;
 	static char const* PUSH_LISTINGS_TASK;
 	static char const* UPDATE_DEVICES_TASK;
 	static char const* UPDATE_EPISODES_TASK;
@@ -412,7 +414,7 @@ private:
 	static char const* UPDATE_LISTINGS_TASK;
 	static char const* UPDATE_RECORDINGRULES_TASK;
 	static char const* UPDATE_RECORDINGS_TASK;
-
+	
 	// Settings Helpers
 	//
 	struct settings copy_settings(void) const;
@@ -451,6 +453,7 @@ private:
 	std::atomic<bool>				m_startup_complete;				// Startup completed flag
 	time_t							m_stream_starttime;				// Current stream start time
 	time_t							m_stream_endtime;				// Current stream end time
+	std::atomic<bool>				m_useproxy;						// Flag to use a proxy server
 };
 
 //-----------------------------------------------------------------------------

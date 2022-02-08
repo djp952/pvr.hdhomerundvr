@@ -461,7 +461,7 @@ void set_discovered(sqlite3* instance, char const* type, time_t discovered);
 // set_http_proxy
 //
 // Sets the HTTP proxy server
-std::string set_http_proxy(sqlite3* instance, char const* proxy);
+std::string set_http_proxy(sqlite3* instance, char const* address, char const* username, char const* password);
 
 // set_recording_lastposition
 //
