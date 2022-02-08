@@ -366,13 +366,51 @@
           <control type="toggle"/>
         </setting>
 
-        <setting id="discovery_proxy_server" type="string" label="30147" help="30542">
+        <setting id="use_proxy_server" type="boolean" label="30147" help="30516">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
+
+        <setting id="proxy_server_address" type="string" parent="use_proxy_server" label="30148" help="30543">
           <level>0</level>
           <default></default>
           <constraints>
             <allowempty>true</allowempty>
           </constraints>
+          <dependencies>
+            <dependency type="enable" setting="use_proxy_server">true</dependency>
+            <dependency type="visible" setting="use_proxy_server">true</dependency>
+          </dependencies>
           <control type="edit" format="string" />
+        </setting>
+
+        <setting id="proxy_server_username" type="string" parent="use_proxy_server" label="30149" help="30544">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="proxy_server_address" operator="!is"></dependency>
+            <dependency type="visible" setting="use_proxy_server">true</dependency>
+          </dependencies>
+          <control type="edit" format="string" />
+        </setting>
+
+        <setting id="proxy_server_password" type="string" parent="use_proxy_server" label="30150" help="30545">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <dependencies>
+            <dependency type="enable" setting="proxy_server_username" operator="!is"></dependency>
+            <dependency type="visible" setting="use_proxy_server">true</dependency>
+          </dependencies>
+          <control type="edit" format="string">
+            <hidden>true</hidden>
+          </control>
         </setting>
 
         <setting id="use_direct_tuning" type="boolean" label="30111" help="30522">

@@ -3264,12 +3264,15 @@ void set_discovered(sqlite3* instance, char const* type, time_t discovered)
 // Arguments:
 //
 //	instance	- SQLite database instance
+//	address		- Address of the proxy server
+//	username	- Optional username for the proxy server
+//	password	- Optional password for the proxy server
 
-std::string set_http_proxy(sqlite3* instance, char const* proxy)
+std::string set_http_proxy(sqlite3* instance, char const* proxy, char const* username, char const* password)
 {
 	if(instance == nullptr) return std::string();
 
-	return execute_scalar_string(instance, "select set_http_proxy(?1)", proxy);
+	return execute_scalar_string(instance, "select set_http_proxy(?1, ?2, ?3)", proxy, username, password);
 }
 
 //---------------------------------------------------------------------------

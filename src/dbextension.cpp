@@ -248,10 +248,20 @@ static xmlNodePtr xmlTextReaderGetChildElementWithAttribute(xmlTextReaderPtr rea
 // Global curlshare instance to share resources among all cURL connections
 static curlshare g_curlshare;
 
-// g_httpproxy
+// g_proxyaddress
 //
-// Global proxy string to use for all HTTP requests
-static std::string g_httpproxy;
+// Global proxy server address[:port]
+static std::string g_proxyaddress;
+
+// g_proxypassword
+//
+// Global proxy server password
+static std::string g_proxypassword;
+
+// g_proxyusername
+//
+// Global proxy server user name
+static std::string g_proxyusername;
 
 // g_useragent
 //
@@ -288,6 +298,40 @@ static sqlite3_module g_xmltv_module = {
 	nullptr,					// xRollbackTo
 	nullptr						// xShadowName
 };
+
+//-----------------------------------------------------------------------------
+// HELPER FUNCTIONS
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// format_proxy_address (local)
+//
+// Converts the individual global proxy variables into a formatted string for cURL
+//
+// Arguments:
+//
+//	NONE
+
+static std::string format_proxy_address(void)
+{
+	std::string formatted;		// Formatted proxy string
+
+	// [username[:password]@]address[:port]
+	//
+	if(!g_proxyaddress.empty()) {
+
+		if(!g_proxyusername.empty()) {
+
+			formatted.append(g_proxyusername);
+			if(!g_proxypassword.empty()) formatted.append(":").append(g_proxypassword);
+			formatted.append("@");
+		}
+
+		formatted.append(g_proxyaddress);
+	}
+
+	return formatted;
+}
 
 //---------------------------------------------------------------------------
 // clean_filename
@@ -548,8 +592,15 @@ void get_http_proxy(sqlite3_context* context, int argc, sqlite3_value** /*argv*/
 {
 	if(argc != 0) return sqlite3_result_error(context, "invalid argument", -1);
 
-	if(g_httpproxy.empty()) return sqlite3_result_null(context);
-	else return sqlite3_result_text(context, g_httpproxy.c_str(), -1, SQLITE_TRANSIENT);
+	std::string result;
+	if(!g_proxyaddress.empty()) {
+
+		if(!g_proxyusername.empty()) result.append(g_proxyusername).append("@");
+		result.append(g_proxyaddress);
+	}
+
+	if(result.empty()) return sqlite3_result_null(context);
+	else return sqlite3_result_text(context, result.c_str(), -1, SQLITE_TRANSIENT);
 }
 
 //---------------------------------------------------------------------------
@@ -841,8 +892,9 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlerr);
 
-	// Don't set the proxy if it's empty; this disables cURL's ability to use environment variables
-	if((curlresult == CURLE_OK) && (!g_httpproxy.empty())) curlresult = curl_easy_setopt(curl, CURLOPT_PROXY, g_httpproxy.c_str());
+	// PROXY
+	std::string proxy = format_proxy_address();
+	if((curlresult == CURLE_OK) && (!proxy.empty())) curlresult = curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());
 
 	if(curlresult == CURLE_OK) curlresult = curl_easy_perform(curl);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responsecode);
@@ -855,7 +907,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult != CURLE_OK) {
 
 		// Use sqlite3_mprintf to generate the formatted error message
-		auto message = sqlite3_mprintf("http %s request on [%s] failed with cURL error: %s", methodstr.c_str(), url, 
+		auto message = sqlite3_mprintf("http %s request on url [%s] failed with cURL error: %s", methodstr.c_str(), url, 
 			(strlen(curlerr)) ? curlerr : curl_easy_strerror(curlresult));
 		sqlite3_result_error(context, message, -1);
 		return sqlite3_free(reinterpret_cast<void*>(message));
@@ -980,8 +1032,9 @@ void json_get_aggregate_final(sqlite3_context* context)
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void*>(&std::get<1>(*transfer)));
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SHARE, static_cast<CURLSH*>(g_curlshare));
 
-				// Don't set the proxy if it's empty; this disables cURL's ability to use environment variables
-				if((curlresult == CURLE_OK) && (!g_httpproxy.empty())) curlresult = curl_easy_setopt(curl, CURLOPT_PROXY, g_httpproxy.c_str());
+				// PROXY
+				std::string proxy = format_proxy_address();
+				if((curlresult == CURLE_OK) && (!proxy.empty())) curlresult = curl_easy_setopt(curl, CURLOPT_PROXY, proxy.c_str());
 
 				// Verify that initialization of the cURL easy interface handle was completed successfully
 				if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
@@ -1124,54 +1177,89 @@ void json_get_aggregate_step(sqlite3_context* context, int argc, sqlite3_value**
 
 void set_http_proxy(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
-	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+	// This function accepts between one and three arguments (address [, username[, password]])
+	if((argc < 1) || (argc > 3)) return sqlite3_result_error(context, "invalid number of arguments", -1);
 
-	const char* input = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
-	if((input != nullptr) && (*input != 0)) {
+	// ADDRESS
+	//
+	std::string parsedaddress;
+	if((argc >= 1) && (argv[0] != nullptr)) {
 
-		// Allocate a CURLU instance to parse the URL components
-		CURLU* curlu = curl_url();
-		if(curlu == nullptr) return sqlite3_result_error(context, "insufficient memory to allocate CURLU instance", -1);
+		char const* address = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+		if((address != nullptr) && (*address != 0)) {
 
-		// Apply the specified proxy URL to the CURLU instance
-		CURLUcode curluresult = curl_url_set(curlu, CURLUPart::CURLUPART_URL, input, CURLU_DEFAULT_SCHEME);
-		if(curluresult == CURLUE_OK) {
+			// Allocate a CURLU instance to parse the URL components
+			CURLU* curlu = curl_url();
+			if(curlu == nullptr) return sqlite3_result_error(context, "insufficient memory to allocate CURLU instance", -1);
 
-			// CURLUPART_HOST
-			char* host = nullptr;
-			curluresult = curl_url_get(curlu, CURLUPART_HOST, &host, 0);
+			// Apply the specified proxy URL to the CURLU instance
+			CURLUcode curluresult = curl_url_set(curlu, CURLUPart::CURLUPART_URL, address, CURLU_DEFAULT_SCHEME);
 			if(curluresult == CURLUE_OK) {
 
-				// CURLUPART_PORT
-				char* port = nullptr;
-				curluresult = curl_url_get(curlu, CURLUPART_PORT, &port, 0);
+				// CURLUPART_HOST
+				char* host = nullptr;
+				curluresult = curl_url_get(curlu, CURLUPART_HOST, &host, 0);
 				if(curluresult == CURLUE_OK) {
 
-					// Port is present, format as HOST:PORT
-					g_httpproxy.assign(host).append(":").append(port);
+					// CURLUPART_PORT
+					char* port = nullptr;
+					curluresult = curl_url_get(curlu, CURLUPART_PORT, &port, 0);
+					if(curluresult == CURLUE_OK) {
 
-					curl_free(port);			// Relase the CURLU string
+						// Port is present, format as HOST:PORT
+						parsedaddress.assign(host).append(":").append(port);
+
+						curl_free(port);			// Relase the CURLU string
+					}
+
+					// Port was not present, format as HOST
+					else parsedaddress.assign(host);
+
+					curl_free(host);				// Release the CURLU string
 				}
 
-				// Port was not present, format as HOST
-				else g_httpproxy.assign(host);
-
-				curl_free(host);				// Release the CURLU string
+				else sqlite3_result_error(context, "unable to parse host name from specified http proxy address", -1);
 			}
 
-			else sqlite3_result_error(context, "unable to parse host name from specified http proxy url", -1);
+			else sqlite3_result_error(context, "unable to parse supplied http proxy address", -1);
+
+			curl_url_cleanup(curlu);				// Release the CURLU instance
 		}
-
-		else sqlite3_result_error(context, "unable to parse supplied http proxy url", -1);
-
-		curl_url_cleanup(curlu);				// Release the CURLU instance
 	}
 
-	else g_httpproxy.clear();				// NULL or zero-length proxy url
+	// Only replace the global after successful parsing, this way anything that was already there
+	// will stay in place if there was an error above.  User name and password will always get
+	// reset as long as the address parsed ...
+	g_proxyaddress = parsedaddress;
 
-	// Return the (formatted) HTTP proxy string back to the caller
-	if(g_httpproxy.empty()) return sqlite3_result_null(context);
-	else return sqlite3_result_text(context, g_httpproxy.c_str(), -1, SQLITE_TRANSIENT);
+	// USER NAME
+	//
+	g_proxyusername.clear();
+	if((!g_proxyaddress.empty()) && (argc >= 2) && (argv[1] != nullptr)) {
+
+		char const* username = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
+		if(username != nullptr) g_proxyusername.assign(username);
+	}
+
+	// PASSWORD
+	//
+	g_proxypassword.clear();
+	if((!g_proxyusername.empty()) && (argc >= 3) && (argv[2] != nullptr)) {
+
+		char const* password = reinterpret_cast<const char*>(sqlite3_value_text(argv[2]));
+		if(password != nullptr) g_proxypassword.assign(password);
+	}
+
+	// Return the formatted HTTP proxy string back to the caller as the result
+	std::string result;
+	if(!g_proxyaddress.empty()) {
+
+		if(!g_proxyusername.empty()) result.append(g_proxyusername).append("@");
+		result.append(g_proxyaddress);
+	}
+
+	if(result.empty()) return sqlite3_result_null(context);
+	else return sqlite3_result_text(context, result.c_str(), -1, SQLITE_TRANSIENT);
 }
 
 //---------------------------------------------------------------------------
@@ -1578,7 +1666,7 @@ int xmltv_filter(sqlite3_vtab_cursor* cursor, int /*indexnum*/, char const* /*in
 
 		// Create the xmlstream instance that will take care of streaming the XMLTV data.  Don't set an empty
 		// proxy string; this disables cURL's ability to use environment variables
-		xmltvcursor->stream = xmlstream::create(uri, g_useragent.c_str(), g_httpproxy.empty() ? nullptr : g_httpproxy.c_str(), g_curlshare);
+		xmltvcursor->stream = xmlstream::create(uri, g_useragent.c_str(), format_proxy_address().c_str(), g_curlshare);
 
 		// Set up the xmlParserInputBuffer and the xmlTextReader instances around the XMLTV stream
 		xmltvcursor->buffer = xmlParserInputBufferCreateIO(input_read_callback, input_close_callback, xmltvcursor, xmlCharEncoding::XML_CHAR_ENCODING_UTF8);
@@ -1921,7 +2009,7 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 
 	// set_http_proxy function
 	//
-	result = sqlite3_create_function_v2(db, "set_http_proxy", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, set_http_proxy, nullptr, nullptr, nullptr);
+	result = sqlite3_create_function_v2(db, "set_http_proxy", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, set_http_proxy, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function set_http_proxy (%d)", result); return result; }
 
 	// uuid extension

@@ -295,10 +295,25 @@ struct addon_settings {
 	// Flag to discover devices via HTTP instead of local network broadcast
 	bool use_http_device_discovery;
 
-	// discovery_proxy_server
+	// use_proxy_server
 	//
-	// Indicates the hostname and port of a proxy server for discovery operations
-	std::string discovery_proxy_server;
+	// Flag indicating that a proxy server should be used
+	bool use_proxy_server;
+
+	// proxy_server_address
+	//
+	// Indicates the hostname and port of the proxy server
+	std::string proxy_server_address;
+
+	// proxy_server_username
+	//
+	// Indicates the username required for the proxy server
+	std::string proxy_server_username;
+
+	// proxy_server_password
+	//
+	// Indicates the password required for the proxy server
+	std::string proxy_server_password;
 
 	// use_direct_tuning
 	//
@@ -512,7 +527,10 @@ static addon_settings g_settings = {
 	600,						// discover_recordings_interval			default = 10 minutes
 	7200,						// discover_recordingrules_interval		default = 2 hours
 	false,						// use_http_device_discovery
-	"",							// discovery_proxy_server
+	false,						// use_proxy_server
+	"",							// proxy_server_address
+	"",							// proxy_server_username
+	"",							// proxy_server_password
 	false,						// use_direct_tuning
 	tuning_protocol::http,		// direct_tuning_protocol
 	false,						// direct_tuning_allow_drm
@@ -696,6 +714,11 @@ static const PVR_TIMER_TYPE g_timertypes[] ={
 		0, { {0, "" } }, 0,			// maxRecordings
 	},
 };
+
+// g_useproxy
+//
+// Atomic flag indicating that a proxy server should be used
+static std::atomic<bool> g_useproxy{ false };
 
 // g_userpath
 //
@@ -1409,6 +1432,67 @@ static std::unique_ptr<pvrstream> openlivestream_tuner_http(connectionpool::hand
 	catch(std::exception& ex) { log_error(__func__, ": unable to stream channel ", vchannel, " via tuner device url ", streamurl.c_str(), ": ", ex.what()); }
 
 	return nullptr;
+}
+
+// proxy_changed_task (local)
+//
+// Scheduled task implementation to rediscover all backend metadata from a proxy change
+static void proxy_changed_task(scalar_condition<bool> const& /*cancel*/)
+{
+	using namespace std::chrono;
+
+	// Create a copy of the current addon settings structure
+	struct addon_settings settings = copy_settings();
+
+	// If the settings indicate no proxy server and one wasn't already in use do nothing
+	if((settings.use_proxy_server == false) && (g_useproxy.load() == false)) return;
+
+	try {
+
+		g_useproxy.store(settings.use_proxy_server);
+
+		if(g_useproxy.load() == true) {
+
+			// The proxy server is being enabled or the settings have changed
+			std::string proxy = set_http_proxy(connectionpool::handle(g_connpool),
+				settings.proxy_server_address.c_str(), settings.proxy_server_username.c_str(), settings.proxy_server_password.c_str());
+			log_notice(__func__, ": discovery http proxy server set to ", (proxy.empty()) ? "(not set)" : proxy.c_str());
+		}
+
+		else {
+
+			// The proxy server is being disabled
+			set_http_proxy(connectionpool::handle(g_connpool), nullptr, nullptr, nullptr);
+			log_notice(__func__, ": discovery http proxy server disabled");
+		}
+
+		// Enable trace-level discovery logging after the proxy server has changed
+		g_startup_complete.store(false);
+
+		// Systems with a low precision system_clock implementation may run the tasks out of order,
+		// account for this by using a base time with a unique millisecond offset during scheduling
+		auto now = system_clock::now();
+
+		// Schedule a task to wait for the network to become available
+		g_scheduler.add(now, std::bind(wait_for_network_task, 60, std::placeholders::_1));
+
+		// Schedule the normal update tasks for everything in an appropriate order
+		g_scheduler.add(now + milliseconds(1), update_devices_task);
+		g_scheduler.add(now + milliseconds(2), update_lineups_task);
+		g_scheduler.add(now + milliseconds(3), update_recordings_task);
+		g_scheduler.add(now + milliseconds(4), update_recordingrules_task);
+		g_scheduler.add(now + milliseconds(5), update_episodes_task);
+
+		// A listings update may have been scheduled by update_lineups_task with a channel check set;
+		// adding it again may override that task, so perform a missing channel check here as well
+		g_scheduler.add(now + milliseconds(6), std::bind(update_listings_task, false, true, std::placeholders::_1));
+
+		// Finally schedule a task to reset startup complete to stop trace-level logging during discovery
+		g_scheduler.add(now + milliseconds(7), startup_complete_task);
+	}
+
+	catch(std::exception& ex) { handle_stdexception(__func__, ex); }
+	catch(...) { handle_generalexception(__func__); }
 }
 
 // select_http_tuner (local)
@@ -2125,7 +2209,9 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 
 			// Load the advanced settings
 			if(g_addon->GetSetting("use_http_device_discovery", &bvalue)) g_settings.use_http_device_discovery = bvalue;
-			if(g_addon->GetSetting("discovery_proxy_server", strvalue)) g_settings.discovery_proxy_server.assign(strvalue);
+			if(g_addon->GetSetting("use_proxy_server", &bvalue)) g_settings.use_proxy_server = bvalue;
+			if(g_addon->GetSetting("proxy_server_username", strvalue)) g_settings.proxy_server_username.assign(strvalue);
+			if(g_addon->GetSetting("proxy_server_password", strvalue)) g_settings.proxy_server_password.assign(strvalue);
 			if(g_addon->GetSetting("use_direct_tuning", &bvalue)) g_settings.use_direct_tuning = bvalue;
 			if(g_addon->GetSetting("direct_tuning_protocol", &nvalue)) g_settings.direct_tuning_protocol = static_cast<enum tuning_protocol>(nvalue);
 			if(g_addon->GetSetting("direct_tuning_allow_drm", &bvalue)) g_settings.direct_tuning_allow_drm = bvalue;
@@ -2147,7 +2233,11 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 			log_notice(__func__, ": g_settings.discover_recordingrules_interval   = ", g_settings.discover_recordingrules_interval);
 			log_notice(__func__, ": g_settings.discover_recordings_after_playback = ", g_settings.discover_recordings_after_playback);
 			log_notice(__func__, ": g_settings.discover_recordings_interval       = ", g_settings.discover_recordings_interval);
-			log_notice(__func__, ": g_settings.discovery_proxy_server             = ", g_settings.discovery_proxy_server);
+			log_notice(__func__, ": m_settings.proxy_server_address               = ", g_settings.proxy_server_address);
+#ifdef _DEBUG
+			log_notice(__func__, ": m_settings.proxy_server_password              = ", g_settings.proxy_server_password);
+#endif
+			log_notice(__func__, ": m_settings.proxy_server_username              = ", g_settings.proxy_server_username);
 			log_notice(__func__, ": g_settings.enable_radio_channel_mapping       = ", g_settings.enable_radio_channel_mapping);
 			log_notice(__func__, ": g_settings.enable_recording_edl               = ", g_settings.enable_recording_edl);
 			log_notice(__func__, ": g_settings.generate_repeat_indicators         = ", g_settings.generate_repeat_indicators);
@@ -2295,11 +2385,15 @@ ADDON_STATUS ADDON_Create(void* handle, void* props)
 						log_notice(__func__, ": successfully recreated the PVR database");
 					}
 
-					// Set the proxy server to use for all HTTP discovery operations
-					std::string proxy = set_http_proxy(connectionpool::handle(g_connpool), g_settings.discovery_proxy_server.c_str());
-					if(!proxy.empty()) log_notice(__func__, ": discovery http proxy server set to ", proxy.c_str());
+					// Set the proxy server to use for all HTTP discovery operations if enabled
+					g_useproxy.store(g_settings.use_proxy_server);
+					if(g_useproxy.load() == true) {
 
-					// Start the task scheduler
+						std::string proxy = set_http_proxy(connectionpool::handle(g_connpool), g_settings.proxy_server_address.c_str(), g_settings.proxy_server_username.c_str(), g_settings.proxy_server_password.c_str());
+						if(!proxy.empty()) log_notice(__func__, ": discovery http proxy server set to ", proxy.c_str());
+					}
+
+					// Attempt to start the task scheduler
 					try { g_scheduler.start(); }
 					catch(...) { g_connpool.reset(); throw; }
 				}
@@ -2636,21 +2730,6 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 	}
 	}
 
-	// discovery_proxy_server
-	//
-	else if(strcmp(name, "discovery_proxy_server") == 0) {
-
-		if(strcmp(g_settings.discovery_proxy_server.c_str(), reinterpret_cast<char const*>(value)) != 0) {
-
-			g_settings.discovery_proxy_server.assign(reinterpret_cast<char const*>(value));
-			log_notice(__func__, ": setting discovery_proxy_server changed to ", g_settings.discovery_proxy_server.c_str());
-
-			// This setting is implemented in the database layer
-			std::string proxy = set_http_proxy(connectionpool::handle(g_connpool), g_settings.discovery_proxy_server.c_str());
-			log_notice(__func__, ": discovery http proxy server set to ", (proxy.empty()) ? "(null)" : proxy.c_str());
-		}
-	}
-
 	// use_http_device_discovery
 	//
 	else if(strcmp(name, "use_http_device_discovery") == 0) {
@@ -2662,6 +2741,55 @@ ADDON_STATUS ADDON_SetSetting(char const* name, void const* value)
 			log_notice(__func__, ": setting use_http_device_discovery changed to ", bvalue, " -- schedule device update");
 			g_scheduler.add(update_devices_task);
 		}
+	}
+
+	// use_proxy_server
+	//
+	else if(strcmp(name, "use_proxy_server") == 0) {
+
+		bool bvalue = *reinterpret_cast<bool const*>(value);
+		if(bvalue != g_settings.use_proxy_server) {
+
+			g_settings.use_proxy_server = bvalue;
+			log_notice(__func__, ": setting use_proxy_server changed to ", bvalue, " -- schedule proxy change");
+			g_scheduler.add(now + std::chrono::seconds(1), proxy_changed_task);
+		}
+	}
+
+	// proxy_server_address
+	//
+	else if(strcmp(name, "proxy_server_address") == 0) {
+
+		if(strcmp(g_settings.proxy_server_address.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.proxy_server_address.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting proxy_server_address changed to ", g_settings.proxy_server_address.c_str(), " -- schedule proxy change");
+			g_scheduler.add(now + std::chrono::seconds(1), proxy_changed_task);
+		}
+	}
+
+	// proxy_server_username
+	//
+	else if(strcmp(name, "proxy_server_username") == 0) {
+
+		if(strcmp(g_settings.proxy_server_username.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.proxy_server_username.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting proxy_server_username changed to ", g_settings.proxy_server_username.c_str(), " -- schedule proxy change");
+			g_scheduler.add(now + std::chrono::seconds(1), proxy_changed_task);
+		}
+	}
+
+	// proxy_server_password
+	//
+	else if(strcmp(name, "proxy_server_password") == 0) {
+
+	if(strcmp(g_settings.proxy_server_password.c_str(), reinterpret_cast<char const*>(value)) != 0) {
+
+			g_settings.proxy_server_password.assign(reinterpret_cast<char const*>(value));
+			log_notice(__func__, ": setting proxy_server_password changed -- schedule proxy change");
+			g_scheduler.add(now + std::chrono::seconds(1), proxy_changed_task);
+	}
 	}
 
 	// use_direct_tuning

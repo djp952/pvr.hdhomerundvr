@@ -130,9 +130,9 @@ xmlstream::xmlstream(char const* url, char const* useragent, char const* proxy, 
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_curlerr.get());
 
-			if((curlresult == CURLE_OK) && (useragent != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_USERAGENT, useragent);
+			if((curlresult == CURLE_OK) && (useragent != nullptr) && (*useragent != '\0')) curlresult = curl_easy_setopt(m_curl, CURLOPT_USERAGENT, useragent);
 			if((curlresult == CURLE_OK) && (share != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_SHARE, share);
-			if((curlresult == CURLE_OK) && (proxy != nullptr)) curlresult = curl_easy_setopt(m_curl, CURLOPT_PROXY, proxy);
+			if((curlresult == CURLE_OK) && (proxy != nullptr) && (*proxy != '\0')) curlresult = curl_easy_setopt(m_curl, CURLOPT_PROXY, proxy);
 
 			if(curlresult != CURLE_OK) throw string_exception(__func__, ": curl_easy_setopt() failed: ", curl_easy_strerror(curlresult));
 
