@@ -994,11 +994,12 @@ void addon::proxy_changed_task(scalar_condition<bool> const& /*cancel*/)
 	struct settings settings = copy_settings();
 
 	// If the settings indicate no proxy server and one wasn't already in use do nothing
-	if((settings.use_proxy_server == false) && (m_useproxy.load() == false)) return;
+	bool useproxy = (settings.use_proxy_server == true) && (!settings.proxy_server_address.empty());
+	if((useproxy == false) && (m_useproxy.load() == false)) return;
 
 	try {
 
-		m_useproxy.store(settings.use_proxy_server);
+		m_useproxy.store(useproxy);
 
 		if(m_useproxy.load() == true) {
 
