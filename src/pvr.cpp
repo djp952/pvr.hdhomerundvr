@@ -1445,11 +1445,12 @@ static void proxy_changed_task(scalar_condition<bool> const& /*cancel*/)
 	struct addon_settings settings = copy_settings();
 
 	// If the settings indicate no proxy server and one wasn't already in use do nothing
-	if((settings.use_proxy_server == false) && (g_useproxy.load() == false)) return;
+	bool useproxy = (settings.use_proxy_server == true) && (!settings.proxy_server_address.empty());
+	if((useproxy == false) && (g_useproxy.load() == false)) return;
 
 	try {
 
-		g_useproxy.store(settings.use_proxy_server);
+		g_useproxy.store(useproxy);
 
 		if(g_useproxy.load() == true) {
 
