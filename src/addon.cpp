@@ -1873,6 +1873,7 @@ ADDON_STATUS addon::Create(void)
 			// Load the advanced settings
 			m_settings.use_http_device_discovery = kodi::GetSettingBoolean("use_http_device_discovery", false);
 			m_settings.use_proxy_server = kodi::GetSettingBoolean("use_proxy_server", false);
+			m_settings.proxy_server_address = kodi::GetSettingString("proxy_server_address");
 			m_settings.proxy_server_username = kodi::GetSettingString("proxy_server_username");
 			m_settings.proxy_server_password = kodi::GetSettingString("proxy_server_password");
 			m_settings.use_direct_tuning = kodi::GetSettingBoolean("use_direct_tuning", false);
