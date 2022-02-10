@@ -832,7 +832,7 @@ static void json_get(sqlite3_context* context, int argc, sqlite3_value** argv)
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
-	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 	if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
@@ -972,7 +972,7 @@ void json_get_aggregate_final(sqlite3_context* context)
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
-				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 				if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
@@ -1013,8 +1013,11 @@ void json_get_aggregate_final(sqlite3_context* context)
 				// otherwise it should be a standard HTTP response code
 				curl_easy_getinfo(std::get<0>(transfer), CURLINFO_RESPONSE_CODE, &responsecode);
 
-				if(responsecode == 0) throw string_exception(__func__, ": no response from host");
-				else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
+				// REMOVED: don't throw an exception on an HTTP error, allow the document to 
+				// remain blank and just not return a row in the result set
+				//
+				// if(responsecode == 0) throw string_exception(__func__, ": no response from host");
+				// else if((responsecode < 200) || (responsecode > 299)) throw http_exception(responsecode);
 
 				// Ensure the BLOB data is null-terminated before attempting to parse it as JSON
 				std::get<1>(transfer).push_back(static_cast<uint8_t>('\0'));

@@ -586,10 +586,10 @@ static bool discover_devices_http(sqlite3* instance)
 	// Discover the devices from the HTTP API and insert them into the discover_device temp table
 	execute_non_query(instance, "drop table if exists discover_device_http");
 	execute_non_query(instance, "create temp table discover_device_http as select "
-		"coalesce(json_extract(discovery.value, '$.DeviceID'), coalesce(json_extract(discovery.value, '$.StorageID'), '00000000')) as deviceid, "
-		"cast(strftime('%s', 'now') as integer) as discovered, "
-		"null as dvrauthorized, "
-		"json_get(json_extract(discovery.value, '$.DiscoverURL')) as data from json_each(json_get('https://api.hdhomerun.com/discover')) as discovery");
+		"key as deviceid, cast(strftime('%s', 'now') as integer) as discovered, null as dvrauthorized, value as data "
+		"from json_each((select json_get_aggregate(json_extract(discovery.value, '$.DiscoverURL'), "
+		"coalesce(json_extract(discovery.value, '$.DeviceID'), coalesce(json_extract(discovery.value, '$.StorageID'), '00000000'))) "
+		"from json_each(json_get('https://api.hdhomerun.com/discover')) as discovery))");
 	execute_non_query(instance, "insert into discover_device select deviceid, discovered, dvrauthorized, data from discover_device_http where data is not null");
 	execute_non_query(instance, "drop table discover_device_http");
 
