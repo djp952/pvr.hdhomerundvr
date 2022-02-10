@@ -1837,127 +1837,127 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	// clean_filename function
 	//
 	int result = sqlite3_create_function_v2(db, "clean_filename", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, clean_filename, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function clean_filename"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function clean_filename (%d)", result); return result; }
 
 	// decode_channel_id function
 	//
 	result = sqlite3_create_function_v2(db, "decode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_channel_id, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_channel_id"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_channel_id (%d)", result); return result; }
 
 	// decode_star_rating function
 	//
 	result = sqlite3_create_function_v2(db, "decode_star_rating", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, decode_star_rating, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_star_rating"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function decode_star_rating (%d)", result); return result; }
 
 	// encode_channel_id function
 	//
 	result = sqlite3_create_function_v2(db, "encode_channel_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, encode_channel_id, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function encode_channel_id"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function encode_channel_id (%d)", result); return result; }
 
 	// fnv_hash function
 	//
 	result = sqlite3_create_function_v2(db, "fnv_hash", -1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, fnv_hash, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function fnv_hash"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function fnv_hash (%d)", result); return result; }
 
 	// get_channel_number function
 	//
 	result = sqlite3_create_function_v2(db, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_channel_number"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_channel_number (%d)", result); return result; }
 
 	// get_episode_number function
 	//
 	result = sqlite3_create_function_v2(db, "get_episode_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_episode_number, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_episode_number"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_episode_number (%d)", result); return result; }
 
 	// get_http_proxy function
 	//
 	result = sqlite3_create_function_v2(db, "get_http_proxy", 0, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_http_proxy, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_http_proxy"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_http_proxy (%d)", result); return result; }
 
 	// get_legacy_channel_frequency function
 	//
 	result = sqlite3_create_function_v2(db, "get_legacy_channel_frequency", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_legacy_channel_frequency, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_legacy_channel_frequency"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_legacy_channel_frequency (%d)", result); return result; }
 
 	// get_legacy_channel_program function
 	//
 	result = sqlite3_create_function_v2(db, "get_legacy_channel_program", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_legacy_channel_program, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_legacy_channel_program"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_legacy_channel_program (%d)", result); return result; }
 
 	// get_primary_genre function
 	//
 	result = sqlite3_create_function_v2(db, "get_primary_genre", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_primary_genre, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_primary_genre"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_primary_genre (%d)", result); return result; }
 
 	// get_recording_id function
 	//
 	result = sqlite3_create_function_v2(db, "get_recording_id", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_recording_id, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_recording_id"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_recording_id (%d)", result); return result; }
 
 	// get_season_number function
 	//
 	result = sqlite3_create_function_v2(db, "get_season_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_season_number, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_season_number"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_season_number (%d)", result); return result; }
 
 	// json_get (1 argument; non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "json_get", 1, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function json_get(1)"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function json_get(1) (%d)", result); return result; }
 
 	// json_get (2 arguments; non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "json_get", 2, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function json_get(2)"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function json_get(2) (%d)", result); return result; }
 
 	// json_get (3 arguments; non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "json_get", 3, SQLITE_UTF8, nullptr, json_get, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function json_get(3)"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function json_get(3) (%d)", result); return result; }
 
 	// json_get_aggregate (non-deterministic)
 	//
 	result = sqlite3_create_function_v2(db, "json_get_aggregate", 2, SQLITE_UTF8, nullptr, nullptr, json_get_aggregate_step, json_get_aggregate_final, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register aggregate function json_get_aggregate (%d)", result); return result; }
 
 	// set_http_proxy function
 	//
 	result = sqlite3_create_function_v2(db, "set_http_proxy", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, set_http_proxy, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function set_http_proxy"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function set_http_proxy (%d)", result); return result; }
 
 	// uuid extension
 	//
 	result = sqlite3_uuid_init(db, nullptr, sqlite3_api);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension uuid"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension uuid (%d)", result); return result; }
 
 	// url_encode function
 	//
 	result = sqlite3_create_function_v2(db, "url_encode", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_encode, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_encode"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_encode (%d)", result); return result; }
 
 	// url_remove_query_string function
 	//
 	result = sqlite3_create_function_v2(db, "url_remove_query_string", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_remove_query_string, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_remove_query_string"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_remove_query_string (%d)", result); return result; }
 
 	// xmltv virtual table
 	//
 	result = sqlite3_create_module_v2(db, "xmltv", &g_xmltv_module, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module xmltv"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register virtual table module xmltv (%d)", result); return result; }
 
 	// xmltv_time_to_w3c function
 	//
 	result = sqlite3_create_function_v2(db, "xmltv_time_to_w3c", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_w3c, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_w3c"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_w3c (%d)", result); return result; }
 
 	// xmltv_time_to_year function
 	//
 	result = sqlite3_create_function_v2(db, "xmltv_time_to_year", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, xmltv_time_to_year, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_year"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function xmltv_time_to_year (%d)", result); return result; }
 
 	// zipfile extension
 	//
 	result = sqlite3_zipfile_init(db, nullptr, sqlite3_api);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension zipfile"); return result; }
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension zipfile (%d)", result); return result; }
 
 	return SQLITE_OK;
 }
