@@ -4,6 +4,7 @@ v20.8.1 (2022.02.xx)
   - Add a date/time stamp to the end of messages stored in the error log
   - Add new "Use HTTP proxy server for discovery operations" Advanced option
   - Remove "Disable reporting of active Live TV tuner signal status" Interface option
+  - Trigger an EPG data resend to Kodi when option 'Use backend genre string(s) in Electronic Program Guide (EPG)' has changed
 
 v20.8.0 (2022.01.31)
   - Add dependency on OpenSSL library version 3.0.1

@@ -2102,7 +2102,8 @@ ADDON_STATUS addon::SetSetting(std::string const& settingName, kodi::addon::CSet
 		if(bvalue != m_settings.use_backend_genre_strings) {
 
 			m_settings.use_backend_genre_strings = bvalue;
-			log_info(__func__, ": setting use_backend_genre_strings changed to ", bvalue);
+			log_info(__func__, ": setting use_backend_genre_strings changed to ", bvalue, " -- schedule guide listing push");
+			m_scheduler.add(PUSH_LISTINGS_TASK, &addon::push_listings_task, this);
 		}
 	}
 
