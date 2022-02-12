@@ -1,4 +1,4 @@
-v4.8.1 (2022.02.xx)
+v4.8.1 (2022.02.12)
   - Fix HTTP query error messages reporting the multipart/form-data POST operation method as 'get'
   - Fix bug preventing HTTP device discovery from completing if a device cannot be contacted
   - Fix bug preventing EPG data from being transferred to Kodi if 'Show DRM protected channels in channel lineups' is enabled
