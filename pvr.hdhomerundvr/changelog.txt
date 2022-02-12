@@ -1,6 +1,7 @@
 v4.8.1 (2022.02.xx)
   - Fix HTTP query error messages reporting the multipart/form-data POST operation method as 'get'
   - Fix bug preventing HTTP device discovery from completing if a device cannot be contacted
+  - Fix bug preventing EPG data from being transferred to Kodi if 'Show DRM protected channels in channel lineups' is enabled
   - Add a date/time stamp to the end of messages stored in the error log
   - Add new "Use HTTP proxy server for discovery operations" Advanced option
   - Remove "Disable reporting of active Live TV tuner signal status" Interface option
