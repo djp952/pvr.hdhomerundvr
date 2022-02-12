@@ -1622,7 +1622,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 
 	// seriesid | title | broadcastid | channelid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | starrating
 	auto sql = "with allchannels(number) as "
-		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where coalesce(json_extract(entry.value, '$.DRM'), 0) = ?1) "
+		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where nullif(json_extract(entry.value, '$.DRM'), ?1) is null) "
 		"select listing.seriesid as seriesid, "
 		"listing.title as title, "
 		"fnv_hash(encode_channel_id(guide.number), listing.starttime, listing.endtime) as broadcastid, "
@@ -1718,7 +1718,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, union channelid channel
 
 	// seriesid | title | broadcastid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | starrating
 	auto sql = "with allchannels(number) as "
-		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where coalesce(json_extract(entry.value, '$.DRM'), 0) = ?1) "
+		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where nullif(json_extract(entry.value, '$.DRM'), ?1) is null) "
 		"select listing.seriesid as seriesid, "
 		"listing.title as title, "
 		"fnv_hash(encode_channel_id(guide.number), listing.starttime, listing.endtime) as broadcastid, "
