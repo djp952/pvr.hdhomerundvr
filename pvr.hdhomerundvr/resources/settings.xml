@@ -379,7 +379,6 @@
             <allowempty>true</allowempty>
           </constraints>
           <dependencies>
-            <dependency type="enable" setting="use_proxy_server">true</dependency>
             <dependency type="visible" setting="use_proxy_server">true</dependency>
           </dependencies>
           <control type="edit" format="string" />
@@ -392,7 +391,6 @@
             <allowempty>true</allowempty>
           </constraints>
           <dependencies>
-            <dependency type="enable" setting="proxy_server_address" operator="!is"></dependency>
             <dependency type="visible" setting="use_proxy_server">true</dependency>
           </dependencies>
           <control type="edit" format="string" />
@@ -405,7 +403,6 @@
             <allowempty>true</allowempty>
           </constraints>
           <dependencies>
-            <dependency type="enable" setting="proxy_server_username" operator="!is"></dependency>
             <dependency type="visible" setting="use_proxy_server">true</dependency>
           </dependencies>
           <control type="edit" format="string">
