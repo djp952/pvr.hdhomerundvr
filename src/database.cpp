@@ -2609,6 +2609,22 @@ std::string get_http_proxy(sqlite3* instance)
 }
 
 //---------------------------------------------------------------------------
+// get_listing_count
+//
+// Gets the number of available listings in the database
+//
+// Arguments:
+//
+//	instance	- SQLite database instance
+
+int get_listing_count(sqlite3* instance)
+{
+	if(instance == nullptr) return 0;
+
+	return execute_scalar_int(instance, "select count(channelid) from listing");
+}
+
+//---------------------------------------------------------------------------
 // get_recording_count
 //
 // Gets the number of available recordings in the database

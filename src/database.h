@@ -357,6 +357,11 @@ time_t get_discovered(sqlite3* instance, char const* type);
 // Gets the currently set HTTP proxy server
 std::string get_http_proxy(sqlite3* instance);
 
+// get_listing_count
+//
+// Gets the number of available listings in the database
+int get_listing_count(sqlite3* instance);
+
 // get_recording_count
 //
 // Gets the number of available recordings in the database

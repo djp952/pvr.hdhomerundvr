@@ -2834,12 +2834,43 @@ PVR_ERROR addon::CallSettingsMenuHook(kodi::addon::PVRMenuhook const& menuhook)
 		//
 		if(menuhook.GetHookId() == MENUHOOK_SETTING_SHOWDEVICENAMES) {
 
-			std::string names;				// Constructed string for the TextViewer dialog
+			std::string text;				// Constructed string for the TextViewer dialog
 
-			// Enumerate all of the device names in the database and build out the text string
-			enumerate_device_names(connectionpool::handle(m_connpool), [&](struct device_name const& device_name) -> void {
-				if(device_name.name != nullptr) names.append(std::string(device_name.name) + "\r\n"); });
-			kodi::gui::dialogs::TextViewer::Show("Discovered HDHomeRun devices", names);
+			// Pull a database connection out from the connection pool
+			connectionpool::handle dbhandle(m_connpool);
+
+			// DEVICES
+			//
+			enumerate_device_names(dbhandle, [&](struct device_name const& device_name) -> void {
+				if(device_name.name != nullptr) text.append(std::string(device_name.name) + "\r\n"); });
+			if(!text.empty()) text.append("\r\n");
+
+			// CHANNELS
+			//
+			int numchannels = get_channel_count(dbhandle, true);		// show_drm_channels
+			text.append("Available Channels: ").append(std::to_string(numchannels)).append("\r\n");
+
+			// RECORDINGS
+			//
+			int numrecordings = get_recording_count(dbhandle);
+			text.append("Available Recordings: ").append(std::to_string(numrecordings)).append("\r\n");
+
+			// RECORDING RULES
+			//
+			int numrecordingrules = get_recordingrule_count(dbhandle);
+			text.append("Available Recording Rules: ").append(std::to_string(numrecordingrules)).append("\r\n");
+
+			// TIMERS
+			//
+			int numtimers = get_timer_count(dbhandle, 14);			// all 14 days
+			text.append("Available Timers: ").append(std::to_string(numtimers)).append("\r\n");
+
+			// LISTINGS
+			//
+			int numlistings = get_listing_count(dbhandle);
+			text.append("Available Listings: ").append(std::to_string(numlistings)).append("\r\n");
+
+			kodi::gui::dialogs::TextViewer::Show("Discovered HDHomeRun devices", text);
 		}
 
 		// MENUHOOK_SETTING_SHOWRECENTERRORS

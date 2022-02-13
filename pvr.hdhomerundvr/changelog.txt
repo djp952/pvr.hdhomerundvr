@@ -1,3 +1,6 @@
+v4.8.2 (2022.03.xx)
+  - Add available HDHomeRun ecosystem object counts to 'List discovered devices' PVR Client specific setting
+
 v4.8.1 (2022.02.12)
   - Fix HTTP query error messages reporting the multipart/form-data POST operation method as 'get'
   - Fix bug preventing HTTP device discovery from completing if a device cannot be contacted
