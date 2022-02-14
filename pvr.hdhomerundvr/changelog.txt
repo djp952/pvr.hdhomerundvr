@@ -1,4 +1,5 @@
 v20.8.2 (2022.03.xx)
+  - Update libhdhomerun library to version 20220203
   - Add available HDHomeRun ecosystem object counts to 'List discovered devices' PVR Client specific setting
 
 v20.8.1 (2022.02.12)
