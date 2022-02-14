@@ -398,6 +398,7 @@
           </constraints>
           <dependencies>
             <dependency type="visible" setting="use_proxy_server">true</dependency>
+            <dependency type="enable" setting="use_proxy_server">true</dependency>
           </dependencies>
           <control type="edit" format="string" />
         </setting>
@@ -410,6 +411,7 @@
           </constraints>
           <dependencies>
             <dependency type="visible" setting="use_proxy_server">true</dependency>
+            <dependency type="enable" setting="use_proxy_server">true</dependency>
           </dependencies>
           <control type="edit" format="string">
             <hidden>true</hidden>
@@ -432,6 +434,7 @@
             </options>
           </constraints>
           <dependencies>
+            <dependency type="visible" setting="use_direct_tuning">true</dependency>
             <dependency type="enable" setting="use_direct_tuning">true</dependency>
           </dependencies>
           <control type="spinner" format="integer"/>
@@ -441,6 +444,7 @@
           <level>0</level>
           <default>false</default>
           <dependencies>
+            <dependency type="visible" setting="use_direct_tuning">true</dependency>
             <dependency type="enable" setting="use_direct_tuning">true</dependency>
           </dependencies>
           <control type="toggle"/>
