@@ -58,15 +58,17 @@ Download the latest jre-8xxx-windows-x64.tar.gz from Oracle:
 * Set a System Environment Variable named JAVA_HOME that points to the location the tar.gz was extracted   
 * Generate a custom public-key certificate that can be used to sign the generated package(s). Follow the instructions provided by Google at the Android Developer [Sign Your App](https://developer.android.com/studio/publish/app-signing.html) page.   
    
-**OPTIONAL: CONFIGURE OSXCROSS CROSS-COMPILER**   
+**OPTIONAL: BUILD OSXCROSS CROSS-COMPILER**   
 *Necessary to build OS X Targets*   
 
-* Generate the MAC OSX 10.11 SDK Package for OSXCROSS by following the instructions provided at [PACKAGING THE SDK](https://github.com/tpoechtrager/osxcross#packaging-the-sdk).  The suggested version of Xcode to use when generating the SDK package is Xcode 7.3.1 (May 3, 2016).
+* Download [Xcode 11.3.1](https://download.developer.apple.com/Developer_Tools/Xcode_11.3.1/Xcode_11.3.1.xip) __(Account required)__ to a location accessible to the WSL Ubuntu 18.04 LTS Distro
 * Open "Ubuntu 18.04 LTS"   
 ```
-sudo apt-get install cmake clang llvm-dev libxml2-dev libssl-dev libbz2-dev zlib1g-dev
+sudo apt-get install cmake clang llvm-dev liblzma-dev libxml2-dev uuid-dev libssl-dev libbz2-dev zlib1g-dev
+cp {Xcode_11.3.1.xip} ~/
 git clone https://github.com/tpoechtrager/osxcross --depth=1
-cp {MacOSX10.11.sdk.tar.bz2} osxcross/tarballs/
+osxcross/tools/gen_sdk_package_pbzx.sh ~/Xcode_11.3.1.xip
+mv osxcross/MacOSX10.15.sdk.tar.xz osxcross/tarballs/
 UNATTENDED=1 osxcross/build.sh
 osxcross/build_compiler_rt.sh
 sudo mkdir -p /usr/lib/llvm-6.0/lib/clang/6.0.0/include
