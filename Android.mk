@@ -43,18 +43,11 @@ LOCAL_MODULE := libz-prebuilt
 LOCAL_SRC_FILES := depends/libz/$(TARGET_ABI)/lib/libz.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-# libcrypto
+# libwolfssl
 #
 include $(CLEAR_VARS)
-LOCAL_MODULE := libcrypto-prebuilt
-LOCAL_SRC_FILES := depends/libssl/$(TARGET_ABI)/lib/libcrypto.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-# libssl
-#
-include $(CLEAR_VARS)
-LOCAL_MODULE := libssl-prebuilt
-LOCAL_SRC_FILES := depends/libssl/$(TARGET_ABI)/lib/libssl.a
+LOCAL_MODULE := libwolfssl-prebuilt
+LOCAL_SRC_FILES := depends/libwolfssl/$(TARGET_ABI)/lib/libwolfssl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # libhdhomerundvr
@@ -95,8 +88,7 @@ LOCAL_STATIC_LIBRARIES += \
 	libcurl-prebuilt \
 	libxml2-prebuilt \
 	libz-prebuilt \
-	libssl-prebuilt \
-	libcrypto-prebuilt
+	libwolfssl-prebuilt
 
 LOCAL_LDLIBS += \
 	-llog

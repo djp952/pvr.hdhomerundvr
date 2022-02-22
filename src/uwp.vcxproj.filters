@@ -61,14 +61,6 @@
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
-    <Filter Include="External Libraries\curl\Header Files\vauth">
-      <UniqueIdentifier>{0336a692-480e-4a5a-adcb-50b03bbbaa19}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
-    </Filter>
-    <Filter Include="External Libraries\curl\Header Files\vtls">
-      <UniqueIdentifier>{e56da373-3dc0-454b-95af-4aad83a1debb}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
-    </Filter>
     <Filter Include="External Libraries\http-status-codes-cpp">
       <UniqueIdentifier>{2fa04bb4-37fd-42ec-831b-1f8e595765b2}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
@@ -79,10 +71,6 @@
     </Filter>
     <Filter Include="External Libraries\curl\Source Files\vtls">
       <UniqueIdentifier>{174b9982-af55-4b10-b4ff-7524a95e19d1}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
-    </Filter>
-    <Filter Include="External Libraries\curl\Header Files\vquic">
-      <UniqueIdentifier>{0cc2f76e-bc68-4b41-95f3-a35a31760871}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="External Libraries\curl\Source Files\vquic">
@@ -127,11 +115,47 @@
     <Filter Include="Header Files\compat\libxml\libxml">
       <UniqueIdentifier>{5c60e457-0549-47ea-a2bc-21dbf24f9b53}</UniqueIdentifier>
     </Filter>
-    <Filter Include="External Libraries\curl\Header Files\vssh">
-      <UniqueIdentifier>{13585d81-ac86-47c0-a9f5-4e3f61cdf879}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\sqlext">
       <UniqueIdentifier>{e6ab9612-cf7c-4125-83e5-783b0ddaf417}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl">
+      <UniqueIdentifier>{0fab09c3-cf25-47dd-836a-8d87bdae26b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files">
+      <UniqueIdentifier>{4884dfab-6d86-4099-8cd8-f6102ce57aa3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Source Files">
+      <UniqueIdentifier>{e32164fa-b989-4973-8d6b-c7e707a90234}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Source Files\wolfcrypt">
+      <UniqueIdentifier>{2e78fa24-6ed0-417a-9096-a66650a10048}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\compat">
+      <UniqueIdentifier>{30782d62-4d90-4f19-9881-de1f6f23d0ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\compat\wolfssl">
+      <UniqueIdentifier>{5db2a6e6-e538-4dba-9a58-b58d8c548d9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\compat\wolfssl">
+      <UniqueIdentifier>{11217df7-75fc-47f2-bfd1-caacaa57f4ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files\cyassl">
+      <UniqueIdentifier>{6ec8eb90-d88f-46f6-8310-1519fb3f5284}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files\wolfssl">
+      <UniqueIdentifier>{8b146ef0-d601-4e4d-ab5a-1ea8d7b4acae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files\cyassl\ctaocrypt">
+      <UniqueIdentifier>{ee5f600c-55cf-4f89-8729-62f19314b1c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files\cyassl\openssl">
+      <UniqueIdentifier>{fe3341cb-b1a2-4fa4-b89a-4039ee354308}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files\wolfssl\openssl">
+      <UniqueIdentifier>{e1144920-382c-45aa-b9a7-8a189b91e5ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt">
+      <UniqueIdentifier>{74cc8b6a-af7b-4645-8edb-5bfd59439385}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -159,261 +183,6 @@
     <ClInclude Include="align.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\amigaos.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\asyn.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\conncache.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\connect.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\content_encoding.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_addrinfo.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_base64.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_des.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_endian.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_fnmatch.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_gethostname.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_gssapi.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_hmac.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_ldap.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_md4.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_md5.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_memory.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_memrchr.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_multibyte.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_ntlm_core.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_ntlm_wb.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_printf.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_rtmp.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_sasl.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_setup.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_setup_once.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_sha256.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_sspi.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_threads.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curlx.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\dotdot.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\easyif.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\escape.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\fileinfo.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\ftplistparser.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\getinfo.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\gopher.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\hash.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\hostcheck.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http_chunks.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http_digest.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http_negotiate.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http_ntlm.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http_proxy.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http2.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\imap.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\inet_ntop.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\inet_pton.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\llist.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\memdebug.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\mime.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\multihandle.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\multiif.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\non-ascii.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\nonblock.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\parsedate.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\pingpong.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\pop3.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\rand.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\rtsp.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\select.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\setopt.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\setup-vms.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\share.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\sigpipe.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\slist.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\smb.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\smtp.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\sockaddr.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\socks.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\speedcheck.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\splay.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\strcase.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\strdup.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\strerror.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\strtok.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\strtoofft.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\system_win32.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\telnet.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\tftp.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\transfer.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\urldata.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\warnless.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\wildcard.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\x509asn1.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libhdhomerun\hdhomerun_os_windows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -426,26 +195,8 @@
     <ClInclude Include="http_exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_ctype.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_path.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_range.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\doh.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\urlapi-int.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dbtypes.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_get_line.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pvrstream.h">
       <Filter>Header Files</Filter>
@@ -455,51 +206,6 @@
     </ClInclude>
     <ClInclude Include="devicestream.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\quic.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vauth\digest.h">
-      <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vauth\ntlm.h">
-      <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vauth\vauth.h">
-      <Filter>External Libraries\curl\Header Files\vauth</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vquic\ngtcp2.h">
-      <Filter>External Libraries\curl\Header Files\vquic</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vquic\quiche.h">
-      <Filter>External Libraries\curl\Header Files\vquic</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gskit.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\gtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mbedtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\mesalink.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\nssg.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\openssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\schannel.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\vtls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\wolfssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
     </ClInclude>
     <ClInclude Include="..\depends\http-status-codes-cpp\HttpStatusCodes_C++11.h">
       <Filter>External Libraries\http-status-codes-cpp</Filter>
@@ -702,65 +408,743 @@
     <ClInclude Include="xmlstream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\bearssl.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vssh\ssh.h">
-      <Filter>External Libraries\curl\Header Files\vssh</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\socketpair.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\mqtt.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\setup-win32.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\dynbuf.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vquic\vquic.h">
-      <Filter>External Libraries\curl\Header Files\vquic</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\keylog.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
-    </ClInclude>
     <ClInclude Include="addon.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\version_win32.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pvrtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\curl_krb5.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\easyoptions.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\altsvc.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\hsts.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\c-hyper.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\http_aws_sigv4.h">
-      <Filter>External Libraries\curl\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="radiofilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\vtls\rustls.h">
-      <Filter>External Libraries\curl\Header Files\vtls</Filter>
+    <ClInclude Include="compat\wolfssl\options.h">
+      <Filter>Header Files\compat\wolfssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libcurl\src\lib\bufref.h">
+    <ClInclude Include="compat\wolfssl\user_settings.h">
+      <Filter>Header Files\compat\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\curl.h">
       <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\curlver.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\easy.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\mprintf.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\multi.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\options.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\stdcheaders.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\system.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\typecheck-gcc.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libcurl\src\include\curl\urlapi.h">
+      <Filter>External Libraries\curl\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\aes.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\arc4.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\asn.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\asn_public.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\blake2.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\blake2-impl.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\blake2-int.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\camellia.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\chacha.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\coding.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\compress.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\des3.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\dh.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\dsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\ecc.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\error-crypt.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\fips_test.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\hmac.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\integer.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\logging.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\md2.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\md4.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\md5.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\memory.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\misc.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\mpi_class.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\mpi_superclass.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\pkcs7.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\poly1305.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\pwdbased.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\random.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\ripemd.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\rsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\settings.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\settings_comp.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\sha.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\sha256.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\sha512.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\tfm.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\types.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\visibility.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ctaocrypt\wc_port.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\ctaocrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\asn1.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\bio.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\bn.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\conf.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\crypto.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\des.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\dh.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\dsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ec.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ec448.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ec25519.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ecdh.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ecdsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ed448.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ed25519.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\engine.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\err.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\evp.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\hmac.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\lhash.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\md4.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\md5.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ocsp.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\opensslconf.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\opensslv.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ossl_typ.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\pem.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\pkcs12.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\rand.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ripemd.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\rsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\sha.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ssl.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ssl23.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\stack.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\ui.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\x509.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\openssl\x509v3.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\callbacks.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\certs_test.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\crl.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\error-ssl.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\internal.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ocsp.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\sniffer.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\sniffer_error.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\ssl.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\test.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\cyassl\version.h">
+      <Filter>External Libraries\wolfssl\Header Files\cyassl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\aes.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\arc4.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\asn.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\asn_public.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\blake2.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\blake2-impl.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\blake2-int.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\camellia.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\chacha.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\chacha20_poly1305.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\cmac.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\coding.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\compress.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\cpuid.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\cryptocb.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\curve448.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\curve25519.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\des3.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\dh.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\dsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\ecc.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\eccsi.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\ed448.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\ed25519.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\error-crypt.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\falcon.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\fe_448.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\fe_operations.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\fips_test.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\ge_448.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\ge_operations.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\hash.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\hmac.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\integer.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\kdf.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\logging.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\md2.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\md4.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\md5.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\mem_track.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\memory.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\misc.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\mpi_class.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\mpi_superclass.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\pkcs7.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\pkcs11.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\pkcs12.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\poly1305.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\pwdbased.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\random.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\rc2.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\ripemd.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\rsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sakke.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\selftest.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\settings.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sha.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sha3.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sha256.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sha512.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\signature.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\siphash.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sp.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\sp_int.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\srp.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\tfm.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\types.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\visibility.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\wc_encrypt.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\wc_pkcs11.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\wc_port.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\wolfevent.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfcrypt\wolfmath.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\aes.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\asn1.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\asn1t.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\bio.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\bn.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\buffer.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\camellia.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\cmac.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\cms.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\compat_types.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\conf.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\crypto.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\des.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\dh.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\dsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ec.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ec448.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ec25519.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ecdh.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ecdsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ed448.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ed25519.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\engine.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\err.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\evp.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\fips_rand.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\hmac.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\lhash.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\md4.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\md5.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\modes.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\obj_mac.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\objects.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ocsp.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\opensslconf.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\opensslv.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ossl_typ.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\pem.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\pkcs7.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\pkcs12.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\rand.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\rc4.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ripemd.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\rsa.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\sha.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\sha3.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\srp.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ssl.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ssl23.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\stack.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\tls1.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\txt_db.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\ui.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\x509.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\x509_vfy.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\openssl\x509v3.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\callbacks.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\certs_test.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\crl.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\error-ssl.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\ocsp.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\sniffer.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\sniffer_error.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\ssl.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\test.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\version.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\depends\libwolfssl\src\wolfssl\wolfio.h">
+      <Filter>External Libraries\wolfssl\Header Files\wolfssl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1145,9 +1529,6 @@
     <ClCompile Include="..\depends\libcurl\src\lib\vauth\vauth.c">
       <Filter>External Libraries\curl\Source Files\vauth</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\vtls\mesalink.c">
-      <Filter>External Libraries\curl\Source Files\vauth</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\vquic\ngtcp2.c">
       <Filter>External Libraries\curl\Source Files\vquic</Filter>
     </ClCompile>
@@ -1448,5 +1829,217 @@
     <ClCompile Include="..\depends\libcurl\src\lib\bufref.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\schannel_verify.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\crl.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\internal.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\keys.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\ocsp.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\ssl.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\tls.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\tls13.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\src\wolfio.c">
+      <Filter>External Libraries\wolfssl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\aes.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\arc4.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\asn.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\blake2b.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\blake2s.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\camellia.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\chacha.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\chacha20_poly1305.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\cmac.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\coding.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\cpuid.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\curve25519.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\curve448.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\des3.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\dh.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\dsa.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ecc.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ed25519.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ed448.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\error.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\fe_448.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\fe_low_mem.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\fe_operations.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ge_448.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ge_low_mem.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ge_operations.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\hash.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\hmac.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\integer.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\kdf.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\logging.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\md2.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\md4.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\md5.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\memory.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\pkcs12.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\pkcs7.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\poly1305.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\pwdbased.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\random.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\rc2.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\ripemd.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\rsa.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sha.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sha256.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sha3.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sha512.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\signature.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sp_c32.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sp_c64.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sp_int.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\sp_x86_64.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\srp.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\tfm.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\wc_encrypt.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\wc_pkcs11.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\wc_port.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\wolfevent.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libwolfssl\src\wolfcrypt\src\wolfmath.c">
+      <Filter>External Libraries\wolfssl\Source Files\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\wolfssl\bcrypt.cpp">
+      <Filter>Source Files\compat\wolfssl</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\tmp\version\version.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

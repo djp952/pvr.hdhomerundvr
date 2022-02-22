@@ -84,6 +84,15 @@ int xmltv_rowid(sqlite3_vtab_cursor* cursor, sqlite_int64* rowid);
 // Alias for an std::basic_string<> of bytes
 typedef std::basic_string<uint8_t> byte_string;
 
+// curl_feature
+//
+// Structure of the curl_fatures table
+struct curl_feature {
+
+	const char*	name;
+	int			bitmask;
+};
+
 // curl_writefunction
 //
 // Function pointer for a CURL write function implementation
@@ -232,6 +241,41 @@ static xmlNodePtr xmlTextReaderGetChildElementWithAttribute(xmlTextReaderPtr rea
 //---------------------------------------------------------------------------
 // GLOBAL VARIABLES
 //---------------------------------------------------------------------------
+
+// g_curl_features
+//
+// Table of curl_feature structures for get_curl_version()
+static const struct curl_feature g_curl_features[] = {
+
+	{"AsynchDNS",      CURL_VERSION_ASYNCHDNS},
+	{"Debug",          CURL_VERSION_DEBUG},
+	{"TrackMemory",    CURL_VERSION_CURLDEBUG},
+	{"IDN",            CURL_VERSION_IDN},
+	{"IPv6",           CURL_VERSION_IPV6},
+	{"Largefile",      CURL_VERSION_LARGEFILE},
+	{"Unicode",        CURL_VERSION_UNICODE},
+	{"SSPI",           CURL_VERSION_SSPI},
+	{"GSS-API",        CURL_VERSION_GSSAPI},
+	{"Kerberos",       CURL_VERSION_KERBEROS5},
+	{"SPNEGO",         CURL_VERSION_SPNEGO},
+	{"NTLM",           CURL_VERSION_NTLM},
+	{"NTLM_WB",        CURL_VERSION_NTLM_WB},
+	{"SSL",            CURL_VERSION_SSL},
+	{"libz",           CURL_VERSION_LIBZ},
+	{"brotli",         CURL_VERSION_BROTLI},
+	{"zstd",           CURL_VERSION_ZSTD},
+	{"CharConv",       CURL_VERSION_CONV},
+	{"TLS-SRP",        CURL_VERSION_TLSAUTH_SRP},
+	{"HTTP2",          CURL_VERSION_HTTP2},
+	{"HTTP3",          CURL_VERSION_HTTP3},
+	{"UnixSockets",    CURL_VERSION_UNIX_SOCKETS},
+	{"HTTPS-proxy",    CURL_VERSION_HTTPS_PROXY},
+	{"MultiSSL",       CURL_VERSION_MULTI_SSL},
+	{"PSL",            CURL_VERSION_PSL},
+	{"alt-svc",        CURL_VERSION_ALTSVC},
+	{"HSTS",           CURL_VERSION_HSTS},
+	{"gsasl",          CURL_VERSION_GSASL},
+};
 
 // g_curlshare
 //
@@ -535,6 +579,63 @@ void get_channel_number(sqlite3_context* context, int argc, sqlite3_value** argv
 	// The input format must be %d.%d or %d
 	if((sscanf(str, "%d.%d", &channel, &subchannel) == 2) || (sscanf(str, "%d", &channel) == 1)) return sqlite3_result_int(context, channel);
 	else return sqlite3_result_int(context, 0);
+}
+
+//---------------------------------------------------------------------------
+// get_curl_version
+//
+// SQLite scalar function to get the cURL version information
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+static int
+featcomp(const void* p1, const void* p2)
+{
+	return strcasecmp(*(char* const*)p1, *(char* const*)p2);
+}
+
+void get_curl_version(sqlite3_context* context, int argc, sqlite3_value** /*argv*/)
+{
+	if(argc != 0) return sqlite3_result_error(context, "invalid argument", -1);
+
+	curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
+
+	// Use the SQLite string functions to build the resulant string
+	sqlite3_str* version = sqlite3_str_new(nullptr);
+
+	// Version
+	sqlite3_str_appendf(version, "%s", curl_version());
+
+	// Protocols	
+	if(info->protocols != nullptr) {
+
+		sqlite3_str_appendall(version, "\nProtocols:");
+		for(char const* const* protocol = info->protocols; *protocol; protocol++)
+			sqlite3_str_appendf(version, " %s", *protocol);
+	}
+
+	// Features
+	if(info->features != 0) {
+
+		sqlite3_str_appendall(version, "\nFeatures: ");
+
+		char* featp[sizeof(g_curl_features) / sizeof(g_curl_features[0]) + 1] = { 0 };
+		size_t numfeat = 0;
+		unsigned int i;
+		for(i = 0; i < sizeof(g_curl_features) / sizeof(g_curl_features[0]); i++) {
+			if(info->features & g_curl_features[i].bitmask)
+				featp[numfeat++] = (char*)g_curl_features[i].name;
+		}
+		qsort(&featp[0], numfeat, sizeof(char*), featcomp);
+		for(i = 0; i < numfeat; i++) sqlite3_str_appendf(version, " %s", featp[i]);
+	}
+
+	// Return the generated string as the scalar result from this function
+	return sqlite3_result_text(context, sqlite3_str_finish(version), -1, sqlite3_free);
 }
 
 //---------------------------------------------------------------------------
@@ -1941,6 +2042,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "get_channel_number", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_channel_number, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_channel_number (%d)", result); return result; }
+
+	// get_curl_version function
+	//
+	result = sqlite3_create_function_v2(db, "get_curl_version", 0, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_curl_version, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_curl_version (%d)", result); return result; }
 
 	// get_episode_number function
 	//
