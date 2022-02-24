@@ -2,6 +2,7 @@ v4.9.0 (2022.03.xx)
   - Remove dependency on OpenSSL library
   - Add dependency on wolfSSL library version 5.2.0
   - Update libhdhomerun library to version 20220203
+  - Update SQLite database engine to version 3.38.0
   - Update cURL library to version 7.82.0-DEV (6c82e3f4)
   - Add available HDHomeRun ecosystem object counts to 'List discovered devices' PVR Client specific setting
 
