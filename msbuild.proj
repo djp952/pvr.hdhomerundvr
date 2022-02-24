@@ -187,7 +187,7 @@
   <Target Name="linux-i686" DependsOnTargets="AddonVersion">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-i686/include -Idepends/libxml2/linux-i686/include -Idepends/libz/linux-i686/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/i386-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-i686/include -Idepends/libxml2/linux-i686/include/libxml2 -Idepends/libz/linux-i686/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/i686-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-DNDEBUG -O2 -fPIC -m32</CFLAGS>
       <CXXFLAGS>-DNDEBUG -O2 -fPIC -std=c++14 -m32</CXXFLAGS>
     </PropertyGroup>
@@ -241,7 +241,7 @@
   <Target Name="linux-x86_64" DependsOnTargets="AddonVersion">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-x86_64/include -Idepends/libxml2/linux-x86_64/include -Idepends/libz/linux-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -I/usr/include/x86_64-linux-gnu -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-x86_64/include -Idepends/libxml2/linux-x86_64/include/libxml2 -Idepends/libz/linux-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version -L/usr/lib/gcc/x86_64-linux-gnu/4.9</CPPFLAGS>
       <CFLAGS>-DNDEBUG -O2 -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -O2 -fPIC -std=c++14</CXXFLAGS>
     </PropertyGroup>
@@ -295,7 +295,7 @@
   <Target Name="linux-armel" DependsOnTargets="AddonVersion">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armel/include -Idepends/libxml2/linux-armel/include -Idepends/libz/linux-armel/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armel/include -Idepends/libxml2/linux-armel/include/libxml2 -Idepends/libz/linux-armel/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -O2 -fPIC -march=armv6</CFLAGS>
       <CXXFLAGS>-DNDEBUG -O2 -fPIC -march=armv6 -std=c++14</CXXFLAGS>
     </PropertyGroup>
@@ -349,7 +349,7 @@
   <Target Name="linux-armhf" DependsOnTargets="AddonVersion">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armhf/include -Idepends/libxml2/linux-armhf/include -Idepends/libz/linux-armhf/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-armhf/include -Idepends/libxml2/linux-armhf/include/libxml2 -Idepends/libz/linux-armhf/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -O2 -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -O2 -fPIC -std=c++14</CXXFLAGS>
     </PropertyGroup>
@@ -403,7 +403,7 @@
   <Target Name="linux-aarch64" DependsOnTargets="AddonVersion">
 
     <PropertyGroup>
-      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-aarch64/include -Idepends/libxml2/linux-aarch64/include -Idepends/libz/linux-aarch64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/linux-aarch64/include -Idepends/libxml2/linux-aarch64/include/libxml2 -Idepends/libz/linux-aarch64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -O2 -fPIC</CFLAGS>
       <CXXFLAGS>-DNDEBUG -O2 -fPIC -std=c++14</CXXFLAGS>
     </PropertyGroup>
@@ -458,7 +458,7 @@
 
     <PropertyGroup>
       <ENV>OSXCROSS_NO_EXTENSION_WARNINGS=1 PATH+=:~/osxcross/target/bin</ENV>
-      <CPPFLAGS>-mmacosx-version-min=10.9 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/osx-x86_64/include -Idepends/libxml2/osx-x86_64/include -Idepends/libz/osx-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
+      <CPPFLAGS>-mmacosx-version-min=10.9 -Wall -Wno-unknown-pragmas -Idepends/xbmc/xbmc -Idepends/xbmc/xbmc/linux -Idepends/xbmc/xbmc/addons/kodi-dev-kit/include -Idepends/http-status-codes-cpp -Idepends/libcurl/osx-x86_64/include -Idepends/libxml2/osx-x86_64/include/libxml2 -Idepends/libz/osx-x86_64/include -Idepends/libhdhomerun -Idepends/rapidjson/include -Idepends/sqlite -Itmp/version</CPPFLAGS>
       <CFLAGS>-DNDEBUG -O2 -fPIC -stdlib=libc++</CFLAGS>
       <CXXFLAGS>-DNDEBUG -O2 -fPIC -std=c++14 -stdlib=libc++</CXXFLAGS>
     </PropertyGroup>
