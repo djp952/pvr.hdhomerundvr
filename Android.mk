@@ -61,7 +61,7 @@ LOCAL_C_INCLUDES += \
 	depends/xbmc/xbmc/addons/kodi-dev-kit/include \
 	depends/http-status-codes-cpp \
 	depends/libcurl/$(TARGET_ABI)/include \
-	depends/libxml2/$(TARGET_ABI)/include \
+	depends/libxml2/$(TARGET_ABI)/include/libxml2 \
 	depends/libz/$(TARGET_ABI)/include \
 	depends/libhdhomerun \
 	depends/rapidjson/include \
