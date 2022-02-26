@@ -695,33 +695,6 @@ void get_http_proxy(sqlite3_context* context, int argc, sqlite3_value** /*argv*/
 }
 
 //---------------------------------------------------------------------------
-// get_legacy_channel_frequency
-//
-// SQLite scalar function to get the frequency of a channel from a legacy device URL
-//
-// Arguments:
-//
-//	context		- SQLite context object
-//	argc		- Number of supplied arguments
-//	argv		- Argument values
-
-void get_legacy_channel_frequency(sqlite3_context* context, int argc, sqlite3_value** argv)
-{
-	uint64_t	tunerid = 0;				// Parsed tuner identifier
-	int64_t		frequency = 0;				// Parsed frequency value
-	int			program = 0;				// Parsed program value
-
-	if((argc != 1) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
-
-	// Null or zero-length input string results in -1
-	const char* str = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
-	if((str == nullptr) || (*str == 0)) return sqlite3_result_int64(context, -1);
-
-	if(sscanf(str, "hdhomerun://%" PRIx64 "/ch%" PRId64 "-%d", &tunerid, &frequency, &program) == 3) return sqlite3_result_int64(context, frequency);
-	else return sqlite3_result_int64(context, -1);
-}
-
-//---------------------------------------------------------------------------
 // get_legacy_channel_program
 //
 // SQLite scalar function to get the program of a channel from a legacy device URL
@@ -2107,11 +2080,6 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_create_function_v2(db, "get_http_proxy", 0, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_http_proxy, nullptr, nullptr, nullptr);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_http_proxy (%d)", result); return result; }
-
-	// get_legacy_channel_frequency function
-	//
-	result = sqlite3_create_function_v2(db, "get_legacy_channel_frequency", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, get_legacy_channel_frequency, nullptr, nullptr, nullptr);
-	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function get_legacy_channel_frequency (%d)", result); return result; }
 
 	// get_legacy_channel_program function
 	//
