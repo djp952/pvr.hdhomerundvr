@@ -1354,6 +1354,56 @@ void set_http_proxy(sqlite3_context* context, int argc, sqlite3_value** argv)
 }
 
 //---------------------------------------------------------------------------
+// url_append_query_string
+//
+// SQLite scalar function to append an argument to the query string of a URL
+//
+// Arguments:
+//
+//	context		- SQLite context object
+//	argc		- Number of supplied arguments
+//	argv		- Argument values
+
+void url_append_query_string(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+	if((argc != 2) || (argv[0] == nullptr)) return sqlite3_result_error(context, "invalid argument", -1);
+
+	// A null or zero-length url results in a NULL result
+	const char* url = reinterpret_cast<const char*>(sqlite3_value_text(argv[0]));
+	if((url == nullptr) || (*url == 0)) return sqlite3_result_null(context);
+
+	// A null or zero-length argument to append results in the base url
+	const char* argument = reinterpret_cast<const char*>(sqlite3_value_text(argv[1]));
+	if((argument == nullptr) || (*argument == 0)) return sqlite3_result_text(context, url, -1, SQLITE_TRANSIENT);
+
+	// Allocate a CURLU instance to process the URL components
+	CURLU* curlu = curl_url();
+	if(curlu == nullptr) return sqlite3_result_error(context, "insufficient memory to allocate CURLU instance", -1);
+
+	// Apply the specified URL to the CURLU instance
+	CURLUcode curluresult = curl_url_set(curlu, CURLUPart::CURLUPART_URL, url, 0);
+	if(curluresult == CURLUE_OK) {
+
+		// Append the argument to the query string of the base URL
+		curluresult = curl_url_set(curlu, CURLUPART_QUERY, argument, CURLU_APPENDQUERY);
+		if(curluresult == CURLUE_OK) {
+
+			char* newurl = nullptr;
+			curluresult = curl_url_get(curlu, CURLUPart::CURLUPART_URL, &newurl, 0);
+			if(curluresult == CURLUE_OK) {
+
+				sqlite3_result_text(context, newurl, -1, SQLITE_TRANSIENT);
+				curl_free(newurl);
+			}
+		}
+	}
+
+	// Report any processing errors and clean up the CURLU instance
+	if(curluresult != CURLUE_OK) sqlite3_result_error(context, "unable to append specified argument to url query string", -1);
+	curl_url_cleanup(curlu);
+}
+
+//---------------------------------------------------------------------------
 // url_encode
 //
 // SQLite scalar function to encode a string with URL escape sequences
@@ -2112,6 +2162,11 @@ extern "C" int sqlite3_extension_init(sqlite3 *db, char** errmsg, const sqlite3_
 	//
 	result = sqlite3_uuid_init(db, nullptr, sqlite3_api);
 	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register extension uuid (%d)", result); return result; }
+
+	// url_append_query_string function
+	//
+	result = sqlite3_create_function_v2(db, "url_append_query_string", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, url_append_query_string, nullptr, nullptr, nullptr);
+	if(result != SQLITE_OK) { *errmsg = sqlite3_mprintf("Unable to register scalar function url_append_query_string (%d)", result); return result; }
 
 	// url_encode function
 	//
