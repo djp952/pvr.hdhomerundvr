@@ -776,7 +776,7 @@ void discover_lineups(sqlite3* instance, bool& changed)
 
 		// Discover the channel lineups for all available tuner devices; the tuner will return "[]" if there are no channels
 		execute_non_query(instance, "insert into discover_lineup select deviceid, cast(strftime('%s', 'now') as integer) as discovered, "
-			"json_get(json_extract(device.data, '$.LineupURL') || '?tuning') as json "
+			"json_get(url_append_query_string(json_extract(device.data, '$.LineupURL'), 'tuning')) as json "
 			"from device where json_extract(device.data, '$.LineupURL') is not null");
 
 		// This requires a multi-step operation against the lineup table; start a transaction
@@ -1071,7 +1071,8 @@ void discover_recordings(sqlite3* instance, bool& changed)
 	// Create and load a temporary table with the series-level recording information from each storage engine instance
 	execute_non_query(instance, "drop table if exists discover_recording");
 	execute_non_query(instance, "create temp table discover_recording as "
-		"with storage(deviceid, url) as(select deviceid, json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' from device where json_extract(device.data, '$.StorageURL') is not null) "
+		"with storage(deviceid, url) as(select deviceid, url_append_query_string(json_extract(device.data, '$.StorageURL'), 'DisplayGroupID=root') from device "
+		"where json_extract(device.data, '$.StorageURL') is not null) "
 		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
 		"max(cast(json_extract(displaygroup.value, '$.UpdateID') as integer)) as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
 		"from storage, json_each(json_get(storage.url)) as displaygroup "
@@ -1135,7 +1136,8 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid)
 	// Create and load a temporary table with the series-level recording information from each storage engine instance
 	execute_non_query(instance, "drop table if exists discover_recording_series");
 	execute_non_query(instance, "create temp table discover_recording_series as "
-		"with storage(deviceid, url) as(select deviceid, json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root' from device where json_extract(device.data, '$.StorageURL') is not null) "
+		"with storage(deviceid, url) as(select deviceid, url_append_query_string(json_extract(device.data, '$.StorageURL'), 'DisplayGroupID=root') from device "
+		"where json_extract(device.data, '$.StorageURL') is not null) "
 		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
 		"json_extract(displaygroup.value, '$.UpdateID') as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
 		"from storage, json_each(json_get(storage.url)) as displaygroup where seriesid like ?1", seriesid);
@@ -1304,8 +1306,8 @@ void enumerate_channeltuners(sqlite3* instance, union channelid channelid, enume
 		"where json_extract(device.data, '$.LineupURL') is not null "
 		"union all select deviceid, tunerid - 1, islegacy from tuners where tunerid > 0) "
 		"select tuners.deviceid || '-' || tuners.tunerid as tunerid, tuners.islegacy as islegacy, "
-		"case when tuners.islegacy = 1 then get_legacy_channel_frequency(json_extract(lineupdata.value, '$.URL')) else coalesce(json_extract(lineupdata.value, '$.Frequency'), -1) end as frequency, "
-		"case when tuners.islegacy = 1 then get_legacy_channel_program(json_extract(lineupdata.value, '$.URL')) else coalesce(json_extract(lineupdata.value, '$.ProgramNumber'), -1) end as program "
+		"coalesce(json_extract(lineupdata.value, '$.Frequency'), -1) as frequency, "
+		"coalesce(json_extract(lineupdata.value, '$.ProgramNumber'), -1) as program "
 		"from tuners inner join lineup using(deviceid), json_each(lineup.data) as lineupdata "
 		"where json_extract(lineupdata.value, '$.GuideNumber') = decode_channel_id(?1) order by tunerid desc";
 
@@ -2422,14 +2424,14 @@ void generate_discovery_diagnostic_file(sqlite3* instance, char const* path)
 		// LINEUPS
 		//
 		try { execute_non_query(instance, "insert into discovery_diagnostics select 'lineup', device.deviceid, "
-			"ifnull(json_get(json_extract(device.data, '$.LineupURL') || '?tuning'), 'null') "
+			"ifnull(json_get(url_append_query_string(json_extract(device.data, '$.LineupURL'), 'tuning')), 'null') "
 			"from device where json_extract(device.data, '$.LineupURL') is not null "); }
 		catch(...) { /* DO NOTHING */ }
 
 		// RECORDINGS
 		//
 		try { execute_non_query(instance, "insert into discovery_diagnostics select 'recordings', device.deviceid, "
-			"ifnull(json_get(json_extract(device.data, '$.StorageURL') || '?DisplayGroupID=root'), 'null') "
+			"ifnull(json_get(url_append_query_string(json_extract(device.data, '$.StorageURL'), 'DisplayGroupID=root')), 'null') "
 			"from device where json_extract(device.data, '$.StorageURL') is not null"); }
 		catch(...) { /* DO NOTHING */ }
 
