@@ -1405,9 +1405,6 @@
     <ClCompile Include="..\depends\libcurl\src\lib\hmac.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\hostcheck.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\http_ntlm.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
@@ -1424,9 +1421,6 @@
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\mime.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\non-ascii.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\openldap.c">
@@ -1460,9 +1454,6 @@
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\warnless.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\x509asn1.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="curlshare.cpp">
@@ -2034,6 +2025,15 @@
     </ClCompile>
     <ClCompile Include="compat\wolfssl\bcrypt.cpp">
       <Filter>Source Files\compat\wolfssl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\h2h3.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\hostcheck.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vtls\x509asn1.c">
+      <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

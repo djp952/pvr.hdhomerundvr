@@ -6,7 +6,7 @@
 	url = https://github.com/j-ulrich/http-status-codes-cpp.git
 [submodule "libcurl"]
 	path = depends/libcurl
-	url = https://github.com/djp952/prebuilt-libcurl.git
+	url = https://github.com/djp952/prebuilt-libcurl
 [submodule "libhdhomerun"]
 	path = depends/libhdhomerun
 	url = https://github.com/djp952/libhdhomerun.git
