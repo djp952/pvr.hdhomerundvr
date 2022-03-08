@@ -4297,6 +4297,33 @@ PVR_ERROR addon::GetTimerTypes(std::vector<kodi::addon::PVRTimerType>& types)
 }
 
 //-----------------------------------------------------------------------------
+// addon::IsEpgTagRecordable (CInstancePVRClient)
+//
+// Checks if the given EPG tag can be recorded
+//
+// Arguments:
+//
+//	tag				- EPG tag to be checked
+//	isRecordable	- Flag indicating if the EPG tag can be recorded
+
+PVR_ERROR addon::IsEPGTagRecordable(kodi::addon::PVREPGTag const& tag, bool& isRecordable)
+{
+	isRecordable = true;				// Default to recordable
+
+	// The only interesting thing about PVREPGTag is the channel id
+	union channelid channelid {};
+	channelid.value = tag.GetUniqueChannelId();
+
+	// The purpose of this function is to block adding timers for EPG tags that point to legacy tuner
+	// devices; in the event of an error/exception just assume the tag is recordable
+	try { isRecordable = !is_channel_legacy_only(connectionpool::handle(m_connpool), channelid); }
+	catch(std::exception& ex) { return handle_stdexception(__func__, ex, PVR_ERROR::PVR_ERROR_NO_ERROR); }
+	catch(...) { return handle_generalexception(__func__, PVR_ERROR::PVR_ERROR_NO_ERROR); }
+
+	return PVR_ERROR::PVR_ERROR_NO_ERROR;
+}
+
+//-----------------------------------------------------------------------------
 // addon::IsRealTimeStream (CInstancePVRClient)
 //
 // Check for real-time streaming
