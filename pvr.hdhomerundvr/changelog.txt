@@ -6,7 +6,8 @@ v20.9.0 (2022.03.xx)
   - Update cURL library to version 7.82.0
   - Update libxml2 library to version 2.9.13
   - Add available HDHomeRun ecosystem object counts to 'List discovered devices' PVR Client specific setting
-  - Fix bug causing a malformed URL to be sent to the backend when querying legacy device channel lineups
+  - Fix bug causing a malformed URL to be sent to the backend when querying legacy tuner device channel lineups
+  - Prevent EPG-based "Record" option from appearing for channels that only exist on legacy tuner device(s)
 
 v20.8.1 (2022.02.12)
   - Fix HTTP query error messages reporting the multipart/form-data POST operation method as 'get'

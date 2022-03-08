@@ -240,6 +240,11 @@ public:
 	// Retrieve the timer types supported by the backend
 	PVR_ERROR GetTimerTypes(std::vector<kodi::addon::PVRTimerType>& types) override;
 
+	// IsEpgTagRecordable
+	//
+	// Checks if the given EPG tag can be recorded
+	PVR_ERROR IsEPGTagRecordable(kodi::addon::PVREPGTag const& tag, bool& isRecordable) override;
+
 	// IsRealTimeStream
 	//
 	// Check for real-time streaming
