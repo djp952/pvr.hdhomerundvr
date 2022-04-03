@@ -9,7 +9,7 @@
 	url = https://github.com/djp952/prebuilt-libcurl
 [submodule "libhdhomerun"]
 	path = depends/libhdhomerun
-	url = https://github.com/djp952/libhdhomerun.git
+	url = https://github.com/silicondust/libhdhomerun.git
 [submodule "libxml2"]
 	path = depends/libxml2
 	url = https://github.com/djp952/prebuilt-libxml2.git
