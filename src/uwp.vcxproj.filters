@@ -2033,6 +2033,18 @@
     <ClCompile Include="..\depends\libcurl\src\lib\vtls\x509asn1.c">
       <Filter>External Libraries\curl\Source Files\vtls</Filter>
     </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\vquic\msh3.c">
+      <Filter>External Libraries\curl\Source Files\vquic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\fopen.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\headers.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\timediff.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tmp\version\version.rc">

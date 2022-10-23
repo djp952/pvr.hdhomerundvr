@@ -1,10 +1,11 @@
-v20.9.0 (2022.07.xx)
+v20.9.0 (2022.10.xx)
   - Remove dependency on OpenSSL library
-  - Add dependency on wolfSSL library version 5.2.0
+  - Add dependency on wolfSSL library version 5.5.0
   - Update libhdhomerun library to version 20220302
-  - Update SQLite database engine to version 3.39.2
-  - Update cURL library to version 7.82.0
+  - Update SQLite database engine to version 3.39.4
+  - Update cURL library to version 7.85.0
   - Update libxml2 library to version 2.9.13
+  - Update zlib library to version 1.2.13
   - Add available HDHomeRun ecosystem object counts to 'List discovered devices' PVR Client specific setting
   - Fix bug causing a malformed URL to be sent to the backend when querying legacy tuner device channel lineups
   - Prevent EPG-based "Record" option from appearing for channels that only exist on legacy tuner device(s)
