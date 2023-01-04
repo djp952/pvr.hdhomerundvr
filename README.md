@@ -129,7 +129,6 @@ Examples:
 | uwp-arm | Universal Windows Platform ARM | /t:uwp-arm |
 | uwp-win32 | Universal Windows Platform X86 | /t:uwp-win32 |
 | uwp-x64 | Universal Windows Platform X64 | /t:uwp-x64 |
-| uwpappx-arm | Universal Windows Platform ARM MSIX | /t:uwpappx-arm /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | uwpappx-x64 | Universal Windows Platform X64 MSIX | /t:uwpappx-x64 /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | windows-win32 | Windows X86 | /t:windows-win32 |
 | windows-x64 | Windows X64 | /t:windows-x64 |
