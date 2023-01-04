@@ -105,6 +105,8 @@ LOCAL_SRC_FILES := \
 	depends/libhdhomerun/hdhomerun_discover.c \
 	depends/libhdhomerun/hdhomerun_os_posix.c \
 	depends/libhdhomerun/hdhomerun_pkt.c \
+	depends/libhdhomerun/hdhomerun_sock.c \
+	depends/libhdhomerun/hdhomerun_sock_netlink.c \
 	depends/libhdhomerun/hdhomerun_sock_posix.c \
 	depends/libhdhomerun/hdhomerun_video.c \
 	depends/sqlite/sqlite3.c \

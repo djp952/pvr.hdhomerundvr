@@ -273,9 +273,6 @@
     <ClInclude Include="..\depends\libxml2\src\include\libxml\dict.h">
       <Filter>External Libraries\libxml2\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\depends\libxml2\src\include\libxml\DOCBparser.h">
-      <Filter>External Libraries\libxml2\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\depends\libxml2\src\include\libxml\encoding.h">
       <Filter>External Libraries\libxml2\Header Files</Filter>
     </ClInclude>
@@ -1397,9 +1394,6 @@
     <ClCompile Include="..\depends\libcurl\src\lib\curl_threads.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\dotdot.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\gopher.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
@@ -1413,9 +1407,6 @@
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\http2.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\idn_win32.c">
       <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\imap.c">
@@ -1459,9 +1450,6 @@
     </ClCompile>
     <ClCompile Include="curlshare.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libcurl\src\lib\curl_ctype.c">
-      <Filter>External Libraries\curl\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\curl_path.c">
       <Filter>External Libraries\curl\Source Files</Filter>
@@ -1632,9 +1620,6 @@
       <Filter>External Libraries\libxml2\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libxml2\src\dict.c">
-      <Filter>External Libraries\libxml2\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\depends\libxml2\src\DOCBparser.c">
       <Filter>External Libraries\libxml2\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\depends\libxml2\src\encoding.c">
@@ -2044,6 +2029,21 @@
     </ClCompile>
     <ClCompile Include="..\depends\libcurl\src\lib\timediff.c">
       <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\cfilters.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\idn.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\noproxy.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libcurl\src\lib\ws.c">
+      <Filter>External Libraries\curl\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\depends\libhdhomerun\hdhomerun_sock.c">
+      <Filter>External Libraries\libhdhomerun\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
