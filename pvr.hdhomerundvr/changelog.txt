@@ -1,4 +1,4 @@
-v4.9.0 (2023.01.xx)
+v4.9.0 (2023.01.08)
   - Remove dependency on OpenSSL library
   - Add dependency on wolfSSL library version 5.5.4
   - Update libhdhomerun library to version 20221202
