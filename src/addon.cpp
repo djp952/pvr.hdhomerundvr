@@ -1069,9 +1069,6 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 		// Abort the enumeration if the cancellation scalar_condition has been set
 		if(cancel.test(true) == true) { cancelenum = true; return; }
 
-		// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and isnew is *not* set, flag it as a repeat
-		bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.isnew == false));
-
 		// UniqueBroadcastId (required)
 		assert(item.broadcastid > EPG_TAG_INVALID_UID);
 		epgtag.SetUniqueBroadcastId(item.broadcastid);
@@ -1094,8 +1091,8 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 
 		// Year
 		//
-		// Only report for program type "MV" (Movies)
-		if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) epgtag.SetYear(item.year);
+		// Only report for program type MOVIE
+		if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MOVIE") == 0)) epgtag.SetYear(item.year);
 
 		// IconPath
 		if(item.iconurl != nullptr) epgtag.SetIconPath(item.iconurl);
@@ -1108,14 +1105,9 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 
 		// FirstAired
 		//
-		// Only report for program types "EP" (Series Episode) and "SH" (Show)
-		if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
-
-			// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-			// unless series/episode information is available
-			if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1)))
-				if(item.originalairdate != nullptr) epgtag.SetFirstAired(item.originalairdate);
-		}
+		// Only report for program types other than MOVIE
+		if((item.programtype != nullptr) && (item.originalairdate != nullptr) && (strcasecmp(item.programtype, "MOVIE") != 0))
+			epgtag.SetFirstAired(item.originalairdate);
 
 		// SeriesNumber
 		epgtag.SetSeriesNumber(item.seriesnumber);
@@ -1130,20 +1122,14 @@ void addon::push_listings(scalar_condition<bool> const& cancel)
 		if(item.episodename != nullptr) {
 
 			// If the setting to generate repeat indicators is set, append to the episode name as appropriate
-			std::string episodename = std::string(item.episodename) + std::string(((isrepeat) && (settings.generate_epg_repeat_indicators)) ? " [R]" : "");
+			std::string episodename = std::string(item.episodename) + std::string(((item.isrepeat) && (settings.generate_epg_repeat_indicators)) ? " [R]" : "");
 			epgtag.SetEpisodeName(episodename);
 		}
 
 		// Flags
-		//
-		// Only report EPG_TAG_FLAG_IS_NEW for program types "EP" (Series Episode) and "SH" (Show)
 		unsigned int flags = EPG_TAG_FLAG_IS_SERIES;
-		if((item.isnew) && (item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
-
-			// Special case: don't report EPG_TAG_FLAG_IS_NEW for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-			// unless series/episode information is available
-			if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1))) flags |= EPG_TAG_FLAG_IS_NEW;
-		}
+		if(item.isnew) flags |= EPG_TAG_FLAG_IS_NEW;
+		if(item.islive) flags |= EPG_TAG_FLAG_IS_LIVE;
 		epgtag.SetFlags(flags);
 
 		// SeriesLink
@@ -3490,9 +3476,6 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 			// Don't send EPG entries with start/end times outside the requested range
 			if((item.starttime > end) || (item.endtime < start)) return;
 
-			// Determine if the episode is a repeat.  If the program type is "EP" or "SH" and isnew is *not* set, flag it as a repeat
-			bool isrepeat = ((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0)) && (item.isnew == false));
-
 			// UniqueBroadcastId (required)
 			epgtag.SetUniqueBroadcastId(item.broadcastid);
 
@@ -3514,8 +3497,8 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 
 			// Year
 			//
-			// Only report for program type "MV" (Movies)
-			if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MV") == 0)) epgtag.SetYear(item.year);
+			// Only report for program type MOVIE
+			if((item.programtype != nullptr) && (strcasecmp(item.programtype, "MOVIE") == 0)) epgtag.SetYear(item.year);
 
 			// IconPath
 			if(item.iconurl != nullptr) epgtag.SetIconPath(item.iconurl);
@@ -3528,16 +3511,9 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 
 			// FirstAired
 			//
-			// Only report for program types "EP" (Series Episode) and "SH" (Show)
-			if((item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
-
-				// Special case: don't report original air date for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-				// unless series/episode information is available
-				if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1))) {
-
-					if(item.originalairdate != nullptr) epgtag.SetFirstAired(item.originalairdate);
-				}
-			}
+			// Only report for program types other than MOVIE
+			if((item.programtype != nullptr) && (item.originalairdate != nullptr) && (strcasecmp(item.programtype, "MOVIE") != 0))
+				epgtag.SetFirstAired(item.originalairdate);
 
 			// SeriesNumber
 			epgtag.SetSeriesNumber(item.seriesnumber);
@@ -3552,20 +3528,14 @@ PVR_ERROR addon::GetEPGForChannel(int channelUid, time_t start, time_t end, kodi
 			if(item.episodename != nullptr) {
 
 				// If the setting to generate repeat indicators is set, append to the episode name as appropriate
-				std::string episodename = std::string(item.episodename) + std::string(((isrepeat) && (settings.generate_epg_repeat_indicators)) ? " [R]" : "");
+				std::string episodename = std::string(item.episodename) + std::string(((item.isrepeat) && (settings.generate_epg_repeat_indicators)) ? " [R]" : "");
 				epgtag.SetEpisodeName(episodename);
 			}
 
 			// Flags
-			//
-			// Only report EPG_TAG_FLAG_IS_NEW for program types "EP" (Series Episode) and "SH" (Show)
 			unsigned int flags = EPG_TAG_FLAG_IS_SERIES;
-			if((item.isnew) && (item.programtype != nullptr) && ((strcasecmp(item.programtype, "EP") == 0) || (strcasecmp(item.programtype, "SH") == 0))) {
-
-				// Special case: don't report EPG_TAG_FLAG_IS_NEW for listings of type EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS
-				// unless series/episode information is available
-				if((item.genretype != EPG_EVENT_CONTENTMASK_NEWSCURRENTAFFAIRS) || ((item.seriesnumber >= 1) || (item.episodenumber >= 1))) flags |= EPG_TAG_FLAG_IS_NEW;
-			}
+			if(item.isnew) flags |= EPG_TAG_FLAG_IS_NEW;
+			if(item.islive) flags |= EPG_TAG_FLAG_IS_LIVE;
 			epgtag.SetFlags(flags);
 
 			// SeriesLink
