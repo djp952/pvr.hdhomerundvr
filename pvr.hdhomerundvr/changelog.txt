@@ -1,3 +1,6 @@
+v20.9.1 (2023.03.18)
+  - Adapt to XMLTV Electronic Program Guide (EPG) schema changes
+
 v20.9.0 (2023.01.08)
   - Remove dependency on OpenSSL library
   - Add dependency on wolfSSL library version 5.5.4

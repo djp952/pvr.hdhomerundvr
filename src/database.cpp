@@ -894,6 +894,8 @@ void discover_listings(sqlite3* instance, char const* deviceauth, bool& changed)
 			"xmltv.categories as genres, "
 			"xmltv.episodenum as episodenumber, "
 			"cast(coalesce(xmltv.isnew, 0) as integer) as isnew, "
+			"cast(coalesce(xmltv.isrepeat, 0) as integer) as isrepeat, "
+			"cast(coalesce(xmltv.islive, 0) as integer) as islive, "
 			"xmltv.starrating as starrating "
 			"from xmltv where xmltv.uri = 'https://api.hdhomerun.com/api/xmltv?DeviceAuth=' || ?1 and onchannel = ?2";
 
@@ -1622,7 +1624,7 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 	// If the maximum number of days wasn't provided, use a month as the boundary
 	if(maxdays < 0) maxdays = 31;
 
-	// seriesid | title | broadcastid | channelid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | starrating
+	// seriesid | title | broadcastid | channelid | starttime | endtime | synopsis | year | iconurl | programtype | genretype | genres | originalairdate | seriesnumber | episodenumber | episodename | isnew | isrepeat | islive | starrating
 	auto sql = "with allchannels(number) as "
 		"(select distinct(json_extract(entry.value, '$.GuideNumber')) as number from lineup, json_each(lineup.data) as entry where nullif(json_extract(entry.value, '$.DRM'), ?1) is null) "
 		"select listing.seriesid as seriesid, "
@@ -1635,13 +1637,16 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 		"coalesce(listing.year, 0) as year, "
 		"listing.iconurl as iconurl, "
 		"listing.programtype as programtype, "
-		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
+		"case upper(listing.programtype) when 'MOVIE' then 0x10 when 'NEWS' then 0x20 when 'SPORT' then 0x40 when 'SHOP' then 0xA0 "
+		"  else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
 		"listing.genres as genres, "
 		"listing.originalairdate as originalairdate, "
 		"get_season_number(listing.episodenumber) as seriesnumber, "
 		"get_episode_number(listing.episodenumber) as episodenumber, "
 		"listing.episodename as episodename, "
 		"listing.isnew as isnew, "
+		"listing.isrepeat as isrepeat, "
+		"listing.islive as islive, "
 		"decode_star_rating(listing.starrating) as starrating "
 		"from listing inner join guide on listing.channelid = guide.channelid "
 		"inner join allchannels on guide.number = allchannels.number "
@@ -1684,7 +1689,9 @@ void enumerate_listings(sqlite3* instance, bool showdrm, int maxdays, enumerate_
 			item.episodenumber = sqlite3_column_int(statement, 14);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 15));
 			item.isnew = (sqlite3_column_int(statement, 16) != 0);
-			item.starrating = sqlite3_column_int(statement, 17);
+			item.isrepeat = (sqlite3_column_int(statement, 17) != 0);
+			item.islive = (sqlite3_column_int(statement, 18) != 0);
+			item.starrating = sqlite3_column_int(statement, 19);
 
 			callback(item, cancel);					// Invoke caller-supplied callback
 			result = sqlite3_step(statement);		// Move to the next row of data
@@ -1730,13 +1737,16 @@ void enumerate_listings(sqlite3* instance, bool showdrm, union channelid channel
 		"coalesce(listing.year, 0) as year, "
 		"listing.iconurl as iconurl, "
 		"listing.programtype as programtype, "
-		"case upper(listing.programtype) when 'MV' then 0x10 when 'SP' then 0x40 else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
+		"case upper(listing.programtype) when 'MOVIE' then 0x10 when 'NEWS' then 0x20 when 'SPORT' then 0x40 when 'SHOP' then 0xA0 "
+		"  else (select case when genremap.genretype is not null then genremap.genretype else 0x30 end) end as genretype, "
 		"listing.genres as genres, "
 		"listing.originalairdate as originalairdate, "
 		"get_season_number(listing.episodenumber) as seriesnumber, "
 		"get_episode_number(listing.episodenumber) as episodenumber, "
 		"listing.episodename as episodename, "
 		"listing.isnew as isnew, "
+		"listing.isrepeat as isrepeat, "
+		"listing.islive as islive, "
 		"decode_star_rating(listing.starrating) as starrating "
 		"from listing inner join guide on listing.channelid = guide.channelid "
 		"inner join allchannels on guide.number = allchannels.number "
@@ -1781,7 +1791,9 @@ void enumerate_listings(sqlite3* instance, bool showdrm, union channelid channel
 			item.episodenumber = sqlite3_column_int(statement, 13);
 			item.episodename = reinterpret_cast<char const*>(sqlite3_column_text(statement, 14));
 			item.isnew = (sqlite3_column_int(statement, 15) != 0);
-			item.starrating = sqlite3_column_int(statement, 16);
+			item.isrepeat = (sqlite3_column_int(statement, 16) != 0);
+			item.islive = (sqlite3_column_int(statement, 17) != 0);
+			item.starrating = sqlite3_column_int(statement, 18);
 
 			callback(item, cancel);					// Invoke caller-supplied callback
 			result = sqlite3_step(statement);		// Move to the next row of data
@@ -3229,9 +3241,10 @@ sqlite3* open_database(char const* connstring, int flags, bool initialize)
 
 			// table: listing
 			//
-			// channelid | starttime | endtime | seriesid | title | episodename | synopsis | year | originalairdate | iconurl | programtype | primarygenre | genres | episodenumber | isnew | starrating
+			// channelid | starttime | endtime | seriesid | title | episodename | synopsis | year | originalairdate | iconurl | programtype | primarygenre | genres | episodenumber | isnew | isrepeat | islive | starrating
 			execute_non_query(instance, "create table if not exists listing(channelid text not null, starttime integer not null, endtime integer not null, seriesid text, title text, "
-				"episodename text, synopsis text, year integer, originalairdate text, iconurl text, programtype text, primarygenre text, genres text, episodenumber text, isnew integer, starrating text)");
+				"episodename text, synopsis text, year integer, originalairdate text, iconurl text, programtype text, primarygenre text, genres text, episodenumber text, isnew integer, "
+				"isrepeat integer, islive integer, starrating text)");
 			execute_non_query(instance, "create index if not exists listing_channelid_starttime_endtime_index on listing(channelid, starttime, endtime)");
 
 			// table: recording

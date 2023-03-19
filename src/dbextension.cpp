@@ -124,6 +124,8 @@ enum class xmltv_vtab_columns {
 	episodenum,				// episodenum text
 	programtype,			// programtype text
 	isnew,					// isnew integer
+	isrepeat,				// isrepeat integer
+	islive,					// islive integer
 	starrating,				// starrating text
 };
 
@@ -1570,27 +1572,27 @@ int xmltv_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordi
 
 		// Special case: concatenate all of the <category> element values into a comma-delimted string
 		case xmltv_vtab_columns::categories: 
-			{
-				std::string collector;				// Collector for the disparate strings
-				bool progtype = false;				// Flag to skip progType <category> element
+		{
+			std::string collector;				// Collector for the disparate strings
+			bool progtype = false;				// Flag to skip progType <category> element
 
-				xmlTextReaderForEachChildElement(xmltvcursor->reader, BAD_CAST("category"), [&](xmlNodePtr node) -> void {
+			xmlTextReaderForEachChildElement(xmltvcursor->reader, BAD_CAST("category"), [&](xmlNodePtr node) -> void {
 
-					// The first <category> element is the progType, which we don't want to use for anything
-					if(!progtype) { progtype = true; return; }
+				// The first <category> element is the progType, which we don't want to use for anything
+				if(!progtype) { progtype = true; return; }
 
-					xmlChar* value = xmlNodeGetContent(node);
-					if(value != nullptr) {
+				xmlChar* value = xmlNodeGetContent(node);
+				if(value != nullptr) {
 
-						if(!collector.empty()) collector.append(",");
-						collector.append(reinterpret_cast<char*>(value));
-						xmlFree(value);
-					}
-				});
+					if(!collector.empty()) collector.append(",");
+					collector.append(reinterpret_cast<char*>(value));
+					xmlFree(value);
+				}
+			});
 
-				if(!collector.empty()) sqlite3_result_text(context, collector.c_str(), -1, SQLITE_TRANSIENT);
-			}
-			break;
+			if(!collector.empty()) sqlite3_result_text(context, collector.c_str(), -1, SQLITE_TRANSIENT);
+		}
+		break;
 
 		case xmltv_vtab_columns::language:
 			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("language"));
@@ -1615,24 +1617,23 @@ int xmltv_column(sqlite3_vtab_cursor* cursor, sqlite3_context* context, int ordi
 			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
 			break;
 
-		// Special case: extract the program type from the alphanumeric identifer at the start of the dd_progid
 		case xmltv_vtab_columns::programtype:
-		{
-			node = xmlTextReaderGetChildElementWithAttribute(xmltvcursor->reader, BAD_CAST("episode-num"), BAD_CAST("system"), BAD_CAST("dd_progid"));
-			if(node != nullptr) {
-
-				xmlChar* progid = xmlNodeGetContent(node);
-				if(progid != nullptr) {
-
-					if(strlen(reinterpret_cast<char*>(progid)) >= 2) sqlite3_result_text(context, reinterpret_cast<char*>(progid), 2, SQLITE_TRANSIENT);
-					xmlFree(progid);
-				}
-			}
-		}
-		break;
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("category"));
+			if(node != nullptr) sqlite3_result_text(context, reinterpret_cast<char*>(xmlNodeGetContent(node)), -1, xmlFree);
+			break;
 
 		case xmltv_vtab_columns::isnew:
 			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("new"));
+			if(node != nullptr) sqlite3_result_int(context, 1);
+			break;
+
+		case xmltv_vtab_columns::isrepeat:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("previously-shown"));
+			if(node != nullptr) sqlite3_result_int(context, 1);
+			break;
+
+		case xmltv_vtab_columns::islive:
+			node = xmlTextReaderGetChildElement(xmltvcursor->reader, BAD_CAST("live"));
 			if(node != nullptr) sqlite3_result_int(context, 1);
 			break;
 
@@ -1665,7 +1666,7 @@ int xmltv_connect(sqlite3* instance, void* /*aux*/, int /*argc*/, const char* co
 	// Declare the schema for the virtual table, use hidden columns for all of the filter criteria
  	int result = sqlite3_declare_vtab(instance, "create table xmltv(uri text hidden, onchannel pointer hidden, channel text, start text, "
 		"stop text, title text, subtitle text, desc text, date text, categories text, language text, iconsrc text, seriesid text, "
-		"episodenum text, programtype text, isnew integer, starrating text)");
+		"episodenum text, programtype text, isnew integer, isrepeat integer, islive integer, starrating text)");
 	if(result != SQLITE_OK) return result;
 
 	// Allocate and initialize the custom virtual table class

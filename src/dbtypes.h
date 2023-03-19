@@ -41,7 +41,7 @@ static size_t const DATABASE_CONNECTIONPOOL_SIZE = 5;
 // DATABASE_SCHEMA_VERSION
 //
 // This value needs to be incremented with any database schema change
-static char const DATABASE_SCHEMA_VERSION[] = "13";
+static char const DATABASE_SCHEMA_VERSION[] = "14";
 
 //---------------------------------------------------------------------------
 // DATA TYPES
@@ -140,6 +140,8 @@ struct listing {
 	int					episodenumber;
 	char const*			episodename;
 	bool				isnew;
+	bool				isrepeat;
+	bool				islive;
 	int					starrating;
 };
 
