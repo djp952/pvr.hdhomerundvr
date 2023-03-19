@@ -629,10 +629,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>20.0.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>20.1.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20221219-a184a3a7-Nexus-x86</KodiAppx>
-      <ZukiAppx>kodi-20.0-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20230312-289ec664-Nexus-x86</KodiAppx>
+      <ZukiAppx>kodi-20.1-zuki.pvr.hdhomerundvr-win32-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -670,10 +670,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>20.0.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>20.1.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20221219-a184a3a7-Nexus-x64</KodiAppx>
-      <ZukiAppx>kodi-20.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20230312-289ec664-Nexus-x64</KodiAppx>
+      <ZukiAppx>kodi-20.1-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -711,10 +711,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>20.0.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>20.1.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>Kodi-20221219-a184a3a7-Nexus-arm</KodiAppx>
-      <ZukiAppx>kodi-20.0-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20230312-289ec664-Nexus-arm</KodiAppx>
+      <ZukiAppx>kodi-20.1-zuki.pvr.hdhomerundvr-arm-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
