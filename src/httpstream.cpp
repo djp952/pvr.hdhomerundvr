@@ -133,8 +133,6 @@ httpstream::httpstream(char const* url) : m_buffersize(DEFAULT_RINGBUFFER_SIZE)
 			CURLcode curlresult = curl_easy_setopt(m_curl, CURLOPT_URL, url);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
-			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
-			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_LOW_SPEED_TIME, 5L);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, &httpstream::curl_responseheaders);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, this);
 			if(curlresult == CURLE_OK) curlresult = curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &httpstream::curl_write);
