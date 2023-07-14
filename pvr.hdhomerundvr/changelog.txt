@@ -1,4 +1,4 @@
-v20.9.2 (2023.xx.xx)
+v20.9.2 (2023.07.13)
   - Remove cURL low speed limit detection options on HTTP streams
 
 v20.9.1 (2023.03.18)
