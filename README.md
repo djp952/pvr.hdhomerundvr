@@ -3,7 +3,7 @@
 Unofficial Kodi HDHomeRun DVR PVR Client   
 ## [__USER DOCUMENTATION AND DOWNLOADS__](https://github.com/djp952/pvr.hdhomerundvr/wiki)   
    
-Copyright (C)2016-2022 Michael G. Brehm    
+Copyright (C)2016-2024 Michael G. Brehm    
 [MIT LICENSE](https://opensource.org/licenses/MIT)   
    
 [__CURL__](https://curl.haxx.se/) - Copyright (C)1996-2022, Daniel Stenberg, daniel@haxx.se, and many contributors   
@@ -83,7 +83,7 @@ sudo cp -v $(pwd)/osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dyli
 **INITIALIZE SOURCE TREE AND DEPENDENCIES**
 * Open "Developer Command Prompt for VS2022"   
 ```
-git clone https://github.com/djp952/pvr.hdhomerundvr -b Nexus
+git clone https://github.com/djp952/pvr.hdhomerundvr -b Omega
 cd pvr.hdhomerundvr
 git submodule update --init
 ```
@@ -130,7 +130,6 @@ Examples:
 | uwp-arm | Universal Windows Platform ARM | /t:uwp-arm |
 | uwp-win32 | Universal Windows Platform X86 | /t:uwp-win32 |
 | uwp-x64 | Universal Windows Platform X64 | /t:uwp-x64 |
-| uwpappx-arm | Universal Windows Platform ARM MSIX | /t:uwpappx-arm /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | uwpappx-x64 | Universal Windows Platform X64 MSIX | /t:uwpappx-x64 /p:Keystore={keystore};KeystorePassword={keystore-password} |
 | windows-win32 | Windows X86 | /t:windows-win32 |
 | windows-x64 | Windows X64 | /t:windows-x64 |

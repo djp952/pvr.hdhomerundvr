@@ -1,3 +1,7 @@
+v21.9.3 (2024.04.06)
+  - Update libhdhomerun library to version 20231109
+  - Update SQLite database engine to version 3.45.2
+
 v20.9.2 (2023.07.13)
   - Remove cURL low speed limit detection options on HTTP streams
 
