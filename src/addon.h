@@ -168,7 +168,7 @@ public:
 	// GetChannelStreamProperties
 	//
 	// Get the stream properties for a channel from the backend
-	PVR_ERROR GetChannelStreamProperties(kodi::addon::PVRChannel const& channel, std::vector<kodi::addon::PVRStreamProperty>& properties) override;
+	PVR_ERROR GetChannelStreamProperties(kodi::addon::PVRChannel const& channel, PVR_SOURCE source, std::vector<kodi::addon::PVRStreamProperty>& properties) override;
 		
 	// GetConnectionString
 	//

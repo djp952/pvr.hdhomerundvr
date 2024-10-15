@@ -83,7 +83,7 @@ sudo cp -v $(pwd)/osxcross/build/compiler-rt/compiler-rt/build/lib/darwin/*.dyli
 **INITIALIZE SOURCE TREE AND DEPENDENCIES**
 * Open "Developer Command Prompt for VS2022"   
 ```
-git clone https://github.com/djp952/pvr.hdhomerundvr -b Omega
+git clone https://github.com/djp952/pvr.hdhomerundvr -b main
 cd pvr.hdhomerundvr
 git submodule update --init
 ```

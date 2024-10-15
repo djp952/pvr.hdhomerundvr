@@ -29,7 +29,7 @@
     <DisplayVersion></DisplayVersion>         <!-- Set by AddonVersion Target; may override on the command line -->
     <Keystore></Keystore>                     <!-- Must be set on the command line -->
     <KeystorePassword></KeystorePassword>     <!-- Must be set on the command line -->
-    <KodiBaseline>omega</KodiBaseline>
+    <KodiBaseline>piers</KodiBaseline>
     <ZipperExe>depends\build\zuki.build.tools.zipper.exe</ZipperExe>
   </PropertyGroup>
 
@@ -629,10 +629,10 @@
 
     <PropertyGroup>
       <BuildNumber>$([System.Version]::Parse($(AddonVersion)).Revision)</BuildNumber>
-      <AppxVersionCode>21.0.$(BuildNumber).0</AppxVersionCode>
+      <AppxVersionCode>22.0.$(BuildNumber).0</AppxVersionCode>
       <PhoneProductId>1F9928BF-0F41-49C8-941A-466153ED2C55</PhoneProductId>
-      <KodiAppx>kodi-21.0-Omega_21.0.0.0-x64</KodiAppx>
-      <ZukiAppx>kodi-21.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
+      <KodiAppx>Kodi-20241008-b4e65aae-master-x64</KodiAppx>
+      <ZukiAppx>kodi-22.0-zuki.pvr.hdhomerundvr-x64-$(AddonVersion)</ZukiAppx>
       <AppxNamespaces>&lt;Namespace Prefix='n' Uri='http://schemas.microsoft.com/appx/manifest/foundation/windows10' /&gt;&lt;Namespace Prefix='mp' Uri='http://schemas.microsoft.com/appx/2014/phone/manifest' /&gt;</AppxNamespaces>
     </PropertyGroup>
 
@@ -647,7 +647,7 @@
 
     <MakeDir Directories="tmp" ContinueOnError="false"/>
     <Message Condition="!Exists('tmp\$(KodiAppx).msix')" Importance="high" Text="Downloading $(KodiAppx).msix ..."/>
-    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl https://mirrors.kodi.tv/releases/windows/UWP/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
+    <Exec Condition="!Exists('tmp\$(KodiAppx).msix')" Command="curl https://mirrors.kodi.tv/nightlies/windows/uwp64/master/$(KodiAppx).msix -L -o tmp\$(KodiAppx).msix " ContinueOnError="false" />
 
     <RemoveDir Directories="out\$(KodiAppx)"/>
     <Exec Command="makeappx unpack /p tmp\$(KodiAppx).msix /l /d out\$(KodiAppx)" ContinueOnError="false"/>

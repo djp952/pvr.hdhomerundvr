@@ -3386,7 +3386,8 @@ PVR_ERROR addon::GetChannelsAmount(int& amount)
 //	channel		- channel to get the stream properties for
 //	properties	- properties required to play the stream
 
-PVR_ERROR addon::GetChannelStreamProperties(kodi::addon::PVRChannel const& channel, std::vector<kodi::addon::PVRStreamProperty>& properties)
+PVR_ERROR addon::GetChannelStreamProperties(kodi::addon::PVRChannel const& channel, PVR_SOURCE /*source*/, 
+	std::vector<kodi::addon::PVRStreamProperty>& properties)
 {
 	properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, channel.GetMimeType());
 	properties.emplace_back(PVR_STREAM_PROPERTY_ISREALTIMESTREAM, "true");
@@ -3749,7 +3750,7 @@ PVR_ERROR addon::GetRecordings(bool deleted, kodi::addon::PVRRecordingsResultSet
 			// EpisodeName
 			if(item.episodename != nullptr) {
 
-				char strEpisodeName[PVR_ADDON_NAME_STRING_LENGTH]{};
+				char strEpisodeName[1024]{};
 
 				snprintf(strEpisodeName, std::extent<decltype(strEpisodeName)>::value, "%s%s", item.episodename, ((isrepeat) && (settings.generate_repeat_indicators)) ? " [R]" : "");
 				recording.SetEpisodeName(strEpisodeName);
