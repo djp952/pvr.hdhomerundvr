@@ -3017,9 +3017,9 @@ void addon::CloseLiveStream(void)
 //
 // Arguments:
 //
-//	NONE
+//	streamid	- ID of the stream to close
 
-void addon::CloseRecordedStream(void)
+void addon::CloseRecordedStream(int64_t /*streamid*/)
 {
 	return CloseLiveStream();			// Identical implementation
 }
@@ -3165,6 +3165,7 @@ PVR_ERROR addon::GetCapabilities(kodi::addon::PVRCapabilities& capabilities)
 	capabilities.SetSupportsLastPlayedPosition(true);
 	capabilities.SetSupportsRecordingEdl(true);
 	capabilities.SetSupportsRecordingsDelete(true);
+	capabilities.SetSupportsMultipleRecordedStreams(false);	// <-- TODO: Look into this
 
 	return PVR_ERROR::PVR_ERROR_NO_ERROR;
 }
@@ -4334,9 +4335,9 @@ int64_t addon::LengthLiveStream(void)
 //
 // Arguments:
 //
-//	NONE
+//	streamid	- ID of the stream to get the length for
 
-int64_t addon::LengthRecordedStream(void)
+int64_t addon::LengthRecordedStream(int64_t /*streamid*/)
 {
 	return LengthLiveStream();			// Identical implementation
 }
@@ -4524,8 +4525,9 @@ bool addon::OpenLiveStream(kodi::addon::PVRChannel const& channel)
 // Arguments:
 //
 //	recording	- Recording stream to be opened
+//  streamid	- ID for the opened stream
 
-bool addon::OpenRecordedStream(kodi::addon::PVRRecording const& recording)
+bool addon::OpenRecordedStream(kodi::addon::PVRRecording const& recording, int64_t& /*streamid*/)
 {
 	// Create a copy of the current addon settings structure
 	struct settings settings = copy_settings();
@@ -4630,10 +4632,11 @@ int addon::ReadLiveStream(unsigned char* buffer, unsigned int size)
 //
 // Arguments:
 //
+//  streamid	- ID of the stream to read
 //	buffer		- The buffer to store the data in
 //	size		- The number of bytes to read into the buffer
 
-int addon::ReadRecordedStream(unsigned char* buffer, unsigned int size)
+int addon::ReadRecordedStream(int64_t /*streamid*/, unsigned char* buffer, unsigned int size)
 {
 	try { 
 	
@@ -4702,10 +4705,11 @@ int64_t addon::SeekLiveStream(int64_t position, int whence)
 //
 // Arguments:
 //
+//	streamid	- ID of the stream to seek
 //	position	- Delta within the stream to seek, relative to whence
 //	whence		- Starting position from which to apply the delta
 
-int64_t addon::SeekRecordedStream(int64_t position, int whence)
+int64_t addon::SeekRecordedStream(int64_t /*streamid*/, int64_t position, int whence)
 {
 	try { return (m_pvrstream) ? m_pvrstream->seek(position, whence) : -1; }
 

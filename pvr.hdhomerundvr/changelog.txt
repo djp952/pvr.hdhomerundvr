@@ -1,5 +1,8 @@
+v22.9.4 (2024.11.04)
+  - Adapt to PVR API v9.2 changes
+
 v22.9.3 (2024.10.14)
-  - Adapt to PVR API v9.x changes
+  - Adapt to PVR API v9.1 changes
 
 v21.9.3 (2024.04.06)
   - Update libhdhomerun library to version 20231109

@@ -113,7 +113,7 @@ public:
 	// CloseRecordedStream
 	//
 	// Close an open stream from a recording
-	void CloseRecordedStream(void) override;
+	void CloseRecordedStream(int64_t streamid) override;
 
 	// DeleteRecording
 	//
@@ -258,7 +258,7 @@ public:
 	// LengthRecordedStream
 	//
 	// Obtain the length of a recorded stream
-	int64_t LengthRecordedStream(void) override;
+	int64_t LengthRecordedStream(int64_t streamid) override;
 
 	// OnSystemSleep
 	//
@@ -278,7 +278,7 @@ public:
 	// OpenRecordedStream
 	//
 	// Open a stream to a recording on the backend
-	bool OpenRecordedStream(kodi::addon::PVRRecording const& recording) override;
+	bool OpenRecordedStream(kodi::addon::PVRRecording const& recording, int64_t& streamid) override;
 		
 	// ReadLiveStream
 	//
@@ -288,7 +288,7 @@ public:
 	// ReadRecordedStream
 	//
 	// Read from a recording
-	int ReadRecordedStream(unsigned char* buffer, unsigned int size) override;
+	int ReadRecordedStream(int64_t streamid, unsigned char* buffer, unsigned int size) override;
 
 	// SeekLiveStream
 	//
@@ -298,7 +298,7 @@ public:
 	// SeekRecordedStream
 	//
 	// Seek in a recorded stream
-	int64_t SeekRecordedStream(int64_t position, int whence) override;
+	int64_t SeekRecordedStream(int64_t streamid, int64_t position, int whence) override;
 
 	// SetEPGMaxFutureDays
 	//
