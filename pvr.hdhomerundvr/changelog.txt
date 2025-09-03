@@ -1,3 +1,6 @@
+v21.9.5 (2025.09.03)
+  - Correct oversight in HDHomeRun RECORD 20250815 adaptations causing recording enumeration errors/slowness
+
 v21.9.4 (2025.09.03)
   - Adapt to HDHomeRun RECORD 20250815 API changes
 

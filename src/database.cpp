@@ -1142,7 +1142,7 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid)
 		"with storage(deviceid, url) as(select deviceid, url_append_query_string(json_extract(device.data, '$.StorageURL'), 'DisplayGroupID=root') from device "
 		"where json_extract(device.data, '$.StorageURL') is not null) "
 		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
-		"json_extract(displaygroup.value, '$.UpdateID') as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
+		"ifnull(json_extract(displaygroup.value, '$.UpdateID'), 0) as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
 		"from storage, json_each(json_get(storage.url)) as displaygroup where seriesid like ?1", seriesid);
 
 	try {
