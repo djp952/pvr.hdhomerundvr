@@ -1,3 +1,6 @@
+v21.9.4 (2025.09.03)
+  - Adapt to HDHomeRun RECORD 20250815 API changes
+
 v21.9.3 (2024.04.06)
   - Update libhdhomerun library to version 20231109
   - Update SQLite database engine to version 3.45.2
