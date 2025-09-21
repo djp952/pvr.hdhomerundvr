@@ -1076,7 +1076,7 @@ void discover_recordings(sqlite3* instance, bool& changed)
 		"with storage(deviceid, url) as(select deviceid, url_append_query_string(json_extract(device.data, '$.StorageURL'), 'DisplayGroupID=root') from device "
 		"where json_extract(device.data, '$.StorageURL') is not null) "
 		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
-		"max(cast(json_extract(displaygroup.value, '$.UpdateID') as integer)) as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
+		"ifnull(json_extract(displaygroup.value, '$.UpdateID'), 0) as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
 		"from storage, json_each(json_get(storage.url)) as displaygroup "
 		"group by deviceid, seriesid, episodesurl");
 
@@ -1091,8 +1091,9 @@ void discover_recordings(sqlite3* instance, bool& changed)
 			if(execute_non_query(instance, "delete from recording where deviceid not in(select distinct deviceid from discover_recording) or "
 				"seriesid not in(select distinct seriesid from discover_recording)") > 0) changed = true;
 
-			// Remove all seriesids with an outdated updateid from the recordings table
-			if(execute_non_query(instance, "delete from recording where updateid <> (select updateid from discover_recording "
+			// Remove all seriesids with an outdated or non-existent updateid from the recordings table
+			if (execute_non_query(instance, "delete from recording where updateid = 0 or "
+				"updateid <> (select updateid from discover_recording "
 				"where deviceid like recording.deviceid and seriesid like recording.seriesid)") > 0) changed = true;
 
 			// The update query is easier to do if the matching rows in discover_recording are removed first
@@ -1141,7 +1142,7 @@ static void discover_series_recordings(sqlite3* instance, char const* seriesid)
 		"with storage(deviceid, url) as(select deviceid, url_append_query_string(json_extract(device.data, '$.StorageURL'), 'DisplayGroupID=root') from device "
 		"where json_extract(device.data, '$.StorageURL') is not null) "
 		"select distinct storage.deviceid as deviceid, json_extract(displaygroup.value, '$.SeriesID') as seriesid, "
-		"json_extract(displaygroup.value, '$.UpdateID') as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
+		"ifnull(json_extract(displaygroup.value, '$.UpdateID'), 0) as updateid, json_extract(displaygroup.value, '$.EpisodesURL') as episodesurl "
 		"from storage, json_each(json_get(storage.url)) as displaygroup where seriesid like ?1", seriesid);
 
 	try {
